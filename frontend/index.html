@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Backtest momentum, MACD, and mean-reversion strategies on real market data — then check whether the result survives walk-forward validation and a signal permutation test."
+    />
+    <title>Finertia — Strategy Backtesting</title>
+    <link rel="canonical" href="https://momentbacktracking.web.app/" />
+    <meta name="theme-color" content="#0f1117" />
+
+    <!-- Open Graph / Twitter. Without these a shared link renders as a bare
+         URL, which is the difference between a click and a scroll past. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Finertia" />
+    <meta property="og:title" content="Backtest a Strategy. Then Find Out If It's Real." />
+    <meta
+      property="og:description"
+      content="Any backtest can be tuned until it looks good. Finertia scores your parameters on data they were never fitted to."
+    />
+    <meta property="og:url" content="https://momentbacktracking.web.app/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Backtest a Strategy. Then Find Out If It's Real." />
+    <meta
+      name="twitter:description"
+      content="Walk-forward validation and permutation tests on a hand-written backtesting engine. No external backtesting libraries."
+    />
+
+    <!-- A single-page app returns 200 for every path, so crawlers cannot learn
+         the routes by following links alone. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Finertia",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "description": "Strategy backtesting with walk-forward validation and permutation testing.",
+        "offers": [
+          { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free" },
+          { "@type": "Offer", "price": "12", "priceCurrency": "USD", "name": "Pro" }
+        ]
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-bg text-text-primary font-sans antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
