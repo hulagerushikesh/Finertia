@@ -1,0 +1,78 @@
+name: CI
+
+# Runs on every push and PR. Nothing here needs Firebase credentials — the test
+# suite covers the pure computation layer only, and the frontend build resolves
+# VITE_* vars to undefined without failing. That is deliberate: a pipeline that
+# needs secrets to run is a pipeline that silently stops running.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run tests
+        run: pytest tests/ -q
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if a credential file was committed
+        # The service account private key would be the worst thing to leak, and
+        # .gitignore only helps for files that were never added. This is the
+        # backstop for a `git add -f` or a rule edited away later.
+        run: |
+          set -e
+          if git ls-files | grep -Ei '(^|/)\.env$|serviceAccount.*\.json|firebase-adminsdk.*\.json'; then
+            echo "::error::A credential file is tracked in git. Remove it and rotate the key."
+            exit 1
+          fi
+          if git grep -l -- "-----BEGIN PRIVATE KEY-----" -- . ':!*.yml'; then
+            echo "::error::A private key is present in tracked source."
+            exit 1
+          fi
+          echo "No credential files tracked."

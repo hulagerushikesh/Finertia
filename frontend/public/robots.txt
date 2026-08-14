@@ -1,0 +1,18 @@
+# Public marketing pages are worth indexing. Everything behind a login is not —
+# those URLs return the same SPA shell to a crawler as to a signed-out user, so
+# indexing them would put empty pages in search results.
+User-agent: *
+Allow: /$
+Allow: /demo
+Allow: /docs
+Allow: /pricing
+Allow: /support
+Disallow: /dashboard
+Disallow: /history
+Disallow: /profile
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+
+Sitemap: https://momentbacktracking.web.app/sitemap.xml
