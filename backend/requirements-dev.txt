@@ -1,0 +1,11 @@
+# Test-only dependencies, deliberately separate from requirements.txt so the
+# production image never ships a test client.
+-r requirements.txt
+
+pytest>=8.0
+
+# Starlette's TestClient warns that pairing it with httpx is deprecated and
+# asks for httpx2. Named here rather than left to whatever httpx some other
+# package happens to pull in, so the test run does not depend on transitive
+# luck.
+httpx2>=2.0
