@@ -1,19 +1,52 @@
 rules_version = '2';
+
+// The client's only legitimate Firestore access is its own profile document.
+// Everything else — creating runs, reading anyone else's data, changing a role
+// or a plan — goes through the API, which uses the Firebase Admin SDK. That SDK
+// bypasses these rules entirely, so locking the client down costs the backend
+// nothing and there is no reason to grant admins client-side access here.
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
-    }
 
     match /users/{uid} {
-      allow read: if request.auth.uid == uid || isAdmin();
-      allow write: if request.auth.uid == uid || isAdmin();
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Registration writes the initial profile from the browser, so every
+      // field the server later trusts has to be pinned on the way in.
+      // Otherwise the first write is a free hand: a new account could name
+      // itself an admin, or arrive pre-paid on the Pro plan.
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.uid == uid
+                    && request.resource.data.role == "user"
+                    && request.resource.data.isActive == true
+                    && request.resource.data.totalRuns == 0
+                    // Absent, not merely false: normalise_plan() fails closed
+                    // to the free tier, and the quota counters are server-owned.
+                    && !("plan" in request.resource.data)
+                    && !("runsThisPeriod" in request.resource.data)
+                    && !("quotaPeriod" in request.resource.data);
+
+      // displayName is the only thing a user may change about themselves.
+      // role, plan, isActive, totalRuns, and the quota counters are all
+      // written by the server and must not be reachable from a browser
+      // console — the backend reads them back as authorisation and billing.
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(["displayName"]);
+
+      // Deleting the profile would orphan the account: Firebase Auth would
+      // still let it sign in, but every server-side role, plan, and quota
+      // lookup would come back empty.
+      allow delete: if false;
     }
 
+    // Runs are created and read entirely through the API. The client has never
+    // touched this collection, so anything arriving here directly is not the
+    // application.
     match /runs/{runId} {
-      allow read: if request.auth.uid == resource.data.uid || isAdmin();
-      allow create: if request.auth != null;
-      allow update, delete: if isAdmin();
+      allow read, write: if false;
     }
   }
 }

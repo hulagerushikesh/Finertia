@@ -295,6 +295,22 @@ A failed send does not fail registration — the account and its profile documen
 
 Set `VITE_SUPPORT_EMAIL` at build time. Unset, it shows an obviously fake placeholder rather than a plausible wrong address.
 
+### Firestore security rules
+
+The API is not the only door into the database. A signed-in browser holds a real Firebase token and can talk to Firestore directly, so any check that exists only in FastAPI is advisory — the rules are what actually enforce it.
+
+The client's sole legitimate access is its own profile document: it reads that one doc, creates it at registration, and may change `displayName`. Nothing else. `role`, `plan`, `isActive`, `totalRuns`, and the quota counters are server-owned, and the `runs` collection is closed to clients entirely — runs are created and read through the API.
+
+Locking this down costs the backend nothing: the Firebase Admin SDK **bypasses security rules**, so every server-side write still works, and admin tooling needs no client-side grant.
+
+Fields are also pinned at creation. Registration is a browser write, so without constraints the very first document is a free hand — a new account could name itself an admin or arrive already on the Pro plan.
+
+```bash
+cd firestore-tests && npm install && npm test
+```
+
+20 tests against the Firestore emulator, covering both directions: that registration, profile reads, and display-name edits still work, and that privilege escalation, cross-account access, and run forgery do not. `emulators:exec` starts and stops the emulator itself, so the only prerequisite is Java.
+
 ### CI and deploys
 
 `.github/workflows/ci.yml` runs on every push and PR: backend tests, frontend build, and a secret scan that fails if a `.env` or service-account key is ever tracked. None of them need credentials — a pipeline that requires secrets is one that silently stops running.
