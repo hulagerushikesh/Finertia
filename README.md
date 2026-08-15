@@ -326,6 +326,10 @@ cd backend
 pytest tests/ -q
 ```
 
-379 tests covering signals, engine, metrics, analytics, strategies, validation, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, and the log formatter. They exercise the pure computation and infrastructure layers only — no Firebase credentials needed, so they run in CI unmodified.
+404 tests covering signals, engine, metrics, analytics, strategies, validation, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
+
+`test_routes.py` covers the part that decides who may call everything else: token handling, suspended accounts, admin gating, quota and entitlement enforcement, rate limiting, and how failures become status codes. `verify_token`, the profile lookup, the Firestore client, and the price fetch are all replaced, so no network or credentials are involved.
+
+Two distinctions it pins down, because getting either wrong puts the wrong message in front of a user: **402 means upgrade and 429 means wait**, and **role is read from the Firestore profile, never from the token** — a token claiming `role: admin` is refused.
 
 The suite includes an explicit lookahead-bias guard: a position must not be open on a price-spike bar.

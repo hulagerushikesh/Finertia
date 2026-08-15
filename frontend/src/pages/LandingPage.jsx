@@ -72,7 +72,7 @@ export default function LandingPage() {
         {[
           { label: "External backtesting deps", value: "0" },
           { label: "Performance metrics", value: "12" },
-          { label: "Tests on the engine", value: "379" },
+          { label: "Tests on the engine", value: "404" },
         ].map((s) => (
           <div key={s.label} className="bg-surface px-6 py-8 text-center">
             <p className="text-3xl font-bold font-mono text-accent mb-1">{s.value}</p>
