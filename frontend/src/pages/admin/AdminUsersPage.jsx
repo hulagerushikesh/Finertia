@@ -88,8 +88,12 @@ export default function AdminUsersPage() {
       {error && <div className="text-danger bg-danger/10 border border-danger/20 rounded-xl px-5 py-4 mb-4 text-sm">{error}</div>}
 
       <>
-          <div className="bg-surface border border-border rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
+          {/* overflow-x-auto, not overflow-hidden: seven columns cannot fit a
+              phone, and hiding them puts the data out of reach rather than one
+              swipe away. The table scrolls inside its own box so the page
+              itself never scrolls sideways. */}
+          <div className="bg-surface border border-border rounded-xl overflow-x-auto">
+            <table className="w-full text-sm min-w-[46rem]">
               <thead>
                 <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">
                   <th className="text-left px-5 py-3">Email</th>

@@ -21,7 +21,7 @@ const features = [
 
 export default function LandingPage() {
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-16 sm:pb-32">
       {/* Hero */}
       <div className="text-center mb-20">
         <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent text-xs font-medium px-3 py-1 rounded-full mb-6">
