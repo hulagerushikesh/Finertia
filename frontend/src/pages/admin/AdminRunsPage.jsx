@@ -68,8 +68,8 @@ export default function AdminRunsPage() {
         <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>
       ) : (
         <>
-          <div className="bg-surface border border-border rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="bg-surface border border-border rounded-xl overflow-x-auto">
+            <table className="w-full text-sm min-w-[48rem]">
               <thead>
                 <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">
                   <th className="text-left px-5 py-3">User</th>

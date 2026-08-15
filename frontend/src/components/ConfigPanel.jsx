@@ -374,7 +374,10 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
   return (
     // The risk section makes this panel taller than a laptop viewport, so it
     // scrolls within itself rather than pushing the Run button off-screen.
-    <div className="w-80 flex-shrink-0 bg-surface border border-border rounded-xl p-5 flex flex-col gap-5 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
+    // Sticky and height-capped only from lg up. On a phone the panel is stacked
+    // above the results, so pinning it would park a scrollable box inside a
+    // scrolling page — two nested scroll regions competing for the same drag.
+    <div className="w-full lg:w-80 lg:flex-shrink-0 bg-surface border border-border rounded-xl p-5 flex flex-col gap-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-text-primary">Configuration</h2>
         <button
