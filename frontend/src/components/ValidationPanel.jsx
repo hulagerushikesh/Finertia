@@ -60,6 +60,29 @@ const DSR_VERDICT = {
   },
 };
 
+const PBO_VERDICT = {
+  robust: {
+    label: "Robust",
+    tone: "text-success border-success/30 bg-success/10",
+    blurb: "Across every way of dividing this period, the combination chosen on one half kept ranking well on the other.",
+  },
+  acceptable: {
+    label: "Acceptable",
+    tone: "text-success border-success/30 bg-success/10",
+    blurb: "The selection usually holds up across splits, though not always.",
+  },
+  fragile: {
+    label: "Fragile",
+    tone: "text-warning border-warning/30 bg-warning/10",
+    blurb: "The in-sample winner drops below the out-of-sample median on a large minority of splits.",
+  },
+  overfit: {
+    label: "Overfit",
+    tone: "text-danger border-danger/30 bg-danger/10",
+    blurb: "The combination that wins on one half lands below the median on the other at least half the time — no better than choosing at random.",
+  },
+};
+
 const pct = (v) => (v === null || v === undefined ? "—" : `${(v * 100).toFixed(2)}%`);
 const num = (v) => (v === null || v === undefined ? "—" : v.toFixed(3));
 
@@ -119,6 +142,8 @@ export default function ValidationPanel({ data }) {
   const { walk_forward: wf, permutation: pm } = data;
   const dsrVerdict =
     DSR_VERDICT[wf.deflated?.verdict] || DSR_VERDICT.inconclusive;
+  const ov = wf.overfitting;
+  const pboVerdict = PBO_VERDICT[ov?.verdict] || PBO_VERDICT.fragile;
   const verdict = WF_VERDICT[wf.verdict] || WF_VERDICT.inconclusive;
 
   return (
@@ -309,6 +334,110 @@ export default function ValidationPanel({ data }) {
               </div>
             </>
           )}
+        </section>
+      )}
+
+      {/* Probability of Backtest Overfitting. Sits last of the three because
+          it judges the whole selection procedure rather than any single run. */}
+      {ov?.computable && (
+        <section className="panel rounded-2xl p-6">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h3 className="text-sm font-bold text-text-primary">
+                Probability of backtest overfitting
+              </h3>
+              <p className="text-xs text-text-muted mt-1 max-w-lg leading-relaxed">
+                The split above is one split. This one cuts the period into{" "}
+                {ov.n_splits} blocks and tries all {ov.n_combinations} balanced
+                ways of splitting them, each time picking the best combination on
+                one half and checking where it lands on the other.
+              </p>
+            </div>
+            <span
+              className={`text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${pboVerdict.tone}`}
+            >
+              {pboVerdict.label}
+            </span>
+          </div>
+
+          <p className="text-xs text-text-muted mt-3 mb-5 leading-relaxed">
+            {pboVerdict.blurb}
+          </p>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="bg-bg border border-border rounded-xl p-4">
+              <p className="eyebrow mb-1.5">PBO</p>
+              <p
+                className={`font-mono text-lg ${
+                  ov.pbo >= 0.5
+                    ? "text-danger"
+                    : ov.pbo >= 0.35
+                      ? "text-warning"
+                      : "text-success"
+                }`}
+              >
+                {pct(ov.pbo)}
+              </p>
+              <p className="text-[11px] text-text-faint mt-1">50% is a coin flip</p>
+            </div>
+            <div className="bg-bg border border-border rounded-xl p-4">
+              <p className="eyebrow mb-1.5">Loses money</p>
+              <p
+                className={`font-mono text-lg ${
+                  ov.probability_of_loss >= 0.5 ? "text-danger" : "text-text-primary"
+                }`}
+              >
+                {pct(ov.probability_of_loss)}
+              </p>
+              <p className="text-[11px] text-text-faint mt-1">of splits, out-of-sample</p>
+            </div>
+            <div className="bg-bg border border-border rounded-xl p-4">
+              <p className="eyebrow mb-1.5">Median Sharpe</p>
+              <p className="font-mono text-lg text-text-primary">
+                {num(ov.median_is_sharpe)}
+                <span className="text-text-faint"> → </span>
+                <span
+                  className={
+                    ov.median_oos_sharpe < ov.median_is_sharpe
+                      ? "text-danger"
+                      : "text-success"
+                  }
+                >
+                  {num(ov.median_oos_sharpe)}
+                </span>
+              </p>
+              <p className="text-[11px] text-text-faint mt-1">in-sample → out</p>
+            </div>
+            <div className="bg-bg border border-border rounded-xl p-4">
+              <p className="eyebrow mb-1.5">Degradation</p>
+              <p
+                className={`font-mono text-lg ${
+                  ov.degradation_slope < 0 ? "text-danger" : "text-success"
+                }`}
+              >
+                {num(ov.degradation_slope)}
+              </p>
+              <p className="text-[11px] text-text-faint mt-1">slope, OOS on IS</p>
+            </div>
+          </div>
+
+          {/* The slope is the number most worth explaining, and it is the one
+              nobody would interpret unaided. */}
+          {ov.degradation_slope < 0 && (
+            <p className="text-xs text-warning mt-4 leading-relaxed">
+              The slope is negative, which is the damning case: across these
+              splits, a <em>better</em> in-sample score predicted a{" "}
+              <em>worse</em> out-of-sample one. Tuning harder on this data made
+              results worse, not better.
+            </p>
+          )}
+
+          <p className="text-xs text-text-faint mt-4 leading-relaxed">
+            These splits are drawn from blocks spread across the whole period, so
+            both halves cover the same years. That is deliberate — it isolates
+            whether selection works at all — but it means this test cannot see a
+            regime change. The chronological split above is what catches that.
+          </p>
         </section>
       )}
 
