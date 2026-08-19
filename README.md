@@ -7,6 +7,27 @@ Beyond a single backtest, Finertia answers the two questions that decide whether
 - **Walk-forward validation** — optimises parameters on the first 70% of the period and scores them on the remaining 30%. Only the out-of-sample number is evidence.
 - **Signal permutation test** — reshuffles the position series 500 times, holding market exposure identical, so only *timing* changes. Separates genuine edge from simply being in the market.
 
+### What it found
+
+Those two checks are only worth building if they change the answer. Run against
+AAPL, 2018–2024, they do — ranking the three strategies on the data they were
+tuned on gives you exactly the wrong order.
+
+| Strategy | In-sample Sharpe | Out-of-sample Sharpe | Verdict |
+|---|---|---|---|
+| Momentum | 0.889 | −0.242 | Failed |
+| MACD | 0.554 | −0.281 | Failed |
+| Bollinger | 0.553 | **1.367** | Held up |
+
+The best in-sample result was the worst out-of-sample one. Momentum looked like
+the clear winner and had no edge at all on data it had not been fitted to.
+
+This is one ticker over one period, so it demonstrates the method rather than
+proving mean reversion beats trend following. That is the point: a single
+backtest is one draw from a distribution, and the number that survives
+out-of-sample is the only one worth quoting. The `/demo` page leads with a
+losing strategy for the same reason.
+
 ## Stack
 
 | Layer | Tech |
