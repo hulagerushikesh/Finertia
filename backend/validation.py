@@ -11,9 +11,21 @@ Pure pandas/numpy, consistent with the rest of the engine.
 import numpy as np
 import pandas as pd
 
+from deflated import deflated_sharpe_ratio
 from engine import compute_returns
 from metrics import compute_metrics
 from strategies import build_positions, longest_window, param_grid
+
+
+def _segment_net_return(
+    position: pd.Series,
+    returns: pd.Series,
+    transaction_cost: float,
+) -> pd.Series:
+    """Net per-bar return for one slice, after turnover costs."""
+    trade_occurred = position.diff().abs() > 0
+    net_return = (position * returns) - trade_occurred * transaction_cost
+    return net_return.fillna(0)
 
 
 def _segment_metrics(
@@ -22,9 +34,7 @@ def _segment_metrics(
     transaction_cost: float,
 ) -> dict:
     """Metrics for one slice of an already-computed position series."""
-    trade_occurred = position.diff().abs() > 0
-    net_return = (position * returns) - trade_occurred * transaction_cost
-    net_return = net_return.fillna(0)
+    net_return = _segment_net_return(position, returns, transaction_cost)
 
     equity_curve = (1 + net_return).cumprod()
     drawdown = (equity_curve - equity_curve.cummax()) / equity_curve.cummax()
@@ -108,6 +118,24 @@ def walk_forward(
 
     degradation = best_is["sharpe_ratio"] - best_oos["sharpe_ratio"]
 
+    # Picking the highest Sharpe out of the grid is multiple testing, and the
+    # maximum of N draws is inflated even when nothing in the grid has an edge.
+    # Deflate the in-sample figure against the bar that selection alone would
+    # clear. In-sample specifically: those are the bars the choice was made on,
+    # so they are the ones carrying the bias.
+    #
+    # N is taken as the raw number of combinations, which treats neighbouring
+    # parameter settings as independent when they plainly are not. Overstating
+    # N raises the noise bar, so the error runs toward calling a real edge
+    # insignificant rather than the reverse — the safe direction for a tool
+    # whose whole job is to talk you out of a bad backtest.
+    deflated = deflated_sharpe_ratio(
+        trial_sharpes=[r["sharpe_ratio"] for r in grid_results],
+        selected_returns=_segment_net_return(
+            best_pos.iloc[is_slice], returns.iloc[is_slice], transaction_cost
+        ).to_numpy(),
+    )
+
     return {
         "strategy": strategy,
         "split_date": str(close.index[split_at].date()),
@@ -118,6 +146,7 @@ def walk_forward(
         "best_in_sample": best_is,
         "best_out_of_sample": best_oos,
         "sharpe_degradation": round(degradation, 6),
+        "deflated": deflated,
         "verdict": _verdict(best_is["sharpe_ratio"], best_oos["sharpe_ratio"]),
         "user_params": user_block,
         "grid": sorted(grid_results, key=lambda r: r["sharpe_ratio"], reverse=True),
