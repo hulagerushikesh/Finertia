@@ -28,6 +28,38 @@ const WF_VERDICT = {
   },
 };
 
+const DSR_VERDICT = {
+  significant: {
+    label: "Survives selection",
+    tone: "text-success border-success/30 bg-success/10",
+    blurb:
+      "The in-sample Sharpe is high enough to be unlikely from cherry-picking alone.",
+  },
+  marginal: {
+    label: "Borderline",
+    tone: "text-warning border-warning/30 bg-warning/10",
+    blurb:
+      "It clears the noise bar, but not by enough to rule out a lucky pick with confidence.",
+  },
+  not_significant: {
+    label: "Could be luck",
+    tone: "text-danger border-danger/30 bg-danger/10",
+    blurb:
+      "It beats the noise bar, but not by enough to distinguish from a fortunate draw.",
+  },
+  noise: {
+    label: "Indistinguishable from noise",
+    tone: "text-danger border-danger/30 bg-danger/10",
+    blurb:
+      "Searching this many combinations would be expected to produce a Sharpe this high even with no edge at all.",
+  },
+  inconclusive: {
+    label: "Cannot say",
+    tone: "text-text-muted border-border bg-bg",
+    blurb: "The sample is too thin or too lopsided for this correction to mean anything.",
+  },
+};
+
 const pct = (v) => (v === null || v === undefined ? "—" : `${(v * 100).toFixed(2)}%`);
 const num = (v) => (v === null || v === undefined ? "—" : v.toFixed(3));
 
@@ -85,6 +117,8 @@ export default function ValidationPanel({ data }) {
   if (!data) return null;
 
   const { walk_forward: wf, permutation: pm } = data;
+  const dsrVerdict =
+    DSR_VERDICT[wf.deflated?.verdict] || DSR_VERDICT.inconclusive;
   const verdict = WF_VERDICT[wf.verdict] || WF_VERDICT.inconclusive;
 
   return (
@@ -177,6 +211,107 @@ export default function ValidationPanel({ data }) {
       </section>
 
       {/* ── Permutation test ── */}
+      {/* Deflation. Sits between walk-forward and the permutation test because
+          it is a correction *to* walk-forward, not a separate experiment. */}
+      {wf.deflated?.computable && (
+        <section className="panel rounded-2xl p-6">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h3 className="text-sm font-bold text-text-primary">
+                Deflated Sharpe ratio
+              </h3>
+              <p className="text-xs text-text-muted mt-1 max-w-lg leading-relaxed">
+                Picking the best of {wf.deflated.n_trials} combinations is itself a
+                search, and the winner of any search looks good. This asks how high
+                a Sharpe that search would have produced on data with no edge at
+                all, then measures the winner against that bar instead of zero.
+              </p>
+            </div>
+            <span
+              className={`text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${dsrVerdict.tone}`}
+            >
+              {dsrVerdict.label}
+            </span>
+          </div>
+
+          <p className="text-xs text-text-muted mt-3 mb-5 leading-relaxed">
+            {wf.deflated.unreliable || dsrVerdict.blurb}
+          </p>
+
+          {!wf.deflated.unreliable && (
+            <>
+              {/* The comparison the whole section exists to make. */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="bg-bg border border-border rounded-xl p-4">
+                  <p className="eyebrow mb-1.5">Selected Sharpe</p>
+                  <p className="font-mono text-lg text-text-primary">
+                    {num(wf.deflated.selected_sharpe)}
+                  </p>
+                  <p className="text-[11px] text-text-faint mt-1">in-sample, annualised</p>
+                </div>
+                <div className="bg-bg border border-border rounded-xl p-4">
+                  <p className="eyebrow mb-1.5">Noise bar</p>
+                  <p
+                    className={`font-mono text-lg ${
+                      wf.deflated.clears_noise_bar ? "text-text-primary" : "text-danger"
+                    }`}
+                  >
+                    {num(wf.deflated.expected_max_sharpe)}
+                  </p>
+                  <p className="text-[11px] text-text-faint mt-1">
+                    best of {wf.deflated.n_trials} on no edge
+                  </p>
+                </div>
+                <div className="bg-bg border border-border rounded-xl p-4">
+                  <p className="eyebrow mb-1.5">Deflated probability</p>
+                  <p
+                    className={`font-mono text-lg ${
+                      wf.deflated.deflated_sharpe_ratio >= 0.95
+                        ? "text-success"
+                        : wf.deflated.deflated_sharpe_ratio >= 0.9
+                          ? "text-warning"
+                          : "text-danger"
+                    }`}
+                  >
+                    {wf.deflated.deflated_sharpe_ratio === null
+                      ? "—"
+                      : pct(wf.deflated.deflated_sharpe_ratio)}
+                  </p>
+                  <p className="text-[11px] text-text-faint mt-1">0.95 is the usual bar</p>
+                </div>
+              </div>
+
+              {/* Stating the uncorrected figure beside it is the point: the gap
+                  between the two is exactly what selection was worth. */}
+              {wf.deflated.psr_vs_zero !== null && (
+                <p className="text-xs text-text-muted mt-4 leading-relaxed">
+                  Without correcting for the search, the same result reads as{" "}
+                  <span className="font-mono text-text-primary">
+                    {pct(wf.deflated.psr_vs_zero)}
+                  </span>{" "}
+                  likely to be real. Accounting for {wf.deflated.n_trials} attempts
+                  takes it to{" "}
+                  <span className="font-mono text-text-primary">
+                    {wf.deflated.deflated_sharpe_ratio === null
+                      ? "—"
+                      : pct(wf.deflated.deflated_sharpe_ratio)}
+                  </span>
+                  .
+                </p>
+              )}
+
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-[11px] font-mono text-text-faint mt-4">
+                <span>skew {num(wf.deflated.skew)}</span>
+                <span>kurtosis {num(wf.deflated.kurtosis)}</span>
+                <span>
+                  in the market {pct(wf.deflated.active_fraction)} of bars
+                </span>
+              </div>
+            </>
+          )}
+        </section>
+      )}
+
       <section className="panel rounded-2xl p-6">
         <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
           <div>
