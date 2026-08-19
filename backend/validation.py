@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from deflated import deflated_sharpe_ratio
+from pbo import combinatorial_pbo
 from engine import compute_returns
 from metrics import compute_metrics
 from strategies import build_positions, longest_window, param_grid
@@ -77,10 +78,17 @@ def walk_forward(
 
     # --- sweep the grid on the in-sample half only -------------------------
     grid_results = []
+    # Every candidate's full-period net return, kept for the PBO matrix below.
+    # Collected here rather than recomputed because the sweep already builds
+    # each position series — doing it again per split would mean 70x the work
+    # for identical numbers.
+    candidate_returns = []
+    warmups = []
     for combo in combos:
         params = {**base_params, **combo}
         # A strategy needing more warm-up than the in-sample half can never fire.
-        if longest_window(strategy, params) >= split_at:
+        warmup = longest_window(strategy, params)
+        if warmup >= split_at:
             continue
         pos = build_positions(close, strategy, params)
         m = _segment_metrics(pos.iloc[is_slice], returns.iloc[is_slice], transaction_cost)
@@ -91,6 +99,10 @@ def walk_forward(
                 "total_return": m["total_return"],
             }
         )
+        candidate_returns.append(
+            _segment_net_return(pos, returns, transaction_cost).to_numpy()
+        )
+        warmups.append(warmup)
 
     if not grid_results:
         raise ValueError(
@@ -136,6 +148,26 @@ def walk_forward(
         ).to_numpy(),
     )
 
+    # Probability of Backtest Overfitting over the same candidate set.
+    #
+    # This asks a different question from the split above: not "did this one
+    # winner survive into a later period", but "is picking the in-sample winner
+    # better than picking at random, across every way of dividing this period".
+    # Both are needed — CSCV is deliberately not chronological, so it cannot
+    # see a regime break, and walk-forward only ever tries one split.
+    #
+    # Trimmed to the longest warm-up in the retained grid so no candidate
+    # contributes a run of flat bars the others do not have.
+    if len(candidate_returns) >= 2:
+        trim = max(warmups)
+        matrix = np.column_stack(candidate_returns)[trim:]
+        overfitting = combinatorial_pbo(matrix)
+    else:
+        overfitting = {
+            "computable": False,
+            "reason": "Only one parameter combination fits this period, so there was no selection to test.",
+        }
+
     return {
         "strategy": strategy,
         "split_date": str(close.index[split_at].date()),
@@ -147,6 +179,7 @@ def walk_forward(
         "best_out_of_sample": best_oos,
         "sharpe_degradation": round(degradation, 6),
         "deflated": deflated,
+        "overfitting": overfitting,
         "verdict": _verdict(best_is["sharpe_ratio"], best_oos["sharpe_ratio"]),
         "user_params": user_block,
         "grid": sorted(grid_results, key=lambda r: r["sharpe_ratio"], reverse=True),
