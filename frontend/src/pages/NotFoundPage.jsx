@@ -17,7 +17,7 @@ export default function NotFoundPage() {
         </p>
         <Link
           to={home}
-          className="inline-block mt-6 bg-accent hover:bg-indigo-500 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm"
+          className="btn-primary mt-6 px-5 py-2.5 text-sm"
         >
           {user ? "Back to dashboard" : "Back to home"}
         </Link>

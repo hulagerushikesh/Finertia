@@ -14,14 +14,14 @@ export default function UsageMeter() {
 
   if (error) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="panel p-5">
         <p className="text-sm text-text-muted">Could not load usage — {error}</p>
       </div>
     );
   }
 
   if (!usage) {
-    return <div className="h-32 bg-surface border border-border rounded-xl animate-pulse" />;
+    return <div className="h-32 panel animate-pulse" />;
   }
 
   const uncapped = usage.limit === null;
@@ -37,7 +37,7 @@ export default function UsageMeter() {
         : "bg-success";
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="panel p-5">
       <div className="flex items-baseline justify-between gap-3 flex-wrap mb-4">
         <h2 className="text-sm font-semibold text-text-primary">
           Usage · {usage.plan_label}
@@ -70,7 +70,7 @@ export default function UsageMeter() {
       <div className="flex flex-wrap gap-x-5 gap-y-1 mt-4 text-xs text-text-muted">
         <span>
           Validation:{" "}
-          <span className={usage.validation ? "text-success" : "text-text-muted/60"}>
+          <span className={usage.validation ? "text-success" : "text-text-faint"}>
             {usage.validation ? "included" : "Pro only"}
           </span>
         </span>

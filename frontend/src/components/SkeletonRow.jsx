@@ -1,7 +1,7 @@
 import React from "react";
 
 const shimmer =
-  "bg-[linear-gradient(90deg,#2a2d3a_0%,#353948_50%,#2a2d3a_100%)] bg-[length:800px_100%] animate-shimmer rounded";
+  "bg-[linear-gradient(90deg,#192133_0%,#28334A_50%,#192133_100%)] bg-[length:800px_100%] animate-shimmer rounded";
 
 /**
  * Placeholder table row shown while data loads.

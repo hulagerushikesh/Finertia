@@ -1,4 +1,5 @@
 import React from "react";
+import { CHART } from "../chartTheme";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -28,7 +29,7 @@ export default function MonthlyHeatmap({ data }) {
       .reduce((acc, d) => acc * (1 + d.return), 1) - 1;
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-5">
+    <div className="panel rounded-2xl p-5">
       <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
         <h3 className="text-sm font-semibold text-text-primary">Monthly returns</h3>
         <div className="flex items-center gap-2 text-[10px] font-mono text-text-muted">
@@ -76,8 +77,10 @@ export default function MonthlyHeatmap({ data }) {
                         title={has ? `${m} ${year}: ${(v * 100).toFixed(2)}%` : `${m} ${year}: no data`}
                         className="text-center text-[10px] font-mono rounded h-7 align-middle"
                         style={{
-                          background: has ? cellColor(v, peak) : "rgba(148,163,184,0.04)",
-                          color: has ? "#f1f5f9" : "#3a5068",
+                          background: has ? cellColor(v, peak) : "rgba(102,116,143,0.06)",
+                          // Empty months recede. They are absence of data, not
+                          // a value, so they must not read as one.
+                          color: has ? CHART.textPrimary : "#3E4A63",
                         }}
                       >
                         {has ? (v * 100).toFixed(1) : "·"}

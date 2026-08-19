@@ -20,13 +20,13 @@ const PASSWORD_ERROR_MAP = {
 };
 
 const inputClass =
-  "w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent transition-colors";
+  "w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-faint focus:outline-none focus:border-accent transition-colors";
 
 const labelClass = "text-xs text-text-muted font-medium block mb-1";
 
 function Card({ title, description, children }) {
   return (
-    <section className="bg-surface border border-border rounded-2xl p-6">
+    <section className="panel rounded-2xl p-6">
       <h2 className="text-sm font-bold text-text-primary">{title}</h2>
       {description && <p className="text-xs text-text-muted mt-1 mb-5">{description}</p>}
       {children}
@@ -192,7 +192,7 @@ export default function UserProfilePage() {
             <button
               onClick={handleSaveName}
               disabled={savingName}
-              className="self-start bg-accent hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-lg transition-colors text-sm"
+              className="btn-primary self-start px-5 py-2 text-sm"
             >
               {savingName ? "Saving…" : "Save"}
             </button>
@@ -247,7 +247,7 @@ export default function UserProfilePage() {
             <button
               onClick={handleChangePassword}
               disabled={savingPassword}
-              className="self-start bg-accent hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold px-5 py-2 rounded-lg transition-colors text-sm"
+              className="btn-primary self-start px-5 py-2 text-sm"
             >
               {savingPassword ? "Updating…" : "Change password"}
             </button>

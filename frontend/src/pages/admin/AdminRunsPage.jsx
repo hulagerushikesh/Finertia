@@ -41,13 +41,13 @@ export default function AdminRunsPage() {
       {/* Filters */}
       <div className="flex gap-3 mb-5 flex-wrap">
         <input
-          className="bg-surface border border-border rounded-lg px-4 py-2 text-sm text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent w-36"
+          className="field-input px-4 py-2 w-36"
           placeholder="Ticker filter…"
           value={tickerFilter}
           onChange={(e) => { setTickerFilter(e.target.value.toUpperCase()); setPage(0); }}
         />
         <input
-          className="bg-surface border border-border rounded-lg px-4 py-2 text-sm text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent w-72"
+          className="field-input px-4 py-2 w-72"
           placeholder="User UID filter…"
           value={uidFilter}
           onChange={(e) => { setUidFilter(e.target.value); setPage(0); }}
@@ -68,7 +68,7 @@ export default function AdminRunsPage() {
         <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>
       ) : (
         <>
-          <div className="bg-surface border border-border rounded-xl overflow-x-auto">
+          <div className="panel overflow-x-auto">
             <table className="w-full text-sm min-w-[48rem]">
               <thead>
                 <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">

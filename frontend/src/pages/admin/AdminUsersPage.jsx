@@ -63,7 +63,7 @@ export default function AdminUsersPage() {
       {/* Search */}
       <div className="flex gap-3 mb-5">
         <input
-          className="flex-1 max-w-xs bg-surface border border-border rounded-lg px-4 py-2 text-sm text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent"
+          className="flex-1 max-w-xs field-input px-4 py-2"
           placeholder="Search by email…"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
@@ -71,7 +71,7 @@ export default function AdminUsersPage() {
         />
         <button
           onClick={() => { setSearch(searchInput); setPage(0); }}
-          className="bg-accent hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg"
+          className="btn-primary text-sm px-4 py-2"
         >
           Search
         </button>
@@ -92,7 +92,7 @@ export default function AdminUsersPage() {
               phone, and hiding them puts the data out of reach rather than one
               swipe away. The table scrolls inside its own box so the page
               itself never scrolls sideways. */}
-          <div className="bg-surface border border-border rounded-xl overflow-x-auto">
+          <div className="panel overflow-x-auto">
             <table className="w-full text-sm min-w-[46rem]">
               <thead>
                 <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">
@@ -178,12 +178,12 @@ export default function AdminUsersPage() {
       {/* Confirm modal */}
       {confirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setConfirmModal(null)}>
-          <div className="bg-surface border border-border rounded-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="panel rounded-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-semibold text-text-primary mb-2">Confirm Action</h3>
             <p className="text-sm text-text-muted mb-5">{confirmModal.label}</p>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setConfirmModal(null)} className="text-sm text-text-muted hover:text-text-primary px-4 py-2">Cancel</button>
-              <button onClick={handleConfirm} className="text-sm bg-accent hover:bg-indigo-500 text-white px-4 py-2 rounded-lg">Confirm</button>
+              <button onClick={handleConfirm} className="btn-primary text-sm px-4 py-2">Confirm</button>
             </div>
           </div>
         </div>

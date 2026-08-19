@@ -1,85 +1,86 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import RealityTape from "../components/RealityTape";
 
-const features = [
+/**
+ * No icons here.
+ *
+ * The three emoji that used to head these blocks said nothing the sentence
+ * underneath did not already say, and a target/gear/chart-bar set is the same
+ * one every tool ships. What actually distinguishes these three is *what the
+ * engine has to do* to support them, so each leads with that instead.
+ */
+const CAPABILITIES = [
   {
-    title: "Overfitting Checks",
-    desc: "Walk-forward validation scores your parameters on data they were never fitted to. A permutation test shuffles your signals 500 times to see whether timing actually beat luck.",
-    icon: "🎯",
+    tag: "The check",
+    title: "Scored on data it never saw",
+    desc: "Walk-forward validation refits your parameters on a rolling window and grades them only on the bars that came after. A permutation test then shuffles your signals 500 times to see whether the timing beat luck.",
   },
   {
-    title: "Three Strategies",
-    desc: "Momentum and MACD follow trends; Bollinger fades them. Run one ticker or a 10-name portfolio, with stops and volatility-targeted sizing on top.",
-    icon: "⚙",
+    tag: "The strategies",
+    title: "Three, and they disagree",
+    desc: "Momentum and MACD ride trends. Bollinger fades them. Running the same market through strategies that want opposite things is the fastest way to find out what the market was actually doing.",
   },
   {
-    title: "Hand-Written Engine",
-    desc: "Zero external backtesting libraries. Every signal, position, and metric is pure Python with pandas + numpy, so you can read the exact lines behind your Sharpe ratio.",
-    icon: "📊",
+    tag: "The engine",
+    title: "Written out, not imported",
+    desc: "No backtesting library. Every signal, position, cost, and metric is pandas and numpy you can read — including the shift that stops tomorrow's price from reaching yesterday's decision.",
   },
 ];
 
 export default function LandingPage() {
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-16 sm:pb-32">
-      {/* Hero */}
-      <div className="text-center mb-20">
-        <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent text-xs font-medium px-3 py-1 rounded-full mb-6">
-          Momentum · MACD · Mean Reversion
-        </div>
-        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-text-primary mb-6 leading-tight">
-          Backtest a Strategy.
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 sm:pt-20 pb-20">
+      {/* Hero. Left-aligned: the tape below is read left-to-right off a zero
+          line, and a centred headline above it would fight that axis. */}
+      <div className="max-w-2xl animate-rise-in">
+        <p className="eyebrow mb-5">Backtesting · Walk-forward · Permutation</p>
+        <h1 className="text-[2.5rem] sm:text-6xl font-extrabold tracking-[-0.03em] leading-[1.02] text-text-primary mb-6">
+          Your backtest looks good.
           <br />
-          <span className="text-accent">Then Find Out If It's Real.</span>
+          <span className="text-text-faint">That&apos;s the problem.</span>
         </h1>
-        <p className="text-lg text-text-muted max-w-2xl mx-auto mb-10">
-          Any backtest can be tuned until it looks good. Finertia scores your parameters on
-          data they were never fitted to, and checks whether your signal timing beats random
-          entries — so you learn which results survive contact with reality.
+        <p className="text-base sm:text-lg text-text-muted leading-relaxed mb-8">
+          Any strategy can be tuned until its chart points up. Finertia scores
+          your parameters on data they were never fitted to, and checks your
+          signal timing against random entries — so you find out which results
+          survive contact with reality.
         </p>
-        <div className="flex items-center justify-center gap-4">
-          <Link
-            to="/register"
-            className="bg-accent hover:bg-indigo-500 text-white font-semibold px-7 py-3 rounded-xl transition-colors text-sm"
-          >
-            Start Backtesting
+        <div className="flex flex-wrap items-center gap-3">
+          <Link to="/register" className="btn-primary px-6 py-3 text-sm">
+            Start backtesting
           </Link>
-          <Link
-            to="/login"
-            className="border border-border hover:border-accent/50 text-text-muted hover:text-text-primary font-semibold px-7 py-3 rounded-xl transition-colors text-sm"
-          >
-            Sign In
+          <Link to="/demo" className="btn-secondary px-6 py-3 text-sm">
+            See a real result
           </Link>
         </div>
       </div>
 
-      {/* Features */}
-      <div className="grid sm:grid-cols-3 gap-6">
-        {features.map((f) => (
-          <div
-            key={f.title}
-            className="bg-surface border border-border rounded-2xl p-6 hover:border-accent/30 transition-colors"
-          >
-            <div className="text-2xl mb-3">{f.icon}</div>
-            <h3 className="font-semibold text-text-primary mb-2">{f.title}</h3>
-            <p className="text-sm text-text-muted leading-relaxed">{f.desc}</p>
+      {/* The signature. A live artifact rather than a claim about one. */}
+      <div className="mt-14 sm:mt-16">
+        <RealityTape />
+      </div>
+
+      {/* Capabilities. Hairline rules instead of three more cards — the tape is
+          the only box on this page that should read as an object. */}
+      <div className="mt-20 grid sm:grid-cols-3 gap-px bg-border">
+        {CAPABILITIES.map((c) => (
+          <div key={c.tag} className="bg-bg sm:px-6 py-6 sm:py-7 first:sm:pl-0 last:sm:pr-0">
+            <p className="eyebrow mb-3">{c.tag}</p>
+            <h2 className="text-[0.95rem] font-semibold text-text-primary mb-2">
+              {c.title}
+            </h2>
+            <p className="text-sm text-text-muted leading-relaxed">{c.desc}</p>
           </div>
         ))}
       </div>
 
-      {/* Stat strip */}
-      <div className="mt-20 grid grid-cols-3 divide-x divide-border border border-border rounded-2xl overflow-hidden">
-        {[
-          { label: "External backtesting deps", value: "0" },
-          { label: "Performance metrics", value: "12" },
-          { label: "Tests on the engine", value: "404" },
-        ].map((s) => (
-          <div key={s.label} className="bg-surface px-6 py-8 text-center">
-            <p className="text-3xl font-bold font-mono text-accent mb-1">{s.value}</p>
-            <p className="text-xs text-text-muted">{s.label}</p>
-          </div>
-        ))}
-      </div>
+      {/* Proof, stated once and quietly. Three big numbers in boxes claimed
+          more importance than a dependency count deserves. */}
+      <p className="mt-12 text-xs font-mono text-text-faint leading-relaxed">
+        0 external backtesting dependencies · 12 performance metrics · 404 tests
+        on the engine
+      </p>
     </main>
   );
 }

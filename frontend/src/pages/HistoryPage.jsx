@@ -139,7 +139,7 @@ export default function HistoryPage() {
         </div>
       ) : (
       <>
-          <div className="bg-surface border border-border rounded-xl overflow-hidden">
+          <div className="panel overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">
@@ -255,7 +255,7 @@ export default function HistoryPage() {
             <button
               onClick={handleCompare}
               disabled={picked.length < 2 || comparing}
-              className="bg-accent hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold px-5 py-2 rounded-lg text-sm transition-colors flex items-center gap-2"
+              className="btn-primary px-5 py-2 text-sm"
             >
               {comparing ? (
                 <>
@@ -306,7 +306,7 @@ export default function HistoryPage() {
 
             <button
               onClick={() => handleReRun(selected)}
-              className="mt-5 w-full bg-accent hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
+              className="btn-primary mt-5 w-full py-2.5 text-sm"
             >
               Re-run this configuration
             </button>

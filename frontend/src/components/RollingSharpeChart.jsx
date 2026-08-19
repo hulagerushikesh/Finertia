@@ -9,6 +9,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
+import { CHART } from "../chartTheme";
 
 const MAX_POINTS = 300;
 
@@ -37,7 +38,7 @@ function CustomTooltip({ active, payload, label }) {
 export default function RollingSharpeChart({ data, window = 60 }) {
   if (!data || data.length === 0) {
     return (
-      <div className="bg-surface border border-border rounded-2xl p-5">
+      <div className="panel rounded-2xl p-5">
         <h3 className="text-sm font-semibold text-text-primary mb-1">Rolling Sharpe</h3>
         <p className="text-xs text-text-muted">
           Needs at least {window} trading days. Try a longer date range.
@@ -54,7 +55,7 @@ export default function RollingSharpeChart({ data, window = 60 }) {
   const timeAbove = values.filter((v) => v > 0).length / values.length;
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-5">
+    <div className="panel rounded-2xl p-5">
       <div className="flex items-start justify-between mb-1 flex-wrap gap-2">
         <div>
           <h3 className="text-sm font-semibold text-text-primary">Rolling Sharpe</h3>
@@ -77,20 +78,20 @@ export default function RollingSharpeChart({ data, window = 60 }) {
 
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={points} margin={{ top: 12, right: 8, left: -18, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3a" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fill: "#94a3b8", fontSize: 10 }}
-            stroke="#2a2d3a"
+            tick={{ fill: CHART.axisText, fontSize: 10 }}
+            stroke={CHART.grid}
             minTickGap={40}
           />
-          <YAxis tick={{ fill: "#94a3b8", fontSize: 10 }} stroke="#2a2d3a" />
+          <YAxis tick={{ fill: CHART.axisText, fontSize: 10 }} stroke={CHART.grid} />
           <Tooltip content={<CustomTooltip />} />
-          <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" />
+          <ReferenceLine y={0} stroke={CHART.axisText} strokeDasharray="4 4" />
           <Line
             type="monotone"
             dataKey="value"
-            stroke="#6366f1"
+            stroke={CHART.strategy}
             strokeWidth={1.6}
             dot={false}
             isAnimationActive={false}

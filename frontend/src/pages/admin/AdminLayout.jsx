@@ -18,7 +18,7 @@ export default function AdminLayout() {
         <h1 className="text-xl font-semibold text-text-primary">Admin Panel</h1>
       </div>
 
-      <nav className="flex gap-1 mb-7 bg-surface border border-border rounded-xl p-1 w-fit">
+      <nav className="flex gap-1 mb-7 panel p-1 w-fit">
         <NavLink to="/admin/overview" className={linkClass}>Overview</NavLink>
         <NavLink to="/admin/users" className={linkClass}>Users</NavLink>
         <NavLink to="/admin/runs" className={linkClass}>Runs</NavLink>

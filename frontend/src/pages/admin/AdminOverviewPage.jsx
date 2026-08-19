@@ -9,10 +9,11 @@ import {
   Cell,
 } from "recharts";
 import { getAdminStats } from "../../api";
+import { CHART } from "../../chartTheme";
 
 function KpiCard({ label, value, sub }) {
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="panel p-5">
       <p className="text-xs text-text-muted uppercase tracking-wider mb-1">{label}</p>
       <p className="text-3xl font-bold font-mono text-text-primary">{value}</p>
       {sub && <p className="text-xs text-text-muted mt-1">{sub}</p>}
@@ -58,7 +59,7 @@ export default function AdminOverviewPage() {
 
       {/* Top tickers bar chart */}
       {stats.top_tickers?.length > 0 && (
-        <div className="bg-surface border border-border rounded-xl p-5">
+        <div className="panel p-5">
           <h3 className="text-sm font-semibold text-text-primary mb-4">Top 5 Tickers</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart
@@ -66,22 +67,22 @@ export default function AdminOverviewPage() {
               layout="vertical"
               margin={{ top: 0, right: 16, bottom: 0, left: 0 }}
             >
-              <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 11 }} tickLine={false} axisLine={false} />
+              <XAxis type="number" tick={{ fill: CHART.axisText, fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis
                 type="category"
                 dataKey="ticker"
                 width={52}
-                tick={{ fill: "#f1f5f9", fontSize: 12, fontFamily: "JetBrains Mono" }}
+                tick={{ fill: CHART.textPrimary, fontSize: 12, fontFamily: CHART.mono }}
                 tickLine={false}
                 axisLine={false}
               />
               <Tooltip
-                contentStyle={{ background: "#1a1d27", border: "1px solid #2a2d3a", borderRadius: 8, fontSize: 12 }}
+                contentStyle={{ background: CHART.surface, border: "1px solid #33405C", borderRadius: 8, fontSize: 12 }}
                 cursor={{ fill: "rgba(99,102,241,0.1)" }}
               />
               <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                 {stats.top_tickers.map((_, i) => (
-                  <Cell key={i} fill="#6366f1" fillOpacity={1 - i * 0.12} />
+                  <Cell key={i} fill={CHART.strategy} fillOpacity={1 - i * 0.12} />
                 ))}
               </Bar>
             </BarChart>

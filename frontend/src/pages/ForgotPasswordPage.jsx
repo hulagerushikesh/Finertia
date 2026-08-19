@@ -11,7 +11,7 @@ const ERROR_MAP = {
 };
 
 const inputClass =
-  "w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent transition-colors";
+  "w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-faint focus:outline-none focus:border-accent transition-colors";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-[calc(100vh-56px)] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="bg-surface border border-border rounded-2xl p-8">
+        <div className="panel rounded-2xl p-8">
           {sent ? (
             <>
               <div className="w-10 h-10 rounded-full bg-success/10 border border-success/30 flex items-center justify-center mb-4">
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
               </p>
               <Link
                 to="/login"
-                className="block w-full text-center bg-accent hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
+                className="btn-primary w-full py-2.5 text-sm"
               >
                 Back to sign in
               </Link>
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
                 <button
                   onClick={handleSend}
                   disabled={loading}
-                  className="w-full bg-accent hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
+                  className="btn-primary w-full py-2.5 text-sm"
                 >
                   {loading ? "Sending…" : "Send reset link"}
                 </button>

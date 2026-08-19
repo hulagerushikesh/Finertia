@@ -10,10 +10,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { STRATEGIES } from "./ConfigPanel";
+import { CHART } from "../chartTheme";
 
 // Four distinct hues rather than shades of one — the whole point of the chart is
 // telling the lines apart, and the run cap is four for the same reason.
-const COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#38bdf8"];
+const COLORS = [CHART.strategy, CHART.success, CHART.warning, CHART.info];
 
 const label = (s) =>
   `${s.ticker} · ${STRATEGIES.find((x) => x.id === s.strategy)?.label || s.strategy}`;
@@ -24,7 +25,7 @@ const pct = (v) =>
 function CustomTooltip({ active, payload, label: date, series }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-surface border border-border rounded-lg px-3 py-2 text-xs font-mono">
+    <div className="bg-raised border border-border-strong shadow-pop rounded-lg px-3 py-2 text-xs font-mono">
       <p className="text-text-muted mb-1">{date}</p>
       {payload.map((p) => {
         const s = series.find((x) => x.runId === p.dataKey);
@@ -63,7 +64,7 @@ export default function ComparisonPanel({ data }) {
         </div>
       )}
 
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="panel p-5">
         <div className="flex items-baseline justify-between mb-4 gap-3 flex-wrap">
           <h3 className="text-sm font-semibold text-text-primary">
             Equity Curves — {series.length} runs
@@ -74,24 +75,24 @@ export default function ComparisonPanel({ data }) {
         </div>
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={thinned} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a2d3a" />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
             <XAxis
               dataKey="date"
               tickFormatter={(d) => d?.slice(0, 7)}
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
+              tick={{ fill: CHART.axisText, fontSize: 11 }}
               tickLine={false}
-              axisLine={{ stroke: "#2a2d3a" }}
+              axisLine={{ stroke: CHART.grid }}
               interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fill: "#94a3b8", fontSize: 11, fontFamily: "JetBrains Mono" }}
+              tick={{ fill: CHART.axisText, fontSize: 11, fontFamily: CHART.mono }}
               tickLine={false}
               axisLine={false}
               tickFormatter={(v) => v.toFixed(2)}
               width={48}
             />
             <Tooltip content={<CustomTooltip series={series} />} />
-            <Legend wrapperStyle={{ fontSize: 12, color: "#94a3b8" }} />
+            <Legend wrapperStyle={{ fontSize: 12, color: CHART.axisText }} />
             {series.map((s, i) => (
               <Line
                 key={s.runId}
@@ -110,7 +111,7 @@ export default function ComparisonPanel({ data }) {
         </ResponsiveContainer>
       </div>
 
-      <div className="bg-surface border border-border rounded-xl overflow-hidden">
+      <div className="panel overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -169,7 +170,7 @@ export default function ComparisonPanel({ data }) {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-text-muted/70 px-5 py-3 border-t border-border">
+        <p className="text-xs text-text-faint px-5 py-3 border-t border-border">
           Bold marks the best value in each column. Comparing runs on different
           tickers or periods compares two different markets as much as two
           strategies — the fair test holds everything but one variable fixed.
