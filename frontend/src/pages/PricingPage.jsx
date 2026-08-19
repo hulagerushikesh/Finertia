@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { getPlans, startCheckout } from "../api";
 import { useAuth } from "../hooks/useAuth";
@@ -13,7 +13,10 @@ export default function PricingPage() {
   const [error, setError] = useState("");
   const [redirecting, setRedirecting] = useState(false);
 
-  useEffect(() => {
+  // Named rather than inline so the error state can call it again.
+  const loadPlans = useCallback(() => {
+    setLoading(true);
+    setError("");
     getPlans()
       .then((d) => {
         setPlans(d.plans);
@@ -22,6 +25,10 @@ export default function PricingPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadPlans();
+  }, [loadPlans]);
 
   async function handleUpgrade() {
     setRedirecting(true);
@@ -48,12 +55,24 @@ export default function PricingPage() {
         </p>
       </div>
 
+      {/* A pricing page that shows an error and nothing else has failed twice:
+          once at fetching, and again at being a pricing page. Offer the way
+          back, and say what is still true while the API is unreachable. */}
       {error && (
         <div
           role="alert"
-          className="bg-danger/10 border border-danger/30 text-danger text-sm rounded-xl px-5 py-4 mb-6"
+          className="bg-danger/10 border border-danger/30 rounded-xl px-5 py-4 mb-6 flex flex-col gap-3"
         >
-          {error}
+          <p className="text-sm text-danger leading-relaxed">{error}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <button onClick={loadPlans} disabled={loading} className="btn-secondary px-4 py-1.5 text-xs">
+              {loading ? "Retrying…" : "Try again"}
+            </button>
+            <p className="text-xs text-text-muted">
+              Plans and prices are served by the API, so they are not shown here
+              rather than shown wrong.
+            </p>
+          </div>
         </div>
       )}
 
@@ -96,7 +115,13 @@ export default function PricingPage() {
                   <span className="text-sm text-text-faint">/ month</span>
                 </p>
                 <p className="eyebrow mb-7">
-                  {isPro ? "Cancel any time" : "No card required"}
+                  {!isPro
+                    ? "No card required"
+                    : billingEnabled
+                      ? "Cancel any time"
+                      : /* Promising cancellation of a subscription nobody can
+                           start reads as a broken promise, not a reassurance. */
+                        "Not yet available here"}
                 </p>
 
                 <ul className="flex flex-col gap-3 mb-8 flex-1">
