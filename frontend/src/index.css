@@ -4,25 +4,124 @@
 
 @layer base {
   body {
-    background-color: #0f1117;
-    color: #f1f5f9;
+    background-color: #090c13;
+    color: #e9eef9;
+  }
+
+  /*
+   * Every figure in this app is meant to be compared against the one above it.
+   * Proportional digits make a column of returns wobble as the values change,
+   * which reads as the number being unstable rather than the glyph widths.
+   * Tabular figures are the single cheapest thing that makes data look
+   * measured.
+   */
+  .font-mono,
+  input[type="number"],
+  input[type="date"],
+  table {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /*
+   * Exactly one file in this codebase had a focus ring before this. Everything
+   * else relied on a 1px border tint, which is invisible at a glance and left
+   * keyboard users with no idea where they were. This is the floor, applied
+   * once, so no component has to remember it.
+   *
+   * focus-visible rather than focus: a mouse click on a button should not leave
+   * a ring behind it.
+   */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid #7c6bf7;
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: rgba(124, 107, 247, 0.32);
+    color: #ffffff;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: #2a2d3a #0f1117;
+    scrollbar-color: #232d42 transparent;
   }
 
   *::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   *::-webkit-scrollbar-track {
-    background: #0f1117;
+    background: transparent;
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: #2a2d3a;
-    border-radius: 3px;
+    background-color: #232d42;
+    border-radius: 4px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: #33405c;
+  }
+
+  /*
+   * Honour the OS setting. Reduced motion is a vestibular accommodation, not a
+   * preference — the entry animations here are decoration and none of them
+   * carry information that is lost by skipping them.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * The panel treatment. Named rather than repeated so the elevation model
+   * stays consistent: one hairline border, one inset highlight along the top
+   * edge. That highlight is what makes a dark surface read as lit from above
+   * instead of as a flat rectangle of slightly different grey.
+   */
+  .panel {
+    @apply bg-surface border border-border rounded-xl shadow-panel;
+  }
+
+  .panel-lifted {
+    @apply bg-surface border border-border rounded-xl shadow-panel-lifted;
+  }
+
+  /*
+   * Eyebrow label above a reading. Small, wide-tracked, mono — the caption on
+   * an instrument dial rather than a form label.
+   */
+  .eyebrow {
+    @apply text-2xs font-mono uppercase tracking-[0.14em] text-text-faint;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-accent-strong text-white font-semibold rounded-lg
+           transition-[background-color,transform] duration-150
+           hover:bg-accent-deep active:translate-y-px
+           disabled:opacity-45 disabled:cursor-not-allowed disabled:hover:bg-accent-strong disabled:active:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-raised text-text-primary font-medium rounded-lg
+           border border-border transition-colors duration-150
+           hover:border-border-strong hover:text-text-primary
+           disabled:opacity-45 disabled:cursor-not-allowed;
+  }
+
+  .field-input {
+    @apply w-full bg-raised border border-border rounded-lg px-3 py-2 text-sm text-text-primary
+           placeholder-text-faint transition-colors duration-150
+           hover:border-border-strong focus:border-accent focus:outline-none;
   }
 }

@@ -28,9 +28,14 @@ export default function Navbar() {
     navigate("/login");
   }
 
+  // Active state carried by an underline as well as colour. Colour alone was
+  // the only marker before, which is both a low-contrast cue and one that
+  // disappears entirely for a reader who cannot separate violet from grey.
   const linkClass = ({ isActive }) =>
-    `text-sm font-medium transition-colors ${
-      isActive ? "text-accent" : "text-text-muted hover:text-text-primary"
+    `relative text-sm font-medium transition-colors py-4 ${
+      isActive
+        ? "text-text-primary after:absolute after:left-0 after:right-0 after:-bottom-px after:h-0.5 after:bg-accent after:rounded-full"
+        : "text-text-muted hover:text-text-primary"
     }`;
 
   // Same destinations in both layouts — the mobile panel is a reflow of the
@@ -50,7 +55,7 @@ export default function Navbar() {
       ];
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-surface/90 backdrop-blur-sm">
+    <nav className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
         <Link
           to="/"
@@ -60,7 +65,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop */}
-        <div className="hidden md:flex items-center gap-6 min-w-0">
+        <div className="hidden md:flex items-center gap-6 min-w-0 self-stretch">
           {links.map(([to, label]) => (
             <NavLink key={to} to={to} className={linkClass}>
               {label}
@@ -68,24 +73,35 @@ export default function Navbar() {
           ))}
           {user ? (
             <>
+              {/* An account chip rather than a bare email string: it reads as
+                  something you can open, which the underlined-on-hover text
+                  did not. */}
               <Link
                 to="/profile"
-                title="Account settings"
-                className="text-xs text-text-muted hover:text-text-primary font-mono truncate max-w-[160px] transition-colors"
+                aria-label="Account settings"
+                className="flex items-center gap-2 bg-raised border border-border hover:border-border-strong rounded-full pl-1 pr-3 py-1 transition-colors min-w-0"
               >
-                {user.email}
+                <span
+                  aria-hidden="true"
+                  className="w-5 h-5 shrink-0 rounded-full bg-accent/20 text-accent-soft text-2xs font-mono font-semibold flex items-center justify-center uppercase"
+                >
+                  {user.email.charAt(0)}
+                </span>
+                <span className="text-xs font-mono text-text-muted truncate max-w-[140px]">
+                  {user.email}
+                </span>
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-sm text-text-muted hover:text-danger transition-colors flex-shrink-0"
+                className="text-sm text-text-muted hover:text-danger transition-colors flex-shrink-0 rounded"
               >
-                Sign Out
+                Sign out
               </button>
             </>
           ) : (
             <Link
               to="/register"
-              className="text-sm font-medium bg-accent hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg transition-colors flex-shrink-0 whitespace-nowrap"
+              className="btn-primary text-sm px-4 py-1.5 flex-shrink-0 whitespace-nowrap"
             >
               Get Started
             </Link>
@@ -147,13 +163,13 @@ export default function Navbar() {
                   onClick={handleLogout}
                   className="text-sm text-text-muted hover:text-danger transition-colors flex-shrink-0"
                 >
-                  Sign Out
+                  Sign out
                 </button>
               </div>
             ) : (
               <Link
                 to="/register"
-                className="mt-2 text-sm font-medium bg-accent hover:bg-indigo-500 text-white px-4 py-2.5 rounded-lg transition-colors text-center"
+                className="btn-primary mt-2 text-sm px-4 py-2.5"
               >
                 Get Started
               </Link>

@@ -118,7 +118,7 @@ export default function VerifyEmailBanner() {
           <button
             onClick={handleResend}
             disabled={busy || cooldown > 0}
-            className="text-xs font-semibold bg-accent hover:bg-indigo-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors"
+            className="btn-primary text-xs px-3 py-1.5"
           >
             {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend email"}
           </button>
@@ -137,7 +137,7 @@ export default function VerifyEmailBanner() {
           </Link>
           <button
             onClick={handleDismiss}
-            title="Hide until next visit"
+            aria-label="Hide this reminder until next visit"
             className="text-text-muted hover:text-text-primary transition-colors leading-none px-1"
           >
             ×

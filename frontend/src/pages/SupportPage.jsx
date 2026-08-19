@@ -55,7 +55,7 @@ export default function SupportPage() {
       </p>
 
       {/* Contact */}
-      <div className="bg-surface border border-border rounded-2xl p-6 mb-10">
+      <div className="panel rounded-2xl p-6 mb-10">
         <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
           Get in touch
         </p>

@@ -47,7 +47,7 @@ export default class ErrorBoundary extends React.Component {
 
           <button
             onClick={this.handleReload}
-            className="mt-5 bg-accent hover:bg-indigo-500 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm"
+            className="btn-primary mt-5 px-5 py-2.5 text-sm"
           >
             Reload Finertia
           </button>

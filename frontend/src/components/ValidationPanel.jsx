@@ -90,7 +90,7 @@ export default function ValidationPanel({ data }) {
   return (
     <div className="flex flex-col gap-5">
       {/* ── Walk-forward ── */}
-      <section className="bg-surface border border-border rounded-2xl p-6">
+      <section className="panel rounded-2xl p-6">
         <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
           <div>
             <h3 className="text-sm font-bold text-text-primary">Walk-forward validation</h3>
@@ -177,7 +177,7 @@ export default function ValidationPanel({ data }) {
       </section>
 
       {/* ── Permutation test ── */}
-      <section className="bg-surface border border-border rounded-2xl p-6">
+      <section className="panel rounded-2xl p-6">
         <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
           <div>
             <h3 className="text-sm font-bold text-text-primary">Signal timing test</h3>

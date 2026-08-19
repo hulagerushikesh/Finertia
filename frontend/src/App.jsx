@@ -36,8 +36,8 @@ const AdminRunsPage = lazy(() => import("./pages/admin/AdminRunsPage"));
 function RouteFallback() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
-      <div className="h-8 w-48 bg-surface border border-border rounded-lg animate-pulse mb-6" />
-      <div className="h-64 bg-surface border border-border rounded-2xl animate-pulse" />
+      <div className="h-8 w-48 panel rounded-lg animate-pulse mb-6" />
+      <div className="h-64 panel rounded-2xl animate-pulse" />
     </div>
   );
 }

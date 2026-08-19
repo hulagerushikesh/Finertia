@@ -42,7 +42,7 @@ export default function DocsPage() {
         computations do and, more usefully, where they can mislead you.
       </p>
 
-      <nav className="bg-surface border border-border rounded-xl p-5 mb-10">
+      <nav className="panel p-5 mb-10">
         <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
           Contents
         </p>
@@ -50,7 +50,7 @@ export default function DocsPage() {
           {CONTENTS.map(([id, label], i) => (
             <li key={id} className="text-sm">
               <a href={`#${id}`} className="text-text-muted hover:text-accent transition-colors">
-                <span className="font-mono text-xs text-text-muted/60 mr-2">
+                <span className="font-mono text-xs text-text-faint mr-2">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 {label}

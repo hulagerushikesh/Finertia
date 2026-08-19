@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ConfigPanel, { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
 import MetricsGrid from "../components/MetricsGrid";
 import EquityCurveChart from "../components/EquityCurveChart";
@@ -118,24 +118,68 @@ export default function DashboardPage() {
 
         {/* Results */}
         <div className="flex-1 min-w-0">
+          {/* An error with no way forward is just an accusation. The button
+              repeats the action that failed, because the most common cause here
+              is a transient data fetch rather than a bad configuration. */}
           {error && (
-            <div className="bg-danger/10 border border-danger/30 text-danger text-sm rounded-xl px-5 py-4 mb-5">
-              {error}
+            <div className="bg-danger/10 border border-danger/30 rounded-xl px-5 py-4 mb-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <p className="text-sm text-danger flex-1 min-w-[14rem] leading-relaxed">{error}</p>
+              <button
+                onClick={handleRun}
+                disabled={loading}
+                className="btn-secondary px-3 py-1.5 text-xs shrink-0"
+              >
+                Try again
+              </button>
             </div>
           )}
 
+          {/* An empty state should be an invitation, not a status message.
+              "Results will appear here" told the reader what a results pane is;
+              this hands them a finished run in one click, using whatever is
+              already configured beside it. */}
           {!result && !loading && (
-            <div className="flex flex-col items-center justify-center h-80 border border-dashed border-border rounded-2xl text-text-muted">
-              <p className="text-4xl mb-3">⚡</p>
-              <p className="font-medium text-text-primary">Configure and run a backtest</p>
-              <p className="text-sm mt-1">Results will appear here</p>
+            <div className="panel border-dashed p-8 sm:p-10 flex flex-col items-start gap-4 animate-rise-in">
+              <p className="eyebrow">Nothing run yet</p>
+              <h2 className="text-xl font-semibold text-text-primary max-w-md leading-snug">
+                {isPortfolio
+                  ? `Run the ${params.tickers.length}-name portfolio and see what comes back.`
+                  : `Run ${params.ticker || "a ticker"} and see what comes back.`}
+              </h2>
+              <p className="text-sm text-text-muted max-w-md leading-relaxed">
+                The settings beside this panel are ready to go. You will get
+                twelve metrics, an equity curve against buy-and-hold, and a plain
+                statement of what the result cannot tell you.
+              </p>
+              <div className="flex flex-wrap items-center gap-3 mt-1">
+                <button onClick={handleRun} className="btn-primary px-5 py-2.5 text-sm">
+                  {isPortfolio ? "Run portfolio" : "Run backtest"}
+                </button>
+                <Link to="/demo" className="btn-secondary px-5 py-2.5 text-sm">
+                  Look at a finished one
+                </Link>
+              </div>
             </div>
           )}
 
+          {/* Shaped like the result it is replacing. A centred spinner in an
+              empty box gives no hint of what is coming and makes the whole page
+              jump when it is swapped out. */}
           {loading && (
-            <div className="flex flex-col items-center justify-center h-80 border border-border rounded-2xl">
-              <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin mb-4" />
-              <p className="text-sm text-text-muted">Fetching data and computing signals…</p>
+            <div className="flex flex-col gap-3" aria-live="polite" aria-busy="true">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-text-muted">
+                  Fetching prices and computing signals…
+                </p>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="panel h-[5.5rem] animate-pulse" />
+                ))}
+              </div>
+              <div className="panel h-14 animate-pulse" />
+              <div className="panel h-64 animate-pulse" />
             </div>
           )}
 
@@ -166,9 +210,11 @@ export default function DashboardPage() {
                   <button
                     onClick={handleCopyLink}
                     className="text-xs font-mono text-text-muted hover:text-accent border border-border hover:border-accent px-3 py-1 rounded-full transition-colors"
-                    title="Copy a link that reopens this exact configuration"
                   >
-                    {copied ? "Link copied" : "Share config"}
+                    {/* The label says what the button does, so the explanation
+                        that used to live in a `title` — invisible on touch —
+                        is no longer needed anywhere. */}
+                    {copied ? "Link copied" : "Copy link to this setup"}
                   </button>
                   <span className="text-xs font-mono bg-success/10 text-success border border-success/20 px-3 py-1 rounded-full">
                     Completed in {(result.duration_ms / 1000).toFixed(2)}s
@@ -299,7 +345,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-text-muted">
                       Sweeping parameters and shuffling signals…
                     </p>
-                    <p className="text-xs text-text-muted/60 mt-1">
+                    <p className="text-xs text-text-faint mt-1">
                       This runs hundreds of backtests — a few seconds
                     </p>
                   </div>
@@ -314,7 +360,7 @@ export default function DashboardPage() {
                     </p>
                     <button
                       onClick={handleValidate}
-                      className="mt-4 bg-accent hover:bg-indigo-500 text-white font-semibold px-5 py-2 rounded-lg text-sm transition-colors"
+                      className="btn-primary mt-4 px-5 py-2 text-sm"
                     >
                       Run validation
                     </button>

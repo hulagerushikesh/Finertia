@@ -14,7 +14,7 @@ export default function TradesTable({ trades }) {
   const slice = trades.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="panel p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-text-primary">Trade Log</h3>
         <span className="text-xs text-text-muted">{trades.length} entries</span>

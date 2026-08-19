@@ -31,7 +31,7 @@ export default function Footer() {
             </Link>
           ))}
         </div>
-        <p className="text-xs text-text-muted/70 leading-relaxed max-w-2xl">
+        <p className="text-xs text-text-faint leading-relaxed max-w-2xl">
           Backtested results are hypothetical and do not reflect what trading
           this strategy would have returned. Past performance says nothing about
           future performance. Finertia is a research tool, not investment
