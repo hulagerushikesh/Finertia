@@ -13,6 +13,7 @@ import pandas as pd
 
 from deflated import deflated_sharpe_ratio
 from pbo import combinatorial_pbo
+from purge import purged_split
 from engine import compute_returns
 from metrics import compute_metrics
 from strategies import build_positions, longest_window, param_grid
@@ -60,6 +61,9 @@ def walk_forward(
     Positions are always computed on the FULL series and sliced afterwards.
     Building signals from a slice instead would leave its first warm-up bars
     flat, which would understate the out-of-sample result rather than measure it.
+
+    The two halves do not touch. A purge-and-embargo gap sits between them so
+    the trade that straddles the split cannot earn in both — see `purge.py`.
     """
     base_params = base_params or {}
     n = len(close)
@@ -71,8 +75,13 @@ def walk_forward(
         )
 
     returns = compute_returns(close)
-    is_slice = slice(0, split_at)
-    oos_slice = slice(split_at, n)
+
+    # Selection stops short of the split and scoring starts after it, so the
+    # position carried across the boundary is never counted by both halves.
+    boundary = purged_split(n, split_at)
+    is_end, oos_start = boundary["is_end"], boundary["oos_start"]
+    is_slice = slice(0, is_end)
+    oos_slice = slice(oos_start, n)
 
     combos = grid if grid is not None else param_grid(strategy)
 
@@ -88,7 +97,7 @@ def walk_forward(
         params = {**base_params, **combo}
         # A strategy needing more warm-up than the in-sample half can never fire.
         warmup = longest_window(strategy, params)
-        if warmup >= split_at:
+        if warmup >= is_end:
             continue
         pos = build_positions(close, strategy, params)
         m = _segment_metrics(pos.iloc[is_slice], returns.iloc[is_slice], transaction_cost)
@@ -171,8 +180,16 @@ def walk_forward(
     return {
         "strategy": strategy,
         "split_date": str(close.index[split_at].date()),
-        "in_sample_bars": split_at,
-        "out_of_sample_bars": n - split_at,
+        # Bars each half actually uses, which is the split minus the gap — not
+        # the nominal ratio. Reporting the nominal figure would overstate how
+        # much data backs either number.
+        "in_sample_bars": is_end,
+        "out_of_sample_bars": n - oos_start,
+        "boundary": {
+            **boundary,
+            "in_sample_end_date": str(close.index[is_end - 1].date()),
+            "out_of_sample_start_date": str(close.index[oos_start].date()),
+        },
         "combinations_tested": len(grid_results),
         "best_params": best["params"],
         "best_in_sample": best_is,

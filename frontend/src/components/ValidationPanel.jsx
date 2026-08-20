@@ -136,6 +136,47 @@ function SegmentCard({ title, caption, metrics, accent }) {
   );
 }
 
+/**
+ * The two halves of the walk-forward split do not touch — a purge-and-embargo
+ * gap sits between them. Worth stating in the UI rather than only in the code,
+ * because it explains why the bar counts do not add up to the period and why
+ * the split ratio the user chose is not exactly what they got.
+ */
+function BoundaryNote({ boundary }) {
+  if (!boundary.applied) {
+    return (
+      <p className="text-[11px] text-warning leading-relaxed mb-5">
+        This period was too short to leave a gap at the split, so the two halves
+        touch. A trade held across the boundary earns in both — the out-of-sample
+        figure may be flattered by a move the selection was already paid for. A
+        longer date range removes the doubt.
+      </p>
+    );
+  }
+  return (
+    <p
+      className={`text-[11px] leading-relaxed mb-5 ${
+        boundary.shortened ? "text-warning" : "text-text-faint"
+      }`}
+    >
+      A {boundary.purge_bars}-bar gap sits on each side of the split, so selection
+      stops at{" "}
+      <span className="font-mono">{boundary.in_sample_end_date}</span>{" "}
+      and scoring resumes at{" "}
+      <span className="font-mono">{boundary.out_of_sample_start_date}</span>.
+      Without it, a position held across the boundary would earn once as evidence
+      for choosing these parameters and again as proof they worked.
+      {boundary.shortened && (
+        <>
+          {" "}This period could only spare {boundary.purge_bars} of the{" "}
+          {boundary.requested_gap} bars that gap wants, so some of that
+          double-counting is still in the numbers below.
+        </>
+      )}
+    </p>
+  );
+}
+
 export default function ValidationPanel({ data }) {
   if (!data) return null;
 
@@ -143,6 +184,7 @@ export default function ValidationPanel({ data }) {
   const dsrVerdict =
     DSR_VERDICT[wf.deflated?.verdict] || DSR_VERDICT.inconclusive;
   const ov = wf.overfitting;
+  const boundary = wf.boundary;
   const pboVerdict = PBO_VERDICT[ov?.verdict] || PBO_VERDICT.fragile;
   const verdict = WF_VERDICT[wf.verdict] || WF_VERDICT.inconclusive;
 
@@ -154,9 +196,8 @@ export default function ValidationPanel({ data }) {
           <div>
             <h3 className="text-sm font-bold text-text-primary">Walk-forward validation</h3>
             <p className="text-xs text-text-muted mt-1 max-w-lg leading-relaxed">
-              Parameters were optimised on the first {Math.round((wf.in_sample_bars /
-                (wf.in_sample_bars + wf.out_of_sample_bars)) * 100)}% of the period, then scored on
-              the remainder. Only the out-of-sample column is evidence.
+              Parameters were optimised on the earlier part of the period, then
+              scored on the later part. Only the out-of-sample column is evidence.
             </p>
           </div>
           <span
@@ -168,12 +209,14 @@ export default function ValidationPanel({ data }) {
 
         <p className="text-xs text-text-muted mt-3 mb-5 leading-relaxed">{verdict.blurb}</p>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[11px] font-mono text-text-muted mb-5">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[11px] font-mono text-text-muted mb-3">
           <span>split <span className="text-text-primary">{wf.split_date}</span></span>
           <span>{wf.in_sample_bars} in-sample bars</span>
           <span>{wf.out_of_sample_bars} out-of-sample bars</span>
           <span>{wf.combinations_tested} combinations tested</span>
         </div>
+
+        {boundary && <BoundaryNote boundary={boundary} />}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <SegmentCard
