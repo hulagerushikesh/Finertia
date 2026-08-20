@@ -16,10 +16,32 @@ def price_series(n=600, drift=0.0006, vol=0.015, seed=0):
 
 
 class TestWalkForwardSplit:
-    def test_split_sizes_follow_the_ratio(self):
+    def test_split_sizes_follow_the_ratio_minus_the_gap(self):
+        """The ratio sets where the cut falls; the purge-and-embargo gap then
+        takes bars off each side. The reported counts are what each half
+        actually used, not the nominal 420/180 — quoting the nominal figure
+        would claim more evidence than either number rests on."""
         r = walk_forward(price_series(600), 0.001, split_ratio=0.7)
-        assert r["in_sample_bars"] == 420
-        assert r["out_of_sample_bars"] == 180
+        gap = r["boundary"]["purge_bars"]
+        assert gap == 6  # 1% of 600
+        assert r["in_sample_bars"] == 420 - gap
+        assert r["out_of_sample_bars"] == 180 - gap
+        assert r["split_date"] == str(price_series(600).index[420].date())
+
+    def test_the_two_halves_never_touch(self):
+        r = walk_forward(price_series(600), 0.001, split_ratio=0.7)
+        b = r["boundary"]
+        assert b["oos_start"] - b["is_end"] == 2 * b["purge_bars"] > 0
+        assert b["in_sample_end_date"] < b["out_of_sample_start_date"]
+        assert b["applied"] is True and b["shortened"] is False
+
+    def test_a_short_period_gives_up_the_gap_rather_than_the_split(self):
+        """With 100 bars there is no room for a gap once both halves keep their
+        30-bar floor. Dropping the gap is the right trade — but it has to be
+        visible, because those numbers still carry boundary contamination."""
+        r = walk_forward(price_series(100), 0.001, split_ratio=0.7)
+        assert r["boundary"]["applied"] is False
+        assert r["boundary"]["shortened"] is True
 
     def test_split_date_sits_between_the_endpoints(self):
         close = price_series(600)
