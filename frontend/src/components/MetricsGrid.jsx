@@ -85,14 +85,20 @@ export default function MetricsGrid({ metrics }) {
   return (
     <div className="flex flex-col gap-3">
       {/* The four numbers a decision actually rests on. */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* Four-up only from xl. The dashboard puts a 21rem sidebar beside this
+          column, so at lg these cards were ~150px wide and every label but
+          "Sharpe" truncated — "TOTAL RE…", "MAX DRAW…". Measured: the labels
+          need up to 179px including the tooltip. */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {HEADLINE.map(({ key, label, type, tone, tip }) => (
           <div
             key={key}
             className="panel p-4 sm:p-5 flex flex-col gap-2 relative overflow-visible"
           >
-            <div className="flex items-center gap-1.5">
-              <span className="eyebrow truncate">{label}</span>
+            <div className="flex items-start gap-1.5 min-w-0">
+              {/* Wraps rather than truncates. A clipped label loses the word
+                  that distinguishes it; a second line costs 16px. */}
+              <span className="eyebrow">{label}</span>
               <Tooltip label={tip} align="start" />
             </div>
             <span
@@ -108,11 +114,27 @@ export default function MetricsGrid({ metrics }) {
       </div>
 
       {/* Everything else, at the weight it deserves. */}
-      <div className="panel divide-y divide-border sm:divide-y-0 sm:grid sm:grid-cols-3 lg:grid-cols-7 sm:divide-x">
+      {/* Was one row of seven. Seven cells need ~1477px and this column is
+          ~650px on a 1024 screen, so the labels overran their cells and
+          collided with the next one — CSS grid items default to
+          min-width:auto and refuse to shrink, so `truncate` never fired.
+          Now it wraps to as many rows as it needs.
+
+          Borders live on the cells rather than in the gaps, which is what
+          makes wrapping safe: a row with an empty trailing slot draws no
+          stray hairline, because there is no cell there to draw one. The
+          negative margins push the outer edges under the panel's own border,
+          and overflow-hidden clips them at the rounded corners. */}
+      <div className="panel overflow-hidden">
+        {/* One column below sm: there the cell puts label and value on the same
+            row, so a second column left "ANN. VOLATILITY" 60px of the 122 it
+            needs. Full width gives the label the room and costs nothing —
+            seven short rows are no taller than four cramped ones. */}
+        <div className="grid sm:grid-cols-3 lg:grid-cols-4 -mr-px -mb-px">
         {SECONDARY.map(({ key, label, type, tone, tip }) => (
           <div
             key={key}
-            className="px-4 py-3 flex items-center justify-between gap-2 sm:flex-col sm:items-start sm:gap-1.5"
+            className="min-w-0 border-r border-b border-border px-4 py-3 flex items-center justify-between gap-2 sm:flex-col sm:items-start sm:gap-1.5"
           >
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="eyebrow truncate">{label}</span>
@@ -125,6 +147,7 @@ export default function MetricsGrid({ metrics }) {
             </span>
           </div>
         ))}
+        </div>
       </div>
     </div>
   );
