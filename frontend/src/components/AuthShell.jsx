@@ -11,7 +11,7 @@ import React from "react";
  */
 export default function AuthShell({ title, subtitle, aside, children }) {
   return (
-    <main className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4 py-12">
+    <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-4xl grid lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] gap-10 lg:gap-16 items-center">
         <div className="w-full max-w-sm mx-auto lg:mx-0 animate-rise-in">
           <h1 className="text-2xl font-bold tracking-tight text-text-primary mb-1.5">
@@ -25,7 +25,7 @@ export default function AuthShell({ title, subtitle, aside, children }) {
           <div className="hidden lg:block border-l border-border pl-16">{aside}</div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
 

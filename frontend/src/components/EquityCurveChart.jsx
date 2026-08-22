@@ -34,7 +34,7 @@ export default function EquityCurveChart({ data }) {
 
   return (
     <div className="panel p-5">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">Equity Curve</h3>
+      <h2 className="text-sm font-semibold text-text-primary mb-4">Equity Curve</h2>
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={thinned} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />

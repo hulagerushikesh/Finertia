@@ -30,12 +30,12 @@ const CAPABILITIES = [
 
 export default function LandingPage() {
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 sm:pt-20 pb-20">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 sm:pt-20 pb-20">
       {/* Hero. Left-aligned: the tape below is read left-to-right off a zero
           line, and a centred headline above it would fight that axis. */}
       <div className="max-w-2xl animate-rise-in">
         <p className="eyebrow mb-5">Backtesting · Walk-forward · Permutation</p>
-        <h1 className="text-[2.5rem] sm:text-6xl font-extrabold tracking-[-0.03em] leading-[1.02] text-text-primary mb-6">
+        <h1 className="text-display-md sm:text-6xl font-extrabold tracking-[-0.03em] leading-[1.02] text-text-primary mb-6">
           Your backtest looks good.
           <br />
           <span className="text-text-faint">That&apos;s the problem.</span>
@@ -67,7 +67,7 @@ export default function LandingPage() {
         {CAPABILITIES.map((c) => (
           <div key={c.tag} className="bg-bg sm:px-6 py-6 sm:py-7 first:sm:pl-0 last:sm:pr-0">
             <p className="eyebrow mb-3">{c.tag}</p>
-            <h2 className="text-[0.95rem] font-semibold text-text-primary mb-2">
+            <h2 className="text-base font-semibold text-text-primary mb-2">
               {c.title}
             </h2>
             <p className="text-sm text-text-muted leading-relaxed">{c.desc}</p>
@@ -81,6 +81,6 @@ export default function LandingPage() {
         0 external backtesting dependencies · 12 performance metrics · 404 tests
         on the engine
       </p>
-    </main>
+    </div>
   );
 }

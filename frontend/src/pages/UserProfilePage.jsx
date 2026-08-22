@@ -139,7 +139,7 @@ export default function UserProfilePage() {
             <dd className="text-xs break-all">
               <span className="font-mono text-text-primary">{user.email}</span>{" "}
               <span
-                className={`inline-block text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border align-middle ${
+                className={`inline-block text-2xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border align-middle ${
                   emailVerified
                     ? "bg-success/10 border-success/30 text-success"
                     : "bg-warning/10 border-warning/30 text-warning"
@@ -152,7 +152,7 @@ export default function UserProfilePage() {
             <dt className="text-text-muted text-xs pt-0.5">Role</dt>
             <dd>
               <span
-                className={`inline-block text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                className={`inline-block text-2xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
                   userProfile?.role === "admin"
                     ? "bg-accent/10 border-accent/30 text-accent"
                     : "bg-bg border-border text-text-muted"

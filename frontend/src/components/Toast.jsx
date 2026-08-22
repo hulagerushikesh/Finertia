@@ -30,7 +30,7 @@ export default function Toast({ message, type = "info", onDismiss }) {
       className={`pointer-events-auto animate-toast-in flex items-start gap-3 min-w-[260px] max-w-sm border ${v.ring} backdrop-blur-sm rounded-lg pl-3 pr-2 py-2.5 shadow-lg shadow-black/30`}
     >
       <span
-        className={`shrink-0 mt-0.5 w-4 h-4 rounded-full border ${v.ring} ${v.iconColor} flex items-center justify-center text-[10px] font-bold leading-none`}
+        className={`shrink-0 mt-0.5 w-4 h-4 rounded-full border ${v.ring} ${v.iconColor} flex items-center justify-center text-2xs font-bold leading-none`}
       >
         {v.icon}
       </span>

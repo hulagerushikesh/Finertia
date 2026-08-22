@@ -27,7 +27,7 @@ function CustomTooltip({ active, payload, label }) {
   const v = payload[0].value;
   return (
     <div className="bg-bg border border-border rounded-lg px-3 py-2 shadow-lg">
-      <p className="text-[10px] font-mono text-text-muted mb-0.5">{label}</p>
+      <p className="text-tick font-mono text-text-muted mb-0.5">{label}</p>
       <p className={`text-xs font-mono ${v >= 0 ? "text-success" : "text-danger"}`}>
         Sharpe {v.toFixed(2)}
       </p>
@@ -39,7 +39,7 @@ export default function RollingSharpeChart({ data, window = 60 }) {
   if (!data || data.length === 0) {
     return (
       <div className="panel rounded-2xl p-5">
-        <h3 className="text-sm font-semibold text-text-primary mb-1">Rolling Sharpe</h3>
+        <h2 className="text-sm font-semibold text-text-primary mb-1">Rolling Sharpe</h2>
         <p className="text-xs text-text-muted">
           Needs at least {window} trading days. Try a longer date range.
         </p>
@@ -58,12 +58,12 @@ export default function RollingSharpeChart({ data, window = 60 }) {
     <div className="panel rounded-2xl p-5">
       <div className="flex items-start justify-between mb-1 flex-wrap gap-2">
         <div>
-          <h3 className="text-sm font-semibold text-text-primary">Rolling Sharpe</h3>
-          <p className="text-[11px] text-text-muted mt-0.5">
+          <h2 className="text-sm font-semibold text-text-primary">Rolling Sharpe</h2>
+          <p className="text-2xs text-text-muted mt-0.5">
             Trailing {window}-day risk-adjusted return. Steady above zero beats one lucky spike.
           </p>
         </div>
-        <div className="flex gap-4 text-[10px] font-mono text-text-muted">
+        <div className="flex gap-4 text-2xs font-mono text-text-muted">
           <span>
             latest <span className={latest >= 0 ? "text-success" : "text-danger"}>{latest.toFixed(2)}</span>
           </span>

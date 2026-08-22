@@ -306,7 +306,7 @@ function Section({ title, badge, defaultOpen = false, children }) {
         )}
         <span
           aria-hidden="true"
-          className={`text-text-faint group-hover:text-text-primary transition-transform duration-200 text-[0.6rem] ${
+          className={`text-text-faint group-hover:text-text-primary transition-transform duration-200 text-2xs ${
             open ? "rotate-90" : ""
           }`}
         >

@@ -67,9 +67,27 @@ export default {
         // instrumentation, and its figures sit better in dense tables.
         mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
       },
+      /*
+       * Micro type is where this interface actually lives — eyebrow labels,
+       * verdict pills, axis ticks — and it had no scale. The app reached past
+       * Tailwind's `xs` with arbitrary bracket values 48 times and rendered
+       * eight distinct sizes on a single page, two of them 9px.
+       *
+       * `2xs` is the floor for anything a user reads as interface text.
+       *
+       * `tick` is the one step below it and exists for chart internals only:
+       * axis labels and heatmap cells sit inside a fixed geometry that cannot
+       * grow, and every one of them restates a number shown at full size
+       * elsewhere on the page. Chrome does not get to use it — if a label is
+       * the only place a fact appears, it is not a tick.
+       */
       fontSize: {
-        // One step below Tailwind's xs, for the eyebrow labels above readings.
+        tick: ["0.625rem", { lineHeight: "0.875rem" }],
         "2xs": ["0.6875rem", { lineHeight: "1rem" }],
+        // Display steps, previously one-off bracket values on four pages.
+        "display-sm": ["1.75rem", { lineHeight: "1.1" }],
+        "display-md": ["2.5rem", { lineHeight: "1.02" }],
+        "display-lg": ["2.75rem", { lineHeight: "1" }],
       },
       boxShadow: {
         // Lit from above. A single inset hairline is what separates a panel

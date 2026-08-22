@@ -19,10 +19,10 @@ function CustomTooltip({ active, payload, label }) {
   const diff = strat - bench;
   return (
     <div className="bg-bg border border-border rounded-lg px-3 py-2 shadow-lg">
-      <p className="text-[10px] font-mono text-text-muted mb-1">{label}</p>
+      <p className="text-tick font-mono text-text-muted mb-1">{label}</p>
       <p className="text-xs font-mono text-accent">Strategy {(strat * 100).toFixed(2)}%</p>
       <p className="text-xs font-mono text-text-muted">Buy &amp; hold {(bench * 100).toFixed(2)}%</p>
-      <p className={`text-[10px] font-mono mt-1 ${diff >= 0 ? "text-success" : "text-danger"}`}>
+      <p className={`text-tick font-mono mt-1 ${diff >= 0 ? "text-success" : "text-danger"}`}>
         {diff >= 0 ? "beat by " : "behind by "}
         {Math.abs(diff * 100).toFixed(2)}%
       </p>
@@ -39,12 +39,12 @@ export default function AnnualReturnsChart({ data }) {
     <div className="panel rounded-2xl p-5">
       <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
         <div>
-          <h3 className="text-sm font-semibold text-text-primary">Annual returns</h3>
-          <p className="text-[11px] text-text-muted mt-0.5">
+          <h2 className="text-sm font-semibold text-text-primary">Annual returns</h2>
+          <p className="text-2xs text-text-muted mt-0.5">
             Strategy against buy-and-hold, year by year.
           </p>
         </div>
-        <span className="text-[10px] font-mono text-text-muted">
+        <span className="text-2xs font-mono text-text-muted">
           beat benchmark in{" "}
           <span className={wins > data.length / 2 ? "text-success" : "text-danger"}>
             {wins} / {data.length}
