@@ -49,67 +49,72 @@ export default function App() {
         <ToastProvider>
           <div className="min-h-screen bg-bg text-text-primary font-sans">
             <Navbar />
-            <ErrorBoundary>
-              <Suspense fallback={<RouteFallback />}>
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/pricing" element={<PricingPage />} />
-                  <Route path="/demo" element={<DemoPage />} />
-                  <Route path="/docs" element={<DocsPage />} />
-                  <Route path="/support" element={<SupportPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route
-                    path="/forgot-password"
-                    element={<ForgotPasswordPage />}
-                  />
-
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <DashboardPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/history"
-                    element={
-                      <ProtectedRoute>
-                        <HistoryPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/profile"
-                    element={
-                      <ProtectedRoute>
-                        <UserProfilePage />
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  <Route
-                    path="/admin"
-                    element={
-                      <AdminRoute>
-                        <AdminLayout />
-                      </AdminRoute>
-                    }
-                  >
+            {/* One landmark for every route. Screen readers had no way to skip
+                the nav before this; three pages carried their own <main> and the
+                rest carried none. */}
+            <main id="main">
+              <ErrorBoundary>
+                <Suspense fallback={<RouteFallback />}>
+                  <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/demo" element={<DemoPage />} />
+                    <Route path="/docs" element={<DocsPage />} />
+                    <Route path="/support" element={<SupportPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
                     <Route
-                      index
-                      element={<Navigate to="/admin/overview" replace />}
+                      path="/forgot-password"
+                      element={<ForgotPasswordPage />}
                     />
-                    <Route path="overview" element={<AdminOverviewPage />} />
-                    <Route path="users" element={<AdminUsersPage />} />
-                    <Route path="runs" element={<AdminRunsPage />} />
-                  </Route>
 
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </Suspense>
-            </ErrorBoundary>
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <DashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/history"
+                      element={
+                        <ProtectedRoute>
+                          <HistoryPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <ProtectedRoute>
+                          <UserProfilePage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/admin"
+                      element={
+                        <AdminRoute>
+                          <AdminLayout />
+                        </AdminRoute>
+                      }
+                    >
+                      <Route
+                        index
+                        element={<Navigate to="/admin/overview" replace />}
+                      />
+                      <Route path="overview" element={<AdminOverviewPage />} />
+                      <Route path="users" element={<AdminUsersPage />} />
+                      <Route path="runs" element={<AdminRunsPage />} />
+                    </Route>
+
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
+            </main>
             <Footer />
           </div>
         </ToastProvider>

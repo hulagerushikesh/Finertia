@@ -42,7 +42,7 @@ export default function PricingPage() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="max-w-xl mb-10">
         <p className="eyebrow mb-4">Pricing</p>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-text-primary mb-4">
@@ -109,7 +109,7 @@ export default function PricingPage() {
                 </h2>
 
                 <p className="mb-1 flex items-baseline gap-1.5">
-                  <span className="text-[2.75rem] leading-none font-mono font-medium text-text-primary tracking-tight">
+                  <span className="text-display-lg leading-none font-mono font-medium text-text-primary tracking-tight">
                     ${plan.price_monthly}
                   </span>
                   <span className="text-sm text-text-faint">/ month</span>
@@ -182,6 +182,6 @@ export default function PricingPage() {
         start of each calendar month (UTC). Cancelling keeps Pro until the end of
         the period you have already paid for.
       </p>
-    </main>
+    </div>
   );
 }

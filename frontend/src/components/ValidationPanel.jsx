@@ -108,7 +108,7 @@ function describeParams(params) {
 function Stat({ label, value, tone = "text-text-primary" }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">{label}</p>
+      <p className="text-2xs uppercase tracking-wider text-text-muted mb-1">{label}</p>
       <p className={`font-mono text-sm ${tone}`}>{value}</p>
     </div>
   );
@@ -119,8 +119,8 @@ function SegmentCard({ title, caption, metrics, accent }) {
   return (
     <div className="bg-bg border border-border rounded-xl p-4">
       <div className="flex items-baseline justify-between mb-3">
-        <h4 className="text-xs font-semibold text-text-primary">{title}</h4>
-        <span className={`text-[10px] font-mono ${accent}`}>{caption}</span>
+        <h3 className="text-xs font-semibold text-text-primary">{title}</h3>
+        <span className={`text-2xs font-mono ${accent}`}>{caption}</span>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Stat
@@ -145,7 +145,7 @@ function SegmentCard({ title, caption, metrics, accent }) {
 function BoundaryNote({ boundary }) {
   if (!boundary.applied) {
     return (
-      <p className="text-[11px] text-warning leading-relaxed mb-5">
+      <p className="text-2xs text-warning leading-relaxed mb-5">
         This period was too short to leave a gap at the split, so the two halves
         touch. A trade held across the boundary earns in both — the out-of-sample
         figure may be flattered by a move the selection was already paid for. A
@@ -155,7 +155,7 @@ function BoundaryNote({ boundary }) {
   }
   return (
     <p
-      className={`text-[11px] leading-relaxed mb-5 ${
+      className={`text-2xs leading-relaxed mb-5 ${
         boundary.shortened ? "text-warning" : "text-text-faint"
       }`}
     >
@@ -194,14 +194,14 @@ export default function ValidationPanel({ data }) {
       <section className="panel rounded-2xl p-6">
         <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
           <div>
-            <h3 className="text-sm font-bold text-text-primary">Walk-forward validation</h3>
+            <h2 className="text-sm font-bold text-text-primary">Walk-forward validation</h2>
             <p className="text-xs text-text-muted mt-1 max-w-lg leading-relaxed">
               Parameters were optimised on the earlier part of the period, then
               scored on the later part. Only the out-of-sample column is evidence.
             </p>
           </div>
           <span
-            className={`text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${verdict.tone}`}
+            className={`text-2xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${verdict.tone}`}
           >
             {verdict.label}
           </span>
@@ -209,7 +209,7 @@ export default function ValidationPanel({ data }) {
 
         <p className="text-xs text-text-muted mt-3 mb-5 leading-relaxed">{verdict.blurb}</p>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[11px] font-mono text-text-muted mb-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-2xs font-mono text-text-muted mb-3">
           <span>split <span className="text-text-primary">{wf.split_date}</span></span>
           <span>{wf.in_sample_bars} in-sample bars</span>
           <span>{wf.out_of_sample_bars} out-of-sample bars</span>
@@ -235,13 +235,13 @@ export default function ValidationPanel({ data }) {
 
         <div className="mt-4 flex items-center justify-between bg-bg border border-border rounded-lg px-4 py-3 flex-wrap gap-2">
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-text-muted">Best parameters found</p>
+            <p className="text-2xs uppercase tracking-wider text-text-muted">Best parameters found</p>
             <p className="font-mono text-xs text-text-primary mt-0.5">
               {describeParams(wf.best_params)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] uppercase tracking-wider text-text-muted">Sharpe decay</p>
+            <p className="text-2xs uppercase tracking-wider text-text-muted">Sharpe decay</p>
             <p
               className={`font-mono text-xs mt-0.5 ${
                 wf.sharpe_degradation > 0.5 ? "text-danger" : "text-text-primary"
@@ -255,7 +255,7 @@ export default function ValidationPanel({ data }) {
 
         {wf.user_params && (
           <div className="mt-3 bg-bg border border-border rounded-lg px-4 py-3">
-            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-2">
+            <p className="text-2xs uppercase tracking-wider text-text-muted mb-2">
               Your parameters ({describeParams(wf.user_params.params)})
             </p>
             <div className="flex flex-wrap gap-x-8 gap-y-2 font-mono text-xs">
@@ -285,9 +285,9 @@ export default function ValidationPanel({ data }) {
         <section className="panel rounded-2xl p-6">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h3 className="text-sm font-bold text-text-primary">
+              <h2 className="text-sm font-bold text-text-primary">
                 Deflated Sharpe ratio
-              </h3>
+              </h2>
               <p className="text-xs text-text-muted mt-1 max-w-lg leading-relaxed">
                 Picking the best of {wf.deflated.n_trials} combinations is itself a
                 search, and the winner of any search looks good. This asks how high
@@ -296,7 +296,7 @@ export default function ValidationPanel({ data }) {
               </p>
             </div>
             <span
-              className={`text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${dsrVerdict.tone}`}
+              className={`text-2xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${dsrVerdict.tone}`}
             >
               {dsrVerdict.label}
             </span>
@@ -315,7 +315,7 @@ export default function ValidationPanel({ data }) {
                   <p className="font-mono text-lg text-text-primary">
                     {num(wf.deflated.selected_sharpe)}
                   </p>
-                  <p className="text-[11px] text-text-faint mt-1">in-sample, annualised</p>
+                  <p className="text-2xs text-text-faint mt-1">in-sample, annualised</p>
                 </div>
                 <div className="bg-bg border border-border rounded-xl p-4">
                   <p className="eyebrow mb-1.5">Noise bar</p>
@@ -326,7 +326,7 @@ export default function ValidationPanel({ data }) {
                   >
                     {num(wf.deflated.expected_max_sharpe)}
                   </p>
-                  <p className="text-[11px] text-text-faint mt-1">
+                  <p className="text-2xs text-text-faint mt-1">
                     best of {wf.deflated.n_trials} on no edge
                   </p>
                 </div>
@@ -345,7 +345,7 @@ export default function ValidationPanel({ data }) {
                       ? "—"
                       : pct(wf.deflated.deflated_sharpe_ratio)}
                   </p>
-                  <p className="text-[11px] text-text-faint mt-1">0.95 is the usual bar</p>
+                  <p className="text-2xs text-text-faint mt-1">0.95 is the usual bar</p>
                 </div>
               </div>
 
@@ -368,7 +368,7 @@ export default function ValidationPanel({ data }) {
                 </p>
               )}
 
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-[11px] font-mono text-text-faint mt-4">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-2xs font-mono text-text-faint mt-4">
                 <span>skew {num(wf.deflated.skew)}</span>
                 <span>kurtosis {num(wf.deflated.kurtosis)}</span>
                 <span>
@@ -386,9 +386,9 @@ export default function ValidationPanel({ data }) {
         <section className="panel rounded-2xl p-6">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h3 className="text-sm font-bold text-text-primary">
+              <h2 className="text-sm font-bold text-text-primary">
                 Probability of backtest overfitting
-              </h3>
+              </h2>
               <p className="text-xs text-text-muted mt-1 max-w-lg leading-relaxed">
                 The split above is one split. This one cuts the period into{" "}
                 {ov.n_splits} blocks and tries all {ov.n_combinations} balanced
@@ -397,7 +397,7 @@ export default function ValidationPanel({ data }) {
               </p>
             </div>
             <span
-              className={`text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${pboVerdict.tone}`}
+              className={`text-2xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${pboVerdict.tone}`}
             >
               {pboVerdict.label}
             </span>
@@ -421,7 +421,7 @@ export default function ValidationPanel({ data }) {
               >
                 {pct(ov.pbo)}
               </p>
-              <p className="text-[11px] text-text-faint mt-1">50% is a coin flip</p>
+              <p className="text-2xs text-text-faint mt-1">50% is a coin flip</p>
             </div>
             <div className="bg-bg border border-border rounded-xl p-4">
               <p className="eyebrow mb-1.5">Loses money</p>
@@ -432,7 +432,7 @@ export default function ValidationPanel({ data }) {
               >
                 {pct(ov.probability_of_loss)}
               </p>
-              <p className="text-[11px] text-text-faint mt-1">of splits, out-of-sample</p>
+              <p className="text-2xs text-text-faint mt-1">of splits, out-of-sample</p>
             </div>
             <div className="bg-bg border border-border rounded-xl p-4">
               <p className="eyebrow mb-1.5">Median Sharpe</p>
@@ -449,7 +449,7 @@ export default function ValidationPanel({ data }) {
                   {num(ov.median_oos_sharpe)}
                 </span>
               </p>
-              <p className="text-[11px] text-text-faint mt-1">in-sample → out</p>
+              <p className="text-2xs text-text-faint mt-1">in-sample → out</p>
             </div>
             <div className="bg-bg border border-border rounded-xl p-4">
               <p className="eyebrow mb-1.5">Degradation</p>
@@ -460,7 +460,7 @@ export default function ValidationPanel({ data }) {
               >
                 {num(ov.degradation_slope)}
               </p>
-              <p className="text-[11px] text-text-faint mt-1">slope, OOS on IS</p>
+              <p className="text-2xs text-text-faint mt-1">slope, OOS on IS</p>
             </div>
           </div>
 
@@ -487,7 +487,7 @@ export default function ValidationPanel({ data }) {
       <section className="panel rounded-2xl p-6">
         <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
           <div>
-            <h3 className="text-sm font-bold text-text-primary">Signal timing test</h3>
+            <h2 className="text-sm font-bold text-text-primary">Signal timing test</h2>
             <p className="text-xs text-text-muted mt-1 max-w-lg leading-relaxed">
               The position series was randomly reordered {pm.trials} times, keeping the exact same
               number of long, short, and flat days. If real timing beats the shuffles, the entries
@@ -495,7 +495,7 @@ export default function ValidationPanel({ data }) {
             </p>
           </div>
           <span
-            className={`text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${
+            className={`text-2xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${
               pm.significant
                 ? "text-success border-success/30 bg-success/10"
                 : "text-danger border-danger/30 bg-danger/10"
@@ -532,7 +532,7 @@ export default function ValidationPanel({ data }) {
               const shift = at > 82 ? "-100%" : at < 18 ? "0%" : "-50%";
               return (
                 <span
-                  className="absolute text-[10px] font-mono text-accent whitespace-nowrap"
+                  className="absolute text-2xs font-mono text-accent whitespace-nowrap"
                   style={{ left: `${at}%`, transform: `translateX(${shift})` }}
                 >
                   ▲ your strategy
@@ -540,7 +540,7 @@ export default function ValidationPanel({ data }) {
               );
             })()}
           </div>
-          <p className="text-[11px] text-text-muted mt-2 leading-relaxed">
+          <p className="text-2xs text-text-muted mt-2 leading-relaxed">
             {pm.significant
               ? `Real timing beat ${(pm.percentile * 100).toFixed(0)}% of random reorderings — unlikely to be chance (p = ${pm.p_value.toFixed(3)}).`
               : `Random timing matched or beat this result ${(pm.p_value * 100).toFixed(0)}% of the time. The returns look like market exposure rather than signal quality.`}
@@ -548,7 +548,7 @@ export default function ValidationPanel({ data }) {
         </div>
       </section>
 
-      <p className="text-[11px] text-text-muted leading-relaxed">
+      <p className="text-2xs text-text-muted leading-relaxed">
         These checks are diagnostic and are not saved to your run history. A strategy can pass the
         timing test and still fail walk-forward — that combination means the approach has signal but
         the specific parameters were tuned too tightly.

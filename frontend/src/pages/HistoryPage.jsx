@@ -175,7 +175,7 @@ export default function HistoryPage() {
                     <td className="px-5 py-3 font-semibold text-text-primary font-mono">
                       <div className="flex items-center gap-2">
                         {run.ticker}
-                        <span className="text-[9px] font-mono font-normal uppercase tracking-wider text-text-muted border border-border rounded px-1.5 py-0.5">
+                        <span className="text-2xs font-mono font-normal uppercase tracking-wider text-text-muted border border-border rounded px-1.5 py-0.5">
                           {strategyLabel(run.strategy)}
                         </span>
                       </div>

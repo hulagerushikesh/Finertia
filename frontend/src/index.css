@@ -119,6 +119,36 @@
            disabled:opacity-45 disabled:cursor-not-allowed;
   }
 
+  /*
+   * Expand a small control's hit area without changing its visual size or
+   * disturbing the layout around it. The pseudo-element is out of flow, so
+   * nothing reflows — only the region that answers a tap grows.
+   *
+   * 24px is WCAG 2.2 AA (2.5.8 Target Size Minimum). Coarse pointers get 44,
+   * the figure both Apple and Google publish, because a fingertip is not a
+   * cursor. Fine pointers deliberately stay at 24: at 44 the hit areas of two
+   * tooltips on adjacent rows overlap, and whichever sits on top silently
+   * swallows the other's clicks — trading one input bug for a worse one.
+   */
+  .tap-safe {
+    position: relative;
+  }
+  .tap-safe::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    transform: translate(-50%, -50%);
+  }
+  @media (pointer: coarse) {
+    .tap-safe::after {
+      width: 44px;
+      height: 44px;
+    }
+  }
+
   .field-input {
     @apply w-full bg-raised border border-border rounded-lg px-3 py-2 text-sm text-text-primary
            placeholder-text-faint transition-colors duration-150

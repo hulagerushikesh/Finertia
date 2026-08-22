@@ -66,9 +66,9 @@ export default function ComparisonPanel({ data }) {
 
       <div className="panel p-5">
         <div className="flex items-baseline justify-between mb-4 gap-3 flex-wrap">
-          <h3 className="text-sm font-semibold text-text-primary">
+          <h2 className="text-sm font-semibold text-text-primary">
             Equity Curves — {series.length} runs
-          </h3>
+          </h2>
           <span className="text-xs text-text-muted font-mono">
             {overlap} overlapping day{overlap === 1 ? "" : "s"}
           </span>

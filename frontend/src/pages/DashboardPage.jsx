@@ -107,6 +107,11 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* The workspace deliberately shows no page title — you arrive here to
+          configure a run, not to read a header. But the document still needs
+          one, or a screen reader lands on a page whose outline starts at h2
+          and never says what the page is. */}
+      <h1 className="sr-only">Backtest workspace</h1>
       <div className="flex flex-col lg:flex-row gap-6 items-stretch lg:items-start">
         {/* Sidebar */}
         <ConfigPanel
@@ -193,7 +198,7 @@ export default function DashboardPage() {
                     <span className="text-text-muted font-normal">
                       {result.start || params.start} → {result.end || params.end}
                     </span>
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/30 px-2 py-0.5 rounded-full">
+                    <span className="text-2xs font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/30 px-2 py-0.5 rounded-full">
                       {STRATEGIES.find((s) => s.id === (result.strategy || params.strategy))?.label ||
                         params.strategy}
                     </span>
@@ -249,7 +254,7 @@ export default function DashboardPage() {
                 >
                   Validation
                   {!validation && !validating && (
-                    <span className="ml-2 text-[10px] font-mono text-accent">run</span>
+                    <span className="ml-2 text-2xs font-mono text-accent">run</span>
                   )}
                 </button>
                 )}

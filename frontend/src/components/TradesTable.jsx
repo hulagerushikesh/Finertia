@@ -16,7 +16,7 @@ export default function TradesTable({ trades }) {
   return (
     <div className="panel p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-text-primary">Trade Log</h3>
+        <h2 className="text-sm font-semibold text-text-primary">Trade Log</h2>
         <span className="text-xs text-text-muted">{trades.length} entries</span>
       </div>
 
@@ -52,7 +52,7 @@ export default function TradesTable({ trades }) {
                 >
                   <td className="py-1.5 pr-4 text-text-muted">{row.date}</td>
                   <td className="py-1.5 pr-4">
-                    <span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold ${cls}`}>
+                    <span className={`px-1.5 py-0.5 rounded text-2xs font-semibold ${cls}`}>
                       {text}
                     </span>
                   </td>

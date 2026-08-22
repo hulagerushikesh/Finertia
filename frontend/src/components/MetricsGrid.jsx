@@ -96,7 +96,7 @@ export default function MetricsGrid({ metrics }) {
               <Tooltip label={tip} align="start" />
             </div>
             <span
-              className={`text-2xl sm:text-[1.75rem] font-mono font-medium leading-none tracking-tight ${toneClass(
+              className={`text-2xl sm:text-display-sm font-mono font-medium leading-none tracking-tight ${toneClass(
                 tone,
                 metrics[key],
               )}`}

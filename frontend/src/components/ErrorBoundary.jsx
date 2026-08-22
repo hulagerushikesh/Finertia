@@ -41,7 +41,7 @@ export default class ErrorBoundary extends React.Component {
             clears it.
           </p>
 
-          <pre className="mt-5 text-left bg-surface border border-border rounded-lg px-4 py-3 text-[11px] font-mono text-danger/90 overflow-x-auto">
+          <pre className="mt-5 text-left bg-surface border border-border rounded-lg px-4 py-3 text-2xs font-mono text-danger/90 overflow-x-auto">
             {String(this.state.error?.message || this.state.error)}
           </pre>
 

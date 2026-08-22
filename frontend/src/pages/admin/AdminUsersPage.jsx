@@ -179,7 +179,7 @@ export default function AdminUsersPage() {
       {confirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setConfirmModal(null)}>
           <div className="panel rounded-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-semibold text-text-primary mb-2">Confirm Action</h3>
+            <h2 className="font-semibold text-text-primary mb-2">Confirm Action</h2>
             <p className="text-sm text-text-muted mb-5">{confirmModal.label}</p>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setConfirmModal(null)} className="text-sm text-text-muted hover:text-text-primary px-4 py-2">Cancel</button>

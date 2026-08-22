@@ -87,12 +87,12 @@ export default function Tooltip({ label, children, align = "center" }) {
         onPointerLeave={(e) => e.pointerType === "mouse" && setOpen(false)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        className="inline-flex items-center justify-center text-text-faint hover:text-accent transition-colors rounded-full"
+        className="tap-safe inline-flex items-center justify-center text-text-faint hover:text-accent transition-colors rounded-full"
       >
         {children ?? (
           <span
             aria-hidden="true"
-            className="w-3.5 h-3.5 rounded-full border border-current text-[9px] font-mono leading-none flex items-center justify-center"
+            className="w-3.5 h-3.5 rounded-full border border-current text-2xs font-mono leading-none flex items-center justify-center"
           >
             ?
           </span>

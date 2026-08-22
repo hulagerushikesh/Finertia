@@ -31,8 +31,8 @@ export default function MonthlyHeatmap({ data }) {
   return (
     <div className="panel rounded-2xl p-5">
       <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-        <h3 className="text-sm font-semibold text-text-primary">Monthly returns</h3>
-        <div className="flex items-center gap-2 text-[10px] font-mono text-text-muted">
+        <h2 className="text-sm font-semibold text-text-primary">Monthly returns</h2>
+        <div className="flex items-center gap-2 text-2xs font-mono text-text-muted">
           <span>loss</span>
           <span className="flex">
             {[-1, -0.6, -0.25, 0.25, 0.6, 1].map((v) => (
@@ -51,13 +51,13 @@ export default function MonthlyHeatmap({ data }) {
         <table className="w-full border-separate" style={{ borderSpacing: "2px", minWidth: "560px" }}>
           <thead>
             <tr>
-              <th className="text-left text-[10px] font-mono text-text-muted font-normal pr-2 w-12" />
+              <th className="text-left text-tick font-mono text-text-muted font-normal pr-2 w-12" />
               {MONTHS.map((m) => (
-                <th key={m} className="text-[10px] font-mono text-text-muted font-normal pb-1">
+                <th key={m} className="text-tick font-mono text-text-muted font-normal pb-1">
                   {m}
                 </th>
               ))}
-              <th className="text-[10px] font-mono text-text-muted font-normal pb-1 pl-2">Year</th>
+              <th className="text-tick font-mono text-text-muted font-normal pb-1 pl-2">Year</th>
             </tr>
           </thead>
           <tbody>
@@ -65,7 +65,7 @@ export default function MonthlyHeatmap({ data }) {
               const total = yearTotal(year);
               return (
                 <tr key={year}>
-                  <td className="text-[11px] font-mono text-text-muted pr-2 whitespace-nowrap">
+                  <td className="text-2xs font-mono text-text-muted pr-2 whitespace-nowrap">
                     {year}
                   </td>
                   {MONTHS.map((m, i) => {
@@ -75,7 +75,7 @@ export default function MonthlyHeatmap({ data }) {
                       <td
                         key={m}
                         title={has ? `${m} ${year}: ${(v * 100).toFixed(2)}%` : `${m} ${year}: no data`}
-                        className="text-center text-[10px] font-mono rounded h-7 align-middle"
+                        className="text-center text-tick font-mono rounded h-7 align-middle"
                         style={{
                           background: has ? cellColor(v, peak) : "rgba(102,116,143,0.06)",
                           // Empty months recede. They are absence of data, not
@@ -88,7 +88,7 @@ export default function MonthlyHeatmap({ data }) {
                     );
                   })}
                   <td
-                    className={`text-center text-[10px] font-mono rounded h-7 pl-2 font-semibold ${
+                    className={`text-center text-tick font-mono rounded h-7 pl-2 font-semibold ${
                       total >= 0 ? "text-success" : "text-danger"
                     }`}
                   >
@@ -100,7 +100,7 @@ export default function MonthlyHeatmap({ data }) {
           </tbody>
         </table>
       </div>
-      <p className="text-[10px] text-text-muted mt-3">
+      <p className="text-2xs text-text-muted mt-3">
         Values are percent. Hover any cell for the exact figure.
       </p>
     </div>
