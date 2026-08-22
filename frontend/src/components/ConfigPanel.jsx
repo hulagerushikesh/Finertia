@@ -219,29 +219,42 @@ const STRATEGIES = [
 /** Which numeric inputs belong to which strategy. */
 const FIELDS = {
   momentum: [
-    { key: "momentum_lookback", label: "Lookback", hint: "Days for rate-of-change (5–200)", min: 5, max: 200, step: 1 },
-    { key: "ma_window", label: "MA Window", hint: "Trend filter period (5–300)", min: 5, max: 300, step: 1 },
-    { key: "momentum_threshold", label: "Threshold", hint: "Min momentum to trigger (0.02 = 2%)", min: 0, max: 1, step: 0.005 },
+    { key: "momentum_lookback", label: "Lookback", range: "5–200", min: 5, max: 200, step: 1,
+      tip: "How many days of rate-of-change the signal is measured over. Shorter reacts faster and trades more." },
+    { key: "ma_window", label: "MA Window", range: "5–300", min: 5, max: 300, step: 1,
+      tip: "The trend filter. A position only opens while price is above this moving average." },
+    { key: "momentum_threshold", label: "Threshold", range: "0–1", min: 0, max: 1, step: 0.005,
+      tip: "Minimum momentum before a trade triggers. 0.02 means the 2% move must be cleared." },
   ],
   macd: [
-    { key: "macd_fast", label: "Fast EMA", hint: "Shorter average, must be < slow (2–100)", min: 2, max: 100, step: 1 },
-    { key: "macd_slow", label: "Slow EMA", hint: "Longer average (3–200)", min: 3, max: 200, step: 1 },
-    { key: "macd_signal", label: "Signal EMA", hint: "Smoothing of the MACD line (2–100)", min: 2, max: 100, step: 1 },
+    { key: "macd_fast", label: "Fast EMA", range: "2–100", min: 2, max: 100, step: 1,
+      tip: "The shorter exponential average. Must be below the slow one or the signal inverts." },
+    { key: "macd_slow", label: "Slow EMA", range: "3–200", min: 3, max: 200, step: 1,
+      tip: "The longer exponential average. The gap between the two is the MACD line." },
+    { key: "macd_signal", label: "Signal EMA", range: "2–100", min: 2, max: 100, step: 1,
+      tip: "Smoothing applied to the MACD line itself. Crossings of it are what trade." },
   ],
   bollinger: [
-    { key: "bb_window", label: "Window", hint: "Bars for the moving average (5–200)", min: 5, max: 200, step: 1 },
-    { key: "bb_std", label: "Std Deviations", hint: "Band width — higher trades less (0.5–4)", min: 0.5, max: 4, step: 0.25 },
+    { key: "bb_window", label: "Window", range: "5–200", min: 5, max: 200, step: 1,
+      tip: "Bars used for the moving average at the centre of the envelope." },
+    { key: "bb_std", label: "Std Dev", range: "0.5–4", min: 0.5, max: 4, step: 0.25,
+      tip: "How wide the bands sit. Higher means fewer, more extreme trades." },
   ],
 };
 
-function Field({ label, hint, tip, children }) {
+function Field({ label, hint, tip, range, children }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="flex items-center gap-1.5">
         <label className="eyebrow">{label}</label>
         {tip && <Tooltip label={tip} align="start" />}
+        {range && (
+          <span className="ml-auto text-2xs font-mono text-text-faint whitespace-nowrap">
+            {range}
+          </span>
+        )}
       </span>
-      {children}
+      <div className="mt-auto">{children}</div>
       {hint && <p className="text-xs text-text-faint leading-relaxed">{hint}</p>}
     </div>
   );
@@ -294,7 +307,7 @@ function Section({ title, badge, defaultOpen = false, children }) {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="w-full flex items-center gap-2 text-left group"
+        className="w-full flex items-center gap-2 py-1 -my-1 text-left group"
       >
         <span className="text-xs font-semibold text-text-primary uppercase tracking-wider flex-1">
           {title}
@@ -376,7 +389,7 @@ function LimitField({ label, hint, value, onChange, defaultPct }) {
   const enabled = value !== null && value !== undefined;
   return (
     <div className="flex flex-col gap-1">
-      <label className="flex items-center gap-2 text-xs font-medium text-text-muted uppercase tracking-wider">
+      <label className="flex w-fit items-center gap-2 py-1 text-xs font-medium text-text-muted uppercase tracking-wider cursor-pointer">
         <input
           type="checkbox"
           checked={enabled}
@@ -473,7 +486,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
           <h2 className="text-sm font-semibold text-text-primary">Configuration</h2>
           <button
             onClick={reset}
-            className="text-xs text-text-faint hover:text-accent transition-colors rounded"
+            className="tap-safe text-xs text-text-faint hover:text-accent transition-colors rounded"
           >
             Reset
           </button>
@@ -505,7 +518,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
         </div>
 
         {mode === "single" ? (
-          <Field label="Ticker" hint="Any symbol yfinance accepts — the list is a shortcut">
+          <Field label="Ticker" tip="Any symbol yfinance accepts — the suggestion list is only a shortcut, not a limit.">
             <TickerInput
               value={params.ticker}
               onChange={(v) => handleChange("ticker", v)}
@@ -544,19 +557,23 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
 
         {/* Strategy parameters. Open by default — these are what a run is. */}
         <Section title="Tuning" badge={tuningBadge} defaultOpen>
-          {FIELDS[strategy].map((f) => (
-            <Field key={f.key} label={f.label} hint={f.hint}>
-              <input
-                type="number"
-                className={inputClass}
-                value={params[f.key]}
-                min={f.min}
-                max={f.max}
-                step={f.step}
-                onChange={(e) => handleChange(f.key, Number(e.target.value))}
-              />
-            </Field>
-          ))}
+          {/* Two-up: these hold two or three characters, and a full-width box
+              for "20" wastes a row each. Matches the Start/End pair above. */}
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+            {FIELDS[strategy].map((f) => (
+              <Field key={f.key} label={f.label} tip={f.tip} range={f.range}>
+                <input
+                  type="number"
+                  className={inputClass}
+                  value={params[f.key]}
+                  min={f.min}
+                  max={f.max}
+                  step={f.step}
+                  onChange={(e) => handleChange(f.key, Number(e.target.value))}
+                />
+              </Field>
+            ))}
+          </div>
 
           {macdInverted && (
             <p className="text-xs text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2">
@@ -566,8 +583,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
 
           <Field
             label="Transaction cost"
-            hint="Charged on turnover each time the position changes"
-            tip="A fraction, not a percent: 0.001 is 0.1% per trade. Set it to zero and a strategy that trades every day will look far better than it is."
+            tip="Charged on turnover each time the position changes. A fraction, not a percent: 0.001 is 0.1% per trade. Set it to zero and a strategy that trades every day will look far better than it is."
           >
             <input
               type="number"
