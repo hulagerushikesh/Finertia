@@ -25,7 +25,14 @@ function fmtPct(v) {
 
 function fmtDate(ts) {
   if (!ts) return "—";
-  const d = ts.toDate ? ts.toDate() : new Date(ts._seconds * 1000);
+  // The API serializes Firestore timestamps to an ISO string; the client SDK
+  // hands back a Timestamp object (.toDate) or a {_seconds} shape. Handle all three.
+  let d;
+  if (typeof ts === "string" || typeof ts === "number") d = new Date(ts);
+  else if (ts.toDate) d = ts.toDate();
+  else if (ts._seconds != null) d = new Date(ts._seconds * 1000);
+  else d = new Date(NaN);
+  if (isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
