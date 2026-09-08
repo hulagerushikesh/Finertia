@@ -13,7 +13,18 @@ def compute_metrics(
     total_return = float(equity_curve.iloc[-1] - 1)
     n = len(net_return)
 
-    annualized_return = float((1 + total_return) ** (252 / n) - 1) if n > 0 else 0.0
+    # (1 + total)^(252/n) is a complex number when the base is negative, which
+    # a levered path can reach. There is no real annualised return once equity
+    # has gone through zero, so it is pinned at total loss. bootstrap.py's
+    # metrics_matrix does the same, and the two are asserted equal in tests.
+    base = 1 + total_return
+    if n <= 0:
+        annualized_return = 0.0
+    elif base > 0:
+        annualized_return = float(base ** (252 / n) - 1)
+    else:
+        annualized_return = -1.0
+
     annualized_volatility = float(net_return.std() * (252 ** 0.5))
 
     sharpe_ratio = (

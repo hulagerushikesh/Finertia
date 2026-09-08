@@ -64,6 +64,74 @@ function toneClass(tone, value) {
  * so the grid said everything mattered equally, which is worse than saying
  * nothing.
  */
+/**
+ * A metric printed on its own reads as a property of the strategy, the way a
+ * ruler reports 30cm. It is not — it is one draw from one sample path, and a
+ * different five years would have produced a different number. The band is the
+ * part that says so.
+ *
+ * The one signal worth interrupting for is an interval that still contains the
+ * null: a Sharpe whose interval spans zero is not weak evidence of an edge, it
+ * is no evidence, however good the point estimate looks. That case is the only
+ * one coloured.
+ */
+function fmtBound(value, type, tone) {
+  // Deliberately coarser than the point estimate. Printing a bound as
+  // "+404.95%" claims a precision the interval is in the middle of denying —
+  // and at two decimals the range plus its flag wrapped to three lines in a
+  // 126px card on a phone, under a number that takes one.
+  const sign = SIGNED_TONES.has(tone) && value > 0 ? "+" : "";
+  if (type === "pct") return `${sign}${Math.round(value * 100)}%`;
+  if (type === "ratio") return `${sign}${value.toFixed(2)}`;
+  return fmt(value, type, tone);
+}
+
+function Band({ band, type, tone }) {
+  if (!band) return null;
+
+  const spansNull = band.null_value !== null && band.excludes_null === false;
+  const range = `${fmtBound(band.low, type, tone)} to ${fmtBound(band.high, type, tone)}`;
+
+  return (
+    <span
+      className={`text-2xs font-mono leading-tight ${
+        spansNull ? "text-warning" : "text-text-faint"
+      }`}
+    >
+      <span className="block">{range}</span>
+      {spansNull && (
+        <span className="block font-sans">spans {band.null_value === 1 ? "1" : "0"}</span>
+      )}
+      {band.reliability === "understates" && (
+        <span className="block font-sans text-text-faint">interval understated</span>
+      )}
+    </span>
+  );
+}
+
+/**
+ * The interval belongs to the number, so its caveats belong in the same
+ * explanation rather than in a footnote the reader has to go find.
+ */
+function tipWith(tip, band, ci, type, tone) {
+  if (!band) return tip;
+  const parts = [tip];
+  // Formatted with the same fmt() the card uses. Printing the raw 0.385 here
+  // beside a card reading +38.50% makes them look like two different numbers.
+  parts.push(
+    `${Math.round(ci.confidence * 100)}% interval from a block bootstrap: ` +
+      `${fmt(band.low, type, tone)} to ${fmt(band.high, type, tone)}.`,
+  );
+  if (band.null_value !== null && band.excludes_null === false) {
+    parts.push(
+      `It still contains ${fmt(band.null_value, type, "neutral")}, so this ` +
+        `backtest is not evidence that the true value is anything else.`,
+    );
+  }
+  if (band.reliability_note) parts.push(band.reliability_note);
+  return parts.join(" ");
+}
+
 const HEADLINE = [
   { key: "total_return", label: "Total return", type: "pct", tone: "signed", tip: "Cumulative return over the entire backtest period." },
   { key: "annualized_return", label: "Annualised", type: "pct", tone: "signed", tip: "Total return scaled to an annual rate (CAGR). The fair way to compare periods of different lengths." },
@@ -81,7 +149,10 @@ const SECONDARY = [
   { key: "worst_day", label: "Worst day", type: "pct", tone: "loss", tip: "Single worst daily return in the backtest." },
 ];
 
-export default function MetricsGrid({ metrics }) {
+export default function MetricsGrid({ metrics, confidenceIntervals }) {
+  const ci = confidenceIntervals?.available ? confidenceIntervals : null;
+  const bands = ci?.metrics ?? {};
+
   return (
     <div className="flex flex-col gap-3">
       {/* The four numbers a decision actually rests on. */}
@@ -99,7 +170,10 @@ export default function MetricsGrid({ metrics }) {
               {/* Wraps rather than truncates. A clipped label loses the word
                   that distinguishes it; a second line costs 16px. */}
               <span className="eyebrow">{label}</span>
-              <Tooltip label={tip} align="start" />
+              <Tooltip
+                label={ci ? tipWith(tip, bands[key], ci, type, tone) : tip}
+                align="start"
+              />
             </div>
             <span
               className={`text-2xl sm:text-display-sm font-mono font-medium leading-none tracking-tight ${toneClass(
@@ -108,6 +182,11 @@ export default function MetricsGrid({ metrics }) {
               )}`}
             >
               {fmt(metrics[key], type, tone)}
+            </span>
+            {/* mt-auto so the bands sit on a shared baseline even when one
+                label wraps to two lines and its neighbour does not. */}
+            <span className="mt-auto">
+              <Band band={bands[key]} type={type} tone={tone} />
             </span>
           </div>
         ))}
@@ -138,7 +217,10 @@ export default function MetricsGrid({ metrics }) {
           >
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="eyebrow truncate">{label}</span>
-              <Tooltip label={tip} align="start" />
+              <Tooltip
+                label={ci ? tipWith(tip, bands[key], ci, type, tone) : tip}
+                align="start"
+              />
             </div>
             <span
               className={`text-sm font-mono font-medium ${toneClass(tone, metrics[key])}`}
@@ -149,6 +231,34 @@ export default function MetricsGrid({ metrics }) {
         ))}
         </div>
       </div>
+
+      {/* The bands are numbers too, so where they came from is stated rather
+          than left to be taken on faith — including the two the simulation
+          showed are too narrow, which is why "narrow" is a marker and not a
+          silent omission. */}
+      {ci && (
+        <p className="text-2xs text-text-faint leading-relaxed">
+          Ranges are {Math.round(ci.confidence * 100)}% confidence intervals from{" "}
+          {ci.n_resamples.toLocaleString()} block-bootstrap resamples
+          {ci.block?.block_length > 1
+            ? ` (blocks averaging ${ci.block.block_length} bars, chosen from this
+               series' own autocorrelation)`
+            : " (the series showed no serial dependence, so blocks are single days)"}
+          . They measure how much of this result came from the order the returns
+          arrived in — not whether the strategy works on data it has never seen.{" "}
+          <span className="text-warning">Amber</span> marks an interval that still
+          contains the value meaning "no effect". Metrics marked{" "}
+          <span className="font-mono">narrow</span> are known to be understated:
+          measured coverage was 70% for volatility and 79% for max drawdown
+          against a nominal 95%.
+        </p>
+      )}
+
+      {confidenceIntervals && !confidenceIntervals.available && (
+        <p className="text-2xs text-text-faint leading-relaxed">
+          No confidence intervals for this run — {confidenceIntervals.reason}
+        </p>
+      )}
     </div>
   );
 }
