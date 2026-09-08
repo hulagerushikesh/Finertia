@@ -384,6 +384,36 @@ def test_backtest_returns_metrics_and_a_curve(api):
     assert body["metrics"]["total_return"] is not None
 
 
+def test_backtest_carries_confidence_intervals(api):
+    """The band has to arrive with the number it belongs to. If the route stops
+    returning it the dashboard silently falls back to bare point estimates,
+    which looks fine and is the thing this was built to stop."""
+    client, _ = api
+    body = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    ci = body["confidence_intervals"]
+    assert ci["available"] is True
+    band = ci["metrics"]["sharpe_ratio"]
+    assert band["low"] <= band["point"] <= band["high"]
+    assert band["point"] == body["metrics"]["sharpe_ratio"]
+
+
+def test_confidence_intervals_are_not_a_paid_feature(api):
+    """The free tier is the one most likely to read a Sharpe as a fact about the
+    strategy, so it is the tier that most needs the interval. `api` signs in as
+    a free user."""
+    client, _ = api
+    body = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    assert body["confidence_intervals"]["available"] is True
+
+
+def test_the_same_backtest_returns_the_same_interval(api):
+    """Seeded from the request, so a reload does not move the band."""
+    client, _ = api
+    first = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    second = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    assert first["confidence_intervals"]["metrics"] == second["confidence_intervals"]["metrics"]
+
+
 def test_usage_reports_the_plan_and_the_counter(api):
     client, _ = api
     body = client.get("/api/me/usage", headers=AUTH).json()

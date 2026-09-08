@@ -16,6 +16,7 @@ from firebase_admin import firestore
 
 from data import fetch_ohlcv
 from engine import compute_returns, apply_positions, compute_benchmark
+from bootstrap import bootstrap_metrics, stable_seed
 from metrics import compute_metrics
 from analytics import monthly_returns, annual_returns, rolling_sharpe
 import billing
@@ -514,6 +515,32 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
     # 5. Metrics
     metrics = compute_metrics(net_return, equity_curve, drawdown, position)
 
+    # 5b. Uncertainty around those metrics.
+    #
+    # Deliberately NOT a Pro feature, unlike validation. Validation is gated
+    # because a grid sweep plus hundreds of permutations genuinely costs
+    # hundreds of backtests; this is one resample of a series already in memory
+    # and adds ~50ms. Gating it would mean the free tier — the tier most likely
+    # to read a Sharpe of 1.2 as a fact about the strategy — is the only one
+    # shown a naked point estimate, which is the exact failure the module exists
+    # to prevent.
+    #
+    # The seed is derived from the run's own inputs so the interval is stable:
+    # re-running the same backtest returns the same band rather than a slightly
+    # different one each time, which would teach the user the number is arbitrary.
+    confidence_intervals = bootstrap_metrics(
+        net_return,
+        seed=stable_seed(
+            req.ticker.upper(),
+            req.start,
+            req.end,
+            req.strategy,
+            sorted(req.strategy_params().items()),
+            sorted(req.risk_params().items()),
+            req.transaction_cost,
+        ),
+    )
+
     # 6. Build response arrays
     dates = [d.strftime("%Y-%m-%d") for d in close.index]
     benchmark_vals = benchmark.fillna(1).tolist()
@@ -593,6 +620,7 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
         "annual_returns": annual,
         "rolling_sharpe": rolling,
         "signals_summary": signals_summary,
+        "confidence_intervals": confidence_intervals,
         "duration_ms": duration_ms,
     }
 
