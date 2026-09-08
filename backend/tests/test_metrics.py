@@ -100,3 +100,32 @@ class TestRatios:
         m = metrics_for(list(up), [1] * 260)
         assert m["total_return"] > 0
         assert m["sharpe_ratio"] > 0
+
+
+class TestEquityThroughZero:
+    """A levered bar can drive net_return below -1, taking 1 + total_return
+    negative. The power then has no real value, so it is pinned at -1.0."""
+
+    def raw_metrics(self, returns):
+        r = series(returns)
+        equity = (1 + r).cumprod()
+        drawdown = (equity - equity.cummax()) / equity.cummax()
+        return compute_metrics(r, equity, drawdown, series([1] * len(returns)))
+
+    def test_non_integer_exponent_does_not_raise(self):
+        # n=5 -> 252/5 = 50.4, a fractional power of a negative base.
+        m = self.raw_metrics([0.0, -1.5, 0.1, 0.05, 0.02])
+        assert m["total_return"] < -1.0
+        assert m["annualized_return"] == -1.0
+
+    def test_integer_exponent_is_pinned_too(self):
+        # n=4 -> 252/4 = 63.0, which returns a real (huge) number and would
+        # otherwise hide the bug behind a nonsense annualised figure.
+        m = self.raw_metrics([0.0, -1.5, 0.1, 0.05])
+        assert m["total_return"] < -1.0
+        assert m["annualized_return"] == -1.0
+
+    def test_exactly_zero_equity_is_pinned(self):
+        m = self.raw_metrics([0.0, -1.0, 0.0, 0.0])
+        assert m["total_return"] == -1.0
+        assert m["annualized_return"] == -1.0

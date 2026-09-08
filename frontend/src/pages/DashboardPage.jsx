@@ -271,7 +271,10 @@ export default function DashboardPage() {
 
               {tab === "results" && (
                 <>
-                  <MetricsGrid metrics={result.metrics} />
+                  <MetricsGrid
+                    metrics={result.metrics}
+                    confidenceIntervals={result.confidence_intervals}
+                  />
                   {isPortfolio && <PortfolioLegs result={result} />}
                   <EquityCurveChart data={result.equity_curve} />
                   <DrawdownChart data={result.drawdown} />
