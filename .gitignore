@@ -24,6 +24,9 @@ npm-debug.log*
 .firebase/
 firebase-debug.log
 
+# Vercel CLI link metadata
+.vercel/
+
 # OS / editor
 .DS_Store
 .idea/
