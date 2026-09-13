@@ -1,0 +1,11 @@
+# Never ship local secrets or dev artifacts to Cloud Build
+.env
+.env.*
+!.env.example
+.gcloudignore
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+tests/
