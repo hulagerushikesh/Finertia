@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Menu } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import ThemeToggle from "./ThemeToggle";
+import { cn } from "@/lib/utils";
+
+/** The wordmark. The full stop is set in pencil — the one mark of the editor. */
+export function Wordmark({ className }) {
+  return (
+    <span className={cn("font-display text-[1.35rem] leading-none tracking-tight text-foreground", className)}>
+      Finertia<span className="text-pencil">.</span>
+    </span>
+  );
+}
 
 export default function Navbar() {
   const { user, userProfile, logout } = useAuth();
@@ -8,19 +23,8 @@ export default function Navbar() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
-  // Close on navigation. Without this the panel stays open over the page the
-  // user just asked for, and on a phone it covers most of it.
+  // Close on navigation: a sheet that stays open covers the page just asked for.
   useEffect(() => setOpen(false), [location.pathname]);
-
-  // A menu that stays open while the layout grows past its breakpoint leaves a
-  // stray panel floating under a nav bar that already shows every link.
-  useEffect(() => {
-    if (!open) return undefined;
-    const mq = window.matchMedia("(min-width: 768px)");
-    const onChange = (e) => e.matches && setOpen(false);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, [open]);
 
   async function handleLogout() {
     setOpen(false);
@@ -28,155 +32,124 @@ export default function Navbar() {
     navigate("/login");
   }
 
-  // Active state carried by an underline as well as colour. Colour alone was
-  // the only marker before, which is both a low-contrast cue and one that
-  // disappears entirely for a reader who cannot separate violet from grey.
-  const linkClass = ({ isActive }) =>
-    `relative text-sm font-medium transition-colors py-4 ${
-      isActive
-        ? "text-text-primary after:absolute after:left-0 after:right-0 after:-bottom-px after:h-0.5 after:bg-accent after:rounded-full"
-        : "text-text-muted hover:text-text-primary"
-    }`;
-
-  // Same destinations in both layouts — the mobile panel is a reflow of the
+  // Same destinations in both layouts — the mobile sheet is a reflow of the
   // desktop bar, not a reduced version of it.
   const links = user
     ? [
-        ["/dashboard", "Dashboard"],
+        ["/dashboard", "Workspace"],
         ["/history", "History"],
         ["/pricing", "Pricing"],
         ...(userProfile?.role === "admin" ? [["/admin/overview", "Admin"]] : []),
       ]
     : [
-        ["/demo", "Demo"],
-        ["/docs", "Docs"],
+        ["/demo", "A real result"],
+        ["/docs", "How it works"],
         ["/pricing", "Pricing"],
-        ["/login", "Login"],
       ];
 
+  // Active state is an underline in pencil, the editor's mark on the current
+  // page — a cue that survives for a reader who cannot split blue from grey.
+  const linkClass = ({ isActive }) =>
+    cn(
+      "relative text-sm font-medium transition-colors py-[1.1rem] whitespace-nowrap",
+      isActive
+        ? "text-foreground after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:bg-pencil"
+        : "text-graphite hover:text-foreground",
+    );
+
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
-        <Link
-          to="/"
-          className="font-bold text-lg tracking-tight text-text-primary flex-shrink-0"
-        >
-          Finertia<span className="text-accent">.</span>
+    <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
+        <Link to="/" className="shrink-0 rounded-sm" aria-label="Finertia home">
+          <Wordmark />
         </Link>
 
         {/* Desktop */}
-        <div className="hidden md:flex items-center gap-6 min-w-0 self-stretch">
+        <nav className="hidden md:flex items-center gap-6 ml-6 self-stretch" aria-label="Primary">
           {links.map(([to, label]) => (
             <NavLink key={to} to={to} className={linkClass}>
               {label}
             </NavLink>
           ))}
+        </nav>
+
+        <div className="hidden md:flex items-center gap-2 ml-auto">
+          <ThemeToggle />
           {user ? (
             <>
-              {/* An account chip rather than a bare email string: it reads as
-                  something you can open, which the underlined-on-hover text
-                  did not. */}
-              <Link
-                to="/profile"
-                aria-label="Account settings"
-                className="flex items-center gap-2 bg-raised border border-border hover:border-border-strong rounded-full pl-1 pr-3 py-1 transition-colors min-w-0"
-              >
-                <span
-                  aria-hidden="true"
-                  className="w-5 h-5 shrink-0 rounded-full bg-accent/20 text-accent-soft text-2xs font-mono font-semibold flex items-center justify-center uppercase"
-                >
-                  {user.email.charAt(0)}
-                </span>
-                <span className="text-xs font-mono text-text-muted truncate max-w-[140px]">
-                  {user.email}
-                </span>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-text-muted hover:text-danger transition-colors flex-shrink-0 rounded"
-              >
+              <Button asChild variant="ghost" size="sm" className="font-mono text-xs text-graphite max-w-[12rem]">
+                <Link to="/profile" aria-label="Account settings">
+                  <span className="size-5 shrink-0 rounded-full bg-pencil/10 text-pencil text-2xs font-medium flex items-center justify-center uppercase">
+                    {user.email.charAt(0)}
+                  </span>
+                  <span className="truncate">{user.email}</span>
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-graphite hover:text-loss">
                 Sign out
-              </button>
+              </Button>
             </>
           ) : (
-            <Link
-              to="/register"
-              className="btn-primary text-sm px-4 py-1.5 flex-shrink-0 whitespace-nowrap"
-            >
-              Get Started
-            </Link>
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/login">Sign in</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/register">Start free</Link>
+              </Button>
+            </>
           )}
         </div>
 
-        {/* Mobile trigger */}
-        <button
-          onClick={() => setOpen((o) => !o)}
-          aria-expanded={open}
-          aria-label={open ? "Close menu" : "Open menu"}
-          className="md:hidden w-9 h-9 -mr-1 flex flex-col items-center justify-center gap-[5px] text-text-muted hover:text-text-primary transition-colors"
-        >
-          <span
-            className={`block w-5 h-px bg-current transition-transform ${
-              open ? "translate-y-[6px] rotate-45" : ""
-            }`}
-          />
-          <span
-            className={`block w-5 h-px bg-current transition-opacity ${
-              open ? "opacity-0" : ""
-            }`}
-          />
-          <span
-            className={`block w-5 h-px bg-current transition-transform ${
-              open ? "-translate-y-[6px] -rotate-45" : ""
-            }`}
-          />
-        </button>
-      </div>
-
-      {/* Mobile panel */}
-      {open && (
-        <div className="md:hidden border-t border-border bg-surface">
-          <div className="px-4 sm:px-6 py-3 flex flex-col">
-            {links.map(([to, label]) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `py-2.5 text-sm font-medium transition-colors ${
-                    isActive ? "text-accent" : "text-text-muted"
-                  }`
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
-
-            {user ? (
-              <div className="border-t border-border mt-2 pt-3 flex items-center justify-between gap-3">
-                <Link
-                  to="/profile"
-                  className="text-xs text-text-muted font-mono truncate min-w-0"
+        {/* Mobile */}
+        <div className="md:hidden ml-auto flex items-center gap-1">
+          <ThemeToggle />
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Open menu">
+                <Menu className="size-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[18rem] flex flex-col gap-1 pt-12">
+              <SheetTitle className="sr-only">Menu</SheetTitle>
+              {links.map(([to, label]) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    cn(
+                      "py-2.5 text-base font-medium rounded-sm",
+                      isActive ? "text-pencil" : "text-foreground",
+                    )
+                  }
                 >
-                  {user.email}
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="text-sm text-text-muted hover:text-danger transition-colors flex-shrink-0"
-                >
-                  Sign out
-                </button>
-              </div>
-            ) : (
-              <Link
-                to="/register"
-                className="btn-primary mt-2 text-sm px-4 py-2.5"
-              >
-                Get Started
-              </Link>
-            )}
-          </div>
+                  {label}
+                </NavLink>
+              ))}
+              <Separator className="my-3" />
+              {user ? (
+                <>
+                  <Link to="/profile" className="font-mono text-xs text-graphite truncate py-1">
+                    {user.email}
+                  </Link>
+                  <Button variant="outline" onClick={handleLogout} className="mt-2 justify-start">
+                    Sign out
+                  </Button>
+                </>
+              ) : (
+                <div className="flex flex-col gap-2 mt-1">
+                  <Button asChild>
+                    <Link to="/register">Start free</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link to="/login">Sign in</Link>
+                  </Button>
+                </div>
+              )}
+            </SheetContent>
+          </Sheet>
         </div>
-      )}
-    </nav>
+      </div>
+    </header>
   );
 }

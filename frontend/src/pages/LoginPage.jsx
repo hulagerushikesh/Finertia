@@ -5,6 +5,10 @@ import { auth } from "../firebase";
 import { useToast } from "../hooks/useToast";
 import AuthShell, { AuthField } from "../components/AuthShell";
 import PasswordInput from "../components/PasswordInput";
+import Spinner from "../components/Spinner";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const ERROR_MAP = {
   "auth/wrong-password": "Incorrect password.",
@@ -43,33 +47,32 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      title="Welcome back"
+      title="Welcome back."
       subtitle="Sign in to pick up your saved runs."
       aside={
         <div className="max-w-sm">
           <p className="eyebrow mb-4">While you were away</p>
-          <p className="text-sm text-text-muted leading-relaxed">
-            Every run you have kept is still in History, with the exact
-            parameters it used. Reopen one to compare it against a new set, or
-            send someone a link that rebuilds the configuration on their screen.
+          <p className="margin-note">
+            Every run you kept is still in History, with the exact parameters it used.
+          </p>
+          <p className="text-sm text-graphite leading-relaxed mt-4">
+            Reopen one to compare it against a new set, or send someone a link that rebuilds
+            the configuration on their screen.
           </p>
         </div>
       }
     >
       {error && (
-        <div
-          role="alert"
-          className="bg-danger/10 border border-danger/30 text-danger text-sm rounded-lg px-4 py-3 mb-5"
-        >
-          {error}
-        </div>
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
+      {/* No <form>: controlled inputs and a click handler, Enter wired by hand. */}
       <div className="flex flex-col gap-4">
         <AuthField label="Email" htmlFor="login-email">
-          <input
+          <Input
             id="login-email"
-            className="field-input py-2.5"
             type="email"
             placeholder="you@example.com"
             value={email}
@@ -83,10 +86,7 @@ export default function LoginPage() {
           label="Password"
           htmlFor="login-password"
           action={
-            <Link
-              to="/forgot-password"
-              className="text-xs text-text-muted hover:text-accent transition-colors rounded"
-            >
+            <Link to="/forgot-password" className="text-xs text-graphite hover:text-pencil transition-colors rounded-sm">
               Forgot password?
             </Link>
           }
@@ -101,25 +101,20 @@ export default function LoginPage() {
           />
         </AuthField>
 
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="btn-primary w-full py-2.5 text-sm mt-1"
-        >
+        <Button onClick={handleLogin} disabled={loading} className="w-full mt-1">
           {loading ? (
             <>
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Signing in…
+              <Spinner /> Signing in…
             </>
           ) : (
             "Sign in"
           )}
-        </button>
+        </Button>
       </div>
 
-      <p className="text-xs text-text-muted text-center mt-6">
+      <p className="text-xs text-graphite text-center mt-6">
         No account yet?{" "}
-        <Link to="/register" className="text-accent hover:underline rounded">
+        <Link to="/register" className="text-pencil hover:underline rounded-sm">
           Create one
         </Link>
       </p>

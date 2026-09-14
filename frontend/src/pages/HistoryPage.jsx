@@ -1,22 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "motion/react";
 import { getHistory, compareRuns } from "../api";
 import { SkeletonRows } from "../components/SkeletonRow";
 import { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
 import ComparisonPanel from "../components/ComparisonPanel";
+import Spinner from "../components/Spinner";
+import { Pager } from "../components/TradesTable";
+import { Rise, EASE_OUT } from "../components/motion";
 import { useToast } from "../hooks/useToast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-// Matches the server-side cap in CompareRequest. Beyond four the chart stops
-// being readable and each run costs a data fetch plus a full recompute.
+// Matches the server-side cap in CompareRequest.
 const MAX_COMPARE = 4;
-
-const strategyLabel = (id) =>
-  STRATEGIES.find((s) => s.id === id)?.label || "Momentum";
-
 const PAGE_SIZE = 20;
-
-// Mirrors the 8 columns of the history table so the skeleton matches its shape.
 const SKELETON_WIDTHS = ["70%", "45%", "85%", "55%", "40%", "50%", "40%", "45%"];
+
+const strategyLabel = (id) => STRATEGIES.find((s) => s.id === id)?.label || "Momentum";
 
 function fmtPct(v) {
   if (v === null || v === undefined) return "—";
@@ -25,8 +31,8 @@ function fmtPct(v) {
 
 function fmtDate(ts) {
   if (!ts) return "—";
-  // The API serializes Firestore timestamps to an ISO string; the client SDK
-  // hands back a Timestamp object (.toDate) or a {_seconds} shape. Handle all three.
+  // The API serialises Firestore timestamps to an ISO string; the client SDK
+  // hands back a Timestamp (.toDate) or a {_seconds} shape. Handle all three.
   let d;
   if (typeof ts === "string" || typeof ts === "number") d = new Date(ts);
   else if (ts.toDate) d = ts.toDate();
@@ -100,8 +106,7 @@ export default function HistoryPage() {
 
   function handleReRun(run) {
     // Start from DEFAULTS so every strategy's parameters exist, then layer the
-    // run's own values on top — otherwise switching strategy in the panel would
-    // hit undefined inputs. Older runs have no `strategy` field; those are momentum.
+    // run's own values on top. Older runs have no `strategy`; those are momentum.
     navigate("/dashboard", {
       state: {
         params: {
@@ -117,209 +122,202 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-baseline justify-between gap-4 flex-wrap mb-6">
-        <h1 className="text-xl font-semibold text-text-primary">Run History</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <Rise className="flex items-end justify-between gap-4 flex-wrap mb-8">
+        <div>
+          <p className="eyebrow mb-3">Saved runs</p>
+          <h1 className="font-display text-display-sm font-medium text-foreground">History</h1>
+        </div>
         {!comparison && runs.length > 1 && (
-          <p className="text-xs text-text-muted">
-            Tick two or more runs to overlay their equity curves
-          </p>
+          <p className="text-xs text-graphite">Tick two or more runs to overlay their equity curves</p>
         )}
-      </div>
+      </Rise>
 
       {error && (
-        <div className="bg-danger/10 border border-danger/30 text-danger text-sm rounded-xl px-5 py-4 mb-5">{error}</div>
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {comparison ? (
         <div className="flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h2 className="text-sm font-semibold text-text-primary">Comparison</h2>
-            <button
-              onClick={clearComparison}
-              className="text-xs text-text-muted hover:text-accent border border-border hover:border-accent rounded-lg px-3 py-1.5 transition-colors"
-            >
+            <h2 className="font-display text-xl font-medium text-foreground">Comparison</h2>
+            <Button variant="outline" size="sm" onClick={clearComparison}>
               ← Back to history
-            </button>
+            </Button>
           </div>
           <ComparisonPanel data={comparison} />
         </div>
       ) : (
-      <>
-          <div className="panel overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">
-                  <th className="w-10 px-4 py-3" />
-                  <th className="text-left px-5 py-3">Date</th>
-                  <th className="text-left px-5 py-3">Ticker</th>
-                  <th className="text-left px-5 py-3">Period</th>
-                  <th className="text-right px-5 py-3">Total Return</th>
-                  <th className="text-right px-5 py-3">Sharpe</th>
-                  <th className="text-right px-5 py-3">Max DD</th>
-                  <th className="text-right px-5 py-3">Duration</th>
-                  <th className="px-5 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {loading && <SkeletonRows rows={8} widths={SKELETON_WIDTHS} />}
-                {!loading && runs.map((run) => (
-                  <tr
-                    key={run.runId}
-                    className="border-b border-border/50 hover:bg-border/20 cursor-pointer transition-colors"
-                    onClick={() => setSelected(run)}
-                  >
-                    <td className="w-10 px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={picked.includes(run.runId)}
-                        onChange={() => togglePick(run.runId)}
-                        aria-label={`Select ${run.ticker} run for comparison`}
-                        className="w-4 h-4 accent-accent cursor-pointer align-middle"
-                      />
-                    </td>
-                    <td className="px-5 py-3 text-text-muted font-mono text-xs">{fmtDate(run.createdAt)}</td>
-                    <td className="px-5 py-3 font-semibold text-text-primary font-mono">
-                      <div className="flex items-center gap-2">
-                        {run.ticker}
-                        <span className="text-2xs font-mono font-normal uppercase tracking-wider text-text-muted border border-border rounded px-1.5 py-0.5">
-                          {strategyLabel(run.strategy)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-text-muted text-xs font-mono">{run.start} → {run.end}</td>
-                    <td className={`px-5 py-3 text-right font-mono text-xs ${run.metrics?.total_return >= 0 ? "text-success" : "text-danger"}`}>
-                      {fmtPct(run.metrics?.total_return)}
-                    </td>
-                    <td className="px-5 py-3 text-right font-mono text-xs text-text-primary">
-                      {run.metrics?.sharpe_ratio?.toFixed(2) ?? "—"}
-                    </td>
-                    <td className="px-5 py-3 text-right font-mono text-xs text-danger">
-                      {fmtPct(run.metrics?.max_drawdown)}
-                    </td>
-                    <td className="px-5 py-3 text-right font-mono text-xs text-text-muted">
-                      {run.durationMs ? `${(run.durationMs / 1000).toFixed(1)}s` : "—"}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleReRun(run); }}
-                        className="text-xs text-accent hover:underline"
+        <>
+          <section className="sheet overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table className="min-w-[52rem]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10 pl-4" />
+                    <TableHead>Date</TableHead>
+                    <TableHead>Ticker</TableHead>
+                    <TableHead>Period</TableHead>
+                    <TableHead className="text-right">Total return</TableHead>
+                    <TableHead className="text-right">Sharpe</TableHead>
+                    <TableHead className="text-right">Max DD</TableHead>
+                    <TableHead className="text-right">Duration</TableHead>
+                    <TableHead className="pr-4" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading && <SkeletonRows rows={8} widths={SKELETON_WIDTHS} />}
+                  {!loading &&
+                    runs.map((run) => (
+                      <TableRow
+                        key={run.runId}
+                        className="cursor-pointer"
+                        onClick={() => setSelected(run)}
                       >
-                        Re-run
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {!loading && runs.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="text-center py-12 text-text-muted">
-                      No runs yet. Go to Dashboard to run your first backtest.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-                className="text-sm text-text-muted hover:text-text-primary disabled:opacity-30"
-              >
-                ← Previous
-              </button>
-              <span className="text-xs text-text-muted">{page + 1} / {totalPages}</span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page === totalPages - 1}
-                className="text-sm text-text-muted hover:text-text-primary disabled:opacity-30"
-              >
-                Next →
-              </button>
+                        <TableCell className="w-10 pl-4" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={picked.includes(run.runId)}
+                            onCheckedChange={() => togglePick(run.runId)}
+                            aria-label={`Select ${run.ticker} run for comparison`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-graphite font-mono text-xs whitespace-nowrap">
+                          {fmtDate(run.createdAt)}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm font-medium text-foreground">
+                          <span className="flex items-center gap-2">
+                            {run.ticker}
+                            <Badge variant="outline" className="font-mono text-tick uppercase tracking-wider text-graphite font-normal px-1.5 py-0">
+                              {strategyLabel(run.strategy)}
+                            </Badge>
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-graphite text-xs font-mono whitespace-nowrap">
+                          {run.start} → {run.end}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            "text-right font-mono text-xs",
+                            run.metrics?.total_return >= 0 ? "text-gain" : "text-loss",
+                          )}
+                        >
+                          {fmtPct(run.metrics?.total_return)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs text-foreground">
+                          {run.metrics?.sharpe_ratio?.toFixed(2) ?? "—"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs text-loss">
+                          {fmtPct(run.metrics?.max_drawdown)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs text-graphite">
+                          {run.durationMs ? `${(run.durationMs / 1000).toFixed(1)}s` : "—"}
+                        </TableCell>
+                        <TableCell className="text-right pr-4">
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="text-pencil h-auto p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReRun(run);
+                            }}
+                          >
+                            Re-run
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  {!loading && runs.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-14">
+                        <p className="font-display text-xl font-medium text-foreground">No runs yet.</p>
+                        <p className="text-sm text-graphite mt-1">
+                          Run a backtest in the workspace and it will be kept here with its parameters.
+                        </p>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
-          )}
-      </>
+          </section>
+
+          {!loading && <Pager page={page} totalPages={totalPages} onPage={setPage} className="mt-4" />}
+        </>
       )}
 
       {/* Compare bar — only once a comparison is actually possible */}
-      {!comparison && picked.length > 0 && (
-        <div className="sticky bottom-4 mt-4 flex items-center justify-between gap-3 flex-wrap bg-surface border border-accent/40 rounded-xl px-5 py-3 shadow-2xl">
-          <span className="text-sm text-text-primary">
-            {picked.length} run{picked.length === 1 ? "" : "s"} selected
-            {picked.length === 1 && (
-              <span className="text-text-muted"> — pick one more to compare</span>
-            )}
-          </span>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setPicked([])}
-              className="text-xs text-text-muted hover:text-text-primary transition-colors"
-            >
-              Clear
-            </button>
-            <button
-              onClick={handleCompare}
-              disabled={picked.length < 2 || comparing}
-              className="btn-primary px-5 py-2 text-sm"
-            >
-              {comparing ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Recomputing…
-                </>
-              ) : (
-                "Compare"
-              )}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Detail Drawer */}
-      {selected && (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelected(null)}>
-          <div
-            className="w-full max-w-md bg-surface border-l border-border h-full overflow-y-auto p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {!comparison && picked.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12, transition: { duration: 0.12 } }}
+            transition={{ duration: 0.2, ease: EASE_OUT }}
+            className="sticky bottom-4 mt-4 flex items-center justify-between gap-3 flex-wrap sheet-lifted border-l-2 border-l-pencil px-5 py-3"
           >
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="font-semibold text-text-primary">{selected.ticker} Details</h2>
-              <button onClick={() => setSelected(null)} className="text-text-muted hover:text-text-primary">✕</button>
+            <span className="text-sm text-foreground">
+              {picked.length} run{picked.length === 1 ? "" : "s"} selected
+              {picked.length === 1 && <span className="text-graphite"> — pick one more to compare</span>}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setPicked([])}>
+                Clear
+              </Button>
+              <Button onClick={handleCompare} disabled={picked.length < 2 || comparing}>
+                {comparing ? (
+                  <>
+                    <Spinner /> Recomputing…
+                  </>
+                ) : (
+                  "Compare"
+                )}
+              </Button>
             </div>
-            <p className="text-xs text-text-muted font-mono mb-4">
-              {selected.start} → {selected.end}
-              <span className="ml-2 text-accent">{strategyLabel(selected.strategy)}</span>
-            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              {Object.entries(selected.metrics || {}).map(([k, v]) => (
-                <div key={k} className="bg-bg border border-border rounded-lg p-3">
-                  <p className="text-xs text-text-muted uppercase tracking-wider mb-1">{k.replace(/_/g, " ")}</p>
-                  <p className="text-sm font-mono text-text-primary">
-                    {typeof v === "number" ? v.toFixed(4) : v}
-                  </p>
-                </div>
-              ))}
-            </div>
+      {/* Detail drawer */}
+      <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          {selected && (
+            <>
+              <SheetHeader className="text-left">
+                <SheetTitle className="font-display text-2xl font-medium">{selected.ticker}</SheetTitle>
+                <SheetDescription className="font-mono text-xs">
+                  {selected.start} → {selected.end}
+                  <span className="ml-2 text-pencil">{strategyLabel(selected.strategy)}</span>
+                </SheetDescription>
+              </SheetHeader>
 
-            <div className="border-t border-border pt-4">
-              <p className="text-xs text-text-muted mb-2 font-semibold uppercase tracking-wider">Parameters</p>
-              <pre className="text-xs text-text-muted font-mono bg-bg rounded-lg p-3 overflow-x-auto">
-                {JSON.stringify(selected.params, null, 2)}
-              </pre>
-            </div>
+              <div className="grid grid-cols-2 gap-2 my-6">
+                {Object.entries(selected.metrics || {}).map(([k, v]) => (
+                  <div key={k} className="bg-muted/50 rounded-md p-3">
+                    <p className="eyebrow mb-1 truncate">{k.replace(/_/g, " ")}</p>
+                    <p className="text-sm font-mono text-foreground">
+                      {typeof v === "number" ? v.toFixed(4) : v}
+                    </p>
+                  </div>
+                ))}
+              </div>
 
-            <button
-              onClick={() => handleReRun(selected)}
-              className="btn-primary mt-5 w-full py-2.5 text-sm"
-            >
-              Re-run this configuration
-            </button>
-          </div>
-        </div>
-      )}
+              <div className="border-t border-border pt-4">
+                <p className="eyebrow mb-2">Parameters</p>
+                <pre className="text-xs text-graphite font-mono bg-muted/50 rounded-md p-3 overflow-x-auto">
+                  {JSON.stringify(selected.params, null, 2)}
+                </pre>
+              </div>
+
+              <Button onClick={() => handleReRun(selected)} className="mt-5 w-full">
+                Re-run this configuration
+              </Button>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

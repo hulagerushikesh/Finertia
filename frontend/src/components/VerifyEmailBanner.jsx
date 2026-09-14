@@ -4,6 +4,8 @@ import { sendEmailVerification } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../hooks/useToast";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const DISMISS_KEY = "finertia:hide-verify-banner";
 const RESEND_COOLDOWN_S = 60;
@@ -103,45 +105,34 @@ export default function VerifyEmailBanner() {
   }
 
   return (
-    <div className="border-b border-warning/30 bg-warning/10">
+    <div className="border-b border-border bg-warn/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-x-4 gap-y-2 flex-wrap">
-        <p className="text-xs text-text-primary flex-1 min-w-[16rem]">
-          <span className="font-semibold">Confirm your email address.</span>{" "}
-          <span className="text-text-muted">
-            We sent a link to{" "}
-            <span className="font-mono">{user.email}</span>. Without it, a
+        <p className="text-xs text-foreground flex-1 min-w-[16rem]">
+          <span className="font-medium">Confirm your email address.</span>{" "}
+          <span className="text-graphite">
+            We sent a link to <span className="font-mono">{user.email}</span>. Without it, a
             password reset can't reach you.
           </span>
         </p>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleResend}
-            disabled={busy || cooldown > 0}
-            className="btn-primary text-xs px-3 py-1.5"
-          >
+        <div className="flex items-center gap-1">
+          <Button size="sm" onClick={handleResend} disabled={busy || cooldown > 0} className="h-7 text-xs">
             {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend email"}
-          </button>
-          <button
-            onClick={handleCheck}
-            disabled={busy}
-            className="text-xs text-text-muted hover:text-text-primary disabled:opacity-50 transition-colors"
-          >
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleCheck} disabled={busy} className="h-7 text-xs text-graphite">
             I've verified
-          </button>
-          <Link
-            to="/support"
-            className="text-xs text-text-muted hover:text-text-primary transition-colors"
-          >
-            Help
-          </Link>
-          <button
+          </Button>
+          <Button asChild variant="ghost" size="sm" className="h-7 text-xs text-graphite">
+            <Link to="/support">Help</Link>
+          </Button>
+          <Button
+            variant="ghost" size="icon"
             onClick={handleDismiss}
             aria-label="Hide this reminder until next visit"
-            className="text-text-muted hover:text-text-primary transition-colors leading-none px-1"
+            className="size-7 text-graphite"
           >
-            ×
-          </button>
+            <X className="size-3.5" />
+          </Button>
         </div>
       </div>
     </div>
