@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { m, useReducedMotion } from "motion/react";
 import Stamp from "./Stamp";
 import { EASE_OUT } from "./motion";
 
@@ -39,7 +39,7 @@ function Bar({ value, tone, delay }) {
   const width = (Math.abs(value) / MAX) * SPAN;
   const positive = value >= 0;
   return (
-    <motion.span
+    <m.span
       initial={off ? false : { scaleX: 0 }}
       animate={{ scaleX: 1 }}
       transition={{ duration: 0.7, delay, ease: EASE_OUT }}

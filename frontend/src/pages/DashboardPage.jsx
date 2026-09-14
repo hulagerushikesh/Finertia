@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { Link2, Check, Download } from "lucide-react";
 import ConfigPanel, { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
 import MetricsGrid from "../components/MetricsGrid";
@@ -157,7 +157,7 @@ export default function DashboardPage() {
 
           <AnimatePresence mode="wait" initial={false}>
             {!result && !loading && (
-              <motion.div
+              <m.div
                 key="empty"
                 initial={off ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -182,13 +182,13 @@ export default function DashboardPage() {
                     <Link to="/demo">Look at a finished one</Link>
                   </Button>
                 </div>
-              </motion.div>
+              </m.div>
             )}
 
             {/* Shaped like the result it is replacing, so the page does not
                 jump when it is swapped out. */}
             {loading && (
-              <motion.div
+              <m.div
                 key="loading"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -208,11 +208,11 @@ export default function DashboardPage() {
                 </div>
                 <Skeleton className="h-14 rounded-lg" />
                 <Skeleton className="h-64 rounded-lg" />
-              </motion.div>
+              </m.div>
             )}
 
             {result && !loading && (
-              <motion.div
+              <m.div
                 key="result"
                 initial={off ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -380,7 +380,7 @@ export default function DashboardPage() {
                       </Button>
                     </div>
                   ))}
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { m, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -25,7 +25,7 @@ export default function Stamp({ children, tone = "pencil", size = "md", classNam
   const off = useReducedMotion();
   const rotate = -5;
   return (
-    <motion.span
+    <m.span
       role="status"
       initial={off ? false : { scale: 1.6, opacity: 0, rotate }}
       animate={{ scale: 1, opacity: 0.94, rotate }}
@@ -41,6 +41,6 @@ export default function Stamp({ children, tone = "pencil", size = "md", classNam
       )}
     >
       {children}
-    </motion.span>
+    </m.span>
   );
 }

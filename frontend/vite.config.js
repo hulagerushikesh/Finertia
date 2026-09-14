@@ -11,6 +11,13 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: { "@": path.resolve(__dirname, "src") },
     },
+    // Pre-bundle every firebase entry together. If Vite discovers one of them
+    // mid-session it re-optimises on its own and ends up with two copies of
+    // @firebase/app, and the second reports "Service firestore/lite is not
+    // available" at runtime. Listing them up front keeps one registry.
+    optimizeDeps: {
+      include: ["firebase/app", "firebase/auth", "firebase/firestore/lite"],
+    },
     build: {
       outDir: "dist",
       rollupOptions: {

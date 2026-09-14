@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { m, useReducedMotion } from "motion/react";
 
 /**
  * The three motions this interface uses, named once.
@@ -23,7 +23,7 @@ export function useMotionOff() {
 
 export function Rise({ children, delay = 0, className, as = "div", ...rest }) {
   const off = useReducedMotion();
-  const Tag = motion[as] || motion.div;
+  const Tag = m[as] || m.div;
   return (
     <Tag
       initial={off ? false : { opacity: 0, y: 8 }}
@@ -50,7 +50,7 @@ export const staggerChild = {
 export function Stagger({ children, className, ...rest }) {
   const off = useReducedMotion();
   return (
-    <motion.div
+    <m.div
       variants={staggerParent}
       initial={off ? "show" : "hidden"}
       animate="show"
@@ -58,12 +58,12 @@ export function Stagger({ children, className, ...rest }) {
       {...rest}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
 export function StaggerItem({ children, className, as = "div", ...rest }) {
-  const Tag = motion[as] || motion.div;
+  const Tag = m[as] || m.div;
   return (
     <Tag variants={staggerChild} className={className} {...rest}>
       {children}

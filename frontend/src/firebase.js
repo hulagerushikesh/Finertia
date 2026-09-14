@@ -1,6 +1,10 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+// The lite SDK: REST calls, no realtime listeners, no offline cache. The
+// client only ever does getDoc/setDoc/updateDoc on its own profile — the
+// full SDK was ~250 kB minified on the landing page for a websocket nobody
+// opened. Security rules apply identically.
+import { getFirestore } from "firebase/firestore/lite";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
