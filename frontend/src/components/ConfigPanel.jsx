@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronRight, X, RotateCcw } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import Tooltip from "./Tooltip";
 import Spinner from "./Spinner";
 import { Input } from "@/components/ui/input";
@@ -351,7 +351,7 @@ function Section({ title, badge, defaultOpen = false, children }) {
       <AnimatePresence initial={false}>
         {open && (
           <CollapsibleContent forceMount asChild>
-            <motion.div
+            <m.div
               initial={off ? false : { height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={off ? undefined : { height: 0, opacity: 0 }}
@@ -359,7 +359,7 @@ function Section({ title, badge, defaultOpen = false, children }) {
               className="overflow-hidden"
             >
               <div className="flex flex-col gap-4 mt-4">{children}</div>
-            </motion.div>
+            </m.div>
           </CollapsibleContent>
         )}
       </AnimatePresence>

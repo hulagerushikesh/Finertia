@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore/lite";
 import { auth, db } from "../firebase";
 import AuthShell, { AuthField } from "../components/AuthShell";
 import PasswordInput from "../components/PasswordInput";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { getHistory, compareRuns } from "../api";
 import { SkeletonRows } from "../components/SkeletonRow";
 import { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
@@ -251,7 +251,7 @@ export default function HistoryPage() {
       {/* Compare bar — only once a comparison is actually possible */}
       <AnimatePresence>
         {!comparison && picked.length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12, transition: { duration: 0.12 } }}
@@ -276,7 +276,7 @@ export default function HistoryPage() {
                 )}
               </Button>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

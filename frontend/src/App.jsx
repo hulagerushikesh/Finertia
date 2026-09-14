@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
@@ -55,7 +55,7 @@ function Page({ render }) {
   const off = useReducedMotion();
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div
+      <m.div
         key={location.pathname}
         initial={off ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -67,7 +67,7 @@ function Page({ render }) {
             one from context and the transition would show the new page
             twice. */}
         {render(location)}
-      </motion.div>
+      </m.div>
     </AnimatePresence>
   );
 }
@@ -75,6 +75,11 @@ function Page({ render }) {
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="finertia-theme">
+      {/* `m` + domAnimation instead of `motion`: this interface only ever
+          animates opacity/transform, and the full `motion` component pulls
+          ~40 kB gz of layout/drag/gesture code onto the landing page. `strict`
+          throws if a `motion.*` element sneaks back in. */}
+      <LazyMotion features={domAnimation} strict>
       <BrowserRouter>
         <AuthProvider>
           <ToastProvider>
@@ -149,6 +154,7 @@ export default function App() {
           </ToastProvider>
         </AuthProvider>
       </BrowserRouter>
+      </LazyMotion>
     </ThemeProvider>
   );
 }

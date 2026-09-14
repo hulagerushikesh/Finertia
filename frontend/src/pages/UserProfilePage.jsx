@@ -5,7 +5,7 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore/lite";
 import { auth, db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import UsageMeter from "../components/UsageMeter";

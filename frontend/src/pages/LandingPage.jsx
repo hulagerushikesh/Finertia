@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { motion, useReducedMotion } from "motion/react";
+import { m, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import RealityTape from "../components/RealityTape";
 import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
@@ -37,13 +37,13 @@ function SplitDiagram() {
   return (
     <svg viewBox="0 0 600 64" className="w-full h-16" aria-hidden="true">
       <line x1="0" y1="40" x2="600" y2="40" stroke="hsl(var(--border-strong))" strokeWidth="1" />
-      <motion.rect
+      <m.rect
         x="0" y="34" width="400" height="12" fill="hsl(var(--foreground))"
         initial={off ? false : { scaleX: 0 }} animate={{ scaleX: 1 }}
         transition={{ duration: 0.8, ease: EASE_OUT }} style={{ transformOrigin: "0 40px" }}
       />
       <rect x="400" y="34" width="24" height="12" fill="hsl(var(--border))" />
-      <motion.rect
+      <m.rect
         x="424" y="34" width="176" height="12" fill="hsl(var(--pencil))"
         initial={off ? false : { scaleX: 0 }} animate={{ scaleX: 1 }}
         transition={{ duration: 0.6, delay: 0.6, ease: EASE_OUT }} style={{ transformOrigin: "424px 40px" }}
