@@ -1,0 +1,209 @@
+# 03 — Validation methods: what makes a backtest number mean something
+
+This is the research core of Finertia. Every method below is implemented from
+the paper, in numpy, with no scipy and no library — and each one exists because
+the previous one was found to be lying in a specific way. Read them in order;
+that order *is* the story.
+
+Prereqs: all of 01, plus Sharpe, drawdown, and `pytest` from 02.
+
+---
+
+## 0. The problem statement
+
+`max(grid_results, key=sharpe)` — pick the best of N parameter combinations on
+the data you have. That single line is:
+
+1. **Overfitting** — the winner was chosen with knowledge of the whole period.
+2. **Multiple testing** — the maximum of N draws is biased upward even when
+   every draw has zero edge.
+3. **Leakage** — a trade open across any split earns on both sides of it.
+4. **A point estimate** — one number, no error bar, from one sample path.
+
+Finertia attacks each in turn. Canonical demo: AAPL 2018–2024.
+
+| Strategy | In-sample Sharpe | Out-of-sample | Verdict |
+|---|---|---|---|
+| Momentum | 0.889 | −0.242 | Failed |
+| MACD | 0.554 | −0.281 | Failed |
+| Bollinger | 0.553 | 1.367 | Held up |
+
+The best in-sample result was the worst out-of-sample one.
+
+---
+
+## 1. Walk-forward validation  — `backend/validation.py` → `walk_forward()`
+
+- [ ] **What**: split the period 70/30. Sweep the strategy's parameter grid on
+  the first 70%, keep the best Sharpe, score *only* on the last 30%.
+- [ ] **Verdict rule** (`_verdict`): OOS retains ≥ 70% of IS Sharpe → held up;
+  otherwise failed/degraded.
+- [ ] **Why it is not enough**: it tries one split. An edge confined to the
+  first half passes; a regime break in the last 30% fails a real edge. And the
+  IS number is still the max of N draws (→ §3).
+- [ ] **Grid sizes**: momentum 16, MACD 4, Bollinger 12 combinations
+  (`strategies.py` → `param_grid`).
+- [ ] The candidate return matrix is built ONCE here and reused by §4.
+  Re-running `build_positions` per split would be 70× the work.
+
+Read: López de Prado, *Advances in Financial Machine Learning* (AFML), ch. 11–12.
+
+## 2. Signal permutation test — `validation.py` → `permutation_test()`
+
+- [ ] **What**: shuffle the position series 500 times, keeping the exposure
+  distribution but destroying the *timing*. Report the percentile the real
+  Sharpe lands in among the shuffles.
+- [ ] **Interpretation**: p ≈ 0.5 → timing is indistinguishable from luck.
+- [ ] **Limit**: defined on a single position series, which is why validation is
+  hidden in portfolio mode (open question, see research/).
+
+Read: White (2000) "A Reality Check for Data Snooping" for the general idea.
+
+## 3. Deflated Sharpe Ratio — `backend/deflated.py`
+
+Bailey & López de Prado (2014), "The Deflated Sharpe Ratio".
+
+- [ ] **Expected max Sharpe of N zero-edge trials**
+  `SR* = σ · [(1−γ)·Φ⁻¹(1 − 1/N) + γ·Φ⁻¹(1 − 1/(N·e))]`, γ = Euler–Mascheroni.
+  Sanity: paper reports 3.26 at N = 1000 — a test pins it.
+  Code: `expected_max_sharpe()`.
+- [ ] **Probabilistic Sharpe Ratio** (Bailey & LdP 2012)
+  `PSR = Φ[ (SR − SR*)·√(T−1) / √(1 − skew·SR + ((kurt−1)/4)·SR²) ]`
+  Code: `probabilistic_sharpe_ratio()`.
+- [ ] **DSR** = PSR evaluated against SR* instead of 0. Code: `deflated_sharpe_ratio()`.
+- [ ] **Normal CDF via `math.erf`; inverse via Acklam's rational approximation
+  (~1e-9)** — because scipy is deliberately absent. Code: `_norm_cdf`, `_norm_ppf`.
+
+**Traps — each produces a plausible wrong number, not an error:**
+- [ ] Kurtosis is **non-excess** (Normal = 3). Check: skew 0, kurt 3 must reduce
+  the denominator to `√(1 + SR²/2)` — Lo (2002)'s standard error. Pinned to 1e-12.
+- [ ] **De-annualise the Sharpe.** `metrics.py` returns an annualised Sharpe;
+  T counts daily bars. Mixing them inflates by ~√252 and everything looks significant.
+- [ ] `std == 0` does **not** catch a flat series (500 × 0.001 sums to std ≈ 4e-19
+  → Sharpe 2e15). The guard is relative to the data's magnitude.
+- [ ] A Sharpe means nothing for a mostly-flat series — one Bollinger setting
+  fired on 3% of bars: skew 30, kurtosis 959. Refused as `unreliable`
+  (< 30 active bars or kurt > 50).
+
+**Result on a random walk by construction:** Momentum 55.7% → 19.4%;
+Bollinger 83.7% → **1.8%**. Uncorrected, Bollinger read as an 84%-likely edge.
+
+Known limitation: N counts raw grid combinations as independent. Neighbouring
+parameters are correlated, so true effective N is lower. Overstating N raises
+the bar — the safe direction — but it is unmeasured. **This is the last open
+roadmap item** (research/open-questions.md §1).
+
+## 4. Probability of Backtest Overfitting via CSCV — `backend/pbo.py`
+
+Bailey, Borwein, López de Prado & Zhu (2014), "The Probability of Backtest Overfitting".
+
+- [ ] **What**: cut the period into S = 8 blocks; form all C(8,4) = 70 balanced
+  train/test splits; on each, pick the best candidate on train and find its
+  rank on test. `PBO` = share of splits where the train-winner lands below the
+  test median. 0.5 = selection is no better than random.
+- [ ] **Also reported**: `probability_of_loss` (winner has OOS Sharpe < 0) and
+  `degradation_slope` (regress OOS on IS across candidates; negative = better
+  in-sample predicted worse out-of-sample). PBO alone under-reports: on a random
+  walk momentum scored a middling 0.41 while P(loss) = 0.90 and slope = −0.69.
+- [ ] **Speed**: ~0.03s, because the candidate matrix from §1 is just row-sliced.
+- [ ] **Traps**: a flat candidate must score −inf, not 0, or it outranks losing
+  strategies and wins training. Ties: `worse + (tied+1)/2` so a total tie sits
+  at the median.
+- [ ] **Limitation, pinned by a test**: CSCV draws both halves from blocks
+  across the whole period, so it *cannot see a regime break* — an edge confined
+  to the first half still scores PBO 0.01. Walk-forward is chronological ("did
+  it survive later"); CSCV is combinatorial ("is selecting on IS score better
+  than random"). Complements, not substitutes.
+
+## 5. Purge and embargo — `backend/purge.py` → `purged_split()`
+
+AFML ch. 7.
+
+- [ ] **The leak was not the warm-up window.** An MA reaching back across the
+  split is legitimate — that is what you do live. The defect is the trade
+  *straddling* the cut: opened in selection, still open in scoring, paid off one
+  price move on both sides. Measured on 5y daily: the momentum grid's boundary
+  position was held up to 33 bars and ran 12 more.
+- [ ] **Gap** = 1% of the period (`EMBARGO_PCT`), floored at 5 bars
+  (1% of 1y = 3 days < a holding period), capped at 25 (past a month it costs
+  more OOS data than the bias it removes). Symmetric, so dead zone = 2·gap.
+  Yields when honouring it would leave a half < 30 bars; sets `shortened`/`applied`.
+- [ ] **It is not a deflator.** 4 tickers × 3 strategies: OOS Sharpe median
+  moved +0.014, down in 5 of 12, up in 7; individual moves up to 0.7; the winner
+  changed in 2. The case is structural (no bar counted twice), not "it makes
+  numbers smaller".
+- [ ] `in_sample_bars` / `out_of_sample_bars` report bars *actually used*, not
+  the nominal 70/30 — pinned so nobody "fixes" it back.
+
+## 6. Block-bootstrap confidence intervals — `backend/bootstrap.py`
+
+On **every** `POST /api/backtest`, every plan, ~50ms. Deliberately not Pro-gated:
+the free tier is exactly who takes a Sharpe at face value.
+
+- [ ] **Stationary bootstrap** (Politis & Romano 1994): resample blocks of
+  geometric random length so the resampled series stays stationary.
+  Code: `stationary_bootstrap_indices()`, 1000 resamples.
+- [ ] **Automatic block length** (Politis & White 2004; Patton, Politis & White
+  2009): flat-top kernel spectral estimate. Code: `politis_white_block_length()`.
+- [ ] **Chosen from TWO series, longer wins: returns AND squared returns.**
+  A strategy return is position × price return; price returns are near-white,
+  so the returns arm says ~1 even for a 30-bar holding period. Uncertainty in
+  Sharpe/vol/drawdown lives in the second moment (volatility clustering is
+  long-memory). Code: `choose_block_length()`.
+  Failed first attempt: "first ACF lag inside 1.96/√n" *as* the block length —
+  saturates on squared returns and returned a block a tenth of the sample.
+- [ ] **BCa intervals** with a **delete-one-BLOCK jackknife** — delete-one-
+  observation is invalid under serial dependence (Künsch 1989).
+  Code: `_bca_interval()`, `_block_jackknife()`.
+- [ ] **Measured coverage, not assumed**: 300 GARCH(1,1) paths, n = 1250,
+  nominal 95% → 7 of 9 metrics 92.7–95.0%. Two fail and are FLAGGED in the
+  response and the UI:
+  - `annualized_volatility` 69.7% — reproduces 56% of true spread. Not fixable by
+    tuning: half the variation in a 5y realised vol is which regime the period
+    sat in, and no resample can recreate a regime it did not contain. Sharpe
+    escapes because it is a ratio — regime level cancels.
+  - `max_drawdown` 79.0% — a resample preserves order only inside a block.
+- [ ] **Three metrics get no interval, on purpose**: `best_day` / `worst_day`
+  (a resample draws only from days that happened — the interval would be bounded
+  by the statistic it bounds, understating tail risk exactly where it matters)
+  and `num_trades` (resampling moves returns, not the position path).
+- [ ] **Seed = blake2b of the run's inputs, never builtin `hash`** — `hash(str)`
+  is salted per process, so a "deterministic" interval would move on every
+  restart. Only a *subprocess* test catches this.
+- [ ] Band bounds are rounded harder than the point estimate (0dp for %):
+  "+404.95%" claims precision the interval is denying.
+
+**Headline**: AAPL momentum 2019–2024 Sharpe 0.3865, 95% CI −0.39 to 1.29.
+Spans zero. Agrees independently with the walk-forward finding.
+
+Latent bug found alongside: `compute_metrics` raised `TypeError` when a strategy
+lost > 100% — `(1+total)**(252/n)` is complex for a negative base. Reachable
+(max_leverage up to 5.0). Pinned at −1.0.
+
+---
+
+## How the six fit together
+
+```
+                 ┌─ §5 purge/embargo (no bar paid twice)
+walk-forward ────┤
+  (§1)           └─ §3 DSR   (was the IS winner better than max-of-N noise?)
+                 
+CSCV (§4)  ─────── is *selecting on IS score* better than random at all?
+permutation (§2) ─ is the *timing* better than a shuffle?
+bootstrap (§6) ─── how wide is the band around every number you printed?
+```
+
+Each answers a different question. None replaces another. The UI shows all of
+them (`ValidationPanel.jsx`: walk-forward → deflated → PBO → permutation;
+`MetricsGrid.jsx`: CI bands).
+
+## Test discipline that made this trustworthy
+
+- Formulas verified against sources *outside* the codebase before use.
+- Constants pinned to the papers (3.26; Lo 2002 to 1e-12).
+- Coverage *measured* on synthetic GARCH paths, failures shipped as flags.
+- Mutation-checked: delete the check, watch exactly the right tests fail.
+- 535 tests, `cd backend && pytest tests/ -q`, no credentials, no network.
+
+Next: [research/reading-list.md](research/reading-list.md)
