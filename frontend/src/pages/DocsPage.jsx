@@ -1,25 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-
-function Section({ id, title, children }) {
-  return (
-    <section id={id} className="scroll-mt-20">
-      <h2 className="text-lg font-semibold text-text-primary mb-3">{title}</h2>
-      <div className="flex flex-col gap-3 text-sm text-text-muted leading-relaxed">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Term({ name, children }) {
-  return (
-    <div className="border-l-2 border-border pl-4 py-1">
-      <p className="text-text-primary font-medium text-sm mb-0.5">{name}</p>
-      <p className="text-sm text-text-muted leading-relaxed">{children}</p>
-    </div>
-  );
-}
+import { DocSection as Section, Term, DocHeader } from "../components/Prose";
+import { Rise } from "../components/motion";
 
 const CONTENTS = [
   ["how-it-works", "How a backtest runs"],
@@ -34,25 +16,22 @@ const CONTENTS = [
 
 export default function DocsPage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-2xl font-bold text-text-primary mb-2">How it works</h1>
-      <p className="text-sm text-text-muted mb-8">
-        Every number in this app is computed by hand-written pandas and numpy —
-        no backtesting library, no TA library. This page explains what those
-        computations do and, more usefully, where they can mislead you.
-      </p>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Rise>
+        <DocHeader eyebrow="Method" title="How it works.">
+          Every number in this app is computed by hand-written pandas and numpy — no backtesting
+          library, no TA library. This page explains what those computations do and, more usefully,
+          where they can mislead you.
+        </DocHeader>
+      </Rise>
 
-      <nav className="panel p-5 mb-10">
-        <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
-          Contents
-        </p>
-        <ol className="flex flex-col gap-1.5">
+      <nav className="grid lg:grid-cols-[11rem_minmax(0,1fr)] gap-x-10 mb-14" aria-label="Contents">
+        <p className="eyebrow lg:text-right mb-3 lg:mb-0 lg:pt-1">Contents</p>
+        <ol className="flex flex-col gap-1.5 max-w-prose">
           {CONTENTS.map(([id, label], i) => (
             <li key={id} className="text-sm">
-              <a href={`#${id}`} className="text-text-muted hover:text-accent transition-colors">
-                <span className="font-mono text-xs text-text-faint mr-2">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
+              <a href={`#${id}`} className="text-graphite hover:text-pencil transition-colors rounded-sm">
+                <span className="font-mono text-2xs text-faint mr-3">{String(i + 1).padStart(2, "0")}</span>
                 {label}
               </a>
             </li>
@@ -60,7 +39,7 @@ export default function DocsPage() {
         </ol>
       </nav>
 
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-14">
         <Section id="how-it-works" title="How a backtest runs">
           <p>
             Daily closing prices are fetched for your ticker and date range. The
@@ -127,7 +106,7 @@ export default function DocsPage() {
             than re-entering the next bar and paying costs for nothing.
           </Term>
           <Term name="Volatility targeting">
-            Scales exposure to <code className="font-mono text-xs">target ÷ trailing volatility</code>,
+            Scales exposure to <code className="font-mono text-xs text-foreground">target ÷ trailing volatility</code>,
             capped by max leverage. Smaller in turbulent markets, larger in calm
             ones. It usually lowers return and lowers drawdown more — whether
             that is an improvement depends on what you are optimising.
@@ -172,6 +151,24 @@ export default function DocsPage() {
             your real result sits comfortably inside the distribution of shuffled
             ones, the edge came from being in the market, not from choosing when.
           </Term>
+          <Term name="Deflated Sharpe ratio">
+            Walk-forward picks the best of a grid, and the best of any search
+            looks good even with no edge. The winner's Sharpe is measured against
+            the maximum that search would be expected to produce on noise, not
+            against zero.
+          </Term>
+          <Term name="Probability of backtest overfitting">
+            The period is cut into eight blocks and every balanced way of
+            splitting them is tried. On each, the combination that wins one half
+            is checked against the other. If it lands below the median at least
+            half the time, the selection is no better than choosing at random.
+          </Term>
+          <Term name="Confidence intervals">
+            Every metric carries a band from a block bootstrap of the returns —
+            resampled in blocks so the autocorrelation survives. A Sharpe whose
+            band still contains zero is not weak evidence of an edge; it is no
+            evidence.
+          </Term>
         </Section>
 
         <Section id="metrics" title="Reading the metrics">
@@ -204,24 +201,24 @@ export default function DocsPage() {
 
         <Section id="limits" title="What a backtest cannot tell you">
           <p>
-            <strong className="text-text-primary">Survivorship bias.</strong>{" "}
+            <strong className="text-foreground font-medium">Survivorship bias.</strong>{" "}
             Price history only exists for companies that still trade. Every
             ticker you can type here is one that survived; the ones that went to
             zero are absent from the data and from your results.
           </p>
           <p>
-            <strong className="text-text-primary">Idealised execution.</strong>{" "}
+            <strong className="text-foreground font-medium">Idealised execution.</strong>{" "}
             Every trade fills at the closing price at a flat cost. Real slippage
             widens exactly when you least want it to — in fast markets, and when
             you are trading size.
           </p>
           <p>
-            <strong className="text-text-primary">One sample.</strong> A single
+            <strong className="text-foreground font-medium">One sample.</strong> A single
             backtest is one draw from a distribution of possible histories. It is
             not a forecast, and this app is not financial advice.
           </p>
           <p className="pt-2">
-            <Link to="/demo" className="text-accent hover:underline">
+            <Link to="/demo" className="text-pencil hover:underline">
               See a worked example →
             </Link>
           </p>
