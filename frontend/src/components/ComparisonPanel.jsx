@@ -10,11 +10,17 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { STRATEGIES } from "./ConfigPanel";
-import { CHART } from "../chartTheme";
+import { CHART, AXIS, thin } from "../chartTheme";
+import ChartFrame from "./ChartFrame";
+import ChartTip from "./ChartTip";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
-// Four distinct hues rather than shades of one — the whole point of the chart is
-// telling the lines apart, and the run cap is four for the same reason.
-const COLORS = [CHART.strategy, CHART.success, CHART.warning, CHART.info];
+// Four distinct marks rather than shades of one — the whole point of the
+// chart is telling the lines apart, and the run cap is four for the same
+// reason. Ink first, then pencil, then the two semantic hues.
+const COLORS = [CHART.strategy, CHART.pencil, CHART.gain, CHART.warn];
 
 const label = (s) =>
   `${s.ticker} · ${STRATEGIES.find((x) => x.id === s.strategy)?.label || s.strategy}`;
@@ -22,20 +28,16 @@ const label = (s) =>
 const pct = (v) =>
   v === null || v === undefined ? "—" : `${(v * 100).toFixed(2)}%`;
 
-function CustomTooltip({ active, payload, label: date, series }) {
+function Tip({ active, payload, label: date, series }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-raised border border-border-strong shadow-pop rounded-lg px-3 py-2 text-xs font-mono">
-      <p className="text-text-muted mb-1">{date}</p>
-      {payload.map((p) => {
+    <ChartTip
+      label={date}
+      rows={payload.map((p) => {
         const s = series.find((x) => x.runId === p.dataKey);
-        return (
-          <p key={p.dataKey} style={{ color: p.color }}>
-            {s ? label(s) : p.dataKey}: {p.value?.toFixed(4)}
-          </p>
-        );
+        return { label: s ? label(s) : p.dataKey, value: p.value?.toFixed(4) };
       })}
-    </div>
+    />
   );
 }
 
@@ -44,8 +46,7 @@ export default function ComparisonPanel({ data }) {
 
   // Same thinning rule as the single-run chart: recharts slows noticeably past a
   // few hundred points and the shape does not change.
-  const step = Math.max(1, Math.floor(chart.length / 300));
-  const thinned = chart.filter((_, i) => i % step === 0);
+  const thinned = thin(chart);
 
   // Best value per metric, so the winner can be marked. Drawdown is negative,
   // so "best" there is the largest (closest to zero) rather than the smallest.
@@ -58,41 +59,29 @@ export default function ComparisonPanel({ data }) {
   return (
     <div className="flex flex-col gap-5">
       {overlap === 0 && (
-        <div className="bg-warning/10 border border-warning/30 text-warning text-xs rounded-xl px-4 py-3">
-          These runs cover periods that never overlap, so the lines share an axis
-          but not a moment in time. Their end values are not comparable.
-        </div>
+        <Alert className="border-l-2 border-l-warn">
+          <AlertDescription className="text-xs text-graphite">
+            These runs cover periods that never overlap, so the lines share an axis but not a
+            moment in time. Their end values are not comparable.
+          </AlertDescription>
+        </Alert>
       )}
 
-      <div className="panel p-5">
-        <div className="flex items-baseline justify-between mb-4 gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold text-text-primary">
-            Equity Curves — {series.length} runs
-          </h2>
-          <span className="text-xs text-text-muted font-mono">
+      <ChartFrame
+        title={`Equity curves — ${series.length} runs`}
+        aside={
+          <span className="text-2xs font-mono text-graphite">
             {overlap} overlapping day{overlap === 1 ? "" : "s"}
           </span>
-        </div>
+        }
+      >
         <ResponsiveContainer width="100%" height={320}>
-          <LineChart data={thinned} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
-            <XAxis
-              dataKey="date"
-              tickFormatter={(d) => d?.slice(0, 7)}
-              tick={{ fill: CHART.axisText, fontSize: 11 }}
-              tickLine={false}
-              axisLine={{ stroke: CHART.grid }}
-              interval="preserveStartEnd"
-            />
-            <YAxis
-              tick={{ fill: CHART.axisText, fontSize: 11, fontFamily: CHART.mono }}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v) => v.toFixed(2)}
-              width={48}
-            />
-            <Tooltip content={<CustomTooltip series={series} />} />
-            <Legend wrapperStyle={{ fontSize: 12, color: CHART.axisText }} />
+          <LineChart data={thinned} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+            <CartesianGrid stroke={CHART.grid} vertical={false} />
+            <XAxis dataKey="date" tickFormatter={(d) => d?.slice(0, 7)} {...AXIS} interval="preserveStartEnd" minTickGap={40} />
+            <YAxis {...AXIS} axisLine={false} tickFormatter={(v) => v.toFixed(2)} width={44} />
+            <Tooltip content={<Tip series={series} />} cursor={{ stroke: CHART.pencil, strokeDasharray: "2 3" }} />
+            <Legend iconType="plainline" wrapperStyle={{ fontSize: 11, fontFamily: CHART.mono, color: CHART.axisText }} />
             {series.map((s, i) => (
               <Line
                 key={s.runId}
@@ -100,8 +89,9 @@ export default function ComparisonPanel({ data }) {
                 dataKey={s.runId}
                 name={label(s)}
                 stroke={COLORS[i % COLORS.length]}
+                strokeDasharray={i === 0 ? undefined : i === 1 ? "6 3" : i === 2 ? "2 3" : "8 3 2 3"}
                 dot={false}
-                strokeWidth={2}
+                strokeWidth={i === 0 ? 2 : 1.6}
                 // A run with no bar on a date is absent from that row rather
                 // than zero; connecting across keeps the line continuous.
                 connectNulls
@@ -109,73 +99,50 @@ export default function ComparisonPanel({ data }) {
             ))}
           </LineChart>
         </ResponsiveContainer>
-      </div>
+      </ChartFrame>
 
-      <div className="panel overflow-hidden">
+      <section className="sheet overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">
-                <th className="text-left px-5 py-3">Run</th>
-                <th className="text-left px-5 py-3">Period</th>
-                <th className="text-right px-5 py-3">Total Return</th>
-                <th className="text-right px-5 py-3">Sharpe</th>
-                <th className="text-right px-5 py-3">Max DD</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-5">Run</TableHead>
+                <TableHead>Period</TableHead>
+                <TableHead className="text-right">Total return</TableHead>
+                <TableHead className="text-right">Sharpe</TableHead>
+                <TableHead className="text-right pr-5">Max DD</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {series.map((s, i) => (
-                <tr key={s.runId} className="border-b border-border/50 last:border-0">
-                  <td className="px-5 py-3">
+                <TableRow key={s.runId} className="font-mono text-xs">
+                  <TableCell className="pl-5">
                     <span className="flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                        style={{ background: COLORS[i % COLORS.length] }}
-                      />
-                      <span className="font-mono text-text-primary">{label(s)}</span>
+                      <span className="w-4 h-0.5 shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                      <span className="text-foreground">{label(s)}</span>
                     </span>
-                  </td>
-                  <td className="px-5 py-3 text-text-muted text-xs font-mono whitespace-nowrap">
-                    {s.start} → {s.end}
-                  </td>
-                  <td
-                    className={`px-5 py-3 text-right font-mono text-xs ${
-                      s.metrics?.total_return === best.total_return
-                        ? "text-success font-bold"
-                        : "text-text-primary"
-                    }`}
-                  >
+                  </TableCell>
+                  <TableCell className="text-graphite whitespace-nowrap">{s.start} → {s.end}</TableCell>
+                  <TableCell className={cn("text-right", s.metrics?.total_return === best.total_return ? "text-gain font-medium pencil-mark" : "text-foreground")}>
                     {pct(s.metrics?.total_return)}
-                  </td>
-                  <td
-                    className={`px-5 py-3 text-right font-mono text-xs ${
-                      s.metrics?.sharpe_ratio === best.sharpe_ratio
-                        ? "text-success font-bold"
-                        : "text-text-primary"
-                    }`}
-                  >
+                  </TableCell>
+                  <TableCell className={cn("text-right", s.metrics?.sharpe_ratio === best.sharpe_ratio ? "text-gain font-medium pencil-mark" : "text-foreground")}>
                     {s.metrics?.sharpe_ratio?.toFixed(2) ?? "—"}
-                  </td>
-                  <td
-                    className={`px-5 py-3 text-right font-mono text-xs ${
-                      s.metrics?.max_drawdown === best.max_drawdown
-                        ? "text-success font-bold"
-                        : "text-danger"
-                    }`}
-                  >
+                  </TableCell>
+                  <TableCell className={cn("text-right pr-5", s.metrics?.max_drawdown === best.max_drawdown ? "text-gain font-medium pencil-mark" : "text-loss")}>
                     {pct(s.metrics?.max_drawdown)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
-        <p className="text-xs text-text-faint px-5 py-3 border-t border-border">
-          Bold marks the best value in each column. Comparing runs on different
-          tickers or periods compares two different markets as much as two
-          strategies — the fair test holds everything but one variable fixed.
+        <p className="text-xs text-faint px-5 py-3 border-t border-border leading-relaxed">
+          The pencil-marked value is the best in each column. Comparing runs on different tickers
+          or periods compares two different markets as much as two strategies — the fair test holds
+          everything but one variable fixed.
         </p>
-      </div>
+      </section>
     </div>
   );
 }

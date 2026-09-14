@@ -1,5 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
+import { ChevronRight, X, RotateCcw } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Tooltip from "./Tooltip";
+import Spinner from "./Spinner";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 // A curated list rather than a symbol-search API: it needs no key, no network
 // call, and no rate limit, and these cover the overwhelming majority of what
@@ -121,8 +131,8 @@ function TickerInput({ value, onChange, onCommit, placeholder = "e.g. AAPL" }) {
 
   return (
     <div className="relative" ref={wrapRef}>
-      <input
-        className={inputClass}
+      <Input
+        className="font-mono uppercase"
         value={value}
         onChange={(e) => {
           onChange(e.target.value.toUpperCase());
@@ -138,18 +148,22 @@ function TickerInput({ value, onChange, onCommit, placeholder = "e.g. AAPL" }) {
         aria-autocomplete="list"
       />
       {open && matches.length > 0 && (
-        <ul className="absolute z-20 left-0 right-0 mt-1 bg-raised border border-border-strong rounded-lg shadow-pop overflow-hidden max-h-60 overflow-y-auto">
+        <ul
+          role="listbox"
+          className="absolute z-20 left-0 right-0 mt-1 bg-popover text-popover-foreground rounded-md shadow-pop overflow-hidden max-h-60 overflow-y-auto"
+        >
           {matches.map((t, i) => (
-            <li key={t.symbol}>
+            <li key={t.symbol} role="option" aria-selected={i === cursor}>
               <button
                 onMouseEnter={() => setCursor(i)}
                 onClick={() => pick(t.symbol)}
-                className={`w-full text-left px-3 py-2 flex items-baseline justify-between gap-2 transition-colors ${
-                  i === cursor ? "bg-accent/15" : ""
-                }`}
+                className={cn(
+                  "w-full text-left px-3 py-2 flex items-baseline justify-between gap-2 transition-colors",
+                  i === cursor && "bg-accent text-accent-foreground",
+                )}
               >
-                <span className="font-mono text-xs text-text-primary">{t.symbol}</span>
-                <span className="text-xs text-text-muted truncate">{t.name}</span>
+                <span className="font-mono text-xs">{t.symbol}</span>
+                <span className="text-xs text-graphite truncate">{t.name}</span>
               </button>
             </li>
           ))}
@@ -246,40 +260,50 @@ function Field({ label, hint, tip, range, children }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="flex items-center gap-1.5">
-        <label className="eyebrow">{label}</label>
+        <Label className="eyebrow">{label}</Label>
         {tip && <Tooltip label={tip} align="start" />}
         {range && (
-          <span className="ml-auto text-2xs font-mono text-text-faint whitespace-nowrap">
-            {range}
-          </span>
+          <span className="ml-auto text-2xs font-mono text-faint whitespace-nowrap">{range}</span>
         )}
       </span>
       <div className="mt-auto">{children}</div>
-      {hint && <p className="text-xs text-text-faint leading-relaxed">{hint}</p>}
+      {hint && <p className="text-xs text-faint leading-relaxed">{hint}</p>}
     </div>
   );
 }
 
-const inputClass = "field-input font-mono";
+const inputClass = "font-mono";
+
+/** An inline validation message, in the loss colour, under the field it names. */
+function FieldError({ children }) {
+  return (
+    <p role="alert" className="text-xs text-loss bg-loss/10 border-l-2 border-loss px-3 py-2 rounded-r-sm">
+      {children}
+    </p>
+  );
+}
 
 /** Segmented control. Every either/or choice in this panel is one of these. */
 function Segmented({ value, onChange, options, columns }) {
   return (
     <div
-      className={`grid gap-1 bg-bg border border-border rounded-lg p-1 ${
-        columns === 3 ? "grid-cols-3" : "grid-cols-2"
-      }`}
+      role="group"
+      className={cn(
+        "grid gap-1 bg-muted rounded-md p-1",
+        columns === 3 ? "grid-cols-3" : "grid-cols-2",
+      )}
     >
       {options.map((o) => (
         <button
           key={o.id}
           onClick={() => onChange(o.id)}
           aria-pressed={value === o.id}
-          className={`text-xs font-medium py-1.5 rounded-md transition-colors ${
+          className={cn(
+            "text-xs font-medium py-1.5 rounded-sm transition-colors",
             value === o.id
-              ? "bg-accent-strong text-white shadow-panel"
-              : "text-text-muted hover:text-text-primary hover:bg-raised"
-          }`}
+              ? "bg-card text-foreground shadow-sheet"
+              : "text-graphite hover:text-foreground",
+          )}
         >
           {o.label}
         </button>
@@ -302,32 +326,44 @@ function Segmented({ value, onChange, options, columns }) {
  */
 function Section({ title, badge, defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
+  const off = useReducedMotion();
   return (
-    <div className="border-t border-border pt-4">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="w-full flex items-center gap-2 py-1 -my-1 text-left group"
-      >
-        <span className="text-xs font-semibold text-text-primary uppercase tracking-wider flex-1">
-          {title}
-        </span>
-        {badge > 0 && (
-          <span className="text-2xs font-mono text-accent-soft bg-accent/12 border border-accent/30 rounded-full px-1.5 leading-[1.15rem]">
-            {badge}
+    <Collapsible open={open} onOpenChange={setOpen} className="border-t border-border pt-4">
+      <CollapsibleTrigger asChild>
+        <button className="w-full flex items-center gap-2 py-1 -my-1 text-left group rounded-sm">
+          <span className="text-xs font-semibold text-foreground uppercase tracking-wider flex-1">
+            {title}
           </span>
+          {badge > 0 && (
+            <Badge variant="outline" className="font-mono text-2xs text-pencil border-pencil/40 px-1.5 py-0">
+              {badge}
+            </Badge>
+          )}
+          <ChevronRight
+            aria-hidden="true"
+            className={cn(
+              "size-3.5 text-faint group-hover:text-foreground transition-transform duration-200",
+              open && "rotate-90",
+            )}
+          />
+        </button>
+      </CollapsibleTrigger>
+      <AnimatePresence initial={false}>
+        {open && (
+          <CollapsibleContent forceMount asChild>
+            <motion.div
+              initial={off ? false : { height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={off ? undefined : { height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="flex flex-col gap-4 mt-4">{children}</div>
+            </motion.div>
+          </CollapsibleContent>
         )}
-        <span
-          aria-hidden="true"
-          className={`text-text-faint group-hover:text-text-primary transition-transform duration-200 text-2xs ${
-            open ? "rotate-90" : ""
-          }`}
-        >
-          &#9654;
-        </span>
-      </button>
-      {open && <div className="flex flex-col gap-4 mt-4">{children}</div>}
-    </div>
+      </AnimatePresence>
+    </Collapsible>
   );
 }
 
@@ -356,7 +392,7 @@ function TickerListInput({ tickers, onChange }) {
         {tickers.map((t) => (
           <span
             key={t}
-            className="inline-flex items-center gap-1.5 bg-bg border border-border rounded-lg pl-2.5 pr-1.5 py-1 text-xs font-mono text-text-primary"
+            className="inline-flex items-center gap-1 bg-muted rounded-sm pl-2 pr-1 py-1 text-xs font-mono text-foreground"
           >
             {t}
             <button
@@ -365,18 +401,16 @@ function TickerListInput({ tickers, onChange }) {
               // would build a request that can only fail.
               disabled={tickers.length <= 2}
               aria-label={`Remove ${t}`}
-              className="text-text-muted hover:text-danger disabled:opacity-30 disabled:hover:text-text-muted leading-none"
+              className="text-graphite hover:text-loss disabled:opacity-30 disabled:hover:text-graphite rounded-sm"
             >
-              ×
+              <X className="size-3" aria-hidden="true" />
             </button>
           </span>
         ))}
       </div>
 
       {full ? (
-        <p className="text-xs text-text-faint">
-          Maximum of {MAX_TICKERS} holdings reached.
-        </p>
+        <p className="text-xs text-faint">Maximum of {MAX_TICKERS} holdings reached.</p>
       ) : (
         <TickerInput value={draft} onChange={setDraft} onCommit={add} placeholder="Add a ticker" />
       )}
@@ -387,23 +421,25 @@ function TickerListInput({ tickers, onChange }) {
 /** Percent-facing input over a fraction-valued field, with an on/off toggle. */
 function LimitField({ label, hint, value, onChange, defaultPct }) {
   const enabled = value !== null && value !== undefined;
+  const id = `limit-${label.replace(/\s+/g, "-").toLowerCase()}`;
   return (
-    <div className="flex flex-col gap-1">
-      <label className="flex w-fit items-center gap-2 py-1 text-xs font-medium text-text-muted uppercase tracking-wider cursor-pointer">
-        <input
-          type="checkbox"
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={id}
           checked={enabled}
-          onChange={(e) => onChange(e.target.checked ? defaultPct / 100 : null)}
-          className="w-3.5 h-3.5 accent-accent cursor-pointer"
+          onCheckedChange={(checked) => onChange(checked ? defaultPct / 100 : null)}
         />
-        {label}
-      </label>
+        <Label htmlFor={id} className="text-xs font-medium text-graphite uppercase tracking-wider cursor-pointer">
+          {label}
+        </Label>
+      </div>
       {enabled && (
         <>
           <div className="relative">
-            <input
+            <Input
               type="number"
-              className={`${inputClass} pr-7`}
+              className="font-mono pr-7"
               // Users think in percent; the API takes a fraction.
               value={(value * 100).toFixed(2).replace(/\.?0+$/, "")}
               min={0.1}
@@ -411,11 +447,9 @@ function LimitField({ label, hint, value, onChange, defaultPct }) {
               step={0.5}
               onChange={(e) => onChange(Number(e.target.value) / 100)}
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted font-mono">
-              %
-            </span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-graphite font-mono">%</span>
           </div>
-          {hint && <p className="text-xs text-text-faint">{hint}</p>}
+          {hint && <p className="text-xs text-faint">{hint}</p>}
         </>
       )}
     </div>
@@ -480,16 +514,13 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
     // button was the last child of the scroll area, so on a laptop opening the
     // risk section pushed the app's primary action out of sight — you had to
     // scroll a sidebar to find the button that does the thing.
-    <div className="w-full lg:w-[21rem] lg:flex-shrink-0 panel flex flex-col lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100vh-6rem)] overflow-hidden">
+    <aside className="w-full lg:w-[21rem] lg:flex-shrink-0 sheet flex flex-col lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100vh-6rem)] overflow-hidden">
       <div className="flex flex-col gap-5 p-5 lg:overflow-y-auto lg:flex-1">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-text-primary">Configuration</h2>
-          <button
-            onClick={reset}
-            className="tap-safe text-xs text-text-faint hover:text-accent transition-colors rounded"
-          >
-            Reset
-          </button>
+          <h2 className="font-display text-lg font-medium text-foreground">Set-up</h2>
+          <Button variant="ghost" size="sm" onClick={reset} className="text-graphite -mr-2">
+            <RotateCcw className="size-3.5" aria-hidden="true" /> Reset
+          </Button>
         </div>
 
         {/* Strategy picker */}
@@ -501,7 +532,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
             onChange={(v) => handleChange("strategy", v)}
             options={STRATEGIES.map((s) => ({ id: s.id, label: s.label }))}
           />
-          <p className="text-xs text-text-faint leading-relaxed">{active.blurb}</p>
+          <p className="text-xs text-faint leading-relaxed">{active.blurb}</p>
         </div>
 
         {/* Single ticker vs portfolio */}
@@ -538,7 +569,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Start">
-            <input
+            <Input
               type="date"
               className={inputClass}
               value={params.start}
@@ -546,7 +577,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
             />
           </Field>
           <Field label="End">
-            <input
+            <Input
               type="date"
               className={inputClass}
               value={params.end}
@@ -562,7 +593,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
           <div className="grid grid-cols-2 gap-x-3 gap-y-4">
             {FIELDS[strategy].map((f) => (
               <Field key={f.key} label={f.label} tip={f.tip} range={f.range}>
-                <input
+                <Input
                   type="number"
                   className={inputClass}
                   value={params[f.key]}
@@ -576,16 +607,14 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
           </div>
 
           {macdInverted && (
-            <p className="text-xs text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2">
-              Fast EMA must be shorter than the slow EMA.
-            </p>
+            <FieldError>Fast EMA must be shorter than the slow EMA.</FieldError>
           )}
 
           <Field
             label="Transaction cost"
             tip="Charged on turnover each time the position changes. A fraction, not a percent: 0.001 is 0.1% per trade. Set it to zero and a strategy that trades every day will look far better than it is."
           >
-            <input
+            <Input
               type="number"
               className={inputClass}
               value={params.transaction_cost}
@@ -606,7 +635,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
                 { id: "inverse_vol", label: "Inverse vol" },
               ]}
             />
-            <p className="text-xs text-text-faint leading-relaxed">
+            <p className="text-xs text-faint leading-relaxed">
               {params.weighting === "inverse_vol"
                 ? "Quieter names get more of the book, so no single volatile holding dominates the portfolio's risk."
                 : "1/N in each name, rebalanced every bar back to target."}
@@ -615,7 +644,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
             {params.weighting === "inverse_vol" && (
               <>
                 <Field label="Weight window" hint="Trailing bars used to measure volatility">
-                  <input
+                  <Input
                     type="number"
                     className={inputClass}
                     value={params.weight_window}
@@ -629,7 +658,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
                   label="Max weight"
                   hint={`Cap per holding — at least ${minWeightCap} for ${params.tickers.length} names`}
                 >
-                  <input
+                  <Input
                     type="number"
                     className={inputClass}
                     value={params.max_weight}
@@ -640,10 +669,10 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
                   />
                 </Field>
                 {capTooSmall && (
-                  <p className="text-xs text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2">
-                    A cap of {params.max_weight} cannot fill a book of{" "}
-                    {params.tickers.length} holdings — it must be at least {minWeightCap}.
-                  </p>
+                  <FieldError>
+                    A cap of {params.max_weight} cannot fill a book of {params.tickers.length}{" "}
+                    holdings — it must be at least {minWeightCap}.
+                  </FieldError>
                 )}
               </>
             )}
@@ -653,7 +682,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
         {/* Risk overlays — independent of the strategy above, and off by
             default, so this stays closed until someone wants it. */}
         <Section title="Risk & sizing" badge={riskBadge}>
-          <p className="text-xs text-text-faint leading-relaxed -mt-1">
+          <p className="text-xs text-faint leading-relaxed -mt-1">
             Applied on top of whichever strategy is selected. Leave these off to
             see the strategy on its own.
           </p>
@@ -675,9 +704,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
           />
 
           {targetTooTight && (
-            <p className="text-xs text-danger bg-danger/10 border border-danger/30 rounded-lg px-3 py-2">
-              Take profit must be further from entry than the stop loss.
-            </p>
+            <FieldError>Take profit must be further from entry than the stop loss.</FieldError>
           )}
 
           <div className="flex flex-col gap-2">
@@ -690,7 +717,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
                 { id: "vol_target", label: "Vol target" },
               ]}
             />
-            <p className="text-xs text-text-faint leading-relaxed">
+            <p className="text-xs text-faint leading-relaxed">
               {params.sizing === "vol_target"
                 ? "Scales exposure so realised volatility sits near the target — smaller in turbulent markets, larger in calm ones."
                 : "Full exposure whenever a signal is on."}
@@ -700,7 +727,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
           {params.sizing === "vol_target" && (
             <>
               <Field label="Target volatility" hint="Annualised, e.g. 0.15 = 15%">
-                <input
+                <Input
                   type="number"
                   className={inputClass}
                   value={params.target_vol}
@@ -711,7 +738,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
                 />
               </Field>
               <Field label="Vol window" hint="Trailing bars used to measure it (2–250)">
-                <input
+                <Input
                   type="number"
                   className={inputClass}
                   value={params.vol_window}
@@ -722,7 +749,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
                 />
               </Field>
               <Field label="Max leverage" hint="Cap on the size multiplier">
-                <input
+                <Input
                   type="number"
                   className={inputClass}
                   value={params.max_leverage}
@@ -738,28 +765,23 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
       </div>
 
       {/* Pinned. Never scrolls out of reach, whatever is open above it. */}
-      <div className="flex-shrink-0 border-t border-border bg-surface p-4">
+      <div className="flex-shrink-0 border-t border-border bg-card p-4">
         {blocker && (
-          <p className="text-xs text-danger mb-2.5 leading-relaxed">{blocker}</p>
+          <p role="alert" className="text-xs text-loss mb-2.5 leading-relaxed">{blocker}</p>
         )}
-        <button
-          onClick={onRun}
-          disabled={loading || blocked}
-          className="btn-primary w-full py-2.5 text-sm"
-        >
+        <Button onClick={onRun} disabled={loading || blocked} className="w-full" size="lg">
           {loading ? (
             <>
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Running…
+              <Spinner /> Running…
             </>
           ) : mode === "portfolio" ? (
             "Run portfolio"
           ) : (
             `Run backtest on ${params.ticker || "…"}`
           )}
-        </button>
+        </Button>
       </div>
-    </div>
+    </aside>
   );
 }
 
