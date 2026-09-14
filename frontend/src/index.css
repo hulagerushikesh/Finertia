@@ -26,7 +26,7 @@
     --secondary-foreground: 225 17% 9%;
     --muted: 220 14% 93%;
     --muted-foreground: 222 10% 40%;   /* graphite #5B6170 */
-    --faint: 220 8% 55%;
+    --faint: 220 8% 42%;               /* 4.7:1 on the muted ground — 55% read 3.2 */
     --accent: 224 72% 96%;             /* pencil tint, for hover grounds */
     --accent-foreground: 224 72% 40%;
     --destructive: 0 55% 51%;          /* loss #C93B3B */
@@ -41,9 +41,9 @@
     --pencil: 224 72% 49%;             /* #2352D9 — text, strokes, verdicts */
     --pencil-fill: 224 72% 49%;        /* button ground; white on it = 5.9:1 */
     --pencil-foreground: 0 0% 100%;
-    --gain: 154 67% 32%;               /* #1B8A5A */
-    --loss: 0 55% 51%;                 /* #C93B3B */
-    --warn: 35 71% 42%;                /* #B7791F */
+    --gain: 154 67% 27%;               /* #17734B — 4.9:1 on muted; 32% read 3.8 */
+    --loss: 0 55% 46%;                 /* #B63535 — 5.0:1 on muted */
+    --warn: 35 71% 30%;                /* #835616 — 5.4:1 on muted; 42% read 3.1 */
   }
 
   .dark {
@@ -59,7 +59,7 @@
     --secondary-foreground: 222 20% 92%;
     --muted: 222 14% 15%;
     --muted-foreground: 220 10% 66%;   /* #9AA1AE */
-    --faint: 220 8% 50%;
+    --faint: 220 8% 56%;               /* 4.6:1 on the muted ground */
     --accent: 224 40% 16%;
     --accent-foreground: 226 100% 82%;
     --destructive: 0 80% 72%;
