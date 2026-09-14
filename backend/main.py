@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from firebase_admin import firestore
 
-from data import fetch_ohlcv
+from data import DataUnavailableError, fetch_ohlcv
 from engine import compute_returns, apply_positions, compute_benchmark
 from bootstrap import bootstrap_metrics, stable_seed
 from metrics import compute_metrics
@@ -474,6 +474,9 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
         df = fetch_ohlcv(req.ticker, req.start, req.end)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except DataUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    data_source = df.attrs.get("data_source", "yfinance")
     close = df["Close"]
 
     if len(close) < req.warmup_bars() + 2:
@@ -621,6 +624,9 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
         "rolling_sharpe": rolling,
         "signals_summary": signals_summary,
         "confidence_intervals": confidence_intervals,
+        # "yfinance" | "cache" | "cache-stale" | "memory". Stale means Yahoo
+        # was down and this is the last good copy — the UI says so.
+        "data_source": data_source,
         "duration_ms": duration_ms,
     }
 
@@ -655,6 +661,9 @@ async def validate_strategy(req: ValidateRequest, authorization: Optional[str] =
         df = fetch_ohlcv(req.ticker, req.start, req.end)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except DataUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    data_source = df.attrs.get("data_source", "yfinance")
     close = df["Close"]
 
     params = req.strategy_params()
@@ -689,6 +698,7 @@ async def validate_strategy(req: ValidateRequest, authorization: Optional[str] =
         "bars": len(close),
         "walk_forward": wf,
         "permutation": permutation,
+        "data_source": data_source,
         "duration_ms": int((time.time() - start_time) * 1000),
     }
 
@@ -725,11 +735,18 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
     # the request outright rather than silently yielding a smaller portfolio
     # than the user asked for.
     closes = {}
+    sources = set()
     for symbol in req.tickers:
         try:
-            closes[symbol] = fetch_ohlcv(symbol, req.start, req.end)["Close"]
+            df = fetch_ohlcv(symbol, req.start, req.end)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=f"{symbol}: {exc}") from exc
+        except DataUnavailableError as exc:
+            raise HTTPException(status_code=503, detail=f"{symbol}: {exc}") from exc
+        closes[symbol] = df["Close"]
+        sources.add(df.attrs.get("data_source", "yfinance"))
+    # One stale leg makes the whole portfolio stale — that is the flag that matters.
+    data_source = "cache-stale" if "cache-stale" in sources else "mixed" if len(sources) > 1 else next(iter(sources))
 
     # 2. Align on shared trading days.
     try:
@@ -858,6 +875,7 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
         "monthly_returns": monthly_returns(net_return),
         "annual_returns": annual_returns(net_return, bench_daily),
         "rolling_sharpe": rolling_sharpe(net_return, window=60),
+        "data_source": data_source,
         "duration_ms": int((time.time() - start_time) * 1000),
     }
 
@@ -910,6 +928,8 @@ async def compare_runs(req: CompareRequest, authorization: Optional[str] = Heade
                 status_code=400,
                 detail=f"Could not reload data for {d.get('ticker')}: {exc}",
             ) from exc
+        except DataUnavailableError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
 
         returns = compute_returns(close)
         positions = build_positions(close, strategy, params)

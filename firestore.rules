@@ -48,5 +48,12 @@ service cloud.firestore {
     match /runs/{runId} {
       allow read, write: if false;
     }
+
+    // Cached price history, written and read by the API through the Admin
+    // SDK (which bypasses these rules). A client that could write here could
+    // feed every other user a fabricated tape.
+    match /prices/{priceId} {
+      allow read, write: if false;
+    }
   }
 }
