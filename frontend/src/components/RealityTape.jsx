@@ -1,20 +1,20 @@
 import React from "react";
+import { motion, useReducedMotion } from "motion/react";
+import Stamp from "./Stamp";
+import { EASE_OUT } from "./motion";
 
 /**
- * The landing page's one bold element: five years of a real result, laid out
- * the way the product thinks.
+ * The landing page's one bold element: five years of a real result, marked
+ * up the way the product marks everything.
  *
- * Every screen in Finertia sets a number you measured beside the thing that
- * tests it, so the palette is two-toned throughout — violet is the strategy,
- * mint is the reference it has to beat. This is that idea at full size, and it
- * does the argument better than a claim could: the strategy below beat simply
- * holding the stock in exactly one year out of five, and that year was the one
- * the market fell.
+ * Ink is the strategy; graphite, hatched, is buy-and-hold — the reference it
+ * has to beat. The verdict is stamped in the corner because that is what a
+ * reviewer does with a result: reads it, then writes one word on it.
  *
- * Numbers are copied from `src/demoData.json` (AAPL, momentum 20/50, 0.1% cost)
- * rather than imported: that file is 43 kB of equity curve, and pulling it into
- * the landing bundle to read five rows would cost first paint more than the
- * duplication costs maintenance.
+ * Numbers are copied from `src/demoData.json` (AAPL, momentum 20/50, 0.1%
+ * cost) rather than imported: that file is 43 kB of equity curve, and pulling
+ * it into the landing bundle to read five rows would cost first paint more
+ * than the duplication costs maintenance.
  */
 const YEARS = [
   { year: 2019, strategy: 0.29297, benchmark: 0.887425 },
@@ -24,8 +24,8 @@ const YEARS = [
   { year: 2023, strategy: 0.090031, benchmark: 0.490081 },
 ];
 
-// Zero sits left of centre because the losing year is far smaller than the best
-// winning one — centring it would waste most of the track on empty space.
+// Zero sits left of centre because the losing year is far smaller than the
+// best winning one — centring it would waste most of the track.
 const ZERO = 22;
 const SPAN = 100 - ZERO;
 const MAX = Math.max(...YEARS.flatMap((r) => [Math.abs(r.strategy), Math.abs(r.benchmark)]));
@@ -35,20 +35,25 @@ function pct(v) {
 }
 
 function Bar({ value, tone, delay }) {
+  const off = useReducedMotion();
   const width = (Math.abs(value) / MAX) * SPAN;
   const positive = value >= 0;
   return (
-    <span
-      className={`absolute top-0 bottom-0 rounded-[2px] animate-sweep-in ${
-        tone === "strategy" ? "bg-accent" : "bg-check/70"
-      }`}
+    <motion.span
+      initial={off ? false : { scaleX: 0 }}
+      animate={{ scaleX: 1 }}
+      transition={{ duration: 0.7, delay, ease: EASE_OUT }}
+      className={
+        tone === "strategy"
+          ? "absolute top-0 bottom-0 bg-foreground rounded-[1px]"
+          : "absolute top-0 bottom-0 rounded-[1px] bg-[repeating-linear-gradient(135deg,hsl(var(--muted-foreground))_0_2px,transparent_2px_5px)]"
+      }
       style={{
         left: positive ? `${ZERO}%` : `${ZERO - width}%`,
         width: `${width}%`,
         // Grow away from the zero line, so the axis stays put and only the
         // reading moves — the way a needle behaves.
         transformOrigin: positive ? "left" : "right",
-        animationDelay: `${delay}ms`,
       }}
     />
   );
@@ -58,65 +63,69 @@ export default function RealityTape() {
   const wins = YEARS.filter((r) => r.strategy > r.benchmark).length;
 
   return (
-    <figure className="panel-lifted overflow-hidden">
-      <figcaption className="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 border-b border-border">
-        <span className="eyebrow">AAPL · Momentum 20/50 · 0.1% cost</span>
+    <figure className="sheet-lifted overflow-hidden relative">
+      <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3 border-b border-border">
+        <span className="eyebrow">AAPL · Momentum 20/50 · 0.1% cost · 2019–2023</span>
         <span className="flex-1" />
-        <span className="flex items-center gap-1.5 text-2xs font-mono text-text-muted">
-          <span className="w-2 h-2 rounded-[2px] bg-accent" aria-hidden="true" />
+        <span className="flex items-center gap-1.5 text-2xs font-mono text-graphite">
+          <span className="w-3 h-2 bg-foreground rounded-[1px]" aria-hidden="true" />
           Strategy
         </span>
-        <span className="flex items-center gap-1.5 text-2xs font-mono text-text-muted">
-          <span className="w-2 h-2 rounded-[2px] bg-check/70" aria-hidden="true" />
+        <span className="flex items-center gap-1.5 text-2xs font-mono text-graphite">
+          <span
+            className="w-3 h-2 rounded-[1px] bg-[repeating-linear-gradient(135deg,hsl(var(--muted-foreground))_0_2px,transparent_2px_5px)]"
+            aria-hidden="true"
+          />
           Buy &amp; hold
         </span>
       </figcaption>
 
-      <div className="px-5 py-5 flex flex-col gap-3.5">
+      <div className="px-5 py-5 flex flex-col gap-3.5 graph-paper">
         {YEARS.map((row, i) => {
           const beat = row.strategy > row.benchmark;
           return (
             <div key={row.year} className="flex items-center gap-3 sm:gap-4">
-              <span className="w-9 shrink-0 text-2xs font-mono text-text-faint">
-                {row.year}
-              </span>
+              <span className="w-9 shrink-0 text-2xs font-mono text-graphite">{row.year}</span>
 
               <span className="relative flex-1 h-7 min-w-0">
                 {/* The zero line. Everything is read against it. */}
                 <span
                   aria-hidden="true"
-                  className="absolute top-0 bottom-0 w-px bg-border-strong"
+                  className="absolute top-0 bottom-0 w-px bg-rule-strong"
                   style={{ left: `${ZERO}%` }}
                 />
                 <span className="absolute inset-x-0 top-0 h-3">
-                  <Bar value={row.strategy} tone="strategy" delay={i * 90} />
+                  <Bar value={row.strategy} tone="strategy" delay={0.1 + i * 0.09} />
                 </span>
                 <span className="absolute inset-x-0 bottom-0 h-3">
-                  <Bar value={row.benchmark} tone="benchmark" delay={i * 90 + 45} />
+                  <Bar value={row.benchmark} tone="benchmark" delay={0.15 + i * 0.09} />
                 </span>
               </span>
 
               <span className="w-[5.5rem] sm:w-28 shrink-0 text-right text-2xs font-mono leading-tight">
-                <span className={beat ? "text-accent" : "text-text-muted"}>
-                  {pct(row.strategy)}
-                </span>
-                <span className="text-text-faint px-1">vs</span>
-                <span className="text-text-muted">{pct(row.benchmark)}</span>
+                <span className={beat ? "pencil-mark" : "text-foreground"}>{pct(row.strategy)}</span>
+                <span className="text-faint px-1">vs</span>
+                <span className="text-graphite">{pct(row.benchmark)}</span>
               </span>
             </div>
           );
         })}
       </div>
 
-      <p className="border-t border-border px-5 py-3.5 text-xs text-text-muted leading-relaxed">
-        <span className="text-text-primary font-medium">
-          Beat buy &amp; hold in {wins} year of {YEARS.length}
-        </span>{" "}
-        — the one the market fell. Over the full period the strategy returned
-        <span className="font-mono text-text-primary"> +68.4%</span> against
-        <span className="font-mono text-text-primary"> +408%</span> for holding
-        the stock. That is the engine's real output, not an illustration.
-      </p>
+      <div className="border-t border-border px-5 py-4 flex items-start gap-4 justify-between flex-wrap">
+        <p className="text-sm text-graphite leading-relaxed max-w-md">
+          <span className="text-foreground font-medium">
+            Beat buy &amp; hold in {wins} year of {YEARS.length}
+          </span>{" "}
+          — the one the market fell. Over the full period the strategy returned
+          <span className="font-mono text-foreground"> +68.4%</span> against
+          <span className="font-mono text-foreground"> +408%</span> for holding the stock.
+          That is the engine's real output, not an illustration.
+        </p>
+        <Stamp tone="loss" delay={0.75} className="shrink-0">
+          Lost to holding
+        </Stamp>
+      </div>
     </figure>
   );
 }
