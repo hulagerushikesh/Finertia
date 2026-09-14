@@ -28,6 +28,11 @@ backtest is one draw from a distribution, and the number that survives
 out-of-sample is the only one worth quoting. The `/demo` page leads with a
 losing strategy for the same reason.
 
+## Learning and planning
+
+- [`learning/`](learning/) — how to understand this project from price data up to the validation papers, with each concept mapped to the file that uses it. Start at [learning/README.md](learning/README.md).
+- [`planning/`](planning/) — current status, the milestone in progress, backlog, and the decision log. Start at [planning/STATUS.md](planning/STATUS.md).
+
 ## Stack
 
 | Layer | Tech |
