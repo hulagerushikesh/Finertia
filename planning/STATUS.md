@@ -1,6 +1,6 @@
 # Status
 
-_Current to `ac0ca6f` (main) · 14 Sep 2026._
+_Current to `2093040` (main) + branch `redesign` · 14 Sep 2026._
 
 ## At a glance
 
@@ -14,7 +14,7 @@ _Current to `ac0ca6f` (main) · 14 Sep 2026._
 | API | 16 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
 | Blocked on user | 0 items |
-| In flight | `redesign` branch — shadcn "Blue pencil" UI rebuild, **45 files uncommitted**, builds clean (see below) |
+| In flight | `redesign` branch — shadcn "Blue pencil" UI rebuild, committed in 5 slices + 3 fixes, PR open, **merge held until the Pitch Fest result** (see below) |
 
 ## Stages — verified vs built
 
@@ -42,20 +42,31 @@ compiles, never exercised end to end.
 | Block-bootstrap CIs | Done `7b178ca` PR #1 | 54 tests; coverage measured on 300 GARCH paths; serving since rev 00003 |
 | Effective N of the grid | **Open** | Documented limitation, unquantified — see NEXT-MILESTONE |
 
-## The redesign branch (in flight, uncommitted)
+## The redesign branch (PR open, merge held)
 
-`git diff --stat` on `redesign`: 45 files, +3,664 / −2,959, plus 21 new
-`components/ui/*` (shadcn), `lib/utils.js`, `ThemeToggle`, `motion.jsx`,
-`ChartFrame`, `ChartTip`, `Prose`, `Stamp`, `Spinner`. `Toast.jsx` deleted in
-favour of sonner. Adds radix-ui, motion, sonner, next-themes, lucide, cva.
+Five slices (tokens → primitives → charts → panels → shell/pages) plus three
+fixes found while landing it. Adds radix-ui, motion, sonner, next-themes,
+lucide, cva. `Toast.jsx` replaced by sonner. Reverses the 22 Aug "no shadcn"
+decision — logged in DECISIONS.md.
 
-- `npm run build` passes (3.5s).
-- **Bundle regressed**: entry `index-*.js` is 764 kB (was 464 kB after the lazy
-  split). `chartTheme-*.js` at 366 kB suggests recharts is being pulled by the
-  theme module. Needs a network-trace check before merge.
-- Nothing verified in a browser yet: contrast floors, `tap-safe`, touch
-  tooltips, 375 px overflow, dark theme, the ~650 px dashboard column.
-- Reverses the 22 Aug "no shadcn" decision — logged in DECISIONS.md.
+**Verified (14 Sep, dev server, measured not eyeballed):**
+- Contrast: every text node on 9 public routes × 2 themes ≥ 4.5:1 (min 4.58).
+  Four light tokens had to move (faint 3.19 → 4.7, gain, loss, warn); dark
+  faint 4.24 → 4.6.
+- 375 px: zero horizontal overflow on all 9 routes.
+- Exactly one `<main>`, one `h1` per route, zero `title=` attributes.
+- Metric tooltips are radix Popovers: open on click/tap, verified; `.tap-safe`
+  intact, 0 overlapping pairs at 24 px and at 44 px on `/demo` at 375 px.
+- `/demo` at 650 / 1024 / 1280 px: no clipped or overlapping metric labels.
+- Mobile Sheet nav opens, closes on route change; theme toggle persists.
+- Bundle: entry was 746 kB raw / 221 gz (main: 480 / 135). LazyMotion +
+  `firebase/firestore/lite` → **521 / 162**. Landing total incl. the
+  preloaded firebase chunk: 196 gz vs 169 on main. The remaining +27 gz is
+  radix + sonner + tailwind-merge.
+
+**Not verified — needs a login on the Vercel preview:** Dashboard at the
+~650 px results column, History, Profile (`displayName` save exercises
+firestore/lite `updateDoc`), Register (`setDoc` + `serverTimestamp`).
 
 ## Timeline (condensed)
 
@@ -69,7 +80,7 @@ favour of sonner. Adds radix-ui, motion, sonner, next-themes, lucide, cva.
 | 6 Sep | **deployed**; submitted to Pitch Fest; `Invalid Date` fixed same night | live |
 | 8 Sep | bootstrap CIs (PR #1) | coverage measured |
 | 13 Sep | backend redeployed (rev 00003); `.gcloudignore`; requirements pinned (PR #3); `.vercel` ignored (PR #4) | prod = pinned deps |
-| 14 Sep | `learning/` + `planning/` folders created | — |
+| 14 Sep | `learning/` + `planning/` (PR #5); venv on prod pins (535 pass); redesign sliced into commits, bundle −59 kB gz, contrast floors restored, canonical fixed | measured, see above |
 
 ## Known risks
 
@@ -77,5 +88,5 @@ favour of sonner. Adds radix-ui, motion, sonner, next-themes, lucide, cva.
    cache that is cold on every scale-from-zero. No fallback. The single most
    likely way the live demo breaks in front of someone.
 2. **Backend redeploy is manual** and was forgotten once (5 days of stale prod).
-3. **Shared python** — local pandas 2.3.1 vs prod 3.0.5; suite passes on both today.
+3. ~~Shared python~~ — `backend/.venv` on prod pins since 14 Sep; 535 pass.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry.
