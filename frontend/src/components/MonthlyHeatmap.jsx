@@ -1,18 +1,19 @@
 import React from "react";
-import { CHART } from "../chartTheme";
+import { cn } from "@/lib/utils";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /**
- * Colour a cell by return, scaled against the largest absolute move in the grid
- * so a quiet strategy is not washed out and a violent one is not saturated.
+ * Colour a cell by return, scaled against the largest absolute move in the
+ * grid so a quiet strategy is not washed out and a violent one not saturated.
+ * Alpha over the semantic gain/loss tokens, so it holds in both themes.
  */
-function cellColor(value, peak) {
-  if (value === null || value === undefined) return "transparent";
-  if (peak === 0) return "rgba(148,163,184,0.10)";
+function cellStyle(value, peak) {
+  if (value === null || value === undefined) return {};
+  if (peak === 0) return { background: "hsl(var(--muted))" };
   const intensity = Math.min(Math.abs(value) / peak, 1);
-  const alpha = 0.12 + intensity * 0.68;
-  return value >= 0 ? `rgba(34,197,94,${alpha})` : `rgba(239,68,68,${alpha})`;
+  const alpha = 0.1 + intensity * 0.6;
+  return { background: `hsl(var(${value >= 0 ? "--gain" : "--loss"}) / ${alpha.toFixed(2)})` };
 }
 
 export default function MonthlyHeatmap({ data }) {
@@ -21,26 +22,18 @@ export default function MonthlyHeatmap({ data }) {
   const years = [...new Set(data.map((d) => d.year))].sort((a, b) => a - b);
   const byYearMonth = new Map(data.map((d) => [`${d.year}-${d.month}`, d.return]));
   const peak = Math.max(...data.map((d) => Math.abs(d.return)), 0);
-
-  // Compounded total per year, shown in a trailing column.
   const yearTotal = (year) =>
-    data
-      .filter((d) => d.year === year)
-      .reduce((acc, d) => acc * (1 + d.return), 1) - 1;
+    data.filter((d) => d.year === year).reduce((acc, d) => acc * (1 + d.return), 1) - 1;
 
   return (
-    <div className="panel rounded-2xl p-5">
+    <section className="sheet px-5 py-4">
       <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-        <h2 className="text-sm font-semibold text-text-primary">Monthly returns</h2>
-        <div className="flex items-center gap-2 text-2xs font-mono text-text-muted">
+        <h2 className="font-display text-lg font-medium text-foreground">Monthly returns</h2>
+        <div className="flex items-center gap-2 text-2xs font-mono text-graphite">
           <span>loss</span>
           <span className="flex">
             {[-1, -0.6, -0.25, 0.25, 0.6, 1].map((v) => (
-              <span
-                key={v}
-                className="w-4 h-2.5 first:rounded-l last:rounded-r"
-                style={{ background: cellColor(v, 1) }}
-              />
+              <span key={v} className="w-4 h-2.5 first:rounded-l-sm last:rounded-r-sm" style={cellStyle(v, 1)} />
             ))}
           </span>
           <span>gain</span>
@@ -51,13 +44,11 @@ export default function MonthlyHeatmap({ data }) {
         <table className="w-full border-separate" style={{ borderSpacing: "2px", minWidth: "560px" }}>
           <thead>
             <tr>
-              <th className="text-left text-tick font-mono text-text-muted font-normal pr-2 w-12" />
+              <th className="w-12" />
               {MONTHS.map((m) => (
-                <th key={m} className="text-tick font-mono text-text-muted font-normal pb-1">
-                  {m}
-                </th>
+                <th key={m} className="text-tick font-mono text-graphite font-normal pb-1">{m}</th>
               ))}
-              <th className="text-tick font-mono text-text-muted font-normal pb-1 pl-2">Year</th>
+              <th className="text-tick font-mono text-graphite font-normal pb-1 pl-2">Year</th>
             </tr>
           </thead>
           <tbody>
@@ -65,9 +56,7 @@ export default function MonthlyHeatmap({ data }) {
               const total = yearTotal(year);
               return (
                 <tr key={year}>
-                  <td className="text-2xs font-mono text-text-muted pr-2 whitespace-nowrap">
-                    {year}
-                  </td>
+                  <td className="text-2xs font-mono text-graphite pr-2 whitespace-nowrap">{year}</td>
                   {MONTHS.map((m, i) => {
                     const v = byYearMonth.get(`${year}-${i + 1}`);
                     const has = v !== undefined;
@@ -75,22 +64,21 @@ export default function MonthlyHeatmap({ data }) {
                       <td
                         key={m}
                         title={has ? `${m} ${year}: ${(v * 100).toFixed(2)}%` : `${m} ${year}: no data`}
-                        className="text-center text-tick font-mono rounded h-7 align-middle"
-                        style={{
-                          background: has ? cellColor(v, peak) : "rgba(102,116,143,0.06)",
-                          // Empty months recede. They are absence of data, not
-                          // a value, so they must not read as one.
-                          color: has ? CHART.textPrimary : "#3E4A63",
-                        }}
+                        className={cn(
+                          "text-center text-tick font-mono rounded-sm h-7 align-middle",
+                          has ? "text-foreground" : "text-faint bg-muted/40",
+                        )}
+                        style={has ? cellStyle(v, peak) : undefined}
                       >
                         {has ? (v * 100).toFixed(1) : "·"}
                       </td>
                     );
                   })}
                   <td
-                    className={`text-center text-tick font-mono rounded h-7 pl-2 font-semibold ${
-                      total >= 0 ? "text-success" : "text-danger"
-                    }`}
+                    className={cn(
+                      "text-center text-tick font-mono h-7 pl-2 font-medium",
+                      total >= 0 ? "text-gain" : "text-loss",
+                    )}
                   >
                     {(total * 100).toFixed(1)}
                   </td>
@@ -100,9 +88,7 @@ export default function MonthlyHeatmap({ data }) {
           </tbody>
         </table>
       </div>
-      <p className="text-2xs text-text-muted mt-3">
-        Values are percent. Hover any cell for the exact figure.
-      </p>
-    </div>
+      <p className="text-2xs text-graphite mt-3">Values are percent. Hover any cell for the exact figure.</p>
+    </section>
   );
 }
