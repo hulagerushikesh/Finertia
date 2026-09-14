@@ -27,9 +27,9 @@ Frontend work stays on its branch until then.
 
 ### Phase 0 — Hygiene (1 hour, day 1)
 
-- [ ] Project venv: `cd backend && python -m venv .venv && source .venv/bin/activate && pip install -r requirements-dev.txt && python -m pytest -q` → 535 on pandas 3.0.5, same as prod.
-- [ ] Narrow the `gh` token to a fine-grained PAT scoped to `hulagerushikesh/Finertia`. Verify with `gh auth status`.
-- [ ] Add `learning/` and `planning/` to the repo (this PR).
+- [x] Project venv — `backend/.venv`, pandas 3.0.5 / numpy 2.4.6 / fastapi 0.141.1, 535 pass (14 Sep).
+- [ ] Narrow the `gh` token — a fine-grained PAT (`github_pat_…`) over the 6 active repos; `gh auth status` still shows the `gho_` token with `repo, workflow` as of 14 Sep. `echo TOKEN | gh auth login --with-token`.
+- [x] Add `learning/` and `planning/` to the repo — PR #5, merged 14 Sep.
 
 **Exit:** local suite matches prod's pins; `gh auth status` shows a scoped token.
 
@@ -39,24 +39,23 @@ The branch reverses the 22 Aug "no shadcn" decision. That is fine — the
 decision is logged with the reason in DECISIONS.md — but it must clear the same
 bars the old UI cleared, or it is a regression wearing new clothes.
 
-- [ ] **Commit the WIP** in reviewable slices on `redesign`: (1) token sheet +
-  tailwind config, (2) `components/ui/*` + `lib/utils`, (3) charts + `chartTheme`,
-  (4) pages, (5) package changes. No single 3,664-line commit.
-- [ ] **Bundle audit.** Entry is 764 kB vs 464 kB before. Network-trace the
-  landing page; confirm recharts is not in the entry graph via `chartTheme`.
-  Target: landing JS ≤ 500 kB gzip-equivalent to before. Fix by moving chart
-  theme constants out of any module the entry imports, not by `manualChunks`
-  (see learning/02 §E for why that backfires).
+- [x] **Commit the WIP** in reviewable slices — 5 commits, tokens → primitives → charts → panels → shell/pages (14 Sep).
+- [x] **Bundle audit.** recharts was never in the entry — the growth was motion
+  + radix + sonner + tailwind-merge. LazyMotion/domAnimation and
+  `firebase/firestore/lite` took the entry from 746/221 to 521/162 (raw/gz kB).
+  Landing total 196 gz vs 169 on main; the rest is the price of radix.
 - [ ] **Verification checklist** — the bars the old UI passed, re-run on the new one:
-  - text ≥ 4.5:1 on every surface, both themes, measured numerically
-  - `:focus-visible` outline global; `prefers-reduced-motion` honoured (motion lib included)
-  - tooltips open on touch (sonner/radix Tooltip ≠ `title=`)
-  - hit targets ≥ 24 px fine / 44 px coarse, no overlapping pairs at 375 px
-  - 375 px: zero horizontal overflow on all 7 public routes
-  - dashboard results column at ~650 px (1024 − sidebar): no label collisions
-  - exactly one `<main>`; h1/h2/h3 outline intact
-  - dark theme correct for both the explicit toggle and system preference
-- [ ] **PR** `redesign → main`, CI green, screenshots of the checklist in the PR body.
+  - [x] text ≥ 4.5:1 on every surface, both themes, measured — 4 light tokens + dark faint fixed; min now 4.58
+  - [x] `:focus-visible` outline global; `prefers-reduced-motion` in CSS and every `m.*`/Recharts animation
+  - [x] tooltips open on touch — radix Popover on click, verified on `/demo`
+  - [x] hit targets: `.tap-safe` 24/44 intact, 0 overlapping pairs at either size, 375 px
+  - [x] 375 px: zero horizontal overflow on all 9 public routes
+  - [x] `/demo` at 650 / 1024 / 1280: no clipped or colliding labels
+  - [ ] **Dashboard proper at ~650 px — needs a login on the Vercel preview (you)**
+  - [x] exactly one `<main>`, one h1 per route, zero `title=`
+  - [x] theme toggle + `finertia-theme` persistence + pre-mount paint script
+- [x] **PR** `redesign → main` — see STATUS.md for the evidence list.
+- [ ] **Your smoke test on the Vercel preview:** login → dashboard at 1024 px → run → History → Profile displayName save → Register a throwaway (exercises every firestore/lite call).
 - [ ] **Merge after the Pitch Fest result** (or on explicit go-ahead). Frontend
   only — no backend redeploy needed.
 
