@@ -62,12 +62,13 @@ what the engine produced.
 | One strategy, one ticker | **Closed.** 3 strategies, risk overlays, 2–10-ticker portfolios |
 | Survivorship bias in data | Disclosed in the UI; not fixable on free data |
 | Admin stats scan collections | Still true; defer until it hurts |
-| *(new)* Effective N overstated in DSR | Open — M9 phase 3 |
-| *(new)* yfinance fragility | Open — M9 phase 2 |
+| *(new)* Effective N overstated in DSR | **Closed.** Eigen + cluster estimates, headline = larger (PR #8) |
+| *(new)* yfinance fragility | **Closed.** Firestore price cache, stale-on-error (PR #7) |
 
 ## Direction
 
 The Aug brief offered three paths (ship-then-deepen / quant-credibility-first /
 education-first). Path A was taken and is complete: shipped 6 Sep, deepened
-through 13 Sep. The remaining fork is **portfolio piece vs product** — decided
-in M9 phase 4, recorded in DECISIONS.md.
+through 13 Sep. The remaining fork was **portfolio piece vs product** — decided 15 Sep
+(M9 phase 4): **portfolio piece**, with `planning/write-up.md` as the
+deliverable. Reasoning and reversal conditions in DECISIONS.md.

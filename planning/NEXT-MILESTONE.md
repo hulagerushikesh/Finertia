@@ -109,15 +109,25 @@ it turns "I built a backtester" into "I found that the best in-sample strategy
 was the worst out-of-sample one, and here is the statistics that proves it".
 Record the outcome in DECISIONS.md.
 
+- [x] **Decided 15 Sep: portfolio path.** DECISIONS.md entry with inputs and
+  what would reverse it. Pitch Fest result still pending — it is a possible
+  reversal input, not a blocker.
+- [x] Write-up drafted: `planning/write-up.md`, ~1,550 words, every figure
+  re-run on 15 Sep on both windows (2024-01-01 and 2025-01-01) including the
+  per-check disagreement (DSR/PBO/permutation vs walk-forward) and bootstrap
+  intervals on the OOS Sharpes.
+- [ ] Publish: README link + a home for it (hulage.in post, or a `/writeup`
+  route on the redesign branch). Not before the Pitch Fest result.
+
 **Exit:** DECISIONS.md has an entry; if portfolio path, the write-up is drafted
-in `planning/` or published.
+in `planning/` or published. **Met** (drafted; publishing waits on the result).
 
 ## Definition of done for M9
 
-- [ ] Phase 0–3 exit criteria met
-- [ ] STATUS.md refreshed: rev 00004, test count, roadmap 5/5, redesign merged or dated
+- [x] Phase 0–3 exit criteria met (phase 0's `gh` token narrowing still on the user)
+- [x] STATUS.md refreshed: rev 00005, 567 tests, roadmap 5/5, redesign dated (PR #6, held)
 - [ ] Build-ledger artifact refreshed from STATUS.md
-- [ ] Phase 4 decision recorded
+- [x] Phase 4 decision recorded (15 Sep)
 
 ## Explicitly not in M9
 
