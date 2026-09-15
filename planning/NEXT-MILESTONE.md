@@ -78,27 +78,20 @@ bars the old UI cleared, or it is a regression wearing new clothes.
 
 **Exit:** with yfinance mocked to 429, a cached-ticker backtest still returns (test) — met. Latency recorded — met, unflattering.
 
-### Phase 3 — Effective N (weeks 2–3, research, on a branch)
+### Phase 3 — Effective N — BUILT, PR open
 
-Roadmap item 5 of 5. See learning/research/open-questions.md §1.
+Roadmap 5 of 5. `backend/trials.py`; wired into `walk_forward` as `deflated.effective_trials`.
 
-- [ ] Build the candidate-return correlation matrix from the walk-forward sweep
-  (already stored for CSCV — free).
-- [ ] N_eff via eigenvalues (Nyholt 2004 / Li & Ji 2005) — first, because it is
-  ~20 lines on data that exists.
-- [ ] N_eff via correlation clustering (López de Prado & Lewis 2019) — second,
-  as the comparison. Report both.
-- [ ] `deflated.py` takes `n_trials`; response carries `n_trials_raw`,
-  `n_trials_effective`, and DSR under each.
-- [ ] Tests: identical candidates → N_eff ≈ 1; independent candidates → N_eff ≈ N;
-  the canonical AAPL case's numbers pinned.
-- [ ] `ValidationPanel.jsx`: show raw vs effective side by side — the gap *is*
-  the finding.
-- [ ] Merge to `main` (backend-only, no auto-deploy). **Redeploy Cloud Run by
-  hand** — this is the step that was skipped last time. Confirm rev 00004 via
-  `/api/health` and one live validation run.
-
-**Exit:** roadmap 5/5; prod serves effective-N; learning/03 §3 updated.
+- [x] Correlation matrix from the in-sample candidate returns the sweep already builds.
+- [x] Eigenvalue estimate (Li & Ji 2005).
+- [x] Clustering estimate (LdP & Lewis 2019) — hand-written average linkage + silhouette; cluster spread only from K ≥ 3; one-blob fallback when silhouette finds nothing but every ρ > 0.875.
+- [x] `deflated_sharpe_ratio` takes `n_trials_effective` + `trial_sharpes_effective`; response carries `under_raw / under_eigen / under_clusters / under_effective`, `n_trials_effective`, `n_trials_lower_bound`, `dsr_gap`.
+- [x] **Headline = the larger estimate** — lowering N flatters; pinned by test.
+- [x] 15 tests, 567 total; three mutation checks (min-for-max, drop one-blob, drop eigen fractional term) each fail exactly one test.
+- [x] Canonical AAPL 2018→2024-01-01: momentum 16→6 (3), MACD 4→2, Bollinger 12→7 (2). DSR +0.07…+0.12. No verdict changes.
+- [x] **Found while measuring:** the walk-forward verdict flips when the window extends one year (split Feb→Oct 2022). README now states the window and the flip; open-questions §3 promoted to the top research item.
+- [ ] Merge → **manual Cloud Run redeploy** → rev 00005.
+- [ ] `ValidationPanel.jsx`: raw vs effective side by side — on the `redesign` branch with the cache note.
 
 ### Phase 4 — Decide what Finertia is for (end of milestone)
 

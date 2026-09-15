@@ -88,10 +88,24 @@ Bailey & López de Prado (2014), "The Deflated Sharpe Ratio".
 **Result on a random walk by construction:** Momentum 55.7% → 19.4%;
 Bollinger 83.7% → **1.8%**. Uncorrected, Bollinger read as an 84%-likely edge.
 
-Known limitation: N counts raw grid combinations as independent. Neighbouring
-parameters are correlated, so true effective N is lower. Overstating N raises
-the bar — the safe direction — but it is unmeasured. **This is the last open
-roadmap item** (research/open-questions.md §1).
+**N is measured, not assumed** (`backend/trials.py`, roadmap 5 of 5). Raw
+grid size treats a 20-day and a 25-day lookback as independent trials. Two
+estimates from the candidates' in-sample return matrix:
+- [ ] **Eigenvalue count** — Li & Ji (2005): `N_eff = Σ [1(λ≥1) + frac(λ)]`
+  over the correlation matrix's eigenvalues. Closed form; errs high on tight
+  blocks (small eigenvalues each add a fraction).
+- [ ] **Correlation clustering** — López de Prado & Lewis (2019): average-
+  linkage on `d = √((1−ρ)/2)`, K by silhouette, one trial per cluster, spread
+  across cluster representatives (only from K ≥ 3 — a std of two numbers is
+  not an estimate). Silhouette < 0.1 → one blob if every ρ > 0.875, else N.
+- [ ] **Headline = the larger estimate.** Lowering N flatters a result; when
+  the two disagree the tool keeps the higher bar and shows the other as the
+  lower bound. Pinned by test.
+- [ ] AAPL 2018→2024-01-01: momentum 16 → 6 (clusters 3), MACD 4 → 2,
+  Bollinger 12 → 7 (clusters 2); DSR moves +0.07…+0.12; no verdict changes.
+
+Remaining limitation: the estimates disagree by 2–3× on this grid, with
+silhouettes ~0.25 (weak structure). The truth is between them.
 
 ## 4. Probability of Backtest Overfitting via CSCV — `backend/pbo.py`
 
@@ -204,6 +218,6 @@ them (`ValidationPanel.jsx`: walk-forward → deflated → PBO → permutation;
 - Constants pinned to the papers (3.26; Lo 2002 to 1e-12).
 - Coverage *measured* on synthetic GARCH paths, failures shipped as flags.
 - Mutation-checked: delete the check, watch exactly the right tests fail.
-- 535 tests, `cd backend && pytest tests/ -q`, no credentials, no network.
+- 567 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
 
 Next: [research/reading-list.md](research/reading-list.md)
