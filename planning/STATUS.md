@@ -1,6 +1,6 @@
 # Status
 
-_Current to `ac0ca6f` (main) · 14 Sep 2026._
+_Current to `5aa95d2` (main) · 15 Sep 2026._
 
 ## At a glance
 
@@ -10,11 +10,12 @@ _Current to `ac0ca6f` (main) · 14 Sep 2026._
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 567 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + secret scan) |
-| Commits | 22 on main · 4 PRs merged |
+| Commits | 36 on main · 7 PRs merged |
 | API | 16 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
-| Blocked on user | 0 items |
-| In flight | `redesign` branch — shadcn "Blue pencil" UI rebuild, **45 files uncommitted**, builds clean (see below) |
+| Blocked on user | 4 — login smoke test on the PR #6 preview · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT · `rm frontend/.gitignore frontend/.env.local` |
+| In flight | PR #6 `redesign → main` — verified, **held until the Pitch Fest result** (see below) |
+| Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); draft at [write-up.md](write-up.md) |
 
 ## Stages — verified vs built
 
@@ -42,20 +43,22 @@ compiles, never exercised end to end.
 | Block-bootstrap CIs | Done `7b178ca` PR #1 | 54 tests; coverage measured on 300 GARCH paths; serving since rev 00003 |
 | Effective N of the grid | Done PR #8 | 15 tests; eigen + clusters, headline = larger; canonical AAPL 16→6 / 4→2 / 12→7; mutation-checked |
 
-## The redesign branch (in flight, uncommitted)
+## The redesign branch — PR #6, held
 
-`git diff --stat` on `redesign`: 45 files, +3,664 / −2,959, plus 21 new
-`components/ui/*` (shadcn), `lib/utils.js`, `ThemeToggle`, `motion.jsx`,
-`ChartFrame`, `ChartTip`, `Prose`, `Stamp`, `Spinner`. `Toast.jsx` deleted in
-favour of sonner. Adds radix-ui, motion, sonner, next-themes, lucide, cva.
+Committed in five slices on `redesign`, PR open against `main`. Verified on
+the Vercel preview: contrast ≥ 4.58:1 on 9 routes × 2 themes (measured),
+375 px zero overflow, tap-safe hit areas, one `<main>`, reduced-motion
+honoured. Bundle brought back under `main` after sourcemap attribution
+(entry 746 → 521 kB raw; landing 196 kB gz vs 169 on `main` — the remaining
+gap is motion/radix/sonner, accepted). Reverses the 22 Aug "no shadcn"
+decision — logged in DECISIONS.md.
 
-- `npm run build` passes (3.5s).
-- **Bundle regressed**: entry `index-*.js` is 764 kB (was 464 kB after the lazy
-  split). `chartTheme-*.js` at 366 kB suggests recharts is being pulled by the
-  theme module. Needs a network-trace check before merge.
-- Nothing verified in a browser yet: contrast floors, `tap-safe`, touch
-  tooltips, 375 px overflow, dark theme, the ~650 px dashboard column.
-- Reverses the 22 Aug "no shadcn" decision — logged in DECISIONS.md.
+Waits on: the Pitch Fest result (`main` auto-deploys the judged site) and
+the user's login smoke test (dashboard at 1024 px, History, Profile
+displayName save, Register — every `firebase/firestore/lite` call).
+
+Two UI follow-ups queued on the same branch: "served from cache" note
+(`data_source === "cache-stale"`) and raw-vs-effective N in `ValidationPanel`.
 
 ## Timeline (condensed)
 
@@ -69,13 +72,16 @@ favour of sonner. Adds radix-ui, motion, sonner, next-themes, lucide, cva.
 | 6 Sep | **deployed**; submitted to Pitch Fest; `Invalid Date` fixed same night | live |
 | 8 Sep | bootstrap CIs (PR #1) | coverage measured |
 | 13 Sep | backend redeployed (rev 00003); `.gcloudignore`; requirements pinned (PR #3); `.vercel` ignored (PR #4) | prod = pinned deps |
-| 14 Sep | `learning/` + `planning/` folders created | — |
+| 14 Sep | `learning/` + `planning/` folders created (PR #5) | — |
+| 15 Sep | Firestore price cache (PR #7, rev 00004); effective N (PR #8, rev 00005); `prices` rules deployed; prewarm 28/28 | 17 + 15 tests, 5 mutation checks; walk-forward window flip found |
+| 15 Sep | **Phase 4 decided: portfolio piece**; write-up drafted from re-run figures on both windows | — |
 
 ## Known risks
 
-1. **yfinance in production** — mitigated by PR #7 once deployed: Firestore
-   cache survives cold starts, stale-on-error serves the last good copy.
-   Residual: a never-seen ticker during a Yahoo outage still 503s.
+1. **yfinance in production** — mitigated since rev 00004: Firestore cache
+   survives cold starts, stale-on-error serves the last good copy. Residual: a
+   never-seen ticker during a Yahoo outage still 503s; prod cold-read latency
+   still unmeasured.
 2. **Backend redeploy is manual** and was forgotten once (5 days of stale prod).
 3. **Shared python** — local pandas 2.3.1 vs prod 3.0.5; suite passes on both today.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry.
