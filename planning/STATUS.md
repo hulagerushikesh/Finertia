@@ -6,9 +6,9 @@ _Current to `ac0ca6f` (main) · 14 Sep 2026._
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00003` |
+| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00005` (15 Sep: price cache + effective N) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
-| Tests | 535 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
+| Tests | 567 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + secret scan) |
 | Commits | 22 on main · 4 PRs merged |
 | API | 16 routes |
@@ -32,7 +32,7 @@ compiles, never exercised end to end.
 | S7 Ops — rate limit, JSON logs, CI | **Verified** | CI green; deps pinned to prod 13 Sep |
 | S8 Grow — demo, docs, support, SEO, email verification | **Verified** | All public routes walked before submission |
 
-## Research roadmap — 4 of 5
+## Research roadmap — 5 of 5
 
 | Item | State | Evidence |
 |---|---|---|
@@ -40,7 +40,7 @@ compiles, never exercised end to end.
 | PBO via CSCV | Done `52217af` | 21 tests; regime-blindness pinned by test |
 | Purge + embargo | Done `e840a3c` | 20 tests; boundary trade measured at 33 bars |
 | Block-bootstrap CIs | Done `7b178ca` PR #1 | 54 tests; coverage measured on 300 GARCH paths; serving since rev 00003 |
-| Effective N of the grid | **Open** | Documented limitation, unquantified — see NEXT-MILESTONE |
+| Effective N of the grid | Done PR #8 | 15 tests; eigen + clusters, headline = larger; canonical AAPL 16→6 / 4→2 / 12→7; mutation-checked |
 
 ## The redesign branch (in flight, uncommitted)
 
