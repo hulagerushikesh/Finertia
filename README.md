@@ -263,6 +263,29 @@ The dashboard mirrors the active configuration into the URL query string, and **
 
 ## Operations
 
+### Price cache
+
+Prices come from yfinance behind two cache tiers: a per-process dict, and one
+Firestore document per (ticker, year) in the `prices` collection so a cold
+Cloud Run instance never has to call Yahoo for a range it has seen. Every
+cached year of a ticker comes from the same download — yfinance returns
+adjusted prices as of the fetch date, so stitching years from different
+downloads would put a phantom jump (or a 4x split) at the boundary. A year
+still in progress is refreshed after six hours; past years never expire.
+
+If Yahoo is down and the cache holds the range, the run is served from cache
+and the response carries `"data_source": "cache-stale"`. If nothing is cached,
+the API returns **503** rather than pretending the symbol does not exist.
+
+Warm it for the suggested tickers:
+
+```bash
+cd backend && .venv/bin/python scripts/prewarm_prices.py
+```
+
+Set `PRICE_CACHE=off` to run without the Firestore tier (local dev without a
+service account already falls back automatically).
+
 ### Rate limiting
 
 Two layers, both sliding-window and both hand-written (`backend/ratelimit.py`) so they are unit-testable without a running server:
