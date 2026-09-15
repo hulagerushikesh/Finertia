@@ -73,9 +73,9 @@ favour of sonner. Adds radix-ui, motion, sonner, next-themes, lucide, cva.
 
 ## Known risks
 
-1. **yfinance in production** — rate limits, schema changes, and an in-memory
-   cache that is cold on every scale-from-zero. No fallback. The single most
-   likely way the live demo breaks in front of someone.
+1. **yfinance in production** — mitigated by PR #7 once deployed: Firestore
+   cache survives cold starts, stale-on-error serves the last good copy.
+   Residual: a never-seen ticker during a Yahoo outage still 503s.
 2. **Backend redeploy is manual** and was forgotten once (5 days of stale prod).
 3. **Shared python** — local pandas 2.3.1 vs prod 3.0.5; suite passes on both today.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry.
