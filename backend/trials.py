@@ -81,7 +81,10 @@ def effective_trials_eigen(matrix: np.ndarray) -> dict:
     if n == 1:
         return {"computable": True, "n_candidates": 1, "n_effective": 1.0}
     lam = np.linalg.eigvalsh(_correlation(m))
-    lam = np.abs(lam)
+    # An exact multiple can come back as 5.9999999 on one BLAS and 6.0000001
+    # on another; the fractional term would read the first as 0.9999999 and
+    # count a phantom trial. Round to well inside float noise first.
+    lam = np.round(np.abs(lam), 8)
     n_eff = float(np.sum((lam >= 1.0).astype(float) + (lam - np.floor(lam))))
     # Rounding can nudge the sum a hair past N; the estimate is bounded by
     # construction.
