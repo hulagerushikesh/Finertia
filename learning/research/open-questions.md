@@ -3,23 +3,13 @@
 The research frontier of the project — what is known to be unsolved, in rough
 priority order. Each says what "done" would look like.
 
-## 1. Effective number of trials (roadmap item 5 of 5)
+## 1. ~~Effective number of trials~~ — done 15 Sep 2026 (`backend/trials.py`)
 
-**Problem.** `deflated.py` sets N = raw grid size (16/4/12). Neighbouring
-parameters (lookback 20 vs 25) produce nearly identical return series, so the
-true number of *independent* trials is smaller. Overstating N inflates SR* and
-raises the bar — safe direction, but unmeasured, and it can call a real edge
-noise.
-
-**Candidates.**
-- Eigenvalue method (Nyholt 2004 / Li & Ji 2005): N_eff from the spectrum of the
-  candidate-return correlation matrix. Cheap; matrix already exists (§1 of 03).
-- Clustering (López de Prado & Lewis 2019): cluster candidates by return
-  correlation, N_eff = number of clusters. More faithful, more code.
-
-**Done when.** `deflated.py` accepts `n_trials_effective`, the validation
-response reports both raw and effective N with the DSR under each, a test pins
-that a grid of identical candidates gives N_eff ≈ 1, and the panel shows the gap.
+Both candidates built: eigenvalue (Li & Ji) and clustering (LdP & Lewis).
+Headline takes the larger; both reported with the DSR under each. What is
+left of this question: the two disagree by 2–3× on the shipped grids with
+silhouettes ~0.25. Sharper grids (more cells, wider ranges) would let the
+clustering speak; that is a grid-design question now, not a statistics one.
 
 ## 2. Validation for portfolios
 
@@ -32,6 +22,12 @@ different null. Needs a definition before code.
 
 Walk-forward uses one split; CSCV cannot see a regime break by construction; the
 vol CI fails coverage because regimes do not resample. Three symptoms, one cause.
+
+**Measured 15 Sep 2026:** AAPL 2018→2024-01-01 says momentum fails, Bollinger
+holds up. AAPL 2018→2025-01-01 — one more year, split moves from Feb to Oct
+2022 — says the opposite. Same strategies, same grid. The single-split verdict
+is a draw from a distribution of splits, and the product currently prints one
+draw as if it were the distribution.
 Options: rolling (anchored) walk-forward with multiple splits; report OOS per
 calendar year; a simple regime label (realised-vol tercile) with per-regime Sharpe.
 
@@ -62,4 +58,4 @@ coefficient is the research.
 
 ---
 
-Items 1 and 3 are the ones that change what the product can *claim*. Start there.
+Item 3 is the one that changes what the product can *claim* — the flip above is the evidence. Start there.
