@@ -1,23 +1,20 @@
 import React from "react";
 import Tooltip from "./Tooltip";
+import { Stagger, StaggerItem } from "./motion";
+import { cn } from "@/lib/utils";
 
 /**
  * Signs are written out rather than left to colour alone.
  *
  * Red/green is the convention in finance and worth keeping, but as the *only*
  * carrier of direction it fails for roughly one in twelve men, and it fails
- * completely in a printed or screenshotted result. A leading + or − says the
- * same thing in a way that survives both.
- *
- * The plus is only added where the sign means something, which is why `tone`
- * has to reach this far. A win rate is not "+47.64%" and a profit factor is not
- * "+1.11" — neither quantity can be negative, so a plus in front of it implies
- * a direction it does not have, which is the opposite of the clarity the sign
- * was added for.
+ * completely in a printed result. A leading + or − says the same thing in a
+ * way that survives both. The plus is only added where the sign means
+ * something: a win rate is not "+47.64%".
  */
 const SIGNED_TONES = new Set(["signed", "gain"]);
 
-function fmt(value, type, tone) {
+export function fmt(value, type, tone) {
   if (value === null || value === undefined) return "—";
   const sign = SIGNED_TONES.has(tone) && value > 0 ? "+" : "";
   if (type === "pct") return `${sign}${(value * 100).toFixed(2)}%`;
@@ -27,59 +24,41 @@ function fmt(value, type, tone) {
 }
 
 /**
- * Colour by what the number *means*, not by its sign.
+ * Colour by what the number *means*, not by its sign. Max drawdown is always
+ * negative, so colouring it by sign painted a −42% drawdown in the same green
+ * as a +68% return.
  *
- * Sign alone is misleading here. Max drawdown and worst day are always
- * negative, so colouring them by sign painted a −42% drawdown in the same green
- * as a +68% return — the worse the drawdown, the more reassuring it looked.
- * Volatility and trade count have no good or bad direction at all, so colouring
- * them says something the number does not support.
- *
- *   signed   — up is good, down is bad (returns, risk-adjusted ratios)
- *   loss     — always a loss; never dress it up
- *   gain     — always a gain
- *   over1    — good above 1.0, bad below (profit factor)
- *   neutral  — carries no direction on its own
+ *   signed — up is good, down is bad · loss — always a loss · gain — always a
+ *   gain · over1 — good above 1.0 · neutral — carries no direction
  */
-function toneClass(tone, value) {
-  if (value === null || value === undefined) return "text-text-faint";
+export function toneClass(tone, value) {
+  if (value === null || value === undefined) return "text-faint";
   switch (tone) {
     case "signed":
-      return value > 0 ? "text-success" : value < 0 ? "text-danger" : "text-text-muted";
+      return value > 0 ? "text-gain" : value < 0 ? "text-loss" : "text-graphite";
     case "loss":
-      return value < 0 ? "text-danger" : "text-text-muted";
+      return value < 0 ? "text-loss" : "text-graphite";
     case "gain":
-      return value > 0 ? "text-success" : "text-text-muted";
+      return value > 0 ? "text-gain" : "text-graphite";
     case "over1":
-      return value > 1 ? "text-success" : value < 1 ? "text-danger" : "text-text-muted";
+      return value > 1 ? "text-gain" : value < 1 ? "text-loss" : "text-graphite";
     default:
-      return "text-text-primary";
+      return "text-foreground";
   }
 }
 
 /**
- * Split into the numbers that decide something and the numbers that describe
- * it. Eleven identically-sized cards gave a reader no way to tell that max
- * drawdown decides whether a strategy is holdable while best day is trivia —
- * so the grid said everything mattered equally, which is worse than saying
- * nothing.
- */
-/**
  * A metric printed on its own reads as a property of the strategy, the way a
- * ruler reports 30cm. It is not — it is one draw from one sample path, and a
- * different five years would have produced a different number. The band is the
- * part that says so.
+ * ruler reports 30cm. It is not — it is one draw from one sample path. The
+ * band is the part that says so.
  *
- * The one signal worth interrupting for is an interval that still contains the
- * null: a Sharpe whose interval spans zero is not weak evidence of an edge, it
- * is no evidence, however good the point estimate looks. That case is the only
- * one coloured.
+ * The one signal worth interrupting for is an interval that still contains
+ * the null: a Sharpe whose interval spans zero is not weak evidence of an
+ * edge, it is no evidence. That case is the only one coloured.
  */
 function fmtBound(value, type, tone) {
-  // Deliberately coarser than the point estimate. Printing a bound as
-  // "+404.95%" claims a precision the interval is in the middle of denying —
-  // and at two decimals the range plus its flag wrapped to three lines in a
-  // 126px card on a phone, under a number that takes one.
+  // Coarser than the point estimate on purpose: printing a bound as
+  // "+404.95%" claims a precision the interval is in the middle of denying.
   const sign = SIGNED_TONES.has(tone) && value > 0 ? "+" : "";
   if (type === "pct") return `${sign}${Math.round(value * 100)}%`;
   if (type === "ratio") return `${sign}${value.toFixed(2)}`;
@@ -88,44 +67,31 @@ function fmtBound(value, type, tone) {
 
 function Band({ band, type, tone }) {
   if (!band) return null;
-
   const spansNull = band.null_value !== null && band.excludes_null === false;
   const range = `${fmtBound(band.low, type, tone)} to ${fmtBound(band.high, type, tone)}`;
 
   return (
-    <span
-      className={`text-2xs font-mono leading-tight ${
-        spansNull ? "text-warning" : "text-text-faint"
-      }`}
-    >
+    <span className={cn("text-2xs font-mono leading-tight block", spansNull ? "text-warn" : "text-faint")}>
       <span className="block">{range}</span>
-      {spansNull && (
-        <span className="block font-sans">spans {band.null_value === 1 ? "1" : "0"}</span>
-      )}
+      {spansNull && <span className="block font-sans">spans {band.null_value === 1 ? "1" : "0"}</span>}
       {band.reliability === "understates" && (
-        <span className="block font-sans text-text-faint">interval understated</span>
+        <span className="block font-sans text-faint">interval understated</span>
       )}
     </span>
   );
 }
 
-/**
- * The interval belongs to the number, so its caveats belong in the same
- * explanation rather than in a footnote the reader has to go find.
- */
+/** The interval belongs to the number, so its caveats belong in the same note. */
 function tipWith(tip, band, ci, type, tone) {
   if (!band) return tip;
   const parts = [tip];
-  // Formatted with the same fmt() the card uses. Printing the raw 0.385 here
-  // beside a card reading +38.50% makes them look like two different numbers.
   parts.push(
     `${Math.round(ci.confidence * 100)}% interval from a block bootstrap: ` +
       `${fmt(band.low, type, tone)} to ${fmt(band.high, type, tone)}.`,
   );
   if (band.null_value !== null && band.excludes_null === false) {
     parts.push(
-      `It still contains ${fmt(band.null_value, type, "neutral")}, so this ` +
-        `backtest is not evidence that the true value is anything else.`,
+      `It still contains ${fmt(band.null_value, type, "neutral")}, so this backtest is not evidence that the true value is anything else.`,
     );
   }
   if (band.reliability_note) parts.push(band.reliability_note);
@@ -155,107 +121,69 @@ export default function MetricsGrid({ metrics, confidenceIntervals }) {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* The four numbers a decision actually rests on. */}
-      {/* Four-up only from xl. The dashboard puts a 21rem sidebar beside this
-          column, so at lg these cards were ~150px wide and every label but
-          "Sharpe" truncated — "TOTAL RE…", "MAX DRAW…". Measured: the labels
-          need up to 179px including the tooltip. */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+      {/* The four numbers a decision actually rests on, set in the display
+          face at a size that makes them the first thing read. Four-up only
+          from xl: beside a 21rem sidebar these are ~150px wide at lg. */}
+      <Stagger className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {HEADLINE.map(({ key, label, type, tone, tip }) => (
-          <div
-            key={key}
-            className="panel p-4 sm:p-5 flex flex-col gap-2 relative overflow-visible"
-          >
+          <StaggerItem key={key} className="sheet p-4 sm:p-5 flex flex-col gap-2 min-h-[6.5rem]">
             <div className="flex items-start gap-1.5 min-w-0">
-              {/* Wraps rather than truncates. A clipped label loses the word
-                  that distinguishes it; a second line costs 16px. */}
               <span className="eyebrow">{label}</span>
-              <Tooltip
-                label={ci ? tipWith(tip, bands[key], ci, type, tone) : tip}
-                align="start"
-              />
+              <Tooltip label={ci ? tipWith(tip, bands[key], ci, type, tone) : tip} align="start" />
             </div>
             <span
-              className={`text-2xl sm:text-display-sm font-mono font-medium leading-none tracking-tight ${toneClass(
-                tone,
-                metrics[key],
-              )}`}
+              className={cn(
+                "font-display text-3xl sm:text-display-sm font-medium leading-none tracking-tight",
+                toneClass(tone, metrics[key]),
+              )}
             >
               {fmt(metrics[key], type, tone)}
             </span>
-            {/* mt-auto so the bands sit on a shared baseline even when one
-                label wraps to two lines and its neighbour does not. */}
             <span className="mt-auto">
               <Band band={bands[key]} type={type} tone={tone} />
             </span>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
 
-      {/* Everything else, at the weight it deserves. */}
-      {/* Was one row of seven. Seven cells need ~1477px and this column is
-          ~650px on a 1024 screen, so the labels overran their cells and
-          collided with the next one — CSS grid items default to
-          min-width:auto and refuse to shrink, so `truncate` never fired.
-          Now it wraps to as many rows as it needs.
-
-          Borders live on the cells rather than in the gaps, which is what
-          makes wrapping safe: a row with an empty trailing slot draws no
-          stray hairline, because there is no cell there to draw one. The
-          negative margins push the outer edges under the panel's own border,
-          and overflow-hidden clips them at the rounded corners. */}
-      <div className="panel overflow-hidden">
-        {/* One column below sm: there the cell puts label and value on the same
-            row, so a second column left "ANN. VOLATILITY" 60px of the 122 it
-            needs. Full width gives the label the room and costs nothing —
-            seven short rows are no taller than four cramped ones. */}
+      {/* Everything else, at the weight it deserves. Borders live on the
+          cells rather than in the gaps so wrapping is safe. */}
+      <div className="sheet overflow-hidden">
         <div className="grid sm:grid-cols-3 lg:grid-cols-4 -mr-px -mb-px">
-        {SECONDARY.map(({ key, label, type, tone, tip }) => (
-          <div
-            key={key}
-            className="min-w-0 border-r border-b border-border px-4 py-3 flex items-center justify-between gap-2 sm:flex-col sm:items-start sm:gap-1.5"
-          >
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="eyebrow truncate">{label}</span>
-              <Tooltip
-                label={ci ? tipWith(tip, bands[key], ci, type, tone) : tip}
-                align="start"
-              />
-            </div>
-            <span
-              className={`text-sm font-mono font-medium ${toneClass(tone, metrics[key])}`}
+          {SECONDARY.map(({ key, label, type, tone, tip }) => (
+            <div
+              key={key}
+              className="min-w-0 border-r border-b border-border px-4 py-3 flex items-center justify-between gap-2 sm:flex-col sm:items-start sm:gap-1.5"
             >
-              {fmt(metrics[key], type, tone)}
-            </span>
-          </div>
-        ))}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="eyebrow truncate">{label}</span>
+                <Tooltip label={ci ? tipWith(tip, bands[key], ci, type, tone) : tip} align="start" />
+              </div>
+              <span className={cn("text-sm font-mono font-medium", toneClass(tone, metrics[key]))}>
+                {fmt(metrics[key], type, tone)}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* The bands are numbers too, so where they came from is stated rather
-          than left to be taken on faith — including the two the simulation
-          showed are too narrow, which is why "narrow" is a marker and not a
-          silent omission. */}
       {ci && (
-        <p className="text-2xs text-text-faint leading-relaxed">
+        <p className="text-2xs text-faint leading-relaxed max-w-prose">
           Ranges are {Math.round(ci.confidence * 100)}% confidence intervals from{" "}
           {ci.n_resamples.toLocaleString()} block-bootstrap resamples
           {ci.block?.block_length > 1
-            ? ` (blocks averaging ${ci.block.block_length} bars, chosen from this
-               series' own autocorrelation)`
+            ? ` (blocks averaging ${ci.block.block_length} bars, chosen from this series' own autocorrelation)`
             : " (the series showed no serial dependence, so blocks are single days)"}
-          . They measure how much of this result came from the order the returns
-          arrived in — not whether the strategy works on data it has never seen.{" "}
-          <span className="text-warning">Amber</span> marks an interval that still
-          contains the value meaning "no effect". Metrics marked{" "}
-          <span className="font-mono">narrow</span> are known to be understated:
-          measured coverage was 70% for volatility and 79% for max drawdown
-          against a nominal 95%.
+          . They measure how much of this result came from the order the returns arrived in — not
+          whether the strategy works on data it has never seen.{" "}
+          <span className="text-warn">Amber</span> marks an interval that still contains the value
+          meaning "no effect". Intervals marked understated are known to be too narrow: measured
+          coverage was 70% for volatility and 79% for max drawdown against a nominal 95%.
         </p>
       )}
 
       {confidenceIntervals && !confidenceIntervals.available && (
-        <p className="text-2xs text-text-faint leading-relaxed">
+        <p className="text-2xs text-faint leading-relaxed">
           No confidence intervals for this run — {confidenceIntervals.reason}
         </p>
       )}

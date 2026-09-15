@@ -5,11 +5,19 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore/lite";
 import { auth, db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import UsageMeter from "../components/UsageMeter";
+import PasswordInput from "../components/PasswordInput";
+import { Rise } from "../components/motion";
 import { useToast } from "../hooks/useToast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 const PASSWORD_ERROR_MAP = {
   "auth/wrong-password": "Your current password is incorrect.",
@@ -19,18 +27,24 @@ const PASSWORD_ERROR_MAP = {
   "auth/requires-recent-login": "Please sign out and back in, then try again.",
 };
 
-const inputClass =
-  "w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-faint focus:outline-none focus:border-accent transition-colors";
-
-const labelClass = "text-xs text-text-muted font-medium block mb-1";
-
+/** A titled sheet with the title set in the margin from lg up. */
 function Card({ title, description, children }) {
   return (
-    <section className="panel rounded-2xl p-6">
-      <h2 className="text-sm font-bold text-text-primary">{title}</h2>
-      {description && <p className="text-xs text-text-muted mt-1 mb-5">{description}</p>}
-      {children}
+    <section className="sheet p-6 grid lg:grid-cols-[11rem_minmax(0,1fr)] gap-x-8 gap-y-4">
+      <div>
+        <h2 className="font-display text-lg font-medium text-foreground leading-tight">{title}</h2>
+        {description && <p className="text-xs text-graphite mt-1.5 leading-relaxed">{description}</p>}
+      </div>
+      <div>{children}</div>
     </section>
+  );
+}
+
+function Pill({ children, tone }) {
+  return (
+    <Badge variant="outline" className={cn("font-mono text-tick uppercase tracking-wider px-1.5 py-0 align-middle", tone)}>
+      {children}
+    </Badge>
   );
 }
 
@@ -121,66 +135,48 @@ export default function UserProfilePage() {
     : "—";
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="mb-6">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <Rise>
+        <header className="mb-8">
+          <p className="eyebrow mb-3">Account</p>
+          <h1 className="font-display text-display-sm font-medium text-foreground">Profile</h1>
+        </header>
+      </Rise>
+
+      <Rise delay={0.05} className="flex flex-col gap-4">
         <UsageMeter />
-      </div>
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold text-text-primary">Profile</h1>
-        <p className="text-sm text-text-muted mt-1">
-          Manage your account details and password.
-        </p>
-      </header>
 
-      <div className="flex flex-col gap-4">
         <Card title="Account">
-          <dl className="grid grid-cols-[110px_1fr] gap-y-3 text-sm">
-            <dt className="text-text-muted text-xs pt-0.5">Email</dt>
-            <dd className="text-xs break-all">
-              <span className="font-mono text-text-primary">{user.email}</span>{" "}
-              <span
-                className={`inline-block text-2xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border align-middle ${
-                  emailVerified
-                    ? "bg-success/10 border-success/30 text-success"
-                    : "bg-warning/10 border-warning/30 text-warning"
-                }`}
-              >
+          <dl className="grid grid-cols-[7rem_1fr] gap-y-3 text-sm items-baseline">
+            <dt className="eyebrow">Email</dt>
+            <dd className="text-xs break-all flex items-center gap-2 flex-wrap">
+              <span className="font-mono text-foreground">{user.email}</span>
+              <Pill tone={emailVerified ? "text-gain border-gain/40" : "text-warn border-warn/40"}>
                 {emailVerified ? "verified" : "unverified"}
-              </span>
+              </Pill>
             </dd>
 
-            <dt className="text-text-muted text-xs pt-0.5">Role</dt>
+            <dt className="eyebrow">Role</dt>
             <dd>
-              <span
-                className={`inline-block text-2xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
-                  userProfile?.role === "admin"
-                    ? "bg-accent/10 border-accent/30 text-accent"
-                    : "bg-bg border-border text-text-muted"
-                }`}
-              >
+              <Pill tone={userProfile?.role === "admin" ? "text-pencil border-pencil/40" : "text-graphite"}>
                 {userProfile?.role || "user"}
-              </span>
+              </Pill>
             </dd>
 
-            <dt className="text-text-muted text-xs pt-0.5">Backtests run</dt>
-            <dd className="font-mono text-xs text-text-primary tabular-nums">
-              {userProfile?.totalRuns ?? 0}
-            </dd>
+            <dt className="eyebrow">Backtests run</dt>
+            <dd className="font-mono text-xs text-foreground">{userProfile?.totalRuns ?? 0}</dd>
 
-            <dt className="text-text-muted text-xs pt-0.5">Member since</dt>
-            <dd className="font-mono text-xs text-text-primary">{joined}</dd>
+            <dt className="eyebrow">Member since</dt>
+            <dd className="font-mono text-xs text-foreground">{joined}</dd>
           </dl>
         </Card>
 
-        <Card
-          title="Display name"
-          description="Shown in the admin panel. Your email address is never changed here."
-        >
+        <Card title="Display name" description="Shown in the admin panel. Your email address is never changed here.">
           <div className="flex flex-col gap-4">
-            <div>
-              <label className={labelClass}>Display name</label>
-              <input
-                className={inputClass}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="profile-name" className="eyebrow">Display name</Label>
+              <Input
+                id="profile-name"
                 type="text"
                 placeholder="Your name"
                 value={displayName}
@@ -189,71 +185,57 @@ export default function UserProfilePage() {
                 autoComplete="name"
               />
             </div>
-            <button
-              onClick={handleSaveName}
-              disabled={savingName}
-              className="btn-primary self-start px-5 py-2 text-sm"
-            >
+            <Button onClick={handleSaveName} disabled={savingName} className="self-start">
               {savingName ? "Saving…" : "Save"}
-            </button>
+            </Button>
           </div>
         </Card>
 
-        <Card
-          title="Change password"
-          description="You'll need your current password to set a new one."
-        >
+        <Card title="Change password" description="You'll need your current password to set a new one.">
           {passwordError && (
-            <div className="bg-danger/10 border border-danger/30 text-danger text-sm rounded-lg px-4 py-3 mb-4">
-              {passwordError}
-            </div>
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{passwordError}</AlertDescription>
+            </Alert>
           )}
 
           <div className="flex flex-col gap-4">
-            <div>
-              <label className={labelClass}>Current password</label>
-              <input
-                className={inputClass}
-                type="password"
-                placeholder="••••••••"
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="pw-current" className="eyebrow">Current password</Label>
+              <PasswordInput
+                id="pw-current"
+                placeholder="Your current password"
                 value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
+                onChange={setCurrentPassword}
                 autoComplete="current-password"
               />
             </div>
-            <div>
-              <label className={labelClass}>New password</label>
-              <input
-                className={inputClass}
-                type="password"
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="pw-new" className="eyebrow">New password</Label>
+              <PasswordInput
+                id="pw-new"
                 placeholder="At least 6 characters"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={setNewPassword}
                 autoComplete="new-password"
               />
             </div>
-            <div>
-              <label className={labelClass}>Confirm new password</label>
-              <input
-                className={inputClass}
-                type="password"
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="pw-confirm" className="eyebrow">Confirm new password</Label>
+              <PasswordInput
+                id="pw-confirm"
                 placeholder="Re-enter new password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={setConfirmPassword}
                 onKeyDown={(e) => e.key === "Enter" && handleChangePassword()}
                 autoComplete="new-password"
               />
             </div>
-            <button
-              onClick={handleChangePassword}
-              disabled={savingPassword}
-              className="btn-primary self-start px-5 py-2 text-sm"
-            >
+            <Button onClick={handleChangePassword} disabled={savingPassword} className="self-start">
               {savingPassword ? "Updating…" : "Change password"}
-            </button>
+            </Button>
           </div>
         </Card>
-      </div>
+      </Rise>
     </div>
   );
 }

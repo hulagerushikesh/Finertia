@@ -15,4 +15,4 @@ Disallow: /login
 Disallow: /register
 Disallow: /forgot-password
 
-Sitemap: https://momentbacktracking.web.app/sitemap.xml
+Sitemap: https://finertia.hulage.in/sitemap.xml

@@ -1,41 +1,20 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { DocSection as Section, Term as Question, DocHeader } from "../components/Prose";
+import { Rise } from "../components/motion";
 
 // Set VITE_SUPPORT_EMAIL at build time. The fallback is a placeholder on
 // purpose — a wrong address that looks plausible is worse than an obvious one.
 const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || "support@example.com";
 
-function Section({ id, title, children }) {
-  return (
-    <section id={id} className="scroll-mt-20">
-      <h2 className="text-lg font-semibold text-text-primary mb-3">{title}</h2>
-      <div className="flex flex-col gap-3 text-sm text-text-muted leading-relaxed">
-        {children}
-      </div>
-    </section>
-  );
-}
-
+/** An API error, quoted verbatim, with what actually causes it. */
 function Problem({ message, children }) {
   return (
-    <div className="border border-border rounded-xl overflow-hidden">
-      <p className="bg-bg px-4 py-2.5 font-mono text-xs text-danger border-b border-border">
+    <div className="sheet overflow-hidden">
+      <p className="bg-muted/60 px-4 py-2.5 font-mono text-xs text-loss border-b border-border">
         {message}
       </p>
-      <div className="px-4 py-3 text-sm text-text-muted leading-relaxed">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function Question({ q, children }) {
-  return (
-    <div className="border-l-2 border-border pl-4 py-1">
-      <p className="text-text-primary font-medium text-sm mb-1">{q}</p>
-      <div className="text-sm text-text-muted leading-relaxed flex flex-col gap-2">
-        {children}
-      </div>
+      <div className="px-4 py-3 text-sm text-graphite leading-relaxed">{children}</div>
     </div>
   );
 }
@@ -46,41 +25,34 @@ export default function SupportPage() {
   )}`;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-2xl font-bold text-text-primary mb-2">Support</h1>
-      <p className="text-sm text-text-muted mb-8">
-        Most problems here are one of a handful of specific errors, so the
-        common ones are written out below with what actually causes them. If
-        yours isn't listed, email us.
-      </p>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Rise>
+        <DocHeader eyebrow="Support" title="When something goes wrong.">
+          Most problems here are one of a handful of specific errors, so the common ones are
+          written out below with what actually causes them. If yours isn't listed, email.
+        </DocHeader>
+      </Rise>
 
       {/* Contact */}
-      <div className="panel rounded-2xl p-6 mb-10">
-        <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
-          Get in touch
-        </p>
-        <a
-          href={mailto}
-          className="text-accent hover:underline font-mono text-sm break-all"
-        >
-          {SUPPORT_EMAIL}
-        </a>
-        <p className="text-sm text-text-muted mt-4 leading-relaxed">
-          Include the <span className="text-text-primary">exact error text</span>{" "}
-          and the ticker, date range, and strategy you ran. If the run saved, the
-          run ID from{" "}
-          <Link to="/history" className="text-accent hover:underline">
-            History
-          </Link>{" "}
-          is enough on its own — every parameter is stored with it.
-        </p>
-        <p className="text-xs text-text-muted mt-3 leading-relaxed">
-          This is a solo project, not a staffed desk. Expect a reply in a couple
-          of days rather than a couple of hours.
-        </p>
+      <div className="grid lg:grid-cols-[11rem_minmax(0,1fr)] gap-x-10 gap-y-3 mb-14">
+        <p className="eyebrow lg:text-right lg:pt-1.5">Get in touch</p>
+        <div className="max-w-prose">
+          <a href={mailto} className="font-display text-xl text-pencil hover:underline break-all">
+            {SUPPORT_EMAIL}
+          </a>
+          <p className="text-sm text-graphite mt-3 leading-relaxed">
+            Include the <span className="text-foreground">exact error text</span> and the ticker,
+            date range, and strategy you ran. If the run saved, the run ID from{" "}
+            <Link to="/history" className="text-pencil hover:underline">History</Link> is enough on
+            its own — every parameter is stored with it.
+          </p>
+          <p className="margin-note mt-4">
+            A solo project, not a staffed desk. Expect a reply in days, not hours.
+          </p>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-14">
         <Section id="errors" title="Errors you might hit">
           <p>
             These are the messages the API actually returns, and what each one
@@ -110,7 +82,7 @@ export default function SupportPage() {
           <Problem message="You have used all N runs on the free plan this month.">
             A monthly quota, not a speed limit. It resets at the start of the
             next calendar month, counted in UTC. The current allowance is on the{" "}
-            <Link to="/pricing" className="text-accent hover:underline">
+            <Link to="/pricing" className="text-pencil hover:underline">
               pricing page
             </Link>
             , which reads it from the API rather than repeating it — Pro removes
@@ -137,7 +109,7 @@ export default function SupportPage() {
         </Section>
 
         <Section id="results" title="Questions about the results">
-          <Question q="Why are my numbers worse than the same strategy elsewhere?">
+          <Question name="Why are my numbers worse than the same strategy elsewhere?">
             <p>
               Usually because this engine refuses several shortcuts that flatter
               a backtest. Signals are shifted one bar before they are traded, so
@@ -149,13 +121,13 @@ export default function SupportPage() {
             </p>
             <p>
               Together those are worth a lot of apparent performance.{" "}
-              <Link to="/docs#lookahead" className="text-accent hover:underline">
+              <Link to="/docs#lookahead" className="text-pencil hover:underline">
                 The docs explain each one.
               </Link>
             </p>
           </Question>
 
-          <Question q="Where does the price data come from?">
+          <Question name="Where does the price data come from?">
             <p>
               Daily closing prices from Yahoo Finance, split- and
               dividend-adjusted. There is no intraday data, so the shortest
@@ -163,7 +135,7 @@ export default function SupportPage() {
             </p>
           </Question>
 
-          <Question q="My strategy shows a great return. Should I trade it?">
+          <Question name="My strategy shows a great return. Should I trade it?">
             <p>
               Not on the strength of one backtest. A result on a single ticker
               over a single period is one sample, and parameters chosen because
@@ -178,7 +150,7 @@ export default function SupportPage() {
             </p>
           </Question>
 
-          <Question q="Can I export the results?">
+          <Question name="Can I export the results?">
             <p>
               Yes — the dashboard has CSV export for the equity curve and the
               trade list, and the run configuration is encoded in the page URL,
@@ -188,16 +160,16 @@ export default function SupportPage() {
         </Section>
 
         <Section id="account" title="Account, billing, and data">
-          <Question q="What do you store?">
+          <Question name="What do you store?">
             <p>
               Your email and display name, and for each run its configuration
               and summary metrics. Equity curves and drawdown series are{" "}
-              <span className="text-text-primary">not</span> stored — they are
+              <span className="text-foreground font-medium">not</span> stored — they are
               recomputed from the parameters whenever you open a saved run.
             </p>
           </Question>
 
-          <Question q="How do I cancel, or delete my account?">
+          <Question name="How do I cancel, or delete my account?">
             <p>
               Email us and we'll do both. There is no self-serve delete button
               yet — saying so is more useful than pointing you at one that
@@ -207,7 +179,7 @@ export default function SupportPage() {
             </p>
           </Question>
 
-          <Question q="I never got the verification email.">
+          <Question name="I never got the verification email.">
             <p>
               Check spam first — it comes from a Firebase address, which filters
               often mistrust. The banner at the top of the dashboard resends it,
@@ -218,14 +190,14 @@ export default function SupportPage() {
           </Question>
         </Section>
 
-        <div className="border-t border-border pt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          <Link to="/docs" className="text-accent hover:underline">
+        <div className="border-t border-border pt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm lg:pl-[14.5rem]">
+          <Link to="/docs" className="text-pencil hover:underline">
             How it works →
           </Link>
-          <Link to="/demo" className="text-accent hover:underline">
+          <Link to="/demo" className="text-pencil hover:underline">
             See a real run →
           </Link>
-          <Link to="/pricing" className="text-accent hover:underline">
+          <Link to="/pricing" className="text-pencil hover:underline">
             Plans →
           </Link>
         </div>

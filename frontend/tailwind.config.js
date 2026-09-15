@@ -1,128 +1,136 @@
 /** @type {import('tailwindcss').Config} */
+import animate from "tailwindcss-animate";
 
 /**
- * Finertia reads as a measuring instrument, not a dashboard.
+ * "Blue pencil."
  *
- * The colour system encodes the product's actual thesis. Every screen here puts
- * a number you measured next to the thing that tests it — in-sample against
- * out-of-sample, your strategy against buy-and-hold, your signal against a
- * shuffled one. So the palette is deliberately two-toned:
+ * The product is peer review for a backtest, so the interface is set like a
+ * marked-up manuscript rather than a trading terminal: paper, ink, and an
+ * editor's blue pencil on every number that was checked.
  *
- *   accent (violet)  the value you measured — the one that might be fooling you
- *   check  (mint)    whatever is checking it — the reference, the null, the
- *                    out-of-sample score
+ *   ink      — what you wrote: your strategy, your numbers, primary actions
+ *   pencil   — what was checked: out-of-sample figures, verdicts, the one
+ *              accent this palette spends its boldness on
+ *   gain /   — kept strictly semantic. Blue for the accent is what frees red
+ *   loss       and green to mean only loss and gain, which the previous
+ *              violet/mint scheme could not promise.
  *
- * Used consistently, that pairing teaches the mental model before any copy
- * does. It is the one place this palette spends its boldness; everything else
- * stays quiet.
+ * Every colour is an HSL triple in CSS variables (src/index.css) so the same
+ * class resolves correctly in the light and dark sheets; nothing here is a
+ * literal hex.
  */
 export default {
+  darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // Cool ink rather than neutral black. A blue cast lets panels sit
-        // *above* the page instead of merging with it, which the old
-        // #0f1117/#1a1d27 pair was too close to do.
-        bg: "#090C13",
-        surface: "#111725",
-        // Nested panels and hover states. The old palette had no third step, so
-        // an input inside a card had to reuse the page colour and read as a
-        // hole punched through the card.
-        raised: "#192133",
-        border: "#232D42",
-        "border-strong": "#33405C",
-
-        /*
-         * The accent is split because one violet cannot do both jobs.
-         *
-         * A violet light enough to read as text on the dark ground (4.94:1) is
-         * too light to carry white text on top of it — #7C6BF7 with a white
-         * label measures 3.96:1, under the 4.5 floor, and the old lighter hover
-         * took it down to 2.72. So `accent` is the text/stroke/border colour
-         * and `accent-strong` is the fill behind white labels.
-         *
-         * Hover goes darker rather than lighter, which is the only direction
-         * that improves the label's contrast instead of destroying it.
-         */
-        accent: "#7C6BF7",
-        "accent-soft": "#9C8FFA",
-        "accent-strong": "#6B58F6",
-        "accent-deep": "#5E49F5",
-        check: "#2DD4BF",
-
-        success: "#34D399",
-        warning: "#F5A524",
-        // Softer than #ef4444: pure red vibrates against a dark ground and made
-        // every drawdown read as an error rather than a fact.
-        danger: "#F87171",
-
-        "text-primary": "#E9EEF9",
-        "text-muted": "#94A3BE",
-        "text-faint": "#7C89A2",
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        // Finertia's own names, on top of the shadcn set.
+        paper: "hsl(var(--background))",
+        sheet: "hsl(var(--card))",
+        ink: "hsl(var(--foreground))",
+        graphite: "hsl(var(--muted-foreground))",
+        faint: "hsl(var(--faint))",
+        rule: "hsl(var(--border))",
+        "rule-strong": "hsl(var(--border-strong))",
+        pencil: {
+          DEFAULT: "hsl(var(--pencil))",
+          fill: "hsl(var(--pencil-fill))",
+          foreground: "hsl(var(--pencil-foreground))",
+        },
+        gain: "hsl(var(--gain))",
+        loss: "hsl(var(--loss))",
+        warn: "hsl(var(--warn))",
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        // IBM Plex Mono over JetBrains: it is the face of scientific
-        // instrumentation, and its figures sit better in dense tables.
-        mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+        // Newsreader carries the headlines and the big figures — an editorial
+        // serif with optical sizes, so it holds at 64px and at 28px.
+        display: ["Newsreader", "Georgia", "Times New Roman", "serif"],
+        // Plex Sans is the face of technical reports. It sets dense copy
+        // without reading as a marketing site.
+        sans: ["IBM Plex Sans", "system-ui", "-apple-system", "sans-serif"],
+        mono: ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
-      /*
-       * Micro type is where this interface actually lives — eyebrow labels,
-       * verdict pills, axis ticks — and it had no scale. The app reached past
-       * Tailwind's `xs` with arbitrary bracket values 48 times and rendered
-       * eight distinct sizes on a single page, two of them 9px.
-       *
-       * `2xs` is the floor for anything a user reads as interface text.
-       *
-       * `tick` is the one step below it and exists for chart internals only:
-       * axis labels and heatmap cells sit inside a fixed geometry that cannot
-       * grow, and every one of them restates a number shown at full size
-       * elsewhere on the page. Chrome does not get to use it — if a label is
-       * the only place a fact appears, it is not a tick.
-       */
       fontSize: {
         tick: ["0.625rem", { lineHeight: "0.875rem" }],
         "2xs": ["0.6875rem", { lineHeight: "1rem" }],
-        // Display steps, previously one-off bracket values on four pages.
-        "display-sm": ["1.75rem", { lineHeight: "1.1" }],
-        "display-md": ["2.5rem", { lineHeight: "1.02" }],
-        "display-lg": ["2.75rem", { lineHeight: "1" }],
+        "display-sm": ["1.875rem", { lineHeight: "1.05" }],
+        "display-md": ["2.75rem", { lineHeight: "1" }],
+        "display-lg": ["3.5rem", { lineHeight: "0.98" }],
+        "display-xl": ["4.25rem", { lineHeight: "0.96" }],
       },
       boxShadow: {
-        // Lit from above. A single inset hairline is what separates a panel
-        // that looks placed on the page from one that looks cut out of it.
-        panel: "inset 0 1px 0 0 rgba(255,255,255,0.045)",
-        "panel-lifted":
-          "inset 0 1px 0 0 rgba(255,255,255,0.06), 0 12px 32px -12px rgba(0,0,0,0.7)",
-        pop: "0 16px 40px -12px rgba(0,0,0,0.75)",
+        // A sheet of paper lifted a millimetre off the desk. One soft shadow,
+        // no inset highlight — highlights are a dark-UI device.
+        sheet: "0 1px 2px hsl(var(--shadow) / 0.06), 0 0 0 1px hsl(var(--border))",
+        lifted:
+          "0 1px 2px hsl(var(--shadow) / 0.06), 0 12px 32px -12px hsl(var(--shadow) / 0.22), 0 0 0 1px hsl(var(--border))",
+        pop: "0 16px 40px -12px hsl(var(--shadow) / 0.35), 0 0 0 1px hsl(var(--border-strong))",
+      },
+      backgroundImage: {
+        // Graph paper. Sits behind charts so the grid is part of the sheet,
+        // not a chart-library default.
+        graph:
+          "linear-gradient(hsl(var(--border) / 0.7) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border) / 0.7) 1px, transparent 1px)",
       },
       keyframes: {
-        "toast-in": {
-          "0%": { opacity: "0", transform: "translateY(8px) scale(0.97)" },
-          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
         shimmer: {
           "0%": { backgroundPosition: "-400px 0" },
           "100%": { backgroundPosition: "400px 0" },
         },
-        "rise-in": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        // The needle sweep on the landing gauge. Runs once, on load.
-        "sweep-in": {
-          "0%": { transform: "scaleX(0)" },
-          "100%": { transform: "scaleX(1)" },
-        },
       },
       animation: {
-        "toast-in": "toast-in 180ms ease-out",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 1.4s linear infinite",
-        "rise-in": "rise-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both",
-        "sweep-in": "sweep-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },
-  plugins: [],
+  plugins: [animate],
 };
