@@ -7,7 +7,7 @@ a new URL and orphans the old one.
 
 | Tracker | URL | State |
 |---|---|---|
-| **Build ledger** (start here) | https://claude.ai/code/artifact/3b4db24d-f545-4131-9c6e-f853b3e3227e | Current to `b26ebe3`, 13 Sep 2026. Source for STATUS.md |
+| **Build ledger** (start here) | https://claude.ai/artifact/8KjjnWNpWGq9Z5WREvz6TF (was `/code/artifact/3b4db24d-…`, same artifact) | Refreshed 15 Sep 2026 from STATUS.md — current to `f916a57`, M9 closed, version label "15 Sep — M9 closed" |
 | Build checklist | https://claude.ai/code/artifact/e6f12c07-ceaa-4270-bfd5-feeb3ef5a224 | Refreshed 13 Sep 2026. Overlaps the ledger |
 | Product brief & status ledger | https://claude.ai/code/artifact/f010c0a9-17f3-4be3-a77e-e246fdcb1e0c | 7 Aug 2026. Positioning still valid; status section stale. Source for product-brief.md |
 | Learning path (56 topics) | https://claude.ai/code/artifact/e35fb185-6fe7-469d-8284-7ba0af4b57f9 | 17 Jul 2026. Predates every validation module. Superseded by ../learning/ |
