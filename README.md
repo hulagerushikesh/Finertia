@@ -7,25 +7,44 @@ Beyond a single backtest, Finertia answers the two questions that decide whether
 - **Walk-forward validation** — optimises parameters on the first 70% of the period and scores them on the remaining 30%. Only the out-of-sample number is evidence.
 - **Signal permutation test** — reshuffles the position series 500 times, holding market exposure identical, so only *timing* changes. Separates genuine edge from simply being in the market.
 
+Four more checks sit behind those, each built because the previous one was found to be lying in a specific way:
+
+- **Deflated Sharpe Ratio** (`deflated.py`, Bailey & López de Prado 2014) — the walk-forward winner is the max of N grid cells, and the max of N draws is inflated even with zero edge. DSR measures the winner against that bar instead of against zero.
+- **Effective number of trials** (`trials.py`, Li & Ji 2005; López de Prado & Lewis 2019) — N is not the grid size: a 20-day and a 25-day lookback are nearly the same trial. Measured two ways from the candidates' in-sample returns (eigenvalue count, correlation clustering); the deflation is reported under the raw N and the measured one, and the headline takes the **larger** estimate, because lowering N is the direction that flatters a result. On AAPL 2018-01-01 → 2024-01-01 the momentum grid of 16 measures as 6 (clusters say 3), Bollinger's 12 as 7 (clusters say 2); no verdict changes, the deflated Sharpe moves by +0.07 to +0.12.
+- **Probability of Backtest Overfitting** (`pbo.py`, CSCV) — is selecting on the in-sample score better than picking at random, across all 70 balanced splits of the period.
+- **Purge and embargo** (`purge.py`) — the trade straddling the in/out-of-sample cut cannot earn on both sides.
+- **Block-bootstrap confidence intervals** (`bootstrap.py`) — on every metric, every plan; coverage measured on GARCH paths, the two metrics that fail are flagged.
+
+See [learning/03-validation-methods.md](learning/03-validation-methods.md) for formulas, traps, and where each lives.
+
 ### What it found
 
 Those two checks are only worth building if they change the answer. Run against
-AAPL, 2018–2024, they do — ranking the three strategies on the data they were
-tuned on gives you exactly the wrong order.
+AAPL, 2018-01-01 → 2024-01-01, they do — ranking the three strategies on the
+data they were tuned on gives you exactly the wrong order.
 
 | Strategy | In-sample Sharpe | Out-of-sample Sharpe | Verdict |
 |---|---|---|---|
-| Momentum | 0.889 | −0.242 | Failed |
-| MACD | 0.554 | −0.281 | Failed |
-| Bollinger | 0.553 | **1.367** | Held up |
+| Momentum | 0.949 | −0.303 | Failed |
+| MACD | 0.511 | −0.300 | Failed |
+| Bollinger | 0.558 | **1.169** | Held up |
+
+(Figures as of 15 Sep 2026, with purge/embargo applied; the pre-purge run in
+August read 0.889 / −0.242 and 0.553 / 1.367 — same order, same verdicts.)
 
 The best in-sample result was the worst out-of-sample one. Momentum looked like
 the clear winner and had no edge at all on data it had not been fitted to.
 
+**And the verdict depends on where you cut.** Extend the same run by one year,
+to 2025-01-01, and it inverts: momentum holds up (0.766 → 0.547) and Bollinger
+fails (0.686 → −0.157). Nothing about the strategies changed — the split moved
+from February 2022 to October 2022, and the out-of-sample half moved with it.
+A single walk-forward split is one draw from a distribution of splits; that is
+why CSCV (every balanced split) sits beside it, and why "regime-aware
+walk-forward" is the next research item.
+
 This is one ticker over one period, so it demonstrates the method rather than
-proving mean reversion beats trend following. That is the point: a single
-backtest is one draw from a distribution, and the number that survives
-out-of-sample is the only one worth quoting. The `/demo` page leads with a
+proving mean reversion beats trend following. The `/demo` page leads with a
 losing strategy for the same reason.
 
 ## Learning and planning
@@ -128,13 +147,19 @@ Finertia/
 ├── backend/
 │   ├── main.py              # FastAPI app + all routes
 │   ├── schemas.py           # request models + validation (no Firebase dependency)
-│   ├── data.py              # yfinance fetch + cache
+│   ├── data.py              # yfinance behind two cache tiers
 │   ├── signals.py           # momentum, MACD, and Bollinger signal generation
 │   ├── strategies.py        # strategy registry — dispatch, warm-up, param grids
 │   ├── engine.py            # position logic + equity curve
 │   ├── metrics.py           # all performance metrics
 │   ├── analytics.py         # monthly, annual, and rolling views
 │   ├── validation.py        # walk-forward + permutation test
+│   ├── deflated.py          # Deflated Sharpe Ratio
+│   ├── trials.py            # effective number of trials (eigen + clusters)
+│   ├── pbo.py               # Probability of Backtest Overfitting (CSCV)
+│   ├── purge.py             # purge + embargo at the split
+│   ├── bootstrap.py         # stationary block bootstrap, BCa intervals
+│   ├── price_store.py       # Firestore / in-memory price cache tiers
 │   ├── risk.py              # stop-loss / take-profit + volatility sizing
 │   ├── portfolio.py         # alignment, weighting, aggregation, attribution
 │   ├── plans.py             # subscription tiers + monthly quota accounting
