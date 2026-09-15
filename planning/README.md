@@ -9,6 +9,7 @@ Where the project is, what is next, and why past choices were made.
 | [BACKLOG.md](BACKLOG.md) | Everything not in the current milestone, grouped | as items appear |
 | [DECISIONS.md](DECISIONS.md) | Decision log — constraints and reversals, with the reason | when a choice is made or reversed |
 | [product-brief.md](product-brief.md) | Positioning, users, competitors, credibility gaps | rarely |
+| [write-up.md](write-up.md) | The finding, written up: walk-forward inversion, five checks that disagree, the window flip | when figures are re-run |
 | [artifacts.md](artifacts.md) | Links to the published interactive trackers these files replaced | when one is refreshed |
 
 Rule carried over from the build ledger: **verified and built are different
