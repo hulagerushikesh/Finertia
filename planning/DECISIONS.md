@@ -3,6 +3,37 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-09-15 — Finertia is a portfolio piece with a write-up, not a product
+
+M9 phase 4. The fork was portfolio piece vs product. **Portfolio path.**
+
+Inputs on the day: Pitch Fest result not yet in; no evidence of use by anyone
+other than the author (the newest `runs` document is the author's, 14 Sep;
+the three pre-submission AAPL runs are the only real traffic). No funding,
+no second person to read a support inbox, no entity for Stripe payouts.
+
+What the decision changes:
+
+- **Kept live, kept free, kept cost-capped.** The URL is the artefact. Nothing
+  is switched off; `min-instances 0` means idle is ₹0.
+- **Stripe stays built and unwired.** `plans.py` and `billing.py` remain
+  tested; `STRIPE_*` stays unset in prod. Do not spend time on go-live,
+  webhooks in prod, or a support address.
+- **The write-up is the deliverable** — `planning/write-up.md`, drafted the
+  same day. It is the highest-leverage remaining artefact: it turns "I built
+  a backtester" into "the best in-sample strategy was the worst out-of-sample
+  one, four of five checks said the edge was real, and the verdict inverted
+  when the window moved one year".
+- **Research items outrank feature items.** Regime-aware walk-forward and
+  portfolio-mode validation stay above admin counters, Sentry, and Stripe in
+  BACKLOG.md, because they improve the write-up and the product path does not
+  exist.
+- **The redesign still lands** (PR #6) — a portfolio piece is judged on
+  polish too — but it is the last UI investment unless something changes.
+
+What would reverse it: a Pitch Fest placement that brings users, or a second
+person willing to own support. Either is a new decision, logged here.
+
 ## 2026-09-14 — Docs live in the repo, artifacts are views
 
 `learning/` and `planning/` are the source of truth. The published artifacts
