@@ -1,16 +1,16 @@
 # Status
 
-_Current to `main` · 16 Sep 2026 (rolling walk-forward on branch `regime-walk-forward`)._
+_Current to `e2970ca` (main) · 16 Sep 2026._
 
 ## At a glance
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00005` (15 Sep: price cache + effective N) |
+| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00006` (16 Sep: rolling walk-forward) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 588 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + secret scan) |
-| Commits | 36 on main · 7 PRs merged |
+| Commits | 40 on main · 9 PRs merged |
 | API | 16 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
 | Blocked on user | 4 — login smoke test on the PR #6 preview · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT · `rm frontend/.gitignore frontend/.env.local` |
@@ -75,7 +75,7 @@ Two UI follow-ups queued on the same branch: "served from cache" note
 | 14 Sep | `learning/` + `planning/` folders created (PR #5) | — |
 | 15 Sep | Firestore price cache (PR #7, rev 00004); effective N (PR #8, rev 00005); `prices` rules deployed; prewarm 28/28 | 17 + 15 tests, 5 mutation checks; walk-forward window flip found |
 | 15 Sep | **Phase 4 decided: portfolio piece**; write-up drafted from re-run figures on both windows | — |
-| 16 Sep | Rolling walk-forward (`rolling.py`): 4 anchored folds, market context per fold, stitched OOS + CI, parameter stability; wired as `rolling_walk_forward` in `/api/validate` | 18 + 3 tests, 588 total; 3 mutation checks; all three AAPL strategies read `regime_dependent` |
+| 16 Sep | Rolling walk-forward (`rolling.py`): 4 anchored folds, market context per fold, stitched OOS + CI, parameter stability; wired as `rolling_walk_forward` in `/api/validate`; PR #10, rev 00006 | 18 + 3 tests, 588 total; 3 mutation checks; all three AAPL strategies read `regime_dependent` |
 
 ## Known risks
 
