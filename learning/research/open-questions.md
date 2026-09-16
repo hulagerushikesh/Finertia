@@ -35,10 +35,15 @@ On both AAPL windows every strategy reads `regime_dependent`; momentum's
 "failed" was the one fold where the market fell (−15%, Apr 2022→Feb 2023)
 and its winning parameters changed at every re-fit.
 
-Still open: the folds are calendar segments, not regimes. A realised-vol
-tercile label per bar with per-regime Sharpe would let the product say
-"earns in low-vol, loses in high-vol" instead of leaving the reader to infer
-it from the fold table. The vol-CI coverage failure (§5) is the same cause.
+**Label built 16 Sep — `backend/regimes.py`, learning/03 §8.** Per-bar
+realised-vol terciles, Sharpe per regime on every backtest and on the stitched
+OOS record. AAPL OOS: momentum 2.26 calm / −0.76 turbulent, Bollinger the
+mirror. Item closed as scoped.
+
+Still open, narrower: the label is one-dimensional (vol). A trend/range label
+(e.g. sign and strength of a 60-day return) would separate "calm and rising"
+from "calm and flat", which is where momentum's calm-regime beta hides. And
+the vol-CI coverage failure (§5) shares the cause — regimes do not resample.
 
 ## 4. Whole-grid inference instead of winner inference
 
@@ -67,4 +72,4 @@ coefficient is the research.
 
 ---
 
-Item 3 was the one that changed what the product can *claim*; the rolling walk-forward is now the evidence. Next: the regime label (3, remainder) or whole-grid inference (4).
+Item 3 is done as scoped (rolling folds + vol label). Next: whole-grid inference (4) or the max-drawdown interval (5).

@@ -18,6 +18,7 @@ from data import DataUnavailableError, fetch_ohlcv
 from engine import compute_returns, apply_positions, compute_benchmark
 from bootstrap import bootstrap_metrics, stable_seed
 from rolling import rolling_walk_forward
+from regimes import regime_breakdown
 from metrics import compute_metrics
 from analytics import monthly_returns, annual_returns, rolling_sharpe
 import billing
@@ -582,6 +583,9 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
     monthly = monthly_returns(net_return)
     annual = annual_returns(net_return, benchmark_daily)
     rolling = rolling_sharpe(net_return, window=60)
+    # Where the return was earned, in the market's own terms: the strategy's
+    # Sharpe on the calm, middling and turbulent thirds of the period.
+    regimes = regime_breakdown(net_return, position, benchmark_daily)
 
     signals_summary = {
         "long_days": int((position > 0).sum()),
@@ -623,6 +627,7 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
         "monthly_returns": monthly,
         "annual_returns": annual,
         "rolling_sharpe": rolling,
+        "regimes": regimes,
         "signals_summary": signals_summary,
         "confidence_intervals": confidence_intervals,
         # "yfinance" | "cache" | "cache-stale" | "memory". Stale means Yahoo
