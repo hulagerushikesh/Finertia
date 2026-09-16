@@ -17,6 +17,7 @@ from firebase_admin import firestore
 from data import DataUnavailableError, fetch_ohlcv
 from engine import compute_returns, apply_positions, compute_benchmark
 from bootstrap import bootstrap_metrics, stable_seed
+from rolling import rolling_walk_forward
 from metrics import compute_metrics
 from analytics import monthly_returns, annual_returns, rolling_sharpe
 import billing
@@ -684,6 +685,22 @@ async def validate_strategy(req: ValidateRequest, authorization: Optional[str] =
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+    # The single split above is one draw. Walk it forward so the verdict is
+    # reported per segment, with the market's own return beside each — the
+    # only way to tell "no edge" from "no edge in the stretch the split
+    # happened to score". Cheap: positions per grid cell are built once.
+    try:
+        rolling = rolling_walk_forward(
+            close,
+            transaction_cost=req.transaction_cost,
+            strategy=req.strategy,
+            base_params=params,
+            n_folds=req.rolling_folds,
+            seed=stable_seed(req.ticker.upper(), req.start, req.end, req.strategy, "rolling"),
+        )
+    except ValueError as exc:
+        rolling = {"computable": False, "reason": str(exc)}
+
     positions = build_positions(close, req.strategy, params)
     returns = compute_returns(close)
     permutation = permutation_test(
@@ -697,6 +714,7 @@ async def validate_strategy(req: ValidateRequest, authorization: Optional[str] =
         "strategy": req.strategy,
         "bars": len(close),
         "walk_forward": wf,
+        "rolling_walk_forward": rolling,
         "permutation": permutation,
         "data_source": data_source,
         "duration_ms": int((time.time() - start_time) * 1000),

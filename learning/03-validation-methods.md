@@ -196,13 +196,57 @@ lost > 100% — `(1+total)**(252/n)` is complex for a negative base. Reachable
 
 ---
 
-## How the six fit together
+## 7. Rolling walk-forward — `backend/rolling.py` → `rolling_walk_forward()`
+
+- [ ] **Why it exists**: §1 tries one split, and the split lands wherever 70%
+  of the requested window falls. Measured 15 Sep 2026: AAPL 2018→2024-01-01
+  says momentum fails and Bollinger holds; extend to 2025-01-01, the in-sample
+  end moves Feb→Oct 2022, and it inverts. One split is one draw from a
+  distribution of splits.
+- [ ] **What**: anchored. First split at 40% of the period; what remains is
+  tiled into K = 4 segments. Fold k sweeps the grid on `[0, split_k)` and
+  scores the winner on `[split_k, split_k+1)` only. Anchored (expanding, not
+  fixed-length) because that is what a live re-fit does — use all history.
+- [ ] **Purge at every boundary**: `purged_split` sizes the gap on the whole
+  series; the bars purged from fold k+1's in-sample end are the *last* bars of
+  fold k's segment, so the straddling trade is scored once and never selected on.
+- [ ] **Stitched curve**: the segments concatenated (embargo gaps excluded) are
+  the out-of-sample record of the *procedure* — "re-fit periodically, trade
+  the winner" — not of one parameter set. It gets `compute_metrics` and a §6
+  bootstrap interval on its Sharpe.
+- [ ] **Per fold**: best params, IS and OOS Sharpe, `_verdict`, plus the
+  market's own return and realised vol over the segment, so a failed fold can
+  be read against what the market did.
+- [ ] **Parameter stability**: distinct winners across folds and the modal
+  set's share. A winner that changes every re-fit was never one strategy —
+  momentum on AAPL changed all four times.
+- [ ] **Overall verdict**: `consistent` (every fold positive and the stitched
+  Sharpe positive), `failed` (no fold positive), else `regime_dependent`.
+  All three strategies on both AAPL windows read `regime_dependent`.
+- [ ] **Cost**: positions per grid cell are built once on the full series and
+  sliced per fold; K folds cost one sweep plus K×N metric evaluations.
+- [ ] **What it does not do**: it does not *detect* regimes. Folds are calendar
+  segments; the regime is read off `benchmark_return` and `realised_volatility`
+  by the human. A vol-tercile label is the obvious next step
+  (research/open-questions.md §3).
+- [ ] Tests (`tests/test_rolling.py`, 18): geometry, anchoring, purge, "scores
+  are full-series positions sliced", "winner chosen on IS only", synthetic
+  trend → consistent, whipsaw → failed, trend-then-whipsaw → regime_dependent.
+  Three mutations (select on OOS; drop the gap; fixed window) each fail
+  exactly one test.
+
+Read: Pardo, *The Evaluation and Optimization of Trading Strategies* (2008),
+ch. 9–11 — the original walk-forward analysis; AFML ch. 12 for the anchored
+vs rolling distinction and why purging still applies per fold.
+
+## How the seven fit together
 
 ```
                  ┌─ §5 purge/embargo (no bar paid twice)
 walk-forward ────┤
   (§1)           └─ §3 DSR   (was the IS winner better than max-of-N noise?)
-                 
+rolling (§7) ────── the same, K times, walked forward: is the verdict a regime?
+
 CSCV (§4)  ─────── is *selecting on IS score* better than random at all?
 permutation (§2) ─ is the *timing* better than a shuffle?
 bootstrap (§6) ─── how wide is the band around every number you printed?
@@ -218,6 +262,6 @@ them (`ValidationPanel.jsx`: walk-forward → deflated → PBO → permutation;
 - Constants pinned to the papers (3.26; Lo 2002 to 1e-12).
 - Coverage *measured* on synthetic GARCH paths, failures shipped as flags.
 - Mutation-checked: delete the check, watch exactly the right tests fail.
-- 567 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
+- 588 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
 
 Next: [research/reading-list.md](research/reading-list.md)
