@@ -13,7 +13,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 ## Research (after effective N)
 
 - [ ] Portfolio-level validation — needs a definition of a portfolio permutation first (open-questions §2)
-- [ ] Regime-aware walk-forward: anchored multi-split; per-year OOS; realised-vol tercile labels (§3)
+- [x] Regime-aware walk-forward — anchored rolling folds built 16 Sep (`rolling.py`, §3). Remaining: a per-bar realised-vol regime label with per-regime Sharpe
 - [ ] Whole-grid inference: White Reality Check / Hansen SPA / Romano-Wolf stepdown (§4)
 - [ ] Max-drawdown interval with honest coverage (§5)
 - [ ] Vol-scaled transaction-cost model (§7)

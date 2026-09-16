@@ -28,8 +28,17 @@ holds up. AAPL 2018→2025-01-01 — one more year, split moves from Feb to Oct
 2022 — says the opposite. Same strategies, same grid. The single-split verdict
 is a draw from a distribution of splits, and the product currently prints one
 draw as if it were the distribution.
-Options: rolling (anchored) walk-forward with multiple splits; report OOS per
-calendar year; a simple regime label (realised-vol tercile) with per-regime Sharpe.
+**Built 16 Sep 2026 — `backend/rolling.py`, learning/03 §7.** Anchored
+rolling walk-forward, four folds, market return and realised vol beside each
+fold, stitched OOS curve with a bootstrap interval, parameter-stability count.
+On both AAPL windows every strategy reads `regime_dependent`; momentum's
+"failed" was the one fold where the market fell (−15%, Apr 2022→Feb 2023)
+and its winning parameters changed at every re-fit.
+
+Still open: the folds are calendar segments, not regimes. A realised-vol
+tercile label per bar with per-regime Sharpe would let the product say
+"earns in low-vol, loses in high-vol" instead of leaving the reader to infer
+it from the fold table. The vol-CI coverage failure (§5) is the same cause.
 
 ## 4. Whole-grid inference instead of winner inference
 
@@ -58,4 +67,4 @@ coefficient is the research.
 
 ---
 
-Item 3 is the one that changes what the product can *claim* — the flip above is the evidence. Start there.
+Item 3 was the one that changed what the product can *claim*; the rolling walk-forward is now the evidence. Next: the regime label (3, remainder) or whole-grid inference (4).
