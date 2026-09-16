@@ -239,13 +239,49 @@ Read: Pardo, *The Evaluation and Optimization of Trading Strategies* (2008),
 ch. 9–11 — the original walk-forward analysis; AFML ch. 12 for the anchored
 vs rolling distinction and why purging still applies per fold.
 
-## How the seven fit together
+## 8. Volatility regimes — `backend/regimes.py`
+
+- [ ] **What**: trailing 21-bar standard deviation of the *market's* daily
+  returns, annualised, one value per bar; cut into terciles of the period
+  (`low` / `mid` / `high`). The strategy's net return is then grouped by
+  label: Sharpe, arithmetic contribution, hit rate, time in market, and the
+  market's own Sharpe on the same bars.
+- [ ] **Why the market's vol, not the strategy's**: the regime is a property
+  of the conditions, not of the trade. A flat strategy has zero variance and
+  would collapse the labels. Pinned by test and a mutation.
+- [ ] **Why trailing, not centred**: the window ends at the bar it labels. It
+  is a description, not a signal, so lookahead is not the concern — but a
+  centred window would label a bar by turbulence that arrived later, which
+  is not what "the bar was in a high-vol regime" means. Mutation-checked.
+- [ ] **Why period-relative terciles**: 20% vol is "high" in 2017 and "low"
+  in 2020. The question is how *this* backtest's return is spread across
+  *its* conditions. Thresholds are reported so "high" has a number.
+- [ ] **Sharpe form**: mean/std × √252 on non-contiguous bars — the §1
+  headline's compounded form would describe a trade nobody could make.
+  Contributions are arithmetic and sum to the arithmetic total.
+- [ ] **Where**: every `/api/backtest` (`regimes`) and the stitched
+  out-of-sample record of §7 (`out_of_sample_stitched.regimes`). Below 63
+  labelled bars the block reads `computable: false`.
+- [ ] **What it says on AAPL**, out-of-sample: momentum Sharpe 2.26 in the
+  calm third (market 2.49 — beta), −0.76 in the turbulent third (market
+  +0.60 — whipsaw). Bollinger the mirror: −1.83 calm, +1.31 turbulent.
+- [ ] Tests (`tests/test_regimes.py`, 14): tercile shares, unlabelled warm-up,
+  thresholds match cut points, vol formula, block series → label, market-
+  not-strategy labelling, shorter strategy series labelled on the full
+  market, contributions sum, degrade on short input.
+
+Read: Ang & Bekaert (2002), "International Asset Allocation with Regime
+Shifts" — the two-state vol regime as the minimal model; AFML ch. 17 for
+structural breaks as the harder version of the same question.
+
+## How the eight fit together
 
 ```
                  ┌─ §5 purge/embargo (no bar paid twice)
 walk-forward ────┤
   (§1)           └─ §3 DSR   (was the IS winner better than max-of-N noise?)
 rolling (§7) ────── the same, K times, walked forward: is the verdict a regime?
+regimes (§8) ────── which third of the market's conditions carried the return?
 
 CSCV (§4)  ─────── is *selecting on IS score* better than random at all?
 permutation (§2) ─ is the *timing* better than a shuffle?
@@ -262,6 +298,6 @@ them (`ValidationPanel.jsx`: walk-forward → deflated → PBO → permutation;
 - Constants pinned to the papers (3.26; Lo 2002 to 1e-12).
 - Coverage *measured* on synthetic GARCH paths, failures shipped as flags.
 - Mutation-checked: delete the check, watch exactly the right tests fail.
-- 588 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
+- 603 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
 
 Next: [research/reading-list.md](research/reading-list.md)
