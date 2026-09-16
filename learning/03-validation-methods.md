@@ -88,10 +88,24 @@ Bailey & López de Prado (2014), "The Deflated Sharpe Ratio".
 **Result on a random walk by construction:** Momentum 55.7% → 19.4%;
 Bollinger 83.7% → **1.8%**. Uncorrected, Bollinger read as an 84%-likely edge.
 
-Known limitation: N counts raw grid combinations as independent. Neighbouring
-parameters are correlated, so true effective N is lower. Overstating N raises
-the bar — the safe direction — but it is unmeasured. **This is the last open
-roadmap item** (research/open-questions.md §1).
+**N is measured, not assumed** (`backend/trials.py`, roadmap 5 of 5). Raw
+grid size treats a 20-day and a 25-day lookback as independent trials. Two
+estimates from the candidates' in-sample return matrix:
+- [ ] **Eigenvalue count** — Li & Ji (2005): `N_eff = Σ [1(λ≥1) + frac(λ)]`
+  over the correlation matrix's eigenvalues. Closed form; errs high on tight
+  blocks (small eigenvalues each add a fraction).
+- [ ] **Correlation clustering** — López de Prado & Lewis (2019): average-
+  linkage on `d = √((1−ρ)/2)`, K by silhouette, one trial per cluster, spread
+  across cluster representatives (only from K ≥ 3 — a std of two numbers is
+  not an estimate). Silhouette < 0.1 → one blob if every ρ > 0.875, else N.
+- [ ] **Headline = the larger estimate.** Lowering N flatters a result; when
+  the two disagree the tool keeps the higher bar and shows the other as the
+  lower bound. Pinned by test.
+- [ ] AAPL 2018→2024-01-01: momentum 16 → 6 (clusters 3), MACD 4 → 2,
+  Bollinger 12 → 7 (clusters 2); DSR moves +0.07…+0.12; no verdict changes.
+
+Remaining limitation: the estimates disagree by 2–3× on this grid, with
+silhouettes ~0.25 (weak structure). The truth is between them.
 
 ## 4. Probability of Backtest Overfitting via CSCV — `backend/pbo.py`
 
@@ -182,13 +196,93 @@ lost > 100% — `(1+total)**(252/n)` is complex for a negative base. Reachable
 
 ---
 
-## How the six fit together
+## 7. Rolling walk-forward — `backend/rolling.py` → `rolling_walk_forward()`
+
+- [ ] **Why it exists**: §1 tries one split, and the split lands wherever 70%
+  of the requested window falls. Measured 15 Sep 2026: AAPL 2018→2024-01-01
+  says momentum fails and Bollinger holds; extend to 2025-01-01, the in-sample
+  end moves Feb→Oct 2022, and it inverts. One split is one draw from a
+  distribution of splits.
+- [ ] **What**: anchored. First split at 40% of the period; what remains is
+  tiled into K = 4 segments. Fold k sweeps the grid on `[0, split_k)` and
+  scores the winner on `[split_k, split_k+1)` only. Anchored (expanding, not
+  fixed-length) because that is what a live re-fit does — use all history.
+- [ ] **Purge at every boundary**: `purged_split` sizes the gap on the whole
+  series; the bars purged from fold k+1's in-sample end are the *last* bars of
+  fold k's segment, so the straddling trade is scored once and never selected on.
+- [ ] **Stitched curve**: the segments concatenated (embargo gaps excluded) are
+  the out-of-sample record of the *procedure* — "re-fit periodically, trade
+  the winner" — not of one parameter set. It gets `compute_metrics` and a §6
+  bootstrap interval on its Sharpe.
+- [ ] **Per fold**: best params, IS and OOS Sharpe, `_verdict`, plus the
+  market's own return and realised vol over the segment, so a failed fold can
+  be read against what the market did.
+- [ ] **Parameter stability**: distinct winners across folds and the modal
+  set's share. A winner that changes every re-fit was never one strategy —
+  momentum on AAPL changed all four times.
+- [ ] **Overall verdict**: `consistent` (every fold positive and the stitched
+  Sharpe positive), `failed` (no fold positive), else `regime_dependent`.
+  All three strategies on both AAPL windows read `regime_dependent`.
+- [ ] **Cost**: positions per grid cell are built once on the full series and
+  sliced per fold; K folds cost one sweep plus K×N metric evaluations.
+- [ ] **What it does not do**: it does not *detect* regimes. Folds are calendar
+  segments; the regime is read off `benchmark_return` and `realised_volatility`
+  by the human. A vol-tercile label is the obvious next step
+  (research/open-questions.md §3).
+- [ ] Tests (`tests/test_rolling.py`, 18): geometry, anchoring, purge, "scores
+  are full-series positions sliced", "winner chosen on IS only", synthetic
+  trend → consistent, whipsaw → failed, trend-then-whipsaw → regime_dependent.
+  Three mutations (select on OOS; drop the gap; fixed window) each fail
+  exactly one test.
+
+Read: Pardo, *The Evaluation and Optimization of Trading Strategies* (2008),
+ch. 9–11 — the original walk-forward analysis; AFML ch. 12 for the anchored
+vs rolling distinction and why purging still applies per fold.
+
+## 8. Volatility regimes — `backend/regimes.py`
+
+- [ ] **What**: trailing 21-bar standard deviation of the *market's* daily
+  returns, annualised, one value per bar; cut into terciles of the period
+  (`low` / `mid` / `high`). The strategy's net return is then grouped by
+  label: Sharpe, arithmetic contribution, hit rate, time in market, and the
+  market's own Sharpe on the same bars.
+- [ ] **Why the market's vol, not the strategy's**: the regime is a property
+  of the conditions, not of the trade. A flat strategy has zero variance and
+  would collapse the labels. Pinned by test and a mutation.
+- [ ] **Why trailing, not centred**: the window ends at the bar it labels. It
+  is a description, not a signal, so lookahead is not the concern — but a
+  centred window would label a bar by turbulence that arrived later, which
+  is not what "the bar was in a high-vol regime" means. Mutation-checked.
+- [ ] **Why period-relative terciles**: 20% vol is "high" in 2017 and "low"
+  in 2020. The question is how *this* backtest's return is spread across
+  *its* conditions. Thresholds are reported so "high" has a number.
+- [ ] **Sharpe form**: mean/std × √252 on non-contiguous bars — the §1
+  headline's compounded form would describe a trade nobody could make.
+  Contributions are arithmetic and sum to the arithmetic total.
+- [ ] **Where**: every `/api/backtest` (`regimes`) and the stitched
+  out-of-sample record of §7 (`out_of_sample_stitched.regimes`). Below 63
+  labelled bars the block reads `computable: false`.
+- [ ] **What it says on AAPL**, out-of-sample: momentum Sharpe 2.26 in the
+  calm third (market 2.49 — beta), −0.76 in the turbulent third (market
+  +0.60 — whipsaw). Bollinger the mirror: −1.83 calm, +1.31 turbulent.
+- [ ] Tests (`tests/test_regimes.py`, 14): tercile shares, unlabelled warm-up,
+  thresholds match cut points, vol formula, block series → label, market-
+  not-strategy labelling, shorter strategy series labelled on the full
+  market, contributions sum, degrade on short input.
+
+Read: Ang & Bekaert (2002), "International Asset Allocation with Regime
+Shifts" — the two-state vol regime as the minimal model; AFML ch. 17 for
+structural breaks as the harder version of the same question.
+
+## How the eight fit together
 
 ```
                  ┌─ §5 purge/embargo (no bar paid twice)
 walk-forward ────┤
   (§1)           └─ §3 DSR   (was the IS winner better than max-of-N noise?)
-                 
+rolling (§7) ────── the same, K times, walked forward: is the verdict a regime?
+regimes (§8) ────── which third of the market's conditions carried the return?
+
 CSCV (§4)  ─────── is *selecting on IS score* better than random at all?
 permutation (§2) ─ is the *timing* better than a shuffle?
 bootstrap (§6) ─── how wide is the band around every number you printed?
@@ -204,6 +298,6 @@ them (`ValidationPanel.jsx`: walk-forward → deflated → PBO → permutation;
 - Constants pinned to the papers (3.26; Lo 2002 to 1e-12).
 - Coverage *measured* on synthetic GARCH paths, failures shipped as flags.
 - Mutation-checked: delete the check, watch exactly the right tests fail.
-- 535 tests, `cd backend && pytest tests/ -q`, no credentials, no network.
+- 603 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
 
 Next: [research/reading-list.md](research/reading-list.md)

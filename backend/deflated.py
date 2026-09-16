@@ -23,6 +23,11 @@ and Non-Normality". Two pieces:
   deflated_sharpe_ratio()      PSR measured against that noise bar rather than
                                against zero.
 
+N is the number of *independent* trials. The grid is not that — neighbouring
+parameter settings produce nearly the same series — so walk_forward measures
+the effective count with trials.py and reports the deflation under both the
+raw N and the measured one. This module takes either; it does not decide.
+
 Pure numpy and stdlib, like the rest of the engine — including the two Normal
 distribution functions, since scipy is not a dependency and adding one for two
 functions would break the project's central constraint.
@@ -152,6 +157,8 @@ def deflated_sharpe_ratio(
     trial_sharpes,
     selected_returns,
     annualized: bool = True,
+    n_trials_effective: int | None = None,
+    trial_sharpes_effective=None,
 ) -> dict:
     """Probability the selected strategy's edge survives the selection that found it.
 
@@ -162,6 +169,13 @@ def deflated_sharpe_ratio(
     annualised everywhere else in this codebase, and feeding an annualised
     Sharpe into a formula whose T counts daily bars overstates the statistic by
     about sqrt(252), which would let almost anything look significant.
+
+    `n_trials_effective` replaces the raw count in the noise bar when the
+    caller has measured how many independent trials the grid really holds
+    (see trials.py). `trial_sharpes_effective`, if given, is the Sharpe of
+    each of those independent trials — one per cluster — and supplies the
+    spread; otherwise the spread across the raw trials is kept. Both are in
+    the same units as `trial_sharpes`.
     """
     trials = np.asarray([s for s in trial_sharpes if s is not None and math.isfinite(s)],
                         dtype=float)
@@ -170,6 +184,10 @@ def deflated_sharpe_ratio(
 
     n_trials = int(trials.size)
     n_obs = int(returns.size)
+    if n_trials_effective is not None:
+        if not 1 <= n_trials_effective <= max(n_trials, 1):
+            raise ValueError("n_trials_effective must lie in [1, n_trials]")
+        n_trials = int(n_trials_effective)
 
     if n_trials == 0 or n_obs < 2:
         return {
@@ -225,7 +243,12 @@ def deflated_sharpe_ratio(
 
     # ddof=1 across trials: the grid is a sample of the strategies that could
     # have been tried, not the entire population of them.
-    sharpe_std = float(trials_per_obs.std(ddof=1)) if n_trials > 1 else 0.0
+    spread = trials_per_obs
+    if trial_sharpes_effective is not None:
+        eff = np.asarray([x for x in trial_sharpes_effective if x is not None and math.isfinite(x)],
+                         dtype=float)
+        spread = eff / trial_scale
+    sharpe_std = float(spread.std(ddof=1)) if spread.size > 1 else 0.0
 
     sr_star = expected_max_sharpe(sharpe_std, n_trials)
     dsr = probabilistic_sharpe_ratio(sharpe_obs, sr_star, n_obs, skew, kurtosis)
