@@ -176,12 +176,34 @@ fold positive, at least one not. The stitched intervals all contain zero.
 That is the honest verdict, and it is not the verdict either single split
 gave.
 
+## Naming the regime
+
+The folds are calendar segments; the reader infers the regime from the
+market column. So label it directly (`backend/regimes.py`): every bar gets
+the market's trailing 21-day realised volatility, the period is cut into
+terciles, and the stitched out-of-sample return is broken down by label.
+Sharpe on each third, AAPL 2018 → 2024-01-01, out-of-sample:
+
+| Regime | Market | Momentum | MACD | Bollinger |
+|---|---|---|---|---|
+| Low vol (≤ 22 %) | 2.49 | 2.26 | 0.66 | −1.83 |
+| Mid | 0.70 | 0.70 | 2.61 | 0.80 |
+| High vol (> 32 %) | 0.60 | **−0.76** | **−1.76** | **1.31** |
+
+Momentum's entire out-of-sample return came from the calm third, where the
+market itself had a Sharpe of 2.49 — momentum was long and the market went
+up. In the turbulent third the market was still positive and momentum lost:
+that is whipsaw, not a bear market. Bollinger is the mirror image, losing in
+calm markets it had no reason to trade and earning in the turbulence it was
+built for. Neither is a good or bad strategy. Each is a bet on a regime, and
+the single-split walk-forward was scoring which regime the split happened to
+land in.
+
 ## What is still open
 
-The folds are calendar segments, not regimes — the reader infers the regime
-from the market column. A realised-volatility label per bar, with Sharpe
-reported per regime, would let the tool say "earns in low-vol, loses in
-high-vol" directly. And portfolio-mode validation: walk-forward and
+The label is one-dimensional. A trend/range label alongside vol would
+separate "calm and rising" from "calm and flat", which is where momentum's
+calm-regime beta hides. And portfolio-mode validation: walk-forward and
 permutation are defined on one position series, so a 2–10-ticker basket
 currently gets metrics and confidence intervals but no overfitting checks.
 
@@ -190,10 +212,10 @@ currently gets metrics and confidence intervals but no overfitting checks.
 - Live: https://finertia.hulage.in → Dashboard → Validate, AAPL, 2018-01-01,
   end 2024-01-01 then 2025-01-01, default parameters, split 0.7.
 - Source: `backend/validation.py` (`walk_forward`, `permutation_test`),
-  `backend/rolling.py`, `backend/deflated.py`, `backend/trials.py`,
+  `backend/rolling.py`, `backend/regimes.py`, `backend/deflated.py`, `backend/trials.py`,
   `backend/pbo.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
   backtesting or statistics library; the normal CDF is `math.erf`.
-- Tests: 588 in `backend/tests/`, including reproductions of the DSR paper's
+- Tests: 603 in `backend/tests/`, including reproductions of the DSR paper's
   worked example and Lo (2002) to 1e-12, and mutation checks on every check
   above.
 - Figures are as of 15 Sep 2026 with yfinance adjusted prices; Yahoo

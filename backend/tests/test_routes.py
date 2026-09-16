@@ -279,6 +279,15 @@ def test_validation_is_allowed_on_pro(api):
     assert client.post("/api/validate", json=BACKTEST, headers=AUTH).status_code == 200
 
 
+def test_backtest_carries_the_regime_breakdown(api):
+    client, _ = api
+    body = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    regimes = body["regimes"]
+    assert regimes["computable"]
+    assert set(regimes["regimes"]) == {"low", "mid", "high"}
+    assert regimes["best_regime"] in regimes["regimes"]
+
+
 def test_validation_carries_the_rolling_walk_forward(api):
     client, state = api
     state["profile"] = dict(PRO)
@@ -288,6 +297,8 @@ def test_validation_carries_the_rolling_walk_forward(api):
     assert rolling["verdict"] in {"consistent", "regime_dependent", "failed"}
     # One verdict per fold, each with the market's own move beside it.
     assert all("benchmark_return" in f for f in rolling["folds"])
+    # And the stitched out-of-sample record split by volatility regime.
+    assert "regimes" in rolling["out_of_sample_stitched"]
 
 
 def test_rolling_folds_is_a_request_knob(api):
