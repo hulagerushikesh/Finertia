@@ -1,6 +1,6 @@
 # The best in-sample strategy was the worst out-of-sample one — and then the window moved
 
-_Draft 1, 15 Sep 2026. Every number below is reproducible on
+_Draft 2, 16 Sep 2026 (draft 1: 15 Sep). Every number below is reproducible on
 https://finertia.hulage.in (Validate tab) or from `backend/` with
 `walk_forward` + `permutation_test`; the source for each check is named._
 
@@ -142,29 +142,58 @@ it is not. What it shows is narrower and more useful:
    stable for MACD (0.30 → 0.77). Which check is trustworthy depends on the
    strategy, which is a reason to run all of them, not a reason to pick one.
 
-## What I would build next
+## Walking the split forward
 
-The obvious fix for point 2 is to stop treating the split as fixed.
-Regime-aware walk-forward — either rolling several splits across the period
-and reporting the distribution of out-of-sample verdicts, or anchoring splits
-to detected regime boundaries — is the top open research item
-(`learning/research/open-questions.md` §3). CSCV already does the "every
-split" half of this for the ranking question; extending it to the
-out-of-sample Sharpe itself is the missing piece.
+The obvious fix for point 2 is to stop treating the split as fixed. Built the
+next day (`backend/rolling.py`): the in-sample stretch starts at 40 % of the
+period and the rest is tiled into four segments. At each fold the grid is
+re-optimised on everything before it and the winner is scored on the segment
+that follows and nowhere else — anchored, because that is what a live re-fit
+does. The purge gap sits at every boundary. Every bar after the first split
+is scored out-of-sample exactly once, by parameters chosen before it.
 
-The second is portfolio-mode validation: walk-forward and permutation are
-defined on one position series, so a 2–10-ticker basket currently gets
-metrics and confidence intervals but no overfitting checks.
+AAPL 2018-01-01 → 2024-01-01, out-of-sample Sharpe per segment:
+
+| Segment | Market | Momentum | MACD | Bollinger |
+|---|---|---|---|---|
+| Jun 2020 → Apr 2021 | +54 % | 0.27 | −0.32 | 0.57 |
+| May 2021 → Mar 2022 | +30 % | **1.10** | 0.58 | −0.60 |
+| Apr 2022 → Feb 2023 | −15 % | **−0.80** | 0.06 | **1.90** |
+| Feb 2023 → Dec 2023 | +31 % | 0.88 | −0.60 | −1.73 |
+| Stitched | | 0.12 [−0.84, 1.45] | −0.08 | 0.44 [−0.46, 1.22] |
+| Winning parameters changed | | 4 of 4 folds | 2 sets | never |
+
+Now the first window's headline reads differently. Momentum "failed" in the
+one segment where the market fell, and earned in the three where it rose.
+Bollinger "held up" because its +1.90 segment was followed by a −1.73 one and
+the single 70/30 split scored both together. Momentum's winning parameters
+were different at every re-fit — MA 50, then 100, then 200, then 20 — so the
+thing being validated was never one strategy; it was "whatever fit the last
+stretch". Bollinger kept 50/2.5 throughout and still alternated sign.
+
+All three strategies, on both windows, read `regime_dependent`: at least one
+fold positive, at least one not. The stitched intervals all contain zero.
+That is the honest verdict, and it is not the verdict either single split
+gave.
+
+## What is still open
+
+The folds are calendar segments, not regimes — the reader infers the regime
+from the market column. A realised-volatility label per bar, with Sharpe
+reported per regime, would let the tool say "earns in low-vol, loses in
+high-vol" directly. And portfolio-mode validation: walk-forward and
+permutation are defined on one position series, so a 2–10-ticker basket
+currently gets metrics and confidence intervals but no overfitting checks.
 
 ## Reproduce it
 
 - Live: https://finertia.hulage.in → Dashboard → Validate, AAPL, 2018-01-01,
   end 2024-01-01 then 2025-01-01, default parameters, split 0.7.
 - Source: `backend/validation.py` (`walk_forward`, `permutation_test`),
-  `backend/deflated.py`, `backend/trials.py`, `backend/pbo.py`,
-  `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
+  `backend/rolling.py`, `backend/deflated.py`, `backend/trials.py`,
+  `backend/pbo.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
   backtesting or statistics library; the normal CDF is `math.erf`.
-- Tests: 567 in `backend/tests/`, including reproductions of the DSR paper's
+- Tests: 588 in `backend/tests/`, including reproductions of the DSR paper's
   worked example and Lo (2002) to 1e-12, and mutation checks on every check
   above.
 - Figures are as of 15 Sep 2026 with yfinance adjusted prices; Yahoo

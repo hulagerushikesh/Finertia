@@ -279,6 +279,46 @@ def test_validation_is_allowed_on_pro(api):
     assert client.post("/api/validate", json=BACKTEST, headers=AUTH).status_code == 200
 
 
+def test_validation_carries_the_rolling_walk_forward(api):
+    client, state = api
+    state["profile"] = dict(PRO)
+    body = client.post("/api/validate", json=BACKTEST, headers=AUTH).json()
+    rolling = body["rolling_walk_forward"]
+    assert len(rolling["folds"]) == 4
+    assert rolling["verdict"] in {"consistent", "regime_dependent", "failed"}
+    # One verdict per fold, each with the market's own move beside it.
+    assert all("benchmark_return" in f for f in rolling["folds"])
+
+
+def test_rolling_folds_is_a_request_knob(api):
+    client, state = api
+    state["profile"] = dict(PRO)
+    body = client.post(
+        "/api/validate", json={**BACKTEST, "rolling_folds": 2}, headers=AUTH
+    ).json()
+    assert body["rolling_walk_forward"]["n_folds"] == 2
+    assert client.post(
+        "/api/validate", json={**BACKTEST, "rolling_folds": 1}, headers=AUTH
+    ).status_code == 422
+
+
+def test_rolling_too_short_degrades_instead_of_failing_the_run(api, monkeypatch):
+    """The single split fits in ~250 bars; eight folds do not. The rest of the
+    validation response is still worth returning."""
+    client, state = api
+    state["profile"] = dict(PRO)
+    monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices(days=260))
+    r = client.post("/api/validate", json={**BACKTEST, "rolling_folds": 8}, headers=AUTH)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["walk_forward"]["verdict"]
+    assert body["rolling_walk_forward"] == {
+        "computable": False,
+        "reason": body["rolling_walk_forward"]["reason"],
+    }
+    assert "fewer folds" in body["rolling_walk_forward"]["reason"]
+
+
 def test_pro_is_not_capped_by_the_free_quota(api):
     client, state = api
     state["profile"] = {**PRO, "runsThisPeriod": 10_000,

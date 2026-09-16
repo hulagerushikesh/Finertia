@@ -175,6 +175,10 @@ class ValidateRequest(BacktestRequest):
 
     split_ratio: float = Field(0.7, ge=0.5, le=0.9)
     permutation_trials: int = Field(500, ge=100, le=2000)
+    # Folds for the rolling walk-forward. 2 is the coarsest reading that is
+    # still a distribution; past 8 the segments on a typical 5y request drop
+    # under the purge floor.
+    rolling_folds: int = Field(4, ge=2, le=8)
 
 
 class PortfolioRequest(BacktestRequest):

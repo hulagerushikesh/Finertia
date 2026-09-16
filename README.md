@@ -14,6 +14,7 @@ Four more checks sit behind those, each built because the previous one was found
 - **Probability of Backtest Overfitting** (`pbo.py`, CSCV) — is selecting on the in-sample score better than picking at random, across all 70 balanced splits of the period.
 - **Purge and embargo** (`purge.py`) — the trade straddling the in/out-of-sample cut cannot earn on both sides.
 - **Block-bootstrap confidence intervals** (`bootstrap.py`) — on every metric, every plan; coverage measured on GARCH paths, the two metrics that fail are flagged.
+- **Rolling walk-forward** (`rolling.py`) — the single 70/30 split is one draw, and the verdict below flips when the window moves. So the split is walked forward: anchored in-sample stretch, the grid re-optimised at each of four folds, each winner scored only on the segment that follows, the market's own return and volatility beside every fold, and the segments stitched into one out-of-sample curve with a bootstrap interval. A strategy that earned in 2020–21 and lost in 2022 is reported as exactly that, not as an average.
 
 See [learning/03-validation-methods.md](learning/03-validation-methods.md) for formulas, traps, and where each lives.
 
@@ -42,6 +43,23 @@ from February 2022 to October 2022, and the out-of-sample half moved with it.
 A single walk-forward split is one draw from a distribution of splits; that is
 why CSCV (every balanced split) sits beside it, and why "regime-aware
 walk-forward" is the next research item.
+
+Walking the split forward instead shows what the single draw was made of.
+Four folds, the grid re-fitted at each, every segment scored by parameters
+chosen before it:
+
+| Out-of-sample segment | Market | Momentum | Bollinger |
+|---|---|---|---|
+| Jun 2020 → Apr 2021 | +54% | 0.27 | 0.57 |
+| May 2021 → Mar 2022 | +30% | **1.10** | −0.60 |
+| Apr 2022 → Feb 2023 | −15% | **−0.80** | **1.90** |
+| Feb 2023 → Dec 2023 | +31% | 0.88 | −1.73 |
+| Stitched, 95% CI | | 0.12 [−0.84, 1.45] | 0.44 [−0.46, 1.22] |
+
+Momentum's "failed" was the one segment where the market fell; Bollinger's
+"held up" was that same segment carrying the one after it. Momentum's winning
+parameters also changed at every re-fit, so it was never one strategy. Both
+read `regime_dependent`, which is the honest verdict for either.
 
 This is one ticker over one period, so it demonstrates the method rather than
 proving mean reversion beats trend following. The `/demo` page leads with a
@@ -159,6 +177,7 @@ Finertia/
 │   ├── pbo.py               # Probability of Backtest Overfitting (CSCV)
 │   ├── purge.py             # purge + embargo at the split
 │   ├── bootstrap.py         # stationary block bootstrap, BCa intervals
+│   ├── rolling.py           # anchored rolling walk-forward, one verdict per fold
 │   ├── price_store.py       # Firestore / in-memory price cache tiers
 │   ├── risk.py              # stop-loss / take-profit + volatility sizing
 │   ├── portfolio.py         # alignment, weighting, aggregation, attribution
