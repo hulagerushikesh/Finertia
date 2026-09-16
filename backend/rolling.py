@@ -55,6 +55,7 @@ from bootstrap import bootstrap_metrics
 from engine import compute_returns
 from metrics import compute_metrics
 from purge import MIN_HALF_BARS, purged_split
+from regimes import regime_breakdown
 from strategies import build_positions, longest_window, param_grid
 from validation import _segment_metrics, _segment_net_return, _verdict
 
@@ -215,6 +216,10 @@ def rolling_walk_forward(
         "sharpe_interval": (
             ci["metrics"]["sharpe_ratio"] if ci.get("available") else {"available": False, "reason": ci.get("reason")}
         ),
+        # The out-of-sample record broken down by the market's volatility
+        # regime. Labels are computed on the full market series, so the
+        # embargo gaps between segments do not distort the window.
+        "regimes": regime_breakdown(net, pos, returns),
     }
 
     # --- did the winner stay the same winner? ---------------------------

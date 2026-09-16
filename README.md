@@ -15,6 +15,7 @@ Four more checks sit behind those, each built because the previous one was found
 - **Purge and embargo** (`purge.py`) — the trade straddling the in/out-of-sample cut cannot earn on both sides.
 - **Block-bootstrap confidence intervals** (`bootstrap.py`) — on every metric, every plan; coverage measured on GARCH paths, the two metrics that fail are flagged.
 - **Rolling walk-forward** (`rolling.py`) — the single 70/30 split is one draw, and the verdict below flips when the window moves. So the split is walked forward: anchored in-sample stretch, the grid re-optimised at each of four folds, each winner scored only on the segment that follows, the market's own return and volatility beside every fold, and the segments stitched into one out-of-sample curve with a bootstrap interval. A strategy that earned in 2020–21 and lost in 2022 is reported as exactly that, not as an average.
+- **Volatility regimes** (`regimes.py`) — every bar labelled by the market's trailing 21-day realised volatility, cut into terciles of the period; the strategy's Sharpe, contribution, and time in market on each third, with the market's own Sharpe beside it. On every backtest and on the stitched out-of-sample record. "Earns in calm markets, gives it back in turbulent ones" becomes three numbers.
 
 See [learning/03-validation-methods.md](learning/03-validation-methods.md) for formulas, traps, and where each lives.
 
@@ -60,6 +61,20 @@ Momentum's "failed" was the one segment where the market fell; Bollinger's
 "held up" was that same segment carrying the one after it. Momentum's winning
 parameters also changed at every re-fit, so it was never one strategy. Both
 read `regime_dependent`, which is the honest verdict for either.
+
+Label the same out-of-sample bars by the market's realised volatility and the
+dependence is explicit. Sharpe on each third of the period:
+
+| Regime (21-day vol) | Market | Momentum | MACD | Bollinger |
+|---|---|---|---|---|
+| Low (≤ 22%) | 2.49 | 2.26 | 0.66 | −1.83 |
+| Mid | 0.70 | 0.70 | 2.61 | 0.80 |
+| High (> 32%) | 0.60 | **−0.76** | **−1.76** | **1.31** |
+
+Momentum's whole out-of-sample return came from calm markets, where it was
+mostly the market's own return; in turbulent stretches it lost while the
+market did not. Bollinger is the mirror image. The strategies are not "good"
+or "bad" — they are conditional on a regime nobody chose.
 
 This is one ticker over one period, so it demonstrates the method rather than
 proving mean reversion beats trend following. The `/demo` page leads with a
@@ -178,6 +193,7 @@ Finertia/
 │   ├── purge.py             # purge + embargo at the split
 │   ├── bootstrap.py         # stationary block bootstrap, BCa intervals
 │   ├── rolling.py           # anchored rolling walk-forward, one verdict per fold
+│   ├── regimes.py           # realised-vol terciles, Sharpe per regime
 │   ├── price_store.py       # Firestore / in-memory price cache tiers
 │   ├── risk.py              # stop-loss / take-profit + volatility sizing
 │   ├── portfolio.py         # alignment, weighting, aggregation, attribution
