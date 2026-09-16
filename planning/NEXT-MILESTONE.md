@@ -61,45 +61,36 @@ bars the old UI cleared, or it is a regression wearing new clothes.
 
 **Exit:** PR open with every checklist line evidenced; bundle no larger than before.
 
-### Phase 2 — Price data that survives (week 2)
+### Phase 2 — Price data that survives — BUILT, PR #7 open
 
-- [ ] Persistent read-through cache in Firestore: `prices/{TICKER}_{YEAR}` docs
-  holding the year's closes (~252 floats — tiny). Admin SDK is already wired;
-  no new infra, no new cost line.
-- [ ] `data.py`: serve from Firestore for complete past years; hit yfinance only
-  for missing years and the current partial year; keep the in-memory dict as L1.
-- [ ] **Stale-on-error**: if yfinance fails and the cache has the range, serve
-  it and flag `data_source: "cache"` in the response.
-- [ ] Pre-warm the demo tickers (AAPL + the curated autocomplete list) with a
-  one-off script.
-- [ ] Tests: cache hit/miss/partial-year, stale-on-error, and a subprocess test
-  that the L1 dict really is per-process.
-- [ ] Measure cold-start backtest latency before/after; put both numbers in the PR.
+- [x] Persistent read-through cache in Firestore: `prices/{TICKER}_{YEAR}`, columnar. `backend/price_store.py` + `backend/data.py`.
+- [x] Correctness rule that surfaced while designing: yfinance adjusts as of fetch date, so every cached year of a ticker must come from ONE download — any miss/stale refetches the whole ticker history under a new batch id; reads require a uniform batch. Pinned by test.
+- [x] Stale-on-error → `data_source: "cache-stale"`; nothing cached + Yahoo down → 503 (was a misleading 400).
+- [x] Pre-listing years stored as empty docs; current year expires after 6 h; past years never.
+- [x] 17 tests, 552 total; two mutation checks each fail exactly one test.
+- [x] Rules deny `prices` to clients — deployed 15 Sep, released ruleset byte-identical to the file.
+- [x] Prewarm: 28/28 suggested tickers, 2015→today, ~300 docs. First real run of `FirestorePriceStore` — worked.
+- [x] Latency measured (Mac in India → nam5): yfinance direct ~1.0 s; cache read 0.8–2.3 s. **A wash, not a win** — Firestore is in `nam5`, Cloud Run in `asia-south1`, both cross-continent. The PR buys resilience and zero rate-limit exposure on cold starts, not speed. Prod number after the Cloud Run deploy.
+- [x] PR #7 merged; rev 00004 (then 00005). Prod cold-read latency still unmeasured — needs one logged-in run from `/dashboard` (the `/demo` page never calls the API).
+- [ ] "Served from cache" note in the UI — on the `redesign` branch (DashboardPage would conflict on `main`).
+- Option, not taken: a second named Firestore DB in `asia-south1` for `prices` (not free-tier; ≈₹0 in practice) if the latency ever matters.
 
-**Exit:** with yfinance mocked to 429, `/demo` and a cached-ticker backtest
-still return; latency numbers recorded.
+**Exit:** with yfinance mocked to 429, a cached-ticker backtest still returns (test) — met. Latency recorded — met, unflattering.
 
-### Phase 3 — Effective N (weeks 2–3, research, on a branch)
+### Phase 3 — Effective N — BUILT, PR open
 
-Roadmap item 5 of 5. See learning/research/open-questions.md §1.
+Roadmap 5 of 5. `backend/trials.py`; wired into `walk_forward` as `deflated.effective_trials`.
 
-- [ ] Build the candidate-return correlation matrix from the walk-forward sweep
-  (already stored for CSCV — free).
-- [ ] N_eff via eigenvalues (Nyholt 2004 / Li & Ji 2005) — first, because it is
-  ~20 lines on data that exists.
-- [ ] N_eff via correlation clustering (López de Prado & Lewis 2019) — second,
-  as the comparison. Report both.
-- [ ] `deflated.py` takes `n_trials`; response carries `n_trials_raw`,
-  `n_trials_effective`, and DSR under each.
-- [ ] Tests: identical candidates → N_eff ≈ 1; independent candidates → N_eff ≈ N;
-  the canonical AAPL case's numbers pinned.
-- [ ] `ValidationPanel.jsx`: show raw vs effective side by side — the gap *is*
-  the finding.
-- [ ] Merge to `main` (backend-only, no auto-deploy). **Redeploy Cloud Run by
-  hand** — this is the step that was skipped last time. Confirm rev 00004 via
-  `/api/health` and one live validation run.
-
-**Exit:** roadmap 5/5; prod serves effective-N; learning/03 §3 updated.
+- [x] Correlation matrix from the in-sample candidate returns the sweep already builds.
+- [x] Eigenvalue estimate (Li & Ji 2005).
+- [x] Clustering estimate (LdP & Lewis 2019) — hand-written average linkage + silhouette; cluster spread only from K ≥ 3; one-blob fallback when silhouette finds nothing but every ρ > 0.875.
+- [x] `deflated_sharpe_ratio` takes `n_trials_effective` + `trial_sharpes_effective`; response carries `under_raw / under_eigen / under_clusters / under_effective`, `n_trials_effective`, `n_trials_lower_bound`, `dsr_gap`.
+- [x] **Headline = the larger estimate** — lowering N flatters; pinned by test.
+- [x] 15 tests, 567 total; three mutation checks (min-for-max, drop one-blob, drop eigen fractional term) each fail exactly one test.
+- [x] Canonical AAPL 2018→2024-01-01: momentum 16→6 (3), MACD 4→2, Bollinger 12→7 (2). DSR +0.07…+0.12. No verdict changes.
+- [x] **Found while measuring:** the walk-forward verdict flips when the window extends one year (split Feb→Oct 2022). README now states the window and the flip; open-questions §3 promoted to the top research item.
+- [x] Merged; Cloud Run rev 00005 serving, health 200, no warnings (15 Sep).
+- [ ] `ValidationPanel.jsx`: raw vs effective side by side — on the `redesign` branch with the cache note.
 
 ### Phase 4 — Decide what Finertia is for (end of milestone)
 
@@ -117,15 +108,25 @@ it turns "I built a backtester" into "I found that the best in-sample strategy
 was the worst out-of-sample one, and here is the statistics that proves it".
 Record the outcome in DECISIONS.md.
 
+- [x] **Decided 15 Sep: portfolio path.** DECISIONS.md entry with inputs and
+  what would reverse it. Pitch Fest result still pending — it is a possible
+  reversal input, not a blocker.
+- [x] Write-up drafted: `planning/write-up.md`, ~1,550 words, every figure
+  re-run on 15 Sep on both windows (2024-01-01 and 2025-01-01) including the
+  per-check disagreement (DSR/PBO/permutation vs walk-forward) and bootstrap
+  intervals on the OOS Sharpes.
+- [ ] Publish: README link + a home for it (hulage.in post, or a `/writeup`
+  route on the redesign branch). Not before the Pitch Fest result.
+
 **Exit:** DECISIONS.md has an entry; if portfolio path, the write-up is drafted
-in `planning/` or published.
+in `planning/` or published. **Met** (drafted; publishing waits on the result).
 
 ## Definition of done for M9
 
-- [ ] Phase 0–3 exit criteria met
-- [ ] STATUS.md refreshed: rev 00004, test count, roadmap 5/5, redesign merged or dated
+- [x] Phase 0–3 exit criteria met (phase 0's `gh` token narrowing still on the user)
+- [x] STATUS.md refreshed: rev 00005, 567 tests, roadmap 5/5, redesign dated (PR #6, held)
 - [ ] Build-ledger artifact refreshed from STATUS.md
-- [ ] Phase 4 decision recorded
+- [x] Phase 4 decision recorded (15 Sep)
 
 ## Explicitly not in M9
 

@@ -1,20 +1,21 @@
 # Status
 
-_Current to `2093040` (main) + branch `redesign` · 14 Sep 2026._
+_Current to `d18b01b` (main) · 16 Sep 2026._
 
 ## At a glance
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00003` |
+| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00007` (16 Sep: rolling walk-forward + volatility regimes) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
-| Tests | 535 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
+| Tests | 603 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + secret scan) |
-| Commits | 22 on main · 4 PRs merged |
+| Commits | 43 on main · 10 PRs merged |
 | API | 16 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
-| Blocked on user | 0 items |
-| In flight | `redesign` branch — shadcn "Blue pencil" UI rebuild, committed in 5 slices + 3 fixes, PR open, **merge held until the Pitch Fest result** (see below) |
+| Blocked on user | 4 — login smoke test on the PR #6 preview · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT · `rm frontend/.gitignore frontend/.env.local` |
+| In flight | PR #6 `redesign → main` — verified, **held until the Pitch Fest result** (see below) |
+| Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); draft at [write-up.md](write-up.md) |
 
 ## Stages — verified vs built
 
@@ -32,7 +33,7 @@ compiles, never exercised end to end.
 | S7 Ops — rate limit, JSON logs, CI | **Verified** | CI green; deps pinned to prod 13 Sep |
 | S8 Grow — demo, docs, support, SEO, email verification | **Verified** | All public routes walked before submission |
 
-## Research roadmap — 4 of 5
+## Research roadmap — 5 of 5
 
 | Item | State | Evidence |
 |---|---|---|
@@ -40,33 +41,24 @@ compiles, never exercised end to end.
 | PBO via CSCV | Done `52217af` | 21 tests; regime-blindness pinned by test |
 | Purge + embargo | Done `e840a3c` | 20 tests; boundary trade measured at 33 bars |
 | Block-bootstrap CIs | Done `7b178ca` PR #1 | 54 tests; coverage measured on 300 GARCH paths; serving since rev 00003 |
-| Effective N of the grid | **Open** | Documented limitation, unquantified — see NEXT-MILESTONE |
+| Effective N of the grid | Done PR #8 | 15 tests; eigen + clusters, headline = larger; canonical AAPL 16→6 / 4→2 / 12→7; mutation-checked |
 
-## The redesign branch (PR open, merge held)
+## The redesign branch — PR #6, held
 
-Five slices (tokens → primitives → charts → panels → shell/pages) plus three
-fixes found while landing it. Adds radix-ui, motion, sonner, next-themes,
-lucide, cva. `Toast.jsx` replaced by sonner. Reverses the 22 Aug "no shadcn"
+Committed in five slices on `redesign`, PR open against `main`. Verified on
+the Vercel preview: contrast ≥ 4.58:1 on 9 routes × 2 themes (measured),
+375 px zero overflow, tap-safe hit areas, one `<main>`, reduced-motion
+honoured. Bundle brought back under `main` after sourcemap attribution
+(entry 746 → 521 kB raw; landing 196 kB gz vs 169 on `main` — the remaining
+gap is motion/radix/sonner, accepted). Reverses the 22 Aug "no shadcn"
 decision — logged in DECISIONS.md.
 
-**Verified (14 Sep, dev server, measured not eyeballed):**
-- Contrast: every text node on 9 public routes × 2 themes ≥ 4.5:1 (min 4.58).
-  Four light tokens had to move (faint 3.19 → 4.7, gain, loss, warn); dark
-  faint 4.24 → 4.6.
-- 375 px: zero horizontal overflow on all 9 routes.
-- Exactly one `<main>`, one `h1` per route, zero `title=` attributes.
-- Metric tooltips are radix Popovers: open on click/tap, verified; `.tap-safe`
-  intact, 0 overlapping pairs at 24 px and at 44 px on `/demo` at 375 px.
-- `/demo` at 650 / 1024 / 1280 px: no clipped or overlapping metric labels.
-- Mobile Sheet nav opens, closes on route change; theme toggle persists.
-- Bundle: entry was 746 kB raw / 221 gz (main: 480 / 135). LazyMotion +
-  `firebase/firestore/lite` → **521 / 162**. Landing total incl. the
-  preloaded firebase chunk: 196 gz vs 169 on main. The remaining +27 gz is
-  radix + sonner + tailwind-merge.
+Waits on: the Pitch Fest result (`main` auto-deploys the judged site) and
+the user's login smoke test (dashboard at 1024 px, History, Profile
+displayName save, Register — every `firebase/firestore/lite` call).
 
-**Not verified — needs a login on the Vercel preview:** Dashboard at the
-~650 px results column, History, Profile (`displayName` save exercises
-firestore/lite `updateDoc`), Register (`setDoc` + `serverTimestamp`).
+Two UI follow-ups queued on the same branch: "served from cache" note
+(`data_source === "cache-stale"`) and raw-vs-effective N in `ValidationPanel`.
 
 ## Timeline (condensed)
 
@@ -80,13 +72,18 @@ firestore/lite `updateDoc`), Register (`setDoc` + `serverTimestamp`).
 | 6 Sep | **deployed**; submitted to Pitch Fest; `Invalid Date` fixed same night | live |
 | 8 Sep | bootstrap CIs (PR #1) | coverage measured |
 | 13 Sep | backend redeployed (rev 00003); `.gcloudignore`; requirements pinned (PR #3); `.vercel` ignored (PR #4) | prod = pinned deps |
-| 14 Sep | `learning/` + `planning/` (PR #5); venv on prod pins (535 pass); redesign sliced into commits, bundle −59 kB gz, contrast floors restored, canonical fixed | measured, see above |
+| 14 Sep | `learning/` + `planning/` folders created (PR #5) | — |
+| 15 Sep | Firestore price cache (PR #7, rev 00004); effective N (PR #8, rev 00005); `prices` rules deployed; prewarm 28/28 | 17 + 15 tests, 5 mutation checks; walk-forward window flip found |
+| 15 Sep | **Phase 4 decided: portfolio piece**; write-up drafted from re-run figures on both windows | — |
+| 16 Sep | Volatility regimes (`regimes.py`): per-bar realised-vol terciles, Sharpe per regime on every backtest + the stitched OOS record; PR #11, rev 00007 | 14 + 2 tests, 603 total; 2 mutation checks; momentum OOS 2.26 calm / −0.76 turbulent |
+| 16 Sep | Rolling walk-forward (`rolling.py`): 4 anchored folds, market context per fold, stitched OOS + CI, parameter stability; wired as `rolling_walk_forward` in `/api/validate`; PR #10, rev 00006 | 18 + 3 tests, 588 total; 3 mutation checks; all three AAPL strategies read `regime_dependent` |
 
 ## Known risks
 
-1. **yfinance in production** — rate limits, schema changes, and an in-memory
-   cache that is cold on every scale-from-zero. No fallback. The single most
-   likely way the live demo breaks in front of someone.
+1. **yfinance in production** — mitigated since rev 00004: Firestore cache
+   survives cold starts, stale-on-error serves the last good copy. Residual: a
+   never-seen ticker during a Yahoo outage still 503s; prod cold-read latency
+   still unmeasured.
 2. **Backend redeploy is manual** and was forgotten once (5 days of stale prod).
-3. ~~Shared python~~ — `backend/.venv` on prod pins since 14 Sep; 535 pass.
+3. **Shared python** — local pandas 2.3.1 vs prod 3.0.5; suite passes on both today.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry.

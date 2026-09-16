@@ -8,12 +8,15 @@ Both answer questions a single backtest cannot:
 Pure pandas/numpy, consistent with the rest of the engine.
 """
 
+import math
+
 import numpy as np
 import pandas as pd
 
-from deflated import deflated_sharpe_ratio
+from deflated import TRADING_DAYS, deflated_sharpe_ratio
 from pbo import combinatorial_pbo
 from purge import purged_split
+from trials import effective_trials_clusters, effective_trials_eigen
 from engine import compute_returns
 from metrics import compute_metrics
 from strategies import build_positions, longest_window, param_grid
@@ -145,16 +148,28 @@ def walk_forward(
     # clear. In-sample specifically: those are the bars the choice was made on,
     # so they are the ones carrying the bias.
     #
-    # N is taken as the raw number of combinations, which treats neighbouring
-    # parameter settings as independent when they plainly are not. Overstating
-    # N raises the noise bar, so the error runs toward calling a real edge
-    # insignificant rather than the reverse — the safe direction for a tool
-    # whose whole job is to talk you out of a bad backtest.
+    # This first pass takes N as the raw number of combinations, which treats
+    # neighbouring parameter settings as independent when they plainly are
+    # not. Overstating N raises the noise bar — the safe direction — and the
+    # block below measures how much it was overstated by.
+    trial_sharpes = [r["sharpe_ratio"] for r in grid_results]
+    selected_is = _segment_net_return(
+        best_pos.iloc[is_slice], returns.iloc[is_slice], transaction_cost
+    ).to_numpy()
     deflated = deflated_sharpe_ratio(
-        trial_sharpes=[r["sharpe_ratio"] for r in grid_results],
-        selected_returns=_segment_net_return(
-            best_pos.iloc[is_slice], returns.iloc[is_slice], transaction_cost
-        ).to_numpy(),
+        trial_sharpes=trial_sharpes,
+        selected_returns=selected_is,
+    )
+
+    # Now measure N instead of assuming it. The candidates' in-sample returns
+    # — the bars the selection was made on — say how many of the grid's
+    # trials were really distinct. Two estimates of different kinds (see
+    # trials.py); the deflated Sharpe is recomputed under each so the gap
+    # between "N = grid size" and "N = what the grid actually tried" is a
+    # number on the page, not a caveat in a comment.
+    deflated["effective_trials"] = _effective_trials(
+        candidate_returns, is_end, max(warmups) if warmups else 0,
+        trial_sharpes, selected_is, deflated,
     )
 
     # Probability of Backtest Overfitting over the same candidate set.
@@ -201,6 +216,97 @@ def walk_forward(
         "user_params": user_block,
         "grid": sorted(grid_results, key=lambda r: r["sharpe_ratio"], reverse=True),
     }
+
+
+def _effective_trials(
+    candidate_returns: list[np.ndarray],
+    is_end: int,
+    trim: int,
+    trial_sharpes: list[float],
+    selected_is: np.ndarray,
+    raw: dict,
+) -> dict:
+    """Effective-N block for the validation response.
+
+    Uses only in-sample bars (after the longest warm-up) so the correlation is
+    measured on the data selection saw. Returns both estimates, and the
+    deflated Sharpe under each, alongside the raw figure for the gap.
+    """
+    if len(candidate_returns) < 2:
+        return {"computable": False, "reason": "Only one candidate — nothing to correlate."}
+
+    matrix = np.column_stack(candidate_returns)[trim:is_end]
+    eigen = effective_trials_eigen(matrix)
+    clusters = effective_trials_clusters(matrix)
+    out = {
+        "computable": bool(eigen.get("computable") and clusters.get("computable")),
+        "n_trials_raw": len(trial_sharpes),
+        "eigen": eigen,
+        "clusters": clusters,
+    }
+    if not out["computable"] or not raw.get("computable"):
+        return out
+
+    n_raw = len(trial_sharpes)
+
+    # Eigenvalue count is fractional; the noise bar wants an integer number of
+    # draws. Round to nearest, never below 1, never above the raw count — and
+    # keep the spread across all raw trials, since the eigenvalue method does
+    # not say which trials to merge.
+    n_eigen = int(min(max(round(eigen["n_effective"]), 1), n_raw))
+    under_eigen = deflated_sharpe_ratio(
+        trial_sharpes, selected_is, n_trials_effective=n_eigen
+    )
+
+    # Clustering does say which — so the spread is across cluster
+    # representatives, each the equal-weight average of its members. Those
+    # Sharpes come back per-observation from trials.py; annualise so they
+    # arrive in the same units as `trial_sharpes`.
+    # A standard deviation of two numbers is not an estimate of anything, so
+    # the cluster spread is used only from three clusters up; below that the
+    # spread across all raw trials stands in, with N = K.
+    n_clu = int(min(max(clusters["n_effective"], 1), n_raw))
+    cluster_sharpes = [s * math.sqrt(TRADING_DAYS) for s in clusters["cluster_sharpes"]]
+    under_clusters = deflated_sharpe_ratio(
+        trial_sharpes, selected_is,
+        n_trials_effective=n_clu,
+        trial_sharpes_effective=cluster_sharpes if n_clu >= 3 else None,
+    )
+
+    def summary(block: dict) -> dict:
+        return {
+            k: block.get(k)
+            for k in (
+                "n_trials", "expected_max_sharpe", "sharpe_std_across_trials",
+                "deflated_sharpe_ratio", "clears_noise_bar", "verdict",
+            )
+        }
+
+    out["under_raw"] = summary(raw)
+    out["under_eigen"] = summary(under_eigen)
+    out["under_clusters"] = summary(under_clusters)
+
+    # The headline takes the LARGER of the two estimates. They disagree
+    # often — on AAPL 2018–2024 the Bollinger grid reads 7 by eigenvalue and 2
+    # by clustering, with a silhouette of 0.24 that says the clusters are not
+    # tight. Lowering N is exactly the direction that flatters a result, so
+    # when the estimates disagree the tool sides with the one that keeps the
+    # bar higher. The other is reported beside it as the lower bound.
+    n_eff = max(n_eigen, n_clu)
+    under_effective = under_eigen if n_eff == n_eigen else under_clusters
+    out["n_trials_effective"] = n_eff
+    out["n_trials_lower_bound"] = min(n_eigen, n_clu)
+    out["under_effective"] = summary(under_effective)
+    # Gap between what the grid was assumed to be and what it measured as.
+    # Positive means the raw deflation was punishing the winner for company
+    # it never had.
+    out["dsr_gap"] = (
+        None
+        if under_effective.get("deflated_sharpe_ratio") is None
+        or raw.get("deflated_sharpe_ratio") is None
+        else round(under_effective["deflated_sharpe_ratio"] - raw["deflated_sharpe_ratio"], 6)
+    )
+    return out
 
 
 def _verdict(is_sharpe: float, oos_sharpe: float) -> str:

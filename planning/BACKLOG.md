@@ -13,13 +13,13 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 ## Research (after effective N)
 
 - [ ] Portfolio-level validation — needs a definition of a portfolio permutation first (open-questions §2)
-- [ ] Regime-aware walk-forward: anchored multi-split; per-year OOS; realised-vol tercile labels (§3)
+- [x] Regime-aware walk-forward — anchored rolling folds + realised-vol regime label, both 16 Sep (`rolling.py`, `regimes.py`, §3). Remaining, narrower: a trend/range label beside vol
 - [ ] Whole-grid inference: White Reality Check / Hansen SPA / Romano-Wolf stepdown (§4)
 - [ ] Max-drawdown interval with honest coverage (§5)
 - [ ] Vol-scaled transaction-cost model (§7)
 - [ ] Ledoit-Wolf test for strategy-vs-benchmark Sharpe difference — the "does it beat buy-and-hold" question with a p-value
 
-## Product (only if Phase 4 picks "product")
+## Product (parked — Phase 4 picked "portfolio"; reopen only on the reversal conditions in DECISIONS.md)
 
 - [ ] Wire Stripe: keys + `STRIPE_WEBHOOK_SECRET` on Cloud Run; never without the secret
 - [ ] Sentry DSN (env-gated; unset = SDK never imported)
@@ -28,10 +28,10 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 - [ ] Email notifications for long validation runs
 - [ ] Intraday bars (needs a paid data source)
 
-## Portfolio / write-up (if Phase 4 picks "portfolio")
+## Portfolio / write-up (Phase 4 picked "portfolio", 15 Sep)
 
-- [ ] 1,500-word write-up: the walk-forward table, the DSR random-walk table, the bootstrap headline (Sharpe 0.39, CI −0.39 to 1.29), what each method catches that the others miss
-- [ ] Put the write-up on hulage.in and link it from the README and the landing page
+- [x] 1,500-word write-up — drafted as `planning/write-up.md`: both windows, the per-check disagreement, bootstrap intervals on the OOS Sharpes
+- [ ] Put the write-up on hulage.in (or a `/writeup` route) and link it from the README and the landing page — after the Pitch Fest result
 - [ ] Short demo GIF of `/demo` → validation tab for the README
 
 ## Docs
