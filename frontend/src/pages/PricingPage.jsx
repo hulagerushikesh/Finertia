@@ -1,8 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { Check } from "lucide-react";
 import { getPlans, startCheckout } from "../api";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../hooks/useToast";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import Stamp from "../components/Stamp";
+import { Rise, Stagger, StaggerItem } from "../components/motion";
+import { cn } from "@/lib/utils";
 
 export default function PricingPage() {
   const { user } = useAuth();
@@ -13,7 +20,6 @@ export default function PricingPage() {
   const [error, setError] = useState("");
   const [redirecting, setRedirecting] = useState(false);
 
-  // Named rather than inline so the error state can call it again.
   const loadPlans = useCallback(() => {
     setLoading(true);
     setError("");
@@ -43,98 +49,79 @@ export default function PricingPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div className="max-w-xl mb-10">
+      <Rise className="max-w-xl mb-12">
         <p className="eyebrow mb-4">Pricing</p>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-text-primary mb-4">
+        <h1 className="font-display text-display-md font-medium tracking-tight text-foreground text-balance">
           Start free. Pay when you want the checks.
         </h1>
-        <p className="text-text-muted leading-relaxed">
-          Both plans run the same engine on the same data. Pro adds the two
-          tests that tell you whether a result is worth anything — and raises
-          the monthly run quota.
+        <p className="text-graphite leading-relaxed mt-4">
+          Both plans run the same engine on the same data. Pro adds the tests that tell you whether
+          a result is worth anything — and raises the monthly run quota.
         </p>
-      </div>
+      </Rise>
 
       {/* A pricing page that shows an error and nothing else has failed twice:
-          once at fetching, and again at being a pricing page. Offer the way
-          back, and say what is still true while the API is unreachable. */}
+          once at fetching, and again at being a pricing page. */}
       {error && (
-        <div
-          role="alert"
-          className="bg-danger/10 border border-danger/30 rounded-xl px-5 py-4 mb-6 flex flex-col gap-3"
-        >
-          <p className="text-sm text-danger leading-relaxed">{error}</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <button onClick={loadPlans} disabled={loading} className="btn-secondary px-4 py-1.5 text-xs">
-              {loading ? "Retrying…" : "Try again"}
-            </button>
-            <p className="text-xs text-text-muted">
-              Plans and prices are served by the API, so they are not shown here
-              rather than shown wrong.
-            </p>
-          </div>
-        </div>
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription className="flex flex-col gap-3">
+            <span>{error}</span>
+            <span className="flex flex-wrap items-center gap-3">
+              <Button variant="outline" size="sm" onClick={loadPlans} disabled={loading}>
+                {loading ? "Retrying…" : "Try again"}
+              </Button>
+              <span className="text-xs text-graphite">
+                Plans and prices are served by the API, so they are not shown here rather than shown
+                wrong.
+              </span>
+            </span>
+          </AlertDescription>
+        </Alert>
       )}
 
       {loading ? (
         <div className="grid sm:grid-cols-2 gap-5">
           {[0, 1].map((i) => (
-            <div key={i} className="panel h-96 animate-pulse" />
+            <Skeleton key={i} className="h-96 rounded-lg" />
           ))}
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-5 items-start">
+        <Stagger className="grid sm:grid-cols-2 gap-5 items-start">
           {plans.map((plan) => {
             const isPro = plan.id === "pro";
             return (
-              <div
+              <StaggerItem
                 key={plan.id}
-                // The recommended plan is lifted rather than merely outlined.
-                // A tinted border alone was doing all the work of saying "this
-                // one", which is a lot to ask of one pixel.
-                className={`relative rounded-xl p-7 flex flex-col ${
-                  isPro
-                    ? "bg-surface border border-accent/45 shadow-panel-lifted"
-                    : "panel"
-                }`}
+                className={cn("relative rounded-lg p-7 flex flex-col", isPro ? "sheet-lifted" : "sheet")}
               >
                 {isPro && (
-                  <span className="absolute -top-2.5 left-7 text-2xs font-mono font-semibold uppercase tracking-wider bg-accent-strong text-white px-2.5 py-0.5 rounded-full">
+                  <Stamp size="sm" className="absolute top-5 right-5" delay={0.5}>
                     Recommended
-                  </span>
+                  </Stamp>
                 )}
 
-                <h2 className="text-sm font-semibold text-text-primary mb-4">
-                  {plan.label}
-                </h2>
+                <p className="eyebrow mb-5">{plan.label}</p>
 
-                <p className="mb-1 flex items-baseline gap-1.5">
-                  <span className="text-display-lg leading-none font-mono font-medium text-text-primary tracking-tight">
+                <p className="flex items-baseline gap-1.5">
+                  <span className="font-display text-display-md font-medium text-foreground tracking-tight">
                     ${plan.price_monthly}
                   </span>
-                  <span className="text-sm text-text-faint">/ month</span>
+                  <span className="text-sm text-faint">/ month</span>
                 </p>
-                <p className="eyebrow mb-7">
+                <p className="text-xs font-mono text-graphite mt-2 mb-7">
                   {!isPro
                     ? "No card required"
                     : billingEnabled
                       ? "Cancel any time"
-                      : /* Promising cancellation of a subscription nobody can
-                           start reads as a broken promise, not a reassurance. */
-                        "Not yet available here"}
+                      : "Not yet available here"}
                 </p>
 
                 <ul className="flex flex-col gap-3 mb-8 flex-1">
                   {plan.features.map((f) => (
-                    <li
-                      key={f}
-                      className="flex items-start gap-2.5 text-sm text-text-muted leading-relaxed"
-                    >
-                      <span
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-graphite leading-relaxed">
+                      <Check
+                        className={cn("size-4 mt-0.5 shrink-0", isPro ? "text-pencil" : "text-faint")}
                         aria-hidden="true"
-                        className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${
-                          isPro ? "bg-accent" : "bg-border-strong"
-                        }`}
                       />
                       {f}
                     </li>
@@ -143,44 +130,35 @@ export default function PricingPage() {
 
                 {isPro ? (
                   !user ? (
-                    <Link to="/register" className="btn-primary py-2.5 text-sm">
-                      Create an account
-                    </Link>
+                    <Button asChild>
+                      <Link to="/register">Create an account</Link>
+                    </Button>
                   ) : billingEnabled ? (
-                    <button
-                      onClick={handleUpgrade}
-                      disabled={redirecting}
-                      className="btn-primary py-2.5 text-sm"
-                    >
+                    <Button onClick={handleUpgrade} disabled={redirecting}>
                       {redirecting ? "Redirecting…" : "Upgrade to Pro"}
-                    </button>
+                    </Button>
                   ) : (
-                    // Self-hosted or pre-launch: showing a button that would
-                    // 503 is worse than saying plainly that it is not wired up.
-                    <div className="border border-border rounded-lg py-2.5 text-center">
-                      <p className="text-xs text-text-faint">
-                        Billing is not enabled on this deployment
-                      </p>
+                    <div className="border border-border rounded-md py-2.5 text-center">
+                      <p className="text-xs text-faint">Billing is not enabled on this deployment</p>
                     </div>
                   )
                 ) : (
-                  <Link
-                    to={user ? "/dashboard" : "/register"}
-                    className="btn-secondary py-2.5 text-sm"
-                  >
-                    {user ? "Go to dashboard" : "Start free"}
-                  </Link>
+                  <Button asChild variant="outline">
+                    <Link to={user ? "/dashboard" : "/register"}>
+                      {user ? "Go to the workspace" : "Start free"}
+                    </Link>
+                  </Button>
                 )}
-              </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </Stagger>
       )}
 
-      <p className="text-xs text-text-faint mt-10 max-w-xl leading-relaxed">
-        Quotas count backtests, validation runs, and portfolios, and reset at the
-        start of each calendar month (UTC). Cancelling keeps Pro until the end of
-        the period you have already paid for.
+      <p className="text-xs text-faint mt-10 max-w-xl leading-relaxed">
+        Quotas count backtests, validation runs, and portfolios, and reset at the start of each
+        calendar month (UTC). Cancelling keeps Pro until the end of the period you have already
+        paid for.
       </p>
     </div>
   );

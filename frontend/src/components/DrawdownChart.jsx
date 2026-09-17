@@ -1,69 +1,50 @@
 import React from "react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { CHART } from "../chartTheme";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useReducedMotion } from "motion/react";
+import { CHART, AXIS, thin } from "../chartTheme";
+import ChartFrame, { HatchDefs } from "./ChartFrame";
+import ChartTip from "./ChartTip";
 
-function formatDate(dateStr) {
-  return dateStr?.slice(0, 7);
-}
+const formatDate = (d) => d?.slice(0, 7);
 
-function CustomTooltip({ active, payload, label }) {
+function Tip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-raised border border-border-strong shadow-pop rounded-lg px-3 py-2 text-xs font-mono">
-      <p className="text-text-muted mb-1">{label}</p>
-      <p className="text-danger">{(payload[0]?.value * 100)?.toFixed(2)}%</p>
-    </div>
+    <ChartTip
+      label={label}
+      rows={[{ label: "Drawdown", value: `${(payload[0]?.value * 100)?.toFixed(2)}%`, className: "text-loss" }]}
+    />
   );
 }
 
 export default function DrawdownChart({ data }) {
-  const thinned = data.filter((_, i) => i % Math.max(1, Math.floor(data.length / 300)) === 0);
+  const off = useReducedMotion();
+  const points = thin(data);
+  const worst = Math.min(...data.map((d) => d.value));
 
   return (
-    <div className="panel p-5">
-      <h2 className="text-sm font-semibold text-text-primary mb-4">Drawdown</h2>
+    <ChartFrame
+      title="Drawdown"
+      caption="How far below its previous peak the equity sat, day by day."
+      aside={
+        <p className="text-2xs font-mono text-graphite">
+          worst <span className="text-loss">{(worst * 100).toFixed(1)}%</span>
+        </p>
+      }
+    >
       <ResponsiveContainer width="100%" height={200}>
-        <AreaChart data={thinned} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id="ddGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={CHART.danger} stopOpacity={0.4} />
-              <stop offset="95%" stopColor={CHART.danger} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
-          <XAxis
-            dataKey="date"
-            tickFormatter={formatDate}
-            tick={{ fill: CHART.axisText, fontSize: 11 }}
-            tickLine={false}
-            axisLine={{ stroke: CHART.grid }}
-            interval="preserveStartEnd"
-          />
-          <YAxis
-            tick={{ fill: CHART.axisText, fontSize: 11, fontFamily: CHART.mono }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v) => `${(v * 100).toFixed(1)}%`}
-            width={52}
-          />
-          <Tooltip content={<CustomTooltip />} />
+        <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+          <HatchDefs />
+          <CartesianGrid stroke={CHART.grid} vertical={false} />
+          <XAxis dataKey="date" tickFormatter={formatDate} {...AXIS} interval="preserveStartEnd" minTickGap={40} />
+          <YAxis {...AXIS} axisLine={false} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} width={44} />
+          <Tooltip content={<Tip />} cursor={{ stroke: CHART.pencil, strokeDasharray: "2 3" }} />
           <Area
-            type="monotone"
-            dataKey="value"
-            stroke={CHART.danger}
-            strokeWidth={1.5}
-            fill="url(#ddGrad)"
+            type="monotone" dataKey="value" stroke={CHART.loss} strokeWidth={1.5} fill="url(#lossGrad)"
+            isAnimationActive={!off} animationDuration={700}
           />
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </ChartFrame>
   );
 }

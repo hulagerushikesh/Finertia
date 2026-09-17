@@ -41,6 +41,19 @@ person willing to own support. Either is a new decision, logged here.
 round. Reason: six artifacts had drifted to three different dates and none
 mentioned the last four commits.
 
+## 2026-09-14 — `firebase/firestore/lite` on the client
+
+The client only ever does `getDoc` / `setDoc` / `updateDoc` / `serverTimestamp`
+on its own profile. The full SDK was ~250 kB minified of websocket, offline
+cache and listener code on the landing page. Lite is REST, rules apply
+identically. If a realtime listener is ever needed, that is the moment to
+switch back — not before.
+
+## 2026-09-14 — motion via `LazyMotion` + `m`, `strict`
+
+Only opacity/transform animate here. `strict` throws on any `motion.*`
+element so the full feature set cannot creep back into the entry.
+
 ## 2026-09-13 (branch `redesign`) — shadcn/ui adopted, reversing 22 Aug
 
 The 22 Aug decision said no shadcn: 44 components on a bespoke token system,

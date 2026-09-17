@@ -2,20 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Blue pencil — the token sheet.
+ *
+ * Light is the default: the product is a marked-up manuscript, and paper is
+ * where a manuscript lives. The dark sheet is the same document read at night,
+ * not a different product — every role keeps its meaning, only the ground
+ * changes.
+ *
+ * All values are HSL triples so Tailwind can add alpha (`bg-pencil/10`).
+ */
 @layer base {
+  :root {
+    --background: 220 16% 96%;         /* paper   #F4F5F7 */
+    --foreground: 225 17% 9%;          /* ink     #14161C */
+    --card: 0 0% 100%;                 /* sheet   #FFFFFF */
+    --card-foreground: 225 17% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 17% 9%;
+    --primary: 225 17% 9%;             /* ink buttons */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 92%;
+    --secondary-foreground: 225 17% 9%;
+    --muted: 220 14% 93%;
+    --muted-foreground: 222 10% 40%;   /* graphite #5B6170 */
+    --faint: 220 8% 42%;               /* 4.7:1 on the muted ground — 55% read 3.2 */
+    --accent: 224 72% 96%;             /* pencil tint, for hover grounds */
+    --accent-foreground: 224 72% 40%;
+    --destructive: 0 55% 51%;          /* loss #C93B3B */
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 15% 87%;             /* rule #D9DCE3 */
+    --border-strong: 220 12% 78%;
+    --input: 222 15% 84%;
+    --ring: 224 72% 49%;
+    --radius: 0.375rem;
+    --shadow: 225 17% 9%;
+
+    --pencil: 224 72% 49%;             /* #2352D9 — text, strokes, verdicts */
+    --pencil-fill: 224 72% 49%;        /* button ground; white on it = 5.9:1 */
+    --pencil-foreground: 0 0% 100%;
+    --gain: 154 67% 27%;               /* #17734B — 4.9:1 on muted; 32% read 3.8 */
+    --loss: 0 55% 46%;                 /* #B63535 — 5.0:1 on muted */
+    --warn: 35 71% 30%;                /* #835616 — 5.4:1 on muted; 42% read 3.1 */
+  }
+
+  .dark {
+    --background: 228 17% 7%;          /* #0F1115 */
+    --foreground: 222 20% 92%;         /* #E8EAEF */
+    --card: 222 17% 10%;               /* #16191F */
+    --card-foreground: 222 20% 92%;
+    --popover: 222 17% 12%;
+    --popover-foreground: 222 20% 92%;
+    --primary: 222 20% 92%;            /* inverted ink */
+    --primary-foreground: 228 17% 7%;
+    --secondary: 222 14% 16%;
+    --secondary-foreground: 222 20% 92%;
+    --muted: 222 14% 15%;
+    --muted-foreground: 220 10% 66%;   /* #9AA1AE */
+    --faint: 220 8% 56%;               /* 4.6:1 on the muted ground */
+    --accent: 224 40% 16%;
+    --accent-foreground: 226 100% 82%;
+    --destructive: 0 80% 72%;
+    --destructive-foreground: 228 17% 7%;
+    --border: 222 15% 17%;             /* #262A33 */
+    --border-strong: 222 12% 26%;
+    --input: 222 15% 20%;
+    --ring: 226 100% 78%;
+    --shadow: 0 0% 0%;
+
+    --pencil: 226 100% 78%;            /* #8DA6FF — reads on ink */
+    --pencil-fill: 226 70% 60%;        /* #4F6FE6 — carries white */
+    --pencil-foreground: 0 0% 100%;
+    --gain: 154 58% 52%;
+    --loss: 0 80% 72%;
+    --warn: 38 75% 56%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
-    background-color: #090c13;
-    color: #e9eef9;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "kern" 1, "liga" 1;
   }
 
   /*
-   * Every figure in this app is meant to be compared against the one above it.
-   * Proportional digits make a column of returns wobble as the values change,
-   * which reads as the number being unstable rather than the glyph widths.
-   * Tabular figures are the single cheapest thing that makes data look
-   * measured.
+   * Every figure in this app is meant to be compared against the one above
+   * it. Proportional digits make a column of returns wobble as the values
+   * change, which reads as the number being unstable rather than the glyph
+   * widths. Tabular figures are the single cheapest thing that makes data
+   * look measured.
    */
   .font-mono,
+  .font-display,
   input[type="number"],
   input[type="date"],
   table {
@@ -23,52 +110,39 @@
     font-feature-settings: "tnum" 1;
   }
 
-  /*
-   * Exactly one file in this codebase had a focus ring before this. Everything
-   * else relied on a 1px border tint, which is invisible at a glance and left
-   * keyboard users with no idea where they were. This is the floor, applied
-   * once, so no component has to remember it.
-   *
-   * focus-visible rather than focus: a mouse click on a button should not leave
-   * a ring behind it.
-   */
+  /* Newsreader ships optical sizes; let the browser pick them. */
+  .font-display {
+    font-optical-sizing: auto;
+  }
+
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-    outline: 2px solid #7c6bf7;
-    outline-offset: 2px;
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
   ::selection {
-    background: rgba(124, 107, 247, 0.32);
-    color: #ffffff;
+    background: hsl(var(--pencil) / 0.22);
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: #232d42 transparent;
+    scrollbar-color: hsl(var(--border-strong)) transparent;
   }
-
   *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
-
   *::-webkit-scrollbar-track {
     background: transparent;
   }
-
   *::-webkit-scrollbar-thumb {
-    background-color: #232d42;
+    background-color: hsl(var(--border-strong));
     border-radius: 4px;
   }
 
-  *::-webkit-scrollbar-thumb:hover {
-    background-color: #33405c;
-  }
-
   /*
-   * Honour the OS setting. Reduced motion is a vestibular accommodation, not a
-   * preference — the entry animations here are decoration and none of them
-   * carry information that is lost by skipping them.
+   * Honour the OS setting. Reduced motion is a vestibular accommodation, not
+   * a preference. Framer Motion reads it through useReducedMotion(); this
+   * catches the CSS transitions.
    */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -83,52 +157,44 @@
 }
 
 @layer components {
-  /*
-   * The panel treatment. Named rather than repeated so the elevation model
-   * stays consistent: one hairline border, one inset highlight along the top
-   * edge. That highlight is what makes a dark surface read as lit from above
-   * instead of as a flat rectangle of slightly different grey.
-   */
-  .panel {
-    @apply bg-surface border border-border rounded-xl shadow-panel;
+  /* A sheet of paper on the desk. The only container treatment in the app. */
+  .sheet {
+    @apply bg-card text-card-foreground rounded-lg shadow-sheet;
+  }
+  .sheet-lifted {
+    @apply bg-card text-card-foreground rounded-lg shadow-lifted;
   }
 
-  .panel-lifted {
-    @apply bg-surface border border-border rounded-xl shadow-panel-lifted;
-  }
-
-  /*
-   * Eyebrow label above a reading. Small, wide-tracked, mono — the caption on
-   * an instrument dial rather than a form label.
-   */
+  /* Caption above a reading: small, wide-tracked, mono. */
   .eyebrow {
-    @apply text-2xs font-mono uppercase tracking-[0.14em] text-text-faint;
-  }
-
-  .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 bg-accent-strong text-white font-semibold rounded-lg
-           transition-[background-color,transform] duration-150
-           hover:bg-accent-deep active:translate-y-px
-           disabled:opacity-45 disabled:cursor-not-allowed disabled:hover:bg-accent-strong disabled:active:translate-y-0;
-  }
-
-  .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 bg-raised text-text-primary font-medium rounded-lg
-           border border-border transition-colors duration-150
-           hover:border-border-strong hover:text-text-primary
-           disabled:opacity-45 disabled:cursor-not-allowed;
+    @apply font-mono text-2xs uppercase tracking-[0.14em] text-graphite;
   }
 
   /*
-   * Expand a small control's hit area without changing its visual size or
-   * disturbing the layout around it. The pseudo-element is out of flow, so
-   * nothing reflows — only the region that answers a tap grows.
-   *
-   * 24px is WCAG 2.2 AA (2.5.8 Target Size Minimum). Coarse pointers get 44,
-   * the figure both Apple and Google publish, because a fingertip is not a
-   * cursor. Fine pointers deliberately stay at 24: at 44 the hit areas of two
-   * tooltips on adjacent rows overlap, and whichever sits on top silently
-   * swallows the other's clicks — trading one input bug for a worse one.
+   * The editor's mark. An out-of-sample figure, a verdict, a checked number
+   * — anything the product has argued back on — is underlined in pencil.
+   */
+  .pencil-mark {
+    @apply text-pencil underline decoration-pencil decoration-2 underline-offset-4;
+  }
+
+  /* Margin note: the explanation of a metric, set beside it in the margin
+     the way an editor writes, rather than hidden in a tooltip. */
+  .margin-note {
+    @apply font-display italic text-pencil text-[0.95rem] leading-snug border-l-2 border-pencil pl-3;
+  }
+
+  /* Graph paper behind a chart. 24px cells match the chart grid. */
+  .graph-paper {
+    background-image: linear-gradient(hsl(var(--border) / 0.55) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.55) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+  }
+
+  /*
+   * Expand a small control's hit area without changing its visual size.
+   * 24px is WCAG 2.2 AA; coarse pointers get 44.
    */
   .tap-safe {
     position: relative;
@@ -147,11 +213,5 @@
       width: 44px;
       height: 44px;
     }
-  }
-
-  .field-input {
-    @apply w-full bg-raised border border-border rounded-lg px-3 py-2 text-sm text-text-primary
-           placeholder-text-faint transition-colors duration-150
-           hover:border-border-strong focus:border-accent focus:outline-none;
   }
 }

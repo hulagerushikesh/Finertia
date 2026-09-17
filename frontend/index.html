@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,8 +8,15 @@
       content="Backtest momentum, MACD, and mean-reversion strategies on real market data — then check whether the result survives walk-forward validation and a signal permutation test."
     />
     <title>Finertia — Strategy Backtesting</title>
-    <link rel="canonical" href="https://momentbacktracking.web.app/" />
-    <meta name="theme-color" content="#090C13" />
+    <link rel="canonical" href="https://finertia.hulage.in/" />
+    <meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0F1115" media="(prefers-color-scheme: dark)" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
 
     <!-- Open Graph / Twitter. Without these a shared link renders as a bare
          URL, which is the difference between a click and a scroll past. -->
@@ -20,7 +27,7 @@
       property="og:description"
       content="Any backtest can be tuned until it looks good. Finertia scores your parameters on data they were never fitted to."
     />
-    <meta property="og:url" content="https://momentbacktracking.web.app/" />
+    <meta property="og:url" content="https://finertia.hulage.in/" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Backtest a Strategy. Then Find Out If It's Real." />
     <meta
@@ -44,14 +51,17 @@
         ]
       }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
   </head>
-  <body class="bg-bg text-text-primary font-sans antialiased">
+  <body>
+    <script>
+      // Paint the stored theme before the first frame so a dark reader never
+      // sees a white flash. next-themes takes over once React mounts.
+      try {
+        var t = localStorage.getItem("finertia-theme");
+        var dark = t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) document.documentElement.classList.add("dark");
+      } catch (e) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

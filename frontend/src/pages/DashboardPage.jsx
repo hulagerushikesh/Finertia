@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
+import { Link2, Check, Download } from "lucide-react";
 import ConfigPanel, { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
 import MetricsGrid from "../components/MetricsGrid";
 import EquityCurveChart from "../components/EquityCurveChart";
@@ -10,10 +12,18 @@ import MonthlyHeatmap from "../components/MonthlyHeatmap";
 import RollingSharpeChart from "../components/RollingSharpeChart";
 import AnnualReturnsChart from "../components/AnnualReturnsChart";
 import PortfolioLegs from "../components/PortfolioLegs";
+import Spinner from "../components/Spinner";
+import Stamp from "../components/Stamp";
+import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
 import { runBacktest, validateStrategy, runPortfolio } from "../api";
 import { exportEquityCurve, exportTrades, exportMetrics } from "../utils/csv";
 import { encodeParams, decodeParams, permalinkFor } from "../utils/permalink";
 import { useToast } from "../hooks/useToast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const WF_TOAST = {
   held_up: ["Validation passed — the edge held up out-of-sample", "success"],
@@ -23,14 +33,24 @@ const WF_TOAST = {
   inconclusive: ["Validation inconclusive — no in-sample edge to test", "info"],
 };
 
+/** The one-word verdict for the results header, once validation has run. */
+const WF_STAMP = {
+  held_up: ["Held up", "gain"],
+  weakened: ["Weakened", "warn"],
+  overfit: ["Overfit", "loss"],
+  failed: ["Failed", "loss"],
+  inconclusive: ["Inconclusive", "faint"],
+};
+
 export default function DashboardPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const off = useReducedMotion();
   // Precedence: a re-run from History carries explicit state, which beats the
   // URL; then a shared permalink; then the defaults.
   const [params, setParams] = useState(
-    () => location.state?.params || decodeParams(location.search) || DEFAULTS
+    () => location.state?.params || decodeParams(location.search) || DEFAULTS,
   );
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -42,8 +62,8 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
 
   // Keep the address bar in step with the config so a reload or a bookmark
-  // preserves it. `replace` rather than `push` — every keystroke in the panel
-  // would otherwise become a separate history entry and Back would crawl.
+  // preserves it. `replace` rather than `push` — every keystroke would
+  // otherwise become a history entry and Back would crawl.
   useEffect(() => {
     navigate({ search: encodeParams(params) }, { replace: true });
   }, [params, navigate]);
@@ -54,8 +74,8 @@ export default function DashboardPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
-      // Clipboard access is denied outside a secure context, which includes
-      // plain http on a LAN address. Showing the URL is the useful fallback.
+      // Clipboard access is denied outside a secure context. Showing the URL
+      // is the useful fallback.
       showToast(permalinkFor(params), "info");
     }
   }
@@ -66,17 +86,13 @@ export default function DashboardPage() {
     setError("");
     setLoading(true);
     try {
-      const data = isPortfolio
-        ? await runPortfolio(params)
-        : await runBacktest(params);
+      const data = isPortfolio ? await runPortfolio(params) : await runBacktest(params);
       setResult(data);
       // Previous validation belongs to the previous config.
       setValidation(null);
       setTab("results");
       const pct = (data.metrics.total_return * 100).toFixed(2);
-      const subject = isPortfolio
-        ? `${params.tickers.length}-name portfolio`
-        : params.ticker;
+      const subject = isPortfolio ? `${params.tickers.length}-name portfolio` : params.ticker;
       showToast(`${subject} complete — ${pct}% total return`, "success");
     } catch (err) {
       const message = err.message || "Backtest failed.";
@@ -105,278 +121,268 @@ export default function DashboardPage() {
     }
   }
 
+  function handleTab(next) {
+    if (next === "validation" && !validation && !validating) {
+      handleValidate();
+      return;
+    }
+    setTab(next);
+  }
+
+  const strategyLabel =
+    STRATEGIES.find((s) => s.id === (result?.strategy || params.strategy))?.label || params.strategy;
+  const stamp = validation ? WF_STAMP[validation.walk_forward.verdict] || WF_STAMP.inconclusive : null;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* The workspace deliberately shows no page title — you arrive here to
-          configure a run, not to read a header. But the document still needs
-          one, or a screen reader lands on a page whose outline starts at h2
-          and never says what the page is. */}
+      {/* The workspace shows no page title — you arrive to configure a run,
+          not to read a header. But the document still needs one. */}
       <h1 className="sr-only">Backtest workspace</h1>
       <div className="flex flex-col lg:flex-row gap-6 items-stretch lg:items-start">
-        {/* Sidebar */}
-        <ConfigPanel
-          params={params}
-          setParams={setParams}
-          onRun={handleRun}
-          loading={loading}
-        />
+        <ConfigPanel params={params} setParams={setParams} onRun={handleRun} loading={loading} />
 
-        {/* Results */}
         <div className="flex-1 min-w-0">
           {/* An error with no way forward is just an accusation. The button
-              repeats the action that failed, because the most common cause here
-              is a transient data fetch rather than a bad configuration. */}
+              repeats the action that failed. */}
           {error && (
-            <div className="bg-danger/10 border border-danger/30 rounded-xl px-5 py-4 mb-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <p className="text-sm text-danger flex-1 min-w-[14rem] leading-relaxed">{error}</p>
-              <button
-                onClick={handleRun}
-                disabled={loading}
-                className="btn-secondary px-3 py-1.5 text-xs shrink-0"
+            <Alert variant="destructive" className="mb-5">
+              <AlertDescription className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span className="flex-1 min-w-[14rem]">{error}</span>
+                <Button variant="outline" size="sm" onClick={handleRun} disabled={loading}>
+                  Try again
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <AnimatePresence mode="wait" initial={false}>
+            {!result && !loading && (
+              <m.div
+                key="empty"
+                initial={off ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                transition={{ duration: 0.22, ease: EASE_OUT }}
+                className="sheet border-2 border-dashed border-border shadow-none p-8 sm:p-10 flex flex-col items-start gap-4 graph-paper"
               >
-                Try again
-              </button>
-            </div>
-          )}
-
-          {/* An empty state should be an invitation, not a status message.
-              "Results will appear here" told the reader what a results pane is;
-              this hands them a finished run in one click, using whatever is
-              already configured beside it. */}
-          {!result && !loading && (
-            <div className="panel border-dashed p-8 sm:p-10 flex flex-col items-start gap-4 animate-rise-in">
-              <p className="eyebrow">Nothing run yet</p>
-              <h2 className="text-xl font-semibold text-text-primary max-w-md leading-snug">
-                {isPortfolio
-                  ? `Run the ${params.tickers.length}-name portfolio and see what comes back.`
-                  : `Run ${params.ticker || "a ticker"} and see what comes back.`}
-              </h2>
-              <p className="text-sm text-text-muted max-w-md leading-relaxed">
-                The settings beside this panel are ready to go. You will get
-                twelve metrics, an equity curve against buy-and-hold, and a plain
-                statement of what the result cannot tell you.
-              </p>
-              <div className="flex flex-wrap items-center gap-3 mt-1">
-                <button onClick={handleRun} className="btn-primary px-5 py-2.5 text-sm">
-                  {isPortfolio ? "Run portfolio" : "Run backtest"}
-                </button>
-                <Link to="/demo" className="btn-secondary px-5 py-2.5 text-sm">
-                  Look at a finished one
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* Shaped like the result it is replacing. A centred spinner in an
-              empty box gives no hint of what is coming and makes the whole page
-              jump when it is swapped out. */}
-          {loading && (
-            <div className="flex flex-col gap-3" aria-live="polite" aria-busy="true">
-              <div className="flex items-center gap-3 mb-1">
-                <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-text-muted">
-                  Fetching prices and computing signals…
+                <p className="eyebrow">Nothing run yet</p>
+                <h2 className="font-display text-display-sm font-medium text-foreground max-w-md text-balance">
+                  {isPortfolio
+                    ? `Run the ${params.tickers.length}-name portfolio and see what comes back.`
+                    : `Run ${params.ticker || "a ticker"} and see what comes back.`}
+                </h2>
+                <p className="text-sm text-graphite max-w-md leading-relaxed">
+                  The set-up beside this is ready to go. You will get twelve metrics with confidence
+                  intervals, an equity curve against buy-and-hold, and a plain statement of what the
+                  result cannot tell you.
                 </p>
-              </div>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="panel h-[5.5rem] animate-pulse" />
-                ))}
-              </div>
-              <div className="panel h-14 animate-pulse" />
-              <div className="panel h-64 animate-pulse" />
-            </div>
-          )}
+                <div className="flex flex-wrap items-center gap-3 mt-1">
+                  <Button onClick={handleRun}>{isPortfolio ? "Run portfolio" : "Run backtest"}</Button>
+                  <Button asChild variant="outline">
+                    <Link to="/demo">Look at a finished one</Link>
+                  </Button>
+                </div>
+              </m.div>
+            )}
 
-          {result && !loading && (
-            <div className="flex flex-col gap-5">
-              {/* Header row */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2 flex-wrap">
-                    {isPortfolio ? result.tickers.join(" · ") : params.ticker}
-                    <span className="text-text-muted font-normal">
+            {/* Shaped like the result it is replacing, so the page does not
+                jump when it is swapped out. */}
+            {loading && (
+              <m.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                className="flex flex-col gap-3"
+                aria-live="polite"
+                aria-busy="true"
+              >
+                <div className="flex items-center gap-3 mb-1 text-graphite">
+                  <Spinner className="text-pencil" />
+                  <p className="text-sm">Fetching prices and computing signals…</p>
+                </div>
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+                  {[0, 1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-[6.5rem] rounded-lg" />
+                  ))}
+                </div>
+                <Skeleton className="h-14 rounded-lg" />
+                <Skeleton className="h-64 rounded-lg" />
+              </m.div>
+            )}
+
+            {result && !loading && (
+              <m.div
+                key="result"
+                initial={off ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, ease: EASE_OUT }}
+                className="flex flex-col gap-5"
+              >
+                {/* Header row: the run, named the way a report names its subject. */}
+                <div className="flex items-end justify-between gap-4 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h2 className="font-display text-display-sm font-medium text-foreground tracking-tight">
+                        {isPortfolio ? result.tickers.join(" · ") : params.ticker}
+                      </h2>
+                      <Badge variant="outline" className="font-mono text-2xs uppercase tracking-wider text-graphite">
+                        {strategyLabel}
+                      </Badge>
+                      {stamp && (
+                        <Stamp size="sm" tone={stamp[1]} delay={0}>
+                          {stamp[0]}
+                        </Stamp>
+                      )}
+                    </div>
+                    <p className="text-xs font-mono text-graphite mt-1.5">
                       {result.start || params.start} → {result.end || params.end}
-                    </span>
-                    <span className="text-2xs font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/30 px-2 py-0.5 rounded-full">
-                      {STRATEGIES.find((s) => s.id === (result.strategy || params.strategy))?.label ||
-                        params.strategy}
-                    </span>
-                  </h2>
-                  {/* A portfolio has no single position series, so it reports
-                      how many shared bars its holdings actually had instead. */}
-                  <p className="text-xs text-text-muted mt-0.5">
-                    {isPortfolio
-                      ? `${result.aligned_bars} bars shared by all ${result.tickers.length} holdings`
-                      : `${result.signals_summary.long_days}d long · ${result.signals_summary.short_days}d short · ${result.signals_summary.flat_days}d flat`}
-                  </p>
+                      <span className="text-faint"> · </span>
+                      {isPortfolio
+                        ? `${result.aligned_bars} bars shared by all ${result.tickers.length} holdings`
+                        : `${result.signals_summary.long_days}d long · ${result.signals_summary.short_days}d short · ${result.signals_summary.flat_days}d flat`}
+                      <span className="text-faint"> · </span>
+                      {(result.duration_ms / 1000).toFixed(2)}s
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={handleCopyLink} className="text-graphite">
+                    {copied ? <Check className="size-3.5 text-gain" /> : <Link2 className="size-3.5" />}
+                    {copied ? "Link copied" : "Copy link to this set-up"}
+                  </Button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleCopyLink}
-                    className="text-xs font-mono text-text-muted hover:text-accent border border-border hover:border-accent px-3 py-1 rounded-full transition-colors"
-                  >
-                    {/* The label says what the button does, so the explanation
-                        that used to live in a `title` — invisible on touch —
-                        is no longer needed anywhere. */}
-                    {copied ? "Link copied" : "Copy link to this setup"}
-                  </button>
-                  <span className="text-xs font-mono bg-success/10 text-success border border-success/20 px-3 py-1 rounded-full">
-                    Completed in {(result.duration_ms / 1000).toFixed(2)}s
-                  </span>
-                </div>
-              </div>
 
-              {/* Results / Validation switcher */}
-              <div className="flex items-center gap-1 border-b border-border">
-                <button
-                  onClick={() => setTab("results")}
-                  className={`text-sm font-medium px-4 py-2 border-b-2 -mb-px transition-colors ${
-                    tab === "results"
-                      ? "border-accent text-text-primary"
-                      : "border-transparent text-text-muted hover:text-text-primary"
-                  }`}
-                >
-                  Results
-                </button>
-                {/* Walk-forward and the permutation test are defined on a
-                    single position series, so they have no portfolio meaning
-                    yet. Hiding the tab beats offering one that always errors. */}
-                {!isPortfolio && (
-                <button
-                  onClick={() => (validation ? setTab("validation") : handleValidate())}
-                  disabled={validating}
-                  className={`text-sm font-medium px-4 py-2 border-b-2 -mb-px transition-colors disabled:opacity-50 ${
-                    tab === "validation"
-                      ? "border-accent text-text-primary"
-                      : "border-transparent text-text-muted hover:text-text-primary"
-                  }`}
-                >
-                  Validation
-                  {!validation && !validating && (
-                    <span className="ml-2 text-2xs font-mono text-accent">run</span>
-                  )}
-                </button>
+                {/* Results / Validation switcher. Walk-forward and the
+                    permutation test are defined on a single position series,
+                    so they have no portfolio meaning yet. */}
+                <Tabs value={tab} onValueChange={handleTab}>
+                  <div className="flex items-center justify-between gap-3 border-b border-border">
+                    <TabsList className="bg-transparent p-0 h-auto gap-1 rounded-none">
+                      <TabsTrigger
+                        value="results"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-pencil data-[state=active]:shadow-none data-[state=active]:bg-transparent px-4 py-2 -mb-px text-sm"
+                      >
+                        Results
+                      </TabsTrigger>
+                      {!isPortfolio && (
+                        <TabsTrigger
+                          value="validation"
+                          disabled={validating}
+                          className="rounded-none border-b-2 border-transparent data-[state=active]:border-pencil data-[state=active]:shadow-none data-[state=active]:bg-transparent px-4 py-2 -mb-px text-sm"
+                        >
+                          Validation
+                          {!validation && !validating && (
+                            <span className="ml-2 font-mono text-2xs text-pencil">run</span>
+                          )}
+                        </TabsTrigger>
+                      )}
+                    </TabsList>
+                    {tab === "validation" && validation && (
+                      <Button variant="ghost" size="sm" onClick={handleValidate} disabled={validating} className="text-graphite">
+                        Re-run checks
+                      </Button>
+                    )}
+                  </div>
+                </Tabs>
+
+                {tab === "results" && (
+                  <Stagger className="flex flex-col gap-5">
+                    <StaggerItem>
+                      <MetricsGrid metrics={result.metrics} confidenceIntervals={result.confidence_intervals} />
+                    </StaggerItem>
+                    {isPortfolio && (
+                      <StaggerItem>
+                        <PortfolioLegs result={result} />
+                      </StaggerItem>
+                    )}
+                    <StaggerItem><EquityCurveChart data={result.equity_curve} /></StaggerItem>
+                    <StaggerItem><DrawdownChart data={result.drawdown} /></StaggerItem>
+                    {result.annual_returns?.length > 0 && (
+                      <StaggerItem><AnnualReturnsChart data={result.annual_returns} /></StaggerItem>
+                    )}
+                    {result.monthly_returns?.length > 0 && (
+                      <StaggerItem><MonthlyHeatmap data={result.monthly_returns} /></StaggerItem>
+                    )}
+                    <StaggerItem><RollingSharpeChart data={result.rolling_sharpe} /></StaggerItem>
+                    {result.trades?.length > 0 && (
+                      <StaggerItem><TradesTable trades={result.trades} /></StaggerItem>
+                    )}
+
+                    {/* The limits of the result, stated where the result is. */}
+                    <StaggerItem className="grid lg:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] gap-x-8 gap-y-3 border-t border-border pt-6">
+                      <p className="margin-note">What this backtest cannot tell you.</p>
+                      <ul className="text-sm text-graphite leading-relaxed flex flex-col gap-2.5 max-w-prose">
+                        <li>
+                          <strong className="text-foreground font-medium">Survivorship bias.</strong>{" "}
+                          Price history only exists for companies that still trade. Testing on{" "}
+                          {isPortfolio ? result.tickers.join(", ") : params.ticker} is testing on
+                          survivors — the delisted and bankrupt names that would have dragged the same
+                          strategy down are simply not in the data.
+                          {isPortfolio &&
+                            " A hand-picked basket of names you already know did well is the sharpest form of this."}
+                        </li>
+                        <li>
+                          <strong className="text-foreground font-medium">
+                            {isPortfolio ? "One basket, one period." : "One ticker, one period."}
+                          </strong>{" "}
+                          A single result is one draw from a distribution.{" "}
+                          {isPortfolio
+                            ? "Validation runs on a single position series, so it is not available for portfolios yet — check the strategy on individual names first."
+                            : "Run the Validation tab to see whether these parameters hold on data they were never fitted to."}
+                        </li>
+                        <li>
+                          <strong className="text-foreground font-medium">Idealised fills.</strong>{" "}
+                          Every trade executes at the close at a flat{" "}
+                          {(params.transaction_cost * 100).toFixed(2)}% cost. Real slippage widens when
+                          you are trading size or trading a fast market.
+                        </li>
+                      </ul>
+                    </StaggerItem>
+
+                    <StaggerItem className="flex items-center gap-2 flex-wrap border-t border-border pt-4">
+                      <span className="eyebrow mr-2">Export</span>
+                      <Button variant="outline" size="sm" onClick={() => exportEquityCurve(result, params)}>
+                        <Download className="size-3.5" /> Equity curve CSV
+                      </Button>
+                      <Button
+                        variant="outline" size="sm"
+                        onClick={() => exportTrades(result, params)}
+                        disabled={!result.trades?.length}
+                      >
+                        <Download className="size-3.5" /> Trades CSV
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => exportMetrics(result, params)}>
+                        <Download className="size-3.5" /> Metrics CSV
+                      </Button>
+                    </StaggerItem>
+                  </Stagger>
                 )}
-                {tab === "validation" && validation && (
-                  <button
-                    onClick={handleValidate}
-                    disabled={validating}
-                    className="ml-auto text-xs text-text-muted hover:text-accent transition-colors disabled:opacity-50"
-                  >
-                    Re-run checks
-                  </button>
-                )}
-              </div>
 
-              {tab === "results" && (
-                <>
-                  <MetricsGrid
-                    metrics={result.metrics}
-                    confidenceIntervals={result.confidence_intervals}
-                  />
-                  {isPortfolio && <PortfolioLegs result={result} />}
-                  <EquityCurveChart data={result.equity_curve} />
-                  <DrawdownChart data={result.drawdown} />
-                  {result.annual_returns?.length > 0 && (
-                    <AnnualReturnsChart data={result.annual_returns} />
-                  )}
-                  {result.monthly_returns?.length > 0 && (
-                    <MonthlyHeatmap data={result.monthly_returns} />
-                  )}
-                  <RollingSharpeChart data={result.rolling_sharpe} />
-                  {result.trades?.length > 0 && <TradesTable trades={result.trades} />}
-
-                  {/* The limits of the result, stated where the result is —
-                      not buried in a docs page nobody opens. */}
-                  <div className="bg-warning/5 border border-warning/20 rounded-xl px-5 py-4">
-                    <p className="text-xs font-semibold text-warning uppercase tracking-wider mb-2">
-                      What this backtest cannot tell you
-                    </p>
-                    <ul className="text-xs text-text-muted leading-relaxed flex flex-col gap-1.5">
-                      <li>
-                        <strong className="text-text-primary">Survivorship bias.</strong>{" "}
-                        Price history only exists for companies that still trade. Testing
-                        on {isPortfolio ? result.tickers.join(", ") : params.ticker} is
-                        testing on survivors — the delisted and bankrupt names that would
-                        have dragged the same strategy down are simply not in the data.
-                        {isPortfolio &&
-                          " A hand-picked basket of names you already know did well is the sharpest form of this."}
-                      </li>
-                      <li>
-                        <strong className="text-text-primary">
-                          {isPortfolio ? "One basket, one period." : "One ticker, one period."}
-                        </strong>{" "}
-                        A single result is one draw from a distribution.{" "}
-                        {isPortfolio
-                          ? "Validation runs on a single position series, so it is not available for portfolios yet — check the strategy on individual names first."
-                          : "Run the Validation tab to see whether these parameters hold on data they were never fitted to."}
-                      </li>
-                      <li>
-                        <strong className="text-text-primary">Idealised fills.</strong>{" "}
-                        Every trade executes at the close at a flat{" "}
-                        {(params.transaction_cost * 100).toFixed(2)}% cost. Real slippage
-                        widens when you are trading size or trading a fast market.
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="flex items-center gap-3 flex-wrap border-t border-border pt-4">
-                    <span className="text-xs text-text-muted">Export</span>
-                    <button
-                      onClick={() => exportEquityCurve(result, params)}
-                      className="text-xs text-text-muted hover:text-accent border border-border hover:border-accent rounded-lg px-3 py-1.5 transition-colors"
-                    >
-                      Equity curve CSV
-                    </button>
-                    <button
-                      onClick={() => exportTrades(result, params)}
-                      disabled={!result.trades?.length}
-                      className="text-xs text-text-muted hover:text-accent border border-border hover:border-accent rounded-lg px-3 py-1.5 transition-colors disabled:opacity-40 disabled:hover:text-text-muted disabled:hover:border-border"
-                    >
-                      Trades CSV
-                    </button>
-                    <button
-                      onClick={() => exportMetrics(result, params)}
-                      className="text-xs text-text-muted hover:text-accent border border-border hover:border-accent rounded-lg px-3 py-1.5 transition-colors"
-                    >
-                      Metrics CSV
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {tab === "validation" && (
-                validating ? (
-                  <div className="flex flex-col items-center justify-center h-72 border border-border rounded-2xl">
-                    <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin mb-4" />
-                    <p className="text-sm text-text-muted">
-                      Sweeping parameters and shuffling signals…
-                    </p>
-                    <p className="text-xs text-text-faint mt-1">
-                      This runs hundreds of backtests — a few seconds
-                    </p>
-                  </div>
-                ) : validation ? (
-                  <ValidationPanel data={validation} />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-72 border border-dashed border-border rounded-2xl text-text-muted px-6 text-center">
-                    <p className="font-medium text-text-primary">Check for overfitting</p>
-                    <p className="text-sm mt-1 max-w-sm leading-relaxed">
-                      Tests whether these parameters survive on data they were not tuned on, and
-                      whether the signal timing beats random entries.
-                    </p>
-                    <button
-                      onClick={handleValidate}
-                      className="btn-primary mt-4 px-5 py-2 text-sm"
-                    >
-                      Run validation
-                    </button>
-                  </div>
-                )
-              )}
-            </div>
-          )}
+                {tab === "validation" &&
+                  (validating ? (
+                    <div className="flex flex-col items-center justify-center h-72 sheet graph-paper" aria-busy="true">
+                      <Spinner size={8} className="text-pencil mb-4" />
+                      <p className="text-sm text-graphite">Sweeping parameters and shuffling signals…</p>
+                      <p className="text-xs text-faint mt-1">
+                        This runs hundreds of backtests — a few seconds
+                      </p>
+                    </div>
+                  ) : validation ? (
+                    <ValidationPanel data={validation} />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-72 border-2 border-dashed border-border rounded-lg text-graphite px-6 text-center graph-paper">
+                      <p className="font-display text-xl font-medium text-foreground">Check for overfitting</p>
+                      <p className="text-sm mt-1 max-w-sm leading-relaxed">
+                        Tests whether these parameters survive on data they were not tuned on, and
+                        whether the signal timing beats random entries.
+                      </p>
+                      <Button onClick={handleValidate} className="mt-4">
+                        Run validation
+                      </Button>
+                    </div>
+                  ))}
+              </m.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
