@@ -1,11 +1,37 @@
 import React, { useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 
 function posLabel(pos) {
-  if (pos === 1) return { text: "Long", cls: "text-success bg-success/10" };
-  if (pos === -1) return { text: "Short", cls: "text-danger bg-danger/10" };
-  return { text: "Flat", cls: "text-text-muted bg-border/40" };
+  if (pos === 1) return { text: "Long", cls: "text-gain border-gain/40" };
+  if (pos === -1) return { text: "Short", cls: "text-loss border-loss/40" };
+  return { text: "Flat", cls: "text-graphite border-border" };
+}
+
+/** Page controls shared by every paginated table. */
+export function Pager({ page, totalPages, onPage, className }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className={cn("flex items-center justify-between", className)}>
+      <Button variant="ghost" size="sm" onClick={() => onPage(Math.max(0, page - 1))} disabled={page === 0}>
+        ← Previous
+      </Button>
+      <span className="text-xs font-mono text-graphite">
+        {page + 1} / {totalPages}
+      </span>
+      <Button
+        variant="ghost" size="sm"
+        onClick={() => onPage(Math.min(totalPages - 1, page + 1))}
+        disabled={page === totalPages - 1}
+      >
+        Next →
+      </Button>
+    </div>
+  );
 }
 
 export default function TradesTable({ trades }) {
@@ -14,82 +40,47 @@ export default function TradesTable({ trades }) {
   const slice = trades.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
-    <div className="panel p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-text-primary">Trade Log</h2>
-        <span className="text-xs text-text-muted">{trades.length} entries</span>
+    <section className="sheet overflow-hidden">
+      <div className="flex items-center justify-between px-5 pt-4 pb-3">
+        <h2 className="font-display text-lg font-medium text-foreground">Trade log</h2>
+        <span className="text-2xs font-mono text-graphite">{trades.length} entries</span>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-xs font-mono">
-          <thead>
-            <tr className="border-b border-border text-text-muted">
-              <th className="text-left pb-2 pr-4">Date</th>
-              <th className="text-left pb-2 pr-4">Position</th>
-              <th className="text-right pb-2 pr-4">Daily Return</th>
-              <th className="text-right pb-2">Equity</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="text-xs font-mono">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-5">Date</TableHead>
+              <TableHead>Position</TableHead>
+              <TableHead className="text-right">Daily return</TableHead>
+              <TableHead className="text-right pr-5">Equity</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {slice.map((row, i) => {
               const { text, cls } = posLabel(row.position);
               const retColor =
-                row.daily_return > 0
-                  ? "text-success"
-                  : row.daily_return < 0
-                  ? "text-danger"
-                  : "text-text-muted";
+                row.daily_return > 0 ? "text-gain" : row.daily_return < 0 ? "text-loss" : "text-graphite";
               return (
-                <tr
-                  key={i}
-                  className={`border-b border-border/40 hover:bg-border/20 transition-colors ${
-                    row.position === 1
-                      ? "bg-success/5"
-                      : row.position === -1
-                      ? "bg-danger/5"
-                      : ""
-                  }`}
-                >
-                  <td className="py-1.5 pr-4 text-text-muted">{row.date}</td>
-                  <td className="py-1.5 pr-4">
-                    <span className={`px-1.5 py-0.5 rounded text-2xs font-semibold ${cls}`}>
+                <TableRow key={i}>
+                  <TableCell className="pl-5 text-graphite">{row.date}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={cn("font-mono text-tick px-1.5 py-0 rounded-sm", cls)}>
                       {text}
-                    </span>
-                  </td>
-                  <td className={`py-1.5 pr-4 text-right ${retColor}`}>
+                    </Badge>
+                  </TableCell>
+                  <TableCell className={cn("text-right", retColor)}>
                     {(row.daily_return * 100).toFixed(3)}%
-                  </td>
-                  <td className="py-1.5 text-right text-text-primary">
-                    {row.equity.toFixed(4)}
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="text-right pr-5 text-foreground">{row.equity.toFixed(4)}</TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <button
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="text-xs text-text-muted hover:text-text-primary disabled:opacity-30 transition-colors"
-          >
-            ← Prev
-          </button>
-          <span className="text-xs text-text-muted">
-            {page + 1} / {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page === totalPages - 1}
-            className="text-xs text-text-muted hover:text-text-primary disabled:opacity-30 transition-colors"
-          >
-            Next →
-          </button>
-        </div>
-      )}
-    </div>
+      <Pager page={page} totalPages={totalPages} onPage={setPage} className="px-3 py-2 border-t border-border" />
+    </section>
   );
 }
