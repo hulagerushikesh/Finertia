@@ -55,9 +55,9 @@ bars the old UI cleared, or it is a regression wearing new clothes.
   - [x] exactly one `<main>`, one h1 per route, zero `title=`
   - [x] theme toggle + `finertia-theme` persistence + pre-mount paint script
 - [x] **PR** `redesign → main` — see STATUS.md for the evidence list.
-- [ ] **Your smoke test on the Vercel preview:** login → dashboard at 1024 px → run → History → Profile displayName save → Register a throwaway (exercises every firestore/lite call).
-- [ ] **Merge after the Pitch Fest result** (or on explicit go-ahead). Frontend
-  only — no backend redeploy needed.
+- [ ] **Your smoke test — now on production:** login → dashboard at 1024 px → run → History → Profile displayName save → Register a throwaway (exercises every firestore/lite call).
+- [x] **Merged 17 Sep on explicit go-ahead** (`e10309b`), before the result. Frontend
+  only — no backend redeploy needed. Override logged in DECISIONS.md.
 
 **Exit:** PR open with every checklist line evidenced; bundle no larger than before.
 
@@ -72,7 +72,7 @@ bars the old UI cleared, or it is a regression wearing new clothes.
 - [x] Prewarm: 28/28 suggested tickers, 2015→today, ~300 docs. First real run of `FirestorePriceStore` — worked.
 - [x] Latency measured (Mac in India → nam5): yfinance direct ~1.0 s; cache read 0.8–2.3 s. **A wash, not a win** — Firestore is in `nam5`, Cloud Run in `asia-south1`, both cross-continent. The PR buys resilience and zero rate-limit exposure on cold starts, not speed. Prod number after the Cloud Run deploy.
 - [x] PR #7 merged; rev 00004 (then 00005). Prod cold-read latency still unmeasured — needs one logged-in run from `/dashboard` (the `/demo` page never calls the API).
-- [ ] "Served from cache" note in the UI — on the `redesign` branch (DashboardPage would conflict on `main`).
+- [ ] "Served from cache" note in the UI — branch off `main` (redesign merged 17 Sep).
 - Option, not taken: a second named Firestore DB in `asia-south1` for `prices` (not free-tier; ≈₹0 in practice) if the latency ever matters.
 
 **Exit:** with yfinance mocked to 429, a cached-ticker backtest still returns (test) — met. Latency recorded — met, unflattering.
@@ -90,7 +90,7 @@ Roadmap 5 of 5. `backend/trials.py`; wired into `walk_forward` as `deflated.effe
 - [x] Canonical AAPL 2018→2024-01-01: momentum 16→6 (3), MACD 4→2, Bollinger 12→7 (2). DSR +0.07…+0.12. No verdict changes.
 - [x] **Found while measuring:** the walk-forward verdict flips when the window extends one year (split Feb→Oct 2022). README now states the window and the flip; open-questions §3 promoted to the top research item.
 - [x] Merged; Cloud Run rev 00005 serving, health 200, no warnings (15 Sep).
-- [ ] `ValidationPanel.jsx`: raw vs effective side by side — on the `redesign` branch with the cache note.
+- [ ] `ValidationPanel.jsx`: raw vs effective side by side — branch off `main` with the cache note.
 
 ### Phase 4 — Decide what Finertia is for (end of milestone)
 
@@ -116,7 +116,7 @@ Record the outcome in DECISIONS.md.
   per-check disagreement (DSR/PBO/permutation vs walk-forward) and bootstrap
   intervals on the OOS Sharpes.
 - [ ] Publish: README link + a home for it (hulage.in post, or a `/writeup`
-  route on the redesign branch). Not before the Pitch Fest result.
+  route off `main`). Not before the Pitch Fest result.
 
 **Exit:** DECISIONS.md has an entry; if portfolio path, the write-up is drafted
 in `planning/` or published. **Met** (drafted; publishing waits on the result).
@@ -124,7 +124,7 @@ in `planning/` or published. **Met** (drafted; publishing waits on the result).
 ## Definition of done for M9
 
 - [x] Phase 0–3 exit criteria met (phase 0's `gh` token narrowing still on the user)
-- [x] STATUS.md refreshed: rev 00005, 567 tests, roadmap 5/5, redesign dated (PR #6, held)
+- [x] STATUS.md refreshed: rev 00007, 603 tests, roadmap 5/5, redesign merged 17 Sep (PR #6)
 - [ ] Build-ledger artifact refreshed from STATUS.md
 - [x] Phase 4 decision recorded (15 Sep)
 
