@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import Stamp from "./Stamp";
+import VerdictCard from "./VerdictCard";
 import RollingWalkForward from "./RollingWalkForward";
 import { Stagger, StaggerItem } from "./motion";
 import { cn } from "@/lib/utils";
@@ -273,10 +274,60 @@ export default function ValidationPanel({ data }) {
   const pboVerdict = PBO_VERDICT[ov?.verdict] || PBO_VERDICT.fragile;
   const verdict = WF_VERDICT[wf.verdict] || WF_VERDICT.inconclusive;
 
+  // The working is long — five sheets of figures — and most readers want
+  // the answer first. Collapsed by default; the choice is remembered so a
+  // researcher who always opens it never has to again.
+  const [showWorking, setShowWorking] = useState(() => {
+    try {
+      return localStorage.getItem("finertia-validation-working") === "open";
+    } catch {
+      return false;
+    }
+  });
+  const setWorking = (next) => {
+    setShowWorking(next);
+    try {
+      localStorage.setItem("finertia-validation-working", next ? "open" : "closed");
+    } catch {
+      /* private mode — the toggle still works for this page */
+    }
+  };
+  const toggleWorking = () => setWorking(!showWorking);
+  // A chip on the verdict card opens the working, then scrolls to its section
+  // on the next frame, once the section has mounted.
+  const jumpTo = (id) => {
+    setWorking(true);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        document.getElementById(`validation-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+      )
+    );
+  };
+
   return (
     <Stagger className="flex flex-col gap-5">
+      <StaggerItem>
+        <VerdictCard data={data} onJump={jumpTo} />
+      </StaggerItem>
+
+      <StaggerItem className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <button
+          type="button"
+          onClick={toggleWorking}
+          aria-expanded={showWorking}
+          aria-controls="validation-working"
+          className="tap-safe inline-flex items-center gap-2 text-xs font-medium text-pencil hover:underline underline-offset-4 whitespace-nowrap"
+        >
+          <span aria-hidden="true" className="font-mono">{showWorking ? "−" : "+"}</span>
+          {showWorking ? "Hide the working" : "Show the working"}
+        </button>
+        <span className="text-2xs text-faint">every figure behind the verdict, with its interval</span>
+      </StaggerItem>
+
+      {showWorking && (
+      <div id="validation-working" className="flex flex-col gap-5">
       {/* ── Walk-forward ── */}
-      <StaggerItem as="section" className="sheet p-6">
+      <StaggerItem as="section" id="validation-walk-forward" className="sheet p-6 scroll-mt-20">
         <Head
           title="Walk-forward validation"
           blurb="Parameters were optimised on the earlier part of the period, then scored on the later part. Only the pencil-marked figures are evidence."
@@ -346,7 +397,7 @@ export default function ValidationPanel({ data }) {
       {/* The single split, walked forward. Directly after it because it is
           the same experiment repeated, not a different one. */}
       {data.rolling_walk_forward && (
-        <StaggerItem>
+        <StaggerItem id="validation-rolling" className="scroll-mt-20">
           <RollingWalkForward rolling={data.rolling_walk_forward} />
         </StaggerItem>
       )}
@@ -354,7 +405,7 @@ export default function ValidationPanel({ data }) {
       {/* Deflation. Sits between walk-forward and the permutation test because
           it is a correction *to* walk-forward, not a separate experiment. */}
       {wf.deflated?.computable && (
-        <StaggerItem as="section" className="sheet p-6">
+        <StaggerItem as="section" id="validation-deflated" className="sheet p-6 scroll-mt-20">
           <Head
             title="Deflated Sharpe ratio"
             blurb={`Picking the best of ${wf.deflated.n_trials} combinations is itself a search, and the winner of any search looks good. This asks how high a Sharpe that search would have produced on data with no edge at all, then measures the winner against that bar instead of zero.`}
@@ -423,7 +474,7 @@ export default function ValidationPanel({ data }) {
       {/* Probability of Backtest Overfitting. Sits last of the three because
           it judges the whole selection procedure rather than any single run. */}
       {ov?.computable && (
-        <StaggerItem as="section" className="sheet p-6">
+        <StaggerItem as="section" id="validation-overfitting" className="sheet p-6 scroll-mt-20">
           <Head
             title="Probability of backtest overfitting"
             blurb={`The split above is one split. This one cuts the period into ${ov.n_splits} blocks and tries all ${ov.n_combinations} balanced ways of splitting them, each time picking the best combination on one half and checking where it lands on the other.`}
@@ -488,7 +539,7 @@ export default function ValidationPanel({ data }) {
         </StaggerItem>
       )}
 
-      <StaggerItem as="section" className="sheet p-6">
+      <StaggerItem as="section" id="validation-timing" className="sheet p-6 scroll-mt-20">
         <Head
           title="Signal timing test"
           blurb={`The position series was randomly reordered ${pm.trials} times, keeping the exact same number of long, short, and flat days. If real timing beats the shuffles, the entries are doing work that market exposure alone would not.`}
@@ -540,6 +591,8 @@ export default function ValidationPanel({ data }) {
         timing test and still fail walk-forward — that combination means the approach has signal but
         the specific parameters were tuned too tightly.
       </p>
+      </div>
+      )}
     </Stagger>
   );
 }
