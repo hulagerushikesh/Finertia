@@ -3,6 +3,24 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-09-17 — Redesign merged before the Pitch Fest result
+
+The 14 Sep constraint was "nothing that changes what a judge sees merges to
+`main` until the result is in". PR #6 merged on 17 Sep, result still pending,
+on the user's explicit instruction after the two holds were stated plainly:
+the judged `/demo` now shows the new UI, and the logged-in paths on
+`firebase/firestore/lite` had not been smoke-tested.
+
+Why it was acceptable: the public routes — including `/demo`, the only link
+the judges have — were verified on the preview (contrast, overflow, hit areas,
+tooltips on touch, reduced motion); the unverified surface is behind login,
+which judges are not expected to cross. Frontend only, so rev 00007 is
+untouched and a rollback is one Vercel redeploy of `50877a4`.
+
+What it changes: the "hold until the result" rule is spent; further frontend
+work merges on its own merits. The smoke test moves from preview to
+production and stays at the top of the blocked-on-user list.
+
 ## 2026-09-15 — Finertia is a portfolio piece with a write-up, not a product
 
 M9 phase 4. The fork was portfolio piece vs product. **Portfolio path.**
