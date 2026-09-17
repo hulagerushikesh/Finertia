@@ -5,6 +5,7 @@ Where the project is, what is next, and why past choices were made.
 | File | Purpose | Update when |
 |---|---|---|
 | [STATUS.md](STATUS.md) | Current state: what is live, verified vs built, stage table, timeline | every merge / deploy |
+| [PROGRESS.md](PROGRESS.md) | The whole story from the first commit: per stretch, what was built, what it proved, what changed course | end of every stretch of work |
 | [NEXT-MILESTONE.md](NEXT-MILESTONE.md) | The one milestone being worked on, in order, with exit criteria | start / end of a milestone |
 | [BACKLOG.md](BACKLOG.md) | Everything not in the current milestone, grouped | as items appear |
 | [DECISIONS.md](DECISIONS.md) | Decision log — constraints and reversals, with the reason | when a choice is made or reversed |

@@ -31,7 +31,8 @@ usually a lie, and how to measure how much of a lie.
 
 ```
 backend/
-  data.py        prices in (yfinance + cache)
+  data.py        prices in (yfinance, through the cache tiers)
+  price_store.py Firestore / in-memory price cache, whole-ticker batches
   signals.py     momentum / MACD / Bollinger → position series
   strategies.py  registry: build fn, warm-up, walk-forward grid per strategy
   engine.py      positions × returns → equity curve, drawdown, costs
@@ -44,8 +45,12 @@ backend/
   pbo.py         Probability of Backtest Overfitting via CSCV
   purge.py       purge + embargo at the walk-forward split
   bootstrap.py   stationary block bootstrap, BCa confidence intervals
+  trials.py      effective number of trials (eigenvalue + clustering)
+  rolling.py     anchored rolling walk-forward, one verdict per fold
+  regimes.py     market volatility terciles, Sharpe per regime
   main.py        16 FastAPI routes; auth, quota, rate limit, error mapping
 frontend/src/    React 18 + Vite + Tailwind + Recharts
 ```
 
-Related: [../planning/](../planning/) for status and what is next.
+Related: [../planning/](../planning/) for status and what is next;
+[../planning/PROGRESS.md](../planning/PROGRESS.md) for how the project got here.
