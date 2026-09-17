@@ -1,5 +1,6 @@
 import React from "react";
 import Stamp from "./Stamp";
+import RollingWalkForward from "./RollingWalkForward";
 import { Stagger, StaggerItem } from "./motion";
 import { cn } from "@/lib/utils";
 
@@ -198,6 +199,69 @@ function BoundaryNote({ boundary }) {
   );
 }
 
+/**
+ * N is not the grid size. A 20-day and a 25-day lookback are nearly the same
+ * trial, so the noise bar built from "16 attempts" is punishing the winner
+ * for company it never had. This states the raw count and the measured one
+ * side by side, and the deflated probability under each. The headline takes
+ * the larger of the two estimates — lowering N is the direction that flatters
+ * a result, so when they disagree the tool sides with the higher bar.
+ */
+function EffectiveN({ et }) {
+  const raw = et.under_raw;
+  const eff = et.under_effective;
+  const gap = et.dsr_gap;
+  const same = et.n_trials_effective === et.n_trials_raw;
+  return (
+    <div className="mt-5 pt-4 border-t border-border">
+      <p className="eyebrow mb-3">How many of those trials were really distinct</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="bg-muted/50 rounded-md p-4">
+          <p className="text-2xs text-graphite mb-1">Counted as</p>
+          <p className="font-display text-2xl font-medium text-foreground">
+            {et.n_trials_raw} <span className="text-sm text-graphite font-sans">trials</span>
+          </p>
+          <p className="text-2xs text-faint mt-1">
+            deflated probability {raw?.deflated_sharpe_ratio === null ? "—" : pct(raw?.deflated_sharpe_ratio)}
+          </p>
+        </div>
+        <div className="bg-pencil/5 ring-1 ring-pencil/30 rounded-md p-4">
+          <p className="text-2xs text-pencil mb-1">Measured as</p>
+          <p className="font-display text-2xl font-medium text-foreground pencil-mark">
+            {et.n_trials_effective} <span className="text-sm text-graphite font-sans">distinct</span>
+          </p>
+          <p className="text-2xs text-faint mt-1">
+            deflated probability{" "}
+            <span className="text-foreground">{eff?.deflated_sharpe_ratio === null ? "—" : pct(eff?.deflated_sharpe_ratio)}</span>
+            {gap !== null && gap !== undefined && gap !== 0 && (
+              <span className={gap > 0 ? "text-gain" : "text-loss"}>
+                {" "}({gap > 0 ? "+" : "−"}{(Math.abs(gap) * 100).toFixed(2)} pts)
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+      <p className="text-2xs text-graphite mt-3 leading-relaxed">
+        {same
+          ? "Every combination in the grid behaved differently from every other in-sample, so the raw count stands."
+          : <>
+              Measured two ways from how the candidates' in-sample returns move together — an
+              eigenvalue count says {Math.round(et.eigen?.n_effective ?? 0)}, correlation clustering says{" "}
+              {et.clusters?.n_effective}
+              {et.clusters?.silhouette !== null && et.clusters?.silhouette !== undefined && (
+                <> (silhouette {et.clusters.silhouette.toFixed(2)})</>
+              )}
+              . The headline takes the <strong className="text-foreground font-medium">larger</strong>, because a
+              smaller N is the direction that flatters a result; {et.n_trials_lower_bound} is the lower bound.
+              {eff?.verdict && raw?.verdict && eff.verdict !== raw.verdict && (
+                <> Under the measured count the verdict reads <span className="text-foreground">{(DSR_VERDICT[eff.verdict] || DSR_VERDICT.inconclusive).label.toLowerCase()}</span>.</>
+              )}
+            </>}
+      </p>
+    </div>
+  );
+}
+
 export default function ValidationPanel({ data }) {
   if (!data) return null;
 
@@ -279,7 +343,14 @@ export default function ValidationPanel({ data }) {
         )}
       </StaggerItem>
 
-      {/* ── Permutation test ── */}
+      {/* The single split, walked forward. Directly after it because it is
+          the same experiment repeated, not a different one. */}
+      {data.rolling_walk_forward && (
+        <StaggerItem>
+          <RollingWalkForward rolling={data.rolling_walk_forward} />
+        </StaggerItem>
+      )}
+
       {/* Deflation. Sits between walk-forward and the permutation test because
           it is a correction *to* walk-forward, not a separate experiment. */}
       {wf.deflated?.computable && (
@@ -331,6 +402,10 @@ export default function ValidationPanel({ data }) {
                   </span>
                   .
                 </p>
+              )}
+
+              {wf.deflated.effective_trials?.computable && (
+                <EffectiveN et={wf.deflated.effective_trials} />
               )}
 
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-2xs font-mono text-faint mt-4">

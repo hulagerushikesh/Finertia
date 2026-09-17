@@ -10,6 +10,7 @@ import TradesTable from "../components/TradesTable";
 import ValidationPanel from "../components/ValidationPanel";
 import MonthlyHeatmap from "../components/MonthlyHeatmap";
 import RollingSharpeChart from "../components/RollingSharpeChart";
+import RegimeTable from "../components/RegimeTable";
 import AnnualReturnsChart from "../components/AnnualReturnsChart";
 import PortfolioLegs from "../components/PortfolioLegs";
 import Spinner from "../components/Spinner";
@@ -244,6 +245,14 @@ export default function DashboardPage() {
                       <span className="text-faint"> · </span>
                       {(result.duration_ms / 1000).toFixed(2)}s
                     </p>
+                    {/* The price source only matters when it is the fallback:
+                        the last good copy served because Yahoo was down. */}
+                    {result.data_source === "cache-stale" && (
+                      <p className="text-2xs text-warn mt-1.5 leading-relaxed max-w-prose">
+                        Prices came from the last good cached copy — the market data provider was
+                        unreachable, so the most recent sessions may be missing from this run.
+                      </p>
+                    )}
                   </div>
                   <Button variant="ghost" size="sm" onClick={handleCopyLink} className="text-graphite">
                     {copied ? <Check className="size-3.5 text-gain" /> : <Link2 className="size-3.5" />}
@@ -303,6 +312,9 @@ export default function DashboardPage() {
                       <StaggerItem><MonthlyHeatmap data={result.monthly_returns} /></StaggerItem>
                     )}
                     <StaggerItem><RollingSharpeChart data={result.rolling_sharpe} /></StaggerItem>
+                    {result.regimes && (
+                      <StaggerItem><RegimeTable regimes={result.regimes} /></StaggerItem>
+                    )}
                     {result.trades?.length > 0 && (
                       <StaggerItem><TradesTable trades={result.trades} /></StaggerItem>
                     )}
