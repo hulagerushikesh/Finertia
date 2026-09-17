@@ -6,25 +6,26 @@ import RealityTape from "../components/RealityTape";
 import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
 
 /**
- * What distinguishes these three is what the engine has to *do* to support
- * them, so each leads with that. No icons: a target/gear/chart-bar set is the
+ * Three things, one sentence each. The method names (walk-forward,
+ * deflated Sharpe, permutation) live in /docs; a first-time reader should
+ * get the idea without them. No icons: a target/gear/chart-bar set is the
  * same one every tool ships.
  */
 const CAPABILITIES = [
   {
     tag: "The check",
-    title: "Scored on data it never saw",
-    desc: "Walk-forward validation refits your parameters on the earlier part of the period and grades them only on the bars that came after. A permutation test then shuffles your signals 500 times to see whether the timing beat luck.",
+    title: "Tested on years it never saw",
+    desc: "Parameters are chosen on the early part of the period and scored on the later part. Only the later score counts.",
   },
   {
     tag: "The correction",
-    title: "Deflated for the search that found it",
-    desc: "Picking the best of sixteen combinations is itself a search, and the winner of any search looks good. The Sharpe is measured against what that search would have produced on data with no edge at all.",
+    title: "Graded against cherry-picking",
+    desc: "Try sixteen settings and keep the best, and the best will look good on its own. The result is marked against that.",
   },
   {
     tag: "The engine",
-    title: "Written out, not imported",
-    desc: "No backtesting library. Every signal, position, cost, and metric is pandas and numpy you can read — including the one-bar shift that stops tomorrow's price from reaching yesterday's decision.",
+    title: "Maths you can read",
+    desc: "No backtesting library. Every signal, cost and metric is plain pandas and numpy you can open and check.",
   },
 ];
 
@@ -67,17 +68,16 @@ export default function LandingPage() {
       {/* Hero. Left-aligned: the tape below is read left-to-right off a zero
           line, and a centred headline above it would fight that axis. */}
       <Rise className="max-w-3xl">
-        <p className="eyebrow mb-6">Backtesting · Walk-forward · Permutation · Bootstrap</p>
+        <p className="eyebrow mb-6">Backtest · then check it&apos;s real</p>
         <h1 className="font-display font-medium text-display-md sm:text-display-lg lg:text-display-xl tracking-[-0.02em] text-foreground text-balance">
           Your backtest looks good.
           <br />
           That&apos;s the <em className="italic text-pencil">problem.</em>
         </h1>
         <p className="text-base sm:text-lg text-graphite leading-relaxed mt-7 max-w-2xl">
-          Any strategy can be tuned until its chart points up. Finertia scores your parameters on
-          data they were never fitted to, checks your timing against random entries, and puts a
-          confidence interval on every number — so you find out which results survive contact
-          with reality.
+          Pick a stock and a strategy. Finertia runs it on real prices, then re-tests the result
+          on years it was never tuned on. If the number was luck, you find out here — not after
+          you trade it.
         </p>
         <div className="flex flex-wrap items-center gap-3 mt-9">
           <Button asChild size="lg">
@@ -105,18 +105,24 @@ export default function LandingPage() {
           </StaggerItem>
         ))}
       </Stagger>
+      <p className="mt-4 text-sm">
+        <Link to="/docs" className="text-pencil hover:underline underline-offset-4">
+          How each check works, with the formulas →
+        </Link>
+      </p>
 
       {/* The method, drawn once. */}
       <div className="mt-20 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-10 items-center">
         <div>
-          <p className="eyebrow mb-3">How a result gets marked</p>
+          <p className="eyebrow mb-3">How to read a result</p>
           <h2 className="font-display text-display-sm font-medium text-foreground text-balance">
-            Only the pencil-marked bars are evidence.
+            The blue stretch is the only part that counts.
           </h2>
           <p className="text-sm text-graphite leading-relaxed mt-4 max-w-md">
-            Parameters are chosen on the first 70% of the period, a purged gap removes the trade
-            straddling the cut, and the remaining 30% is scored untouched. Every out-of-sample
-            figure in the app is underlined in pencil, so you always know which number was checked.
+            Parameters are tuned on the first 70% of the period. The last 30% is scored untouched.
+            Every number from that stretch is{" "}
+            <span className="pencil-mark text-foreground">underlined like this</span> across the
+            app, so you always know which figures were actually checked.
           </p>
         </div>
         <div className="sheet px-6 py-6 graph-paper">
@@ -126,7 +132,7 @@ export default function LandingPage() {
 
       {/* Proof, stated once and quietly. */}
       <p className="mt-16 text-xs font-mono text-faint leading-relaxed">
-        0 external backtesting dependencies · 12 metrics, each with a bootstrap interval · 535
+        0 external backtesting dependencies · 12 metrics, each with a confidence interval · 603
         tests on the engine
       </p>
     </div>
