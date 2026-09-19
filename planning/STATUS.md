@@ -1,6 +1,6 @@
 # Status
 
-_Current to `268da4c` (main) · 19 Sep 2026._
+_Current to `232520c` (main) · 19 Sep 2026._
 
 ## At a glance
 
@@ -10,10 +10,10 @@ _Current to `268da4c` (main) · 19 Sep 2026._
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 603 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + secret scan) |
-| Commits | 56 on main (`git rev-list --count`) · 11 PRs merged |
+| Commits | 94 on main (`git rev-list --count`) · 30 PRs merged |
 | API | 16 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
-| Blocked on user | 4 — login smoke test **on production** (redesign is live) · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT · `rm frontend/.gitignore frontend/.env.local` |
+| Blocked on user | 3 — login smoke test **on production** (redesign is live) · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
 | In flight | nothing — every branch is merged; next work starts fresh off `main` |
 | Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); draft at [write-up.md](write-up.md) |
 
