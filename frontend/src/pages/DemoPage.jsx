@@ -6,7 +6,7 @@ import EquityCurveChart from "../components/EquityCurveChart";
 import DrawdownChart from "../components/DrawdownChart";
 import AnnualReturnsChart from "../components/AnnualReturnsChart";
 import RollingSharpeChart from "../components/RollingSharpeChart";
-import Stamp from "../components/Stamp";
+import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import demo from "../demoData.json";
 
@@ -28,7 +28,7 @@ export default function DemoPage() {
       <Rise className="flex items-start justify-between gap-6 flex-wrap mb-8">
         <div className="max-w-2xl">
           <p className="eyebrow mb-4">A real result · no account needed</p>
-          <h1 className="font-display text-display-md font-medium tracking-tight text-foreground text-balance">
+          <h1 className="font-display text-display-md font-semibold tracking-tight text-foreground text-balance">
             Momentum on {demo.ticker}, {demo.start.slice(0, 4)}–{demo.end.slice(0, 4)}.
           </h1>
           <p className="text-sm font-mono text-graphite mt-3">
@@ -42,11 +42,11 @@ export default function DemoPage() {
       </Rise>
 
       <Rise delay={0.06} className="sheet px-6 py-5 mb-8 grid sm:grid-cols-[auto_1fr] gap-x-6 gap-y-3 items-start">
-        <Stamp tone="loss" size="lg" delay={0.4} className="mt-1">
+        <Badge variant="loss" size="lg" className="mt-1">
           Lost to holding
-        </Stamp>
+        </Badge>
         <div>
-          <p className="font-display text-xl font-medium text-foreground">
+          <p className="font-display text-xl font-semibold text-foreground">
             This strategy lost badly to doing nothing.
           </p>
           <p className="text-sm text-graphite leading-relaxed mt-2">

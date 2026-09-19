@@ -7,7 +7,7 @@ import { useToast } from "../hooks/useToast";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import Stamp from "../components/Stamp";
+import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +51,7 @@ export default function PricingPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <Rise className="max-w-xl mb-12">
         <p className="eyebrow mb-4">Pricing</p>
-        <h1 className="font-display text-display-md font-medium tracking-tight text-foreground text-balance">
+        <h1 className="font-display text-display-md font-semibold tracking-tight text-foreground text-balance">
           Start free. Pay when you want the checks.
         </h1>
         <p className="text-graphite leading-relaxed mt-4">
@@ -95,15 +95,15 @@ export default function PricingPage() {
                 className={cn("relative rounded-lg p-7 flex flex-col", isPro ? "sheet-lifted" : "sheet")}
               >
                 {isPro && (
-                  <Stamp size="sm" className="absolute top-5 right-5" delay={0.5}>
+                  <Badge size="sm" className="absolute top-5 right-5">
                     Recommended
-                  </Stamp>
+                  </Badge>
                 )}
 
                 <p className="eyebrow mb-5">{plan.label}</p>
 
                 <p className="flex items-baseline gap-1.5">
-                  <span className="font-display text-display-md font-medium text-foreground tracking-tight">
+                  <span className="font-display text-display-md font-semibold text-foreground tracking-tight">
                     ${plan.price_monthly}
                   </span>
                   <span className="text-sm text-faint">/ month</span>

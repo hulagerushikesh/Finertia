@@ -133,7 +133,7 @@ export default function MetricsGrid({ metrics, confidenceIntervals }) {
             </div>
             <span
               className={cn(
-                "font-display text-3xl sm:text-display-sm font-medium leading-none tracking-tight",
+                "font-display text-3xl sm:text-display-sm font-semibold leading-none tracking-tight",
                 toneClass(tone, metrics[key]),
               )}
             >

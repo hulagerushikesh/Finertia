@@ -30,7 +30,7 @@ export default function RegimeTable({ regimes, title = "By market regime", compa
   if (!regimes.computable) {
     return (
       <section className={cn(!compact && "sheet p-6")}>
-        {title && <h2 className="font-display text-xl font-medium text-foreground">{title}</h2>}
+        {title && <h2 className="font-display text-xl font-semibold text-foreground">{title}</h2>}
         <p className="text-xs text-graphite mt-2 leading-relaxed">{regimes.reason}</p>
       </section>
     );
@@ -46,7 +46,7 @@ export default function RegimeTable({ regimes, title = "By market regime", compa
       {title && (
         <div className={cn("flex items-start justify-between gap-4 flex-wrap", compact ? "mb-3" : "px-6 pt-6 pb-4")}>
           <div className="max-w-lg">
-            <h2 className={cn("font-display font-medium text-foreground", compact ? "text-sm" : "text-xl")}>{title}</h2>
+            <h2 className={cn("font-display font-semibold text-foreground", compact ? "text-sm" : "text-xl")}>{title}</h2>
             <p className="text-xs text-graphite mt-1 leading-relaxed">
               Each day is labelled by how volatile the market was over the previous {regimes.window} days,
               split into thirds for this period: calm below {pct(t.low_max)} annualised, turbulent above{" "}

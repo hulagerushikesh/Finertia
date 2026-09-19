@@ -34,7 +34,7 @@ export default function Tooltip({ label, children, align = "start", className })
         sideOffset={6}
         className="w-auto max-w-[min(20rem,80vw)] p-0 border-0 bg-transparent shadow-none"
       >
-        <p className="bg-popover text-popover-foreground shadow-pop rounded-md border-l-2 border-l-pencil px-3 py-2.5 text-sm leading-relaxed">
+        <p className="bg-popover text-popover-foreground shadow-lg border rounded-md border-l-2 border-l-pencil px-3 py-2.5 text-sm leading-relaxed">
           {label}
         </p>
       </PopoverContent>
