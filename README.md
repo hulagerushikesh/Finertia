@@ -94,7 +94,7 @@ losing strategy for the same reason.
 | Frontend | React 18 · Vite · Tailwind CSS · Recharts |
 | Auth | Firebase Authentication (email/password) |
 | Database | Cloud Firestore |
-| Hosting | Firebase Hosting (frontend) · Cloud Run / any container host (backend) |
+| Hosting | Vercel (frontend, same-origin `/api/*` proxy) · Cloud Run asia-south1 (backend) |
 
 ---
 
@@ -147,29 +147,52 @@ App will be live at `http://localhost:5174`. The port is pinned in `vite.config.
 
 ## Deploy
 
-### Frontend → Firebase Hosting
+This is how the live site is shipped. Anything else — Firebase Hosting, a
+different container host — works too, but is not what runs.
 
-```bash
-cd frontend
-npm run build
-cd ..
-firebase deploy --only hosting
-```
+### Frontend → Vercel (automatic)
 
-### Backend → Cloud Run (or any container host)
+Every push to `main` deploys https://finertia.hulage.in. The Vercel project has
+Root Directory = `frontend`; [`frontend/vercel.json`](frontend/vercel.json)
+carries the SPA fallback and rewrites `/api/*` to the Cloud Run service, so
+the browser never calls `*.run.app` directly (ad blockers block it, and every
+cross-origin call needed a preflight).
+
+Set the `VITE_*` values from `.env.example` as Vercel environment variables.
+`VITE_API_BASE_URL` is the site's own origin (`https://finertia.hulage.in`),
+not the Cloud Run URL — that is what makes the proxy do its job. Pull requests
+get a preview URL; the preview still proxies to production Cloud Run.
+
+### Backend → Cloud Run (manual, by design)
+
+The backend does **not** auto-deploy. After merging a backend change, deploy by
+hand so a change never silently turns on a meter:
 
 ```bash
 cd backend
-# Build and push your Docker image, or deploy directly via Cloud Run source deploy
 gcloud run deploy finertia-api \
   --source . \
-  --region us-central1 \
-  --set-env-vars FIREBASE_SERVICE_ACCOUNT_JSON='...' \
-  --set-env-vars ALLOWED_ORIGINS='https://your-app.web.app' \
+  --region asia-south1 \
+  --project momentbacktracking \
+  --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 \
+  --set-secrets FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest \
   --allow-unauthenticated
 ```
 
-After deploying the backend, set `VITE_API_BASE_URL` in `frontend/.env` to the Cloud Run URL, rebuild, and redeploy the frontend.
+The service-account JSON lives in Secret Manager, never in an env var or the
+repo. `ALLOWED_ORIGINS=https://finertia.hulage.in` and `LOG_LEVEL` are set on
+the service and persist across deploys. `backend/.gcloudignore` keeps `.env`
+and `tests/` out of the source upload. The caps (`min-instances 0`, max 2,
+512Mi) are the cost ceiling — idle costs nothing; do not raise them casually.
+
+Afterwards, check the new revision is serving:
+
+```bash
+curl -s https://finertia.hulage.in/api/health
+```
+
+If the Cloud Run URL ever changes (it does not on redeploys, only on
+service recreation), update the rewrite destination in `frontend/vercel.json`.
 
 ---
 
@@ -424,7 +447,7 @@ cd firestore-tests && npm install && npm test
 
 `.github/workflows/ci.yml` runs on every push and PR: backend tests, frontend build, and a secret scan that fails if a `.env` or service-account key is ever tracked. None of them need credentials — a pipeline that requires secrets is one that silently stops running.
 
-`deploy.yml` is manual (`workflow_dispatch`) rather than push-triggered, so shipping is always a decision. It runs the tests first, authenticates to GCP by Workload Identity Federation rather than a long-lived key in a repo secret, polls `/api/health` afterwards (a deploy that "succeeded" but serves 500s is not a successful deploy), and fails the frontend build if the bundle still points at localhost.
+`deploy.yml` is manual (`workflow_dispatch`) rather than push-triggered, so shipping is always a decision. Its frontend job still targets Firebase Hosting from before the move to Vercel and is not used; the backend job mirrors the `gcloud run deploy` above. It runs the tests first, authenticates to GCP by Workload Identity Federation rather than a long-lived key in a repo secret, polls `/api/health` afterwards (a deploy that "succeeded" but serves 500s is not a successful deploy), and fails the frontend build if the bundle still points at localhost.
 
 ---
 
