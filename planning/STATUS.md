@@ -1,12 +1,12 @@
 # Status
 
-_Current to `cdd060f` (main) · 19 Sep 2026._
+_Current to `268da4c` (main) · 19 Sep 2026._
 
 ## At a glance
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00007` (16 Sep: rolling walk-forward + volatility regimes); frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17) |
+| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00007` (16 Sep: rolling walk-forward + volatility regimes); frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17) and the same-day simplification (PRs #19–#23: Ocean Breeze theme, plain shadcn surfaces, folded set-up/results, signed-in CTA fix, newcomer landing) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 603 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + secret scan) |
@@ -81,6 +81,7 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 | 16 Sep | Volatility regimes (`regimes.py`): per-bar realised-vol terciles, Sharpe per regime on every backtest + the stitched OOS record; PR #11, rev 00007 | 14 + 2 tests, 603 total; 2 mutation checks; momentum OOS 2.26 calm / −0.76 turbulent |
 | 17 Sep | **Redesign merged** (PR #6, `e10309b`) on explicit go-ahead; `planning/PROGRESS.md` added | preview evidence; logged-in paths unverified |
 | 19 Sep | UI batch on `main`: rolling fold + regime tables, effective N, cache note (PR #13); favicon/manifest/OG (PR #14); plain landing copy (PR #16); verdict card over the validation tab (PR #17) | verified on a real AAPL 2018→2024 payload (2 of 5 checks passed) at 1280 + 375 px, both themes; prod serves the icons and the new copy |
+| 19 Sep | **Simplification**, user's call after reading the site as a customer: tweakcn Ocean Breeze palette + DM Sans (PR #19, contrast re-measured ≥ 4.5:1); notebook metaphor dropped — stamps → Badge, no pencil underlines, no graph paper (PR #20); set-up = strategy/ticker/dates + one Advanced fold, results = 4 numbers + curve + one fold (PR #21); signed-in users no longer sent to /register (PR #22, bug found on prod); landing rewritten for someone who has never heard of a backtest (PR #23) | each PR previewed on the real payload at 375 + 528/1280 px, light + dark; prod title + bundle strings confirmed after merge |
 | 16 Sep | Rolling walk-forward (`rolling.py`): 4 anchored folds, market context per fold, stitched OOS + CI, parameter stability; wired as `rolling_walk_forward` in `/api/validate`; PR #10, rev 00006 | 18 + 3 tests, 588 total; 3 mutation checks; all three AAPL strategies read `regime_dependent` |
 
 ## Known risks
