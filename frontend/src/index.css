@@ -3,79 +3,98 @@
 @tailwind utilities;
 
 /*
- * Blue pencil — the token sheet.
+ * Ocean Breeze — the token sheet.
  *
- * Light is the default: the product is a marked-up manuscript, and paper is
- * where a manuscript lives. The dark sheet is the same document read at night,
- * not a different product — every role keeps its meaning, only the ground
- * changes.
+ * tweakcn's "Ocean Breeze" preset (Tailwind sky / gray / green / emerald
+ * stops), converted from oklch to HSL triples so Tailwind can add alpha
+ * (`bg-pencil/10`) and so `hsl(var(--x))` keeps working in the charts.
  *
- * All values are HSL triples so Tailwind can add alpha (`bg-pencil/10`).
+ * Departures from the preset, all for contrast (every text role ≥ 4.5:1 on
+ * the ground it sits on, measured):
+ *   - buttons carry ink on green, not white on green (2.3:1 in the preset)
+ *   - `pencil` (accent as *text*: links, checked figures, strokes) is the
+ *     emerald-700 stop in light, the primary mint in dark
+ *   - dark muted-foreground lifted from gray-500 to a tuned 66% grey
+ *   - dark border softened one stop; accent text uses the foreground
+ *   - gain / loss / warn keep their tuned values — brand green is the
+ *     accent, gain stays a distinct, deeper green
  */
 @layer base {
   :root {
-    --background: 220 16% 96%;         /* paper   #F4F5F7 */
-    --foreground: 225 17% 9%;          /* ink     #14161C */
-    --card: 0 0% 100%;                 /* sheet   #FFFFFF */
-    --card-foreground: 225 17% 9%;
+    --background: 208 100% 97%;        /* sky-50   #F0F8FF */
+    --foreground: 217 19% 27%;         /* gray-700 #374151 */
+    --card: 0 0% 100%;                 /* #FFFFFF */
+    --card-foreground: 217 19% 27%;
     --popover: 0 0% 100%;
-    --popover-foreground: 225 17% 9%;
-    --primary: 225 17% 9%;             /* ink buttons */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 92%;
-    --secondary-foreground: 225 17% 9%;
-    --muted: 220 14% 93%;
-    --muted-foreground: 222 10% 40%;   /* graphite #5B6170 */
-    --faint: 220 8% 42%;               /* 4.7:1 on the muted ground — 55% read 3.2 */
-    --accent: 224 72% 96%;             /* pencil tint, for hover grounds */
-    --accent-foreground: 224 72% 40%;
-    --destructive: 0 55% 51%;          /* loss #C93B3B */
+    --popover-foreground: 217 19% 27%;
+    --primary: 142 71% 45%;            /* green-500 #22C55E */
+    --primary-foreground: 222 47% 11%; /* slate-900 on it = 7.8:1 */
+    --secondary: 204 94% 94%;          /* sky-100 #E0F2FE */
+    --secondary-foreground: 215 14% 34%;
+    --muted: 220 14% 96%;              /* gray-100 #F3F4F6 */
+    --muted-foreground: 220 9% 46%;    /* gray-500 #6B7280 — 4.8:1 on card */
+    --faint: 220 8% 42%;               /* 5.1:1 on the muted ground */
+    --accent: 149 80% 90%;             /* emerald-100 #D1FAE5, hover grounds */
+    --accent-foreground: 217 19% 27%;
+    --destructive: 0 72% 51%;          /* red-600 #DC2626 — 4.8:1 on card */
     --destructive-foreground: 0 0% 100%;
-    --border: 222 15% 87%;             /* rule #D9DCE3 */
-    --border-strong: 220 12% 78%;
-    --input: 222 15% 84%;
-    --ring: 224 72% 49%;
-    --radius: 0.375rem;
-    --shadow: 225 17% 9%;
+    --border: 220 13% 91%;             /* gray-200 #E5E7EB */
+    --border-strong: 220 13% 82%;
+    --input: 220 13% 88%;
+    --ring: 142 71% 45%;
+    --radius: 0.5rem;
+    --shadow: 222 47% 11%;
 
-    --pencil: 224 72% 49%;             /* #2352D9 — text, strokes, verdicts */
-    --pencil-fill: 224 72% 49%;        /* button ground; white on it = 5.9:1 */
-    --pencil-foreground: 0 0% 100%;
-    --gain: 154 67% 27%;               /* #17734B — 4.9:1 on muted; 32% read 3.8 */
-    --loss: 0 55% 46%;                 /* #B63535 — 5.0:1 on muted */
-    --warn: 35 71% 30%;                /* #835616 — 5.4:1 on muted; 42% read 3.1 */
+    --pencil: 163 93% 24%;             /* emerald-700 #047857 — 5.6:1 on card */
+    --pencil-fill: 142 71% 45%;        /* button ground = primary */
+    --pencil-foreground: 222 47% 11%;
+    --gain: 154 67% 27%;               /* #17734B — 5.3:1 on muted */
+    --loss: 0 55% 46%;                 /* #B63535 — 5.4:1 on muted */
+    --warn: 35 71% 30%;                /* #835616 — 5.8:1 on muted */
+
+    --chart-1: 142 71% 45%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 161 93% 30%;
+    --chart-4: 163 93% 24%;
+    --chart-5: 163 88% 20%;
   }
 
   .dark {
-    --background: 228 17% 7%;          /* #0F1115 */
-    --foreground: 222 20% 92%;         /* #E8EAEF */
-    --card: 222 17% 10%;               /* #16191F */
-    --card-foreground: 222 20% 92%;
-    --popover: 222 17% 12%;
-    --popover-foreground: 222 20% 92%;
-    --primary: 222 20% 92%;            /* inverted ink */
-    --primary-foreground: 228 17% 7%;
-    --secondary: 222 14% 16%;
-    --secondary-foreground: 222 20% 92%;
-    --muted: 222 14% 15%;
-    --muted-foreground: 220 10% 66%;   /* #9AA1AE */
-    --faint: 220 8% 56%;               /* 4.6:1 on the muted ground */
-    --accent: 224 40% 16%;
-    --accent-foreground: 226 100% 82%;
-    --destructive: 0 80% 72%;
-    --destructive-foreground: 228 17% 7%;
-    --border: 222 15% 17%;             /* #262A33 */
-    --border-strong: 222 12% 26%;
-    --input: 222 15% 20%;
-    --ring: 226 100% 78%;
+    --background: 222 47% 11%;         /* slate-900 #0F172A */
+    --foreground: 216 12% 84%;         /* gray-300 #D1D5DB */
+    --card: 217 33% 17%;               /* slate-800 #1E293B */
+    --card-foreground: 216 12% 84%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 216 12% 84%;
+    --primary: 158 64% 52%;            /* emerald-400 #34D399 */
+    --primary-foreground: 222 47% 11%; /* 9.3:1 */
+    --secondary: 218 23% 23%;          /* #2D3748 */
+    --secondary-foreground: 240 5% 65%;
+    --muted: 217 30% 14%;              /* #19212E */
+    --muted-foreground: 220 10% 66%;   /* #9AA1AE — 6.0:1 on card */
+    --faint: 220 8% 56%;               /* 4.8:1 on the muted ground */
+    --accent: 217 19% 27%;             /* gray-700 */
+    --accent-foreground: 216 12% 84%;
+    --destructive: 0 91% 71%;          /* red-400 #F87171 — 5.4:1 on card */
+    --destructive-foreground: 222 47% 11%;
+    --border: 217 19% 27%;             /* gray-700 #374151 */
+    --border-strong: 215 14% 40%;
+    --input: 215 16% 32%;
+    --ring: 158 64% 52%;
     --shadow: 0 0% 0%;
 
-    --pencil: 226 100% 78%;            /* #8DA6FF — reads on ink */
-    --pencil-fill: 226 70% 60%;        /* #4F6FE6 — carries white */
-    --pencil-foreground: 0 0% 100%;
+    --pencil: 158 64% 52%;             /* mint reads on slate — 7.7:1 on card */
+    --pencil-fill: 158 64% 52%;
+    --pencil-foreground: 222 47% 11%;
     --gain: 154 58% 52%;
     --loss: 0 80% 72%;
     --warn: 38 75% 56%;
+
+    --chart-1: 158 64% 52%;
+    --chart-2: 172 66% 50%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 160 84% 39%;
+    --chart-5: 161 93% 30%;
   }
 
   * {
@@ -110,7 +129,7 @@
     font-feature-settings: "tnum" 1;
   }
 
-  /* Newsreader ships optical sizes; let the browser pick them. */
+  /* DM Sans ships an optical-size axis; let the browser pick it. */
   .font-display {
     font-optical-sizing: auto;
   }
