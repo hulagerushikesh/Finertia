@@ -191,6 +191,15 @@ Afterwards, check the new revision is serving:
 curl -s https://finertia.hulage.in/api/health
 ```
 
+Then mark what production is serving — the `backend-deployed` tag is how
+`backend-drift.yml` knows. It comments on every merged PR that leaves
+`backend/` ahead of the tag, and keeps doing so until the tag moves
+(the Deploy workflow moves it on its own):
+
+```bash
+git tag -f backend-deployed <the sha you deployed> && git push -f origin backend-deployed
+```
+
 If the Cloud Run URL ever changes (it does not on redeploys, only on
 service recreation), update the rewrite destination in `frontend/vercel.json`.
 

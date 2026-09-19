@@ -7,7 +7,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 - [ ] Narrow the `gh` token → in M9 phase 0
 - [ ] Project venv → in M9 phase 0
 - [x] Bundle-size CI check — `frontend/scripts/check-bundle.mjs` + `bundle-budget.json`, gzip entry + total, limits ~10% over the 19 Sep build; CI step "Bundle budget" (19 Sep)
-- [ ] Backend deploy reminder: a CI job on `main` that diffs `backend/` against the last deployed SHA and comments "backend changed, redeploy" on the merge (fixes the forgotten-redeploy failure mode without automating a cost)
+- [x] Backend deploy reminder — `backend-drift.yml` diffs `backend/` against the `backend-deployed` tag on every push to main and comments on the merged PR; deploy.yml moves the tag, manual deploys move it per README (19 Sep)
 - [ ] Rotate the Cloud Run runtime SA to a dedicated one (currently the default compute SA)
 
 ## Research (after effective N)
