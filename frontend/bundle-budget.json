@@ -1,0 +1,7 @@
+{
+  "_": "gzip bytes, level 9, measured by scripts/check-bundle.mjs. Limits sit ~10% above the 19 Sep 2026 build (30efb9d): entry 192.3 kB, total 369.2 kB. Raise a limit in the same PR that needs it, and say why.",
+  "limits": {
+    "entry": 216000,
+    "total": 416000
+  }
+}
