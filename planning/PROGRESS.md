@@ -193,9 +193,43 @@ title from the Cloudflare-proxied era — DNS points at Vercel directly now, no
 fix needed. Still open from the merge: the logged-in smoke test on production,
 and whether to trim the results tab to four headline numbers.
 
+## 10. 19 Sep — Simplify: theme, surfaces, folds, landing
+
+**Built.** Five PRs in one sitting after the user's read: "UI is a little
+good, but complex for a user's view — only black and white". PR #19 swapped
+the palette to tweakcn's Ocean Breeze (green accent, sky paper, slate dark)
+and the type to DM Sans; the preset's oklch tokens were converted to the HSL
+triples the charts already consume, and every text role re-measured to
+≥ 4.5:1 (the preset's own white-on-green button was 2.3:1 — buttons carry
+ink instead). PR #20 removed the notebook metaphor: rotated stamps became
+shadcn Badge tones, pencil underlines became colour only, graph paper and
+the custom shadow scale went. PR #21 folded the set-up panel to three
+decisions (strategy, ticker, dates) plus one Advanced fold with a
+changed-count badge, and the results tab to four numbers and the equity
+curve plus one "show all" fold — `useDisclosure` + `MoreToggle` now shared
+with the validation working. PR #23 rewrote the landing page for a reader
+who has never heard the word backtest: what it is, three steps, a real run,
+who it is for, why the checks matter, one call to action.
+
+**Found.** Signed in on production, "Run a backtest" sent the user to
+/register. Every marketing CTA hard-linked there. PR #22: CTAs go to the
+workspace when a user is present, and /login and /register redirect
+signed-in users (`PublicOnlyRoute`).
+
+**Proved.** Each PR previewed on the dev server against the real AAPL
+2018 → 2024 payload (set-up panel, metrics halves, verdict card, working),
+at 375 px and 528/1280 px, light and dark, scrollWidth 375, production build
+clean; prod bundle strings and `<title>` checked after each merge.
+
+**Changed course.** Four theme candidates were rendered on a mock Finertia
+result screen (not tweakcn's generic dashboard) so the choice was made on our
+own components; Ocean Breeze won over Modern Minimal on warmth. The stacked-PR
+lesson from §9 held: every PR today branched from `main`.
+
 ## What is next
 
 See [NEXT-MILESTONE.md](NEXT-MILESTONE.md) for the ordered list and
 [BACKLOG.md](BACKLOG.md) for everything behind it. The short version on 19 Sep:
-run the login smoke test on production, decide on the results-tab trim, publish
+run the logged-in smoke test on production (the new folds and the CTA fix have
+only been seen on previews), regenerate the demo payload with regimes, publish
 the write-up once the Pitch Fest result is in.
