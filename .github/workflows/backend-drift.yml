@@ -1,0 +1,127 @@
+name: Backend drift
+
+# The backend does not auto-deploy (deploy.yml is workflow_dispatch; most
+# deploys are `gcloud run deploy` by hand). On 13 Sep that was forgotten and
+# production served a five-day-old backend. This job is the reminder.
+#
+# The `backend-deployed` tag marks the commit Cloud Run is serving. deploy.yml
+# moves it on a successful deploy; a manual deploy moves it by hand (README,
+# "Deploy"). After every push to main that touches backend/, this job diffs
+# backend/ between the tag and HEAD and, if they differ, comments on the PR
+# that was just merged. It never fails the run — a red X for "you have not
+# deployed yet" would train everyone to ignore red.
+on:
+  push:
+    branches: [main]
+    paths: [backend/**]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  drift:
+    name: Compare backend/ with what is deployed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Diff backend/ against the backend-deployed tag
+        id: diff
+        run: |
+          set -e
+          if ! git fetch --no-tags origin tag backend-deployed 2>/dev/null; then
+            echo "state=untagged" >> "$GITHUB_OUTPUT"
+            echo "No backend-deployed tag. Cannot tell what production is serving." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          DEPLOYED=$(git rev-parse backend-deployed^{commit})
+          echo "deployed=$DEPLOYED" >> "$GITHUB_OUTPUT"
+          echo "deployed_short=$(git rev-parse --short "$DEPLOYED")" >> "$GITHUB_OUTPUT"
+          echo "deployed_date=$(git log -1 --format=%cs "$DEPLOYED")" >> "$GITHUB_OUTPUT"
+          if git diff --quiet "$DEPLOYED" HEAD -- backend/; then
+            echo "state=clean" >> "$GITHUB_OUTPUT"
+            echo "backend/ matches the backend-deployed tag ($DEPLOYED). Nothing to redeploy." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "state=drift" >> "$GITHUB_OUTPUT"
+          {
+            echo "commits<<EOF"
+            git log --no-merges --format='- `%h` %s' "$DEPLOYED"..HEAD -- backend/
+            echo "EOF"
+            echo "files<<EOF"
+            git diff --stat "$DEPLOYED" HEAD -- backend/ | tail -1
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "## Backend changed, not yet redeployed"
+            echo
+            echo "Cloud Run is serving \`$DEPLOYED\`. backend/ on main is ahead:"
+            echo
+            git log --no-merges --format='- `%h` %s' "$DEPLOYED"..HEAD -- backend/
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment on the merged PR
+        if: steps.diff.outputs.state != 'clean'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATE: ${{ steps.diff.outputs.state }}
+          DEPLOYED_SHORT: ${{ steps.diff.outputs.deployed_short }}
+          DEPLOYED_DATE: ${{ steps.diff.outputs.deployed_date }}
+          COMMITS: ${{ steps.diff.outputs.commits }}
+          FILES: ${{ steps.diff.outputs.files }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -e
+          # The PR(s) this push merged. A direct push has none; the summary
+          # above is then the only output.
+          PRS=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/pulls" --jq '.[] | select(.merged_at != null) | .number')
+          if [ -z "$PRS" ]; then
+            echo "No merged PR for $SHA; summary only."
+            exit 0
+          fi
+          MARK="<!-- backend-drift -->"
+          # Heredocs are indented to keep the YAML block scalar intact; the
+          # sed strips exactly that indentation so markdown does not see it.
+          if [ "$STATE" = "untagged" ]; then
+            BODY=$(sed -E 's/^ {4}//' <<MSG
+              $MARK
+              **Backend changed — and there is no \`backend-deployed\` tag**, so this job cannot tell what Cloud Run is serving.
+
+              After the next deploy, mark it once:
+
+              \`\`\`bash
+              git tag -f backend-deployed <deployed-sha> && git push -f origin backend-deployed
+              \`\`\`
+
+              From then on every backend merge gets a diff against production here.
+          MSG
+            )
+          else
+            BODY=$(sed -E 's/^ {4}//' <<MSG
+              $MARK
+              **Backend changed, not yet redeployed.**
+
+              Cloud Run is serving \`$DEPLOYED_SHORT\` ($DEPLOYED_DATE). This merge leaves \`backend/\` on \`main\` ahead of it ($FILES):
+
+              $COMMITS
+
+              Deploy — either the **Deploy** workflow (Actions → Deploy → Run workflow), or by hand per README "Deploy" — then move the tag so this reminder stops:
+
+              \`\`\`bash
+              git tag -f backend-deployed $SHA && git push -f origin backend-deployed
+              \`\`\`
+          MSG
+            )
+          fi
+          for PR in $PRS; do
+            # One comment per PR, however many pushes land on main afterwards.
+            if gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate --jq '.[].body' | grep -qF "$MARK"; then
+              echo "PR #$PR already has the reminder."
+              continue
+            fi
+            gh pr comment "$PR" --body "$BODY"
+            echo "Commented on PR #$PR."
+          done
