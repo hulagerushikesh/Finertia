@@ -165,9 +165,37 @@ that waited on the branch — "served from cache" note and raw-vs-effective N in
 `ValidationPanel` — plus the rolling fold table and regime table are now
 plain feature branches off `main`.
 
+## 9. 19 Sep — The UI batch lands
+
+**Built.** Four frontend PRs merged to `main` in one go, all previewed
+against a real AAPL 2018 → 2024 payload before opening. PR #13: rolling fold
+table, regime tables, raw-vs-effective N, "served from cache" note — the two
+follow-ups that had waited on the redesign. PR #14: favicon set (Newsreader
+"F" on ink, pencil underline), web manifest, `og.png` share card — the fix
+for the blank icon in the phone's search results. PR #16: landing copy in
+plain words ("Backtest · then check it's real"; "The blue stretch is the only
+part that counts") after the user read the page as a customer and found it
+heavy. PR #17: a verdict card above the validation working — "Is this real?",
+`2 of 5 checks passed`, an overall stamp, one sentence on what the combination
+means, one plain word per check; the five sections fold behind "Show the
+working" and a chip click opens the section it names.
+
+**Proved.** CI green on each PR; 1280 + 375 px, light + dark, zero overflow;
+prod serves `/favicon.svg` as `image/svg+xml` and the `DashboardPage` chunk
+carries the verdict strings. Backend untouched — rev 00007 still serving.
+
+**Changed course.** PR #15 (verdict card) was stacked on #13's branch; GitHub
+closed it when that branch was deleted on merge and would not reopen it, so
+the same commit went in as PR #17 against `main`. Lesson: merge stacked PRs
+bottom-up *without* `--delete-branch`, or retarget the upper PR first. The
+"525: SSL handshake" the user saw in a mobile search was a stale history
+title from the Cloudflare-proxied era — DNS points at Vercel directly now, no
+fix needed. Still open from the merge: the logged-in smoke test on production,
+and whether to trim the results tab to four headline numbers.
+
 ## What is next
 
 See [NEXT-MILESTONE.md](NEXT-MILESTONE.md) for the ordered list and
-[BACKLOG.md](BACKLOG.md) for everything behind it. The short version on 17 Sep:
-surface the rolling and regime results in the UI, run the smoke test, publish
+[BACKLOG.md](BACKLOG.md) for everything behind it. The short version on 19 Sep:
+run the login smoke test on production, decide on the results-tab trim, publish
 the write-up once the Pitch Fest result is in.

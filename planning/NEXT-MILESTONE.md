@@ -72,12 +72,12 @@ bars the old UI cleared, or it is a regression wearing new clothes.
 - [x] Prewarm: 28/28 suggested tickers, 2015→today, ~300 docs. First real run of `FirestorePriceStore` — worked.
 - [x] Latency measured (Mac in India → nam5): yfinance direct ~1.0 s; cache read 0.8–2.3 s. **A wash, not a win** — Firestore is in `nam5`, Cloud Run in `asia-south1`, both cross-continent. The PR buys resilience and zero rate-limit exposure on cold starts, not speed. Prod number after the Cloud Run deploy.
 - [x] PR #7 merged; rev 00004 (then 00005). Prod cold-read latency still unmeasured — needs one logged-in run from `/dashboard` (the `/demo` page never calls the API).
-- [ ] "Served from cache" note in the UI — branch off `main` (redesign merged 17 Sep).
+- [x] "Served from cache" note in the UI — PR #13, merged 19 Sep.
 - Option, not taken: a second named Firestore DB in `asia-south1` for `prices` (not free-tier; ≈₹0 in practice) if the latency ever matters.
 
 **Exit:** with yfinance mocked to 429, a cached-ticker backtest still returns (test) — met. Latency recorded — met, unflattering.
 
-### Phase 3 — Effective N — BUILT, PR open
+### Phase 3 — Effective N — DONE
 
 Roadmap 5 of 5. `backend/trials.py`; wired into `walk_forward` as `deflated.effective_trials`.
 
@@ -90,7 +90,7 @@ Roadmap 5 of 5. `backend/trials.py`; wired into `walk_forward` as `deflated.effe
 - [x] Canonical AAPL 2018→2024-01-01: momentum 16→6 (3), MACD 4→2, Bollinger 12→7 (2). DSR +0.07…+0.12. No verdict changes.
 - [x] **Found while measuring:** the walk-forward verdict flips when the window extends one year (split Feb→Oct 2022). README now states the window and the flip; open-questions §3 promoted to the top research item.
 - [x] Merged; Cloud Run rev 00005 serving, health 200, no warnings (15 Sep).
-- [ ] `ValidationPanel.jsx`: raw vs effective side by side — branch off `main` with the cache note.
+- [x] `ValidationPanel.jsx`: raw vs effective side by side — PR #13, merged 19 Sep.
 
 ### Phase 4 — Decide what Finertia is for (end of milestone)
 
