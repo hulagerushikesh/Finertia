@@ -6,7 +6,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 
 - [ ] Narrow the `gh` token → in M9 phase 0
 - [ ] Project venv → in M9 phase 0
-- [ ] Bundle-size CI check: fail the frontend build if entry JS grows > 10% (would have caught the redesign regression automatically)
+- [x] Bundle-size CI check — `frontend/scripts/check-bundle.mjs` + `bundle-budget.json`, gzip entry + total, limits ~10% over the 19 Sep build; CI step "Bundle budget" (19 Sep)
 - [ ] Backend deploy reminder: a CI job on `main` that diffs `backend/` against the last deployed SHA and comments "backend changed, redeploy" on the merge (fixes the forgotten-redeploy failure mode without automating a cost)
 - [ ] Rotate the Cloud Run runtime SA to a dedicated one (currently the default compute SA)
 
