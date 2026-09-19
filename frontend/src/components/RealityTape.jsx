@@ -1,6 +1,6 @@
 import React from "react";
 import { m, useReducedMotion } from "motion/react";
-import Stamp from "./Stamp";
+import { Badge } from "@/components/ui/badge";
 import { EASE_OUT } from "./motion";
 
 /**
@@ -80,7 +80,7 @@ export default function RealityTape() {
         </span>
       </figcaption>
 
-      <div className="px-5 py-5 flex flex-col gap-3.5 graph-paper">
+      <div className="px-5 py-5 flex flex-col gap-3.5">
         {YEARS.map((row, i) => {
           const beat = row.strategy > row.benchmark;
           return (
@@ -122,9 +122,9 @@ export default function RealityTape() {
           <span className="font-mono text-foreground"> +408%</span> for holding the stock.
           That is the engine's real output, not an illustration.
         </p>
-        <Stamp tone="loss" delay={0.75} className="shrink-0">
+        <Badge variant="loss" className="shrink-0">
           Lost to holding
-        </Stamp>
+        </Badge>
       </div>
     </figure>
   );

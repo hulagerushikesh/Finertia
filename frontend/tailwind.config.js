@@ -94,20 +94,6 @@ export default {
         "display-lg": ["3.5rem", { lineHeight: "1.02", letterSpacing: "-0.03em" }],
         "display-xl": ["4.25rem", { lineHeight: "1", letterSpacing: "-0.03em" }],
       },
-      boxShadow: {
-        // A sheet of paper lifted a millimetre off the desk. One soft shadow,
-        // no inset highlight — highlights are a dark-UI device.
-        sheet: "0 1px 2px hsl(var(--shadow) / 0.06), 0 0 0 1px hsl(var(--border))",
-        lifted:
-          "0 1px 2px hsl(var(--shadow) / 0.06), 0 12px 32px -12px hsl(var(--shadow) / 0.22), 0 0 0 1px hsl(var(--border))",
-        pop: "0 16px 40px -12px hsl(var(--shadow) / 0.35), 0 0 0 1px hsl(var(--border-strong))",
-      },
-      backgroundImage: {
-        // Graph paper. Sits behind charts so the grid is part of the sheet,
-        // not a chart-library default.
-        graph:
-          "linear-gradient(hsl(var(--border) / 0.7) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border) / 0.7) 1px, transparent 1px)",
-      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

@@ -31,7 +31,7 @@ export default class ErrorBoundary extends React.Component {
       <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center px-4">
         <div className="w-full max-w-md">
           <p className="eyebrow mb-3">Render error</p>
-          <h1 className="font-display text-display-sm font-medium text-foreground text-balance">
+          <h1 className="font-display text-display-sm font-semibold text-foreground text-balance">
             Something broke on this page.
           </h1>
           <p className="text-sm text-graphite mt-3 leading-relaxed">

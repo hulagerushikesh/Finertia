@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase";
 import AuthShell, { AuthField } from "../components/AuthShell";
-import Stamp from "../components/Stamp";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
         title="Check your inbox."
         subtitle={`If an account exists for ${email.trim()}, a reset link is on its way. It expires in one hour.`}
       >
-        <Stamp tone="gain" className="mb-6">Sent</Stamp>
+        <Badge variant="gain" className="mb-6">Sent</Badge>
         <div className="flex flex-col gap-3">
           <Button asChild className="w-full">
             <Link to="/login">Back to sign in</Link>
