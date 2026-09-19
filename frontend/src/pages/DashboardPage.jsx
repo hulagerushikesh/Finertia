@@ -14,14 +14,13 @@ import RegimeTable from "../components/RegimeTable";
 import AnnualReturnsChart from "../components/AnnualReturnsChart";
 import PortfolioLegs from "../components/PortfolioLegs";
 import Spinner from "../components/Spinner";
-import Stamp from "../components/Stamp";
+import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
 import { runBacktest, validateStrategy, runPortfolio } from "../api";
 import { exportEquityCurve, exportTrades, exportMetrics } from "../utils/csv";
 import { encodeParams, decodeParams, permalinkFor } from "../utils/permalink";
 import { useToast } from "../hooks/useToast";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -164,10 +163,10 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, transition: { duration: 0.1 } }}
                 transition={{ duration: 0.22, ease: EASE_OUT }}
-                className="sheet border-2 border-dashed border-border shadow-none p-8 sm:p-10 flex flex-col items-start gap-4 graph-paper"
+                className="sheet border-2 border-dashed border-border shadow-none p-8 sm:p-10 flex flex-col items-start gap-4"
               >
                 <p className="eyebrow">Nothing run yet</p>
-                <h2 className="font-display text-display-sm font-medium text-foreground max-w-md text-balance">
+                <h2 className="font-display text-display-sm font-semibold text-foreground max-w-md text-balance">
                   {isPortfolio
                     ? `Run the ${params.tickers.length}-name portfolio and see what comes back.`
                     : `Run ${params.ticker || "a ticker"} and see what comes back.`}
@@ -224,16 +223,16 @@ export default function DashboardPage() {
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                   <div className="min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <h2 className="font-display text-display-sm font-medium text-foreground tracking-tight">
+                      <h2 className="font-display text-display-sm font-semibold text-foreground tracking-tight">
                         {isPortfolio ? result.tickers.join(" · ") : params.ticker}
                       </h2>
-                      <Badge variant="outline" className="font-mono text-2xs uppercase tracking-wider text-graphite">
+                     <Badge variant="outline" className="font-mono text-2xs uppercase tracking-wider text-graphite">
                         {strategyLabel}
                       </Badge>
                       {stamp && (
-                        <Stamp size="sm" tone={stamp[1]} delay={0}>
+                        <Badge size="sm" variant={stamp[1]}>
                           {stamp[0]}
-                        </Stamp>
+                        </Badge>
                       )}
                     </div>
                     <p className="text-xs font-mono text-graphite mt-1.5">
@@ -371,7 +370,7 @@ export default function DashboardPage() {
 
                 {tab === "validation" &&
                   (validating ? (
-                    <div className="flex flex-col items-center justify-center h-72 sheet graph-paper" aria-busy="true">
+                    <div className="flex flex-col items-center justify-center h-72 sheet" aria-busy="true">
                       <Spinner size={8} className="text-pencil mb-4" />
                       <p className="text-sm text-graphite">Sweeping parameters and shuffling signals…</p>
                       <p className="text-xs text-faint mt-1">
@@ -381,8 +380,8 @@ export default function DashboardPage() {
                   ) : validation ? (
                     <ValidationPanel data={validation} />
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-72 border-2 border-dashed border-border rounded-lg text-graphite px-6 text-center graph-paper">
-                      <p className="font-display text-xl font-medium text-foreground">Check for overfitting</p>
+                    <div className="flex flex-col items-center justify-center h-72 border-2 border-dashed border-border rounded-lg text-graphite px-6 text-center">
+                      <p className="font-display text-xl font-semibold text-foreground">Check for overfitting</p>
                       <p className="text-sm mt-1 max-w-sm leading-relaxed">
                         Tests whether these parameters survive on data they were not tuned on, and
                         whether the signal timing beats random entries.

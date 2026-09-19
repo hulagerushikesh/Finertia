@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Stamp from "./Stamp";
+import { Badge } from "@/components/ui/badge";
 import VerdictCard from "./VerdictCard";
 import RollingWalkForward from "./RollingWalkForward";
 import { Stagger, StaggerItem } from "./motion";
@@ -124,10 +124,10 @@ function Head({ title, blurb, stamp, tone }) {
   return (
     <div className="flex items-start justify-between gap-4 flex-wrap">
       <div className="max-w-lg">
-        <h2 className="font-display text-xl font-medium text-foreground">{title}</h2>
+        <h2 className="font-display text-xl font-semibold text-foreground">{title}</h2>
         <p className="text-xs text-graphite mt-1 leading-relaxed">{blurb}</p>
       </div>
-      <Stamp tone={tone} className="shrink-0">{stamp}</Stamp>
+      <Badge variant={tone} className="shrink-0">{stamp}</Badge>
     </div>
   );
 }
@@ -137,7 +137,7 @@ function Figure({ label, value, sub, tone = "text-foreground", mark = false }) {
   return (
     <div className="bg-muted/50 rounded-md p-4">
       <p className="eyebrow mb-1.5">{label}</p>
-      <p className={cn("font-display text-2xl font-medium", tone, mark && "pencil-mark")}>{value}</p>
+      <p className={cn("font-display text-2xl font-semibold", tone, mark && "pencil-mark")}>{value}</p>
       {sub && <p className="text-2xs text-faint mt-1">{sub}</p>}
     </div>
   );
@@ -219,7 +219,7 @@ function EffectiveN({ et }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="bg-muted/50 rounded-md p-4">
           <p className="text-2xs text-graphite mb-1">Counted as</p>
-          <p className="font-display text-2xl font-medium text-foreground">
+          <p className="font-display text-2xl font-semibold text-foreground">
             {et.n_trials_raw} <span className="text-sm text-graphite font-sans">trials</span>
           </p>
           <p className="text-2xs text-faint mt-1">
@@ -228,7 +228,7 @@ function EffectiveN({ et }) {
         </div>
         <div className="bg-pencil/5 ring-1 ring-pencil/30 rounded-md p-4">
           <p className="text-2xs text-pencil mb-1">Measured as</p>
-          <p className="font-display text-2xl font-medium text-foreground pencil-mark">
+          <p className="font-display text-2xl font-semibold text-foreground pencil-mark">
             {et.n_trials_effective} <span className="text-sm text-graphite font-sans">distinct</span>
           </p>
           <p className="text-2xs text-faint mt-1">
@@ -330,7 +330,7 @@ export default function ValidationPanel({ data }) {
       <StaggerItem as="section" id="validation-walk-forward" className="sheet p-6 scroll-mt-20">
         <Head
           title="Walk-forward validation"
-          blurb="Parameters were optimised on the earlier part of the period, then scored on the later part. Only the pencil-marked figures are evidence."
+          blurb="Parameters were optimised on the earlier part of the period, then scored on the later part. Only the green figures are evidence."
           stamp={verdict.label}
           tone={verdict.tone}
         />

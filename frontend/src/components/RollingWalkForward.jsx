@@ -1,5 +1,5 @@
 import React from "react";
-import Stamp from "./Stamp";
+import { Badge } from "@/components/ui/badge";
 import RegimeTable from "./RegimeTable";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -70,7 +70,7 @@ export default function RollingWalkForward({ rolling }) {
   if (!rolling.computable && rolling.computable !== undefined) {
     return (
       <section className="sheet p-6">
-        <h2 className="font-display text-xl font-medium text-foreground">Walking the split forward</h2>
+        <h2 className="font-display text-xl font-semibold text-foreground">Walking the split forward</h2>
         <p className="text-xs text-graphite mt-2 leading-relaxed">{rolling.reason}</p>
       </section>
     );
@@ -86,16 +86,16 @@ export default function RollingWalkForward({ rolling }) {
     <section className="sheet p-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="max-w-lg">
-          <h2 className="font-display text-xl font-medium text-foreground">Walking the split forward</h2>
+          <h2 className="font-display text-xl font-semibold text-foreground">Walking the split forward</h2>
           <p className="text-xs text-graphite mt-1 leading-relaxed">
             The split above is one date. Here it starts at{" "}
             <span className="font-mono text-foreground">{rolling.first_split_date}</span> and moves forward
             in {rolling.n_folds} equal steps. At each step the grid is re-optimised on everything before
             the line and the winner is scored only on the stretch after it, with the market's own return
-            beside it. Only the pencil-marked column is evidence.
+            beside it. Only the green column is evidence.
           </p>
         </div>
-        <Stamp tone={v.tone} className="shrink-0">{v.label}</Stamp>
+        <Badge variant={v.tone} className="shrink-0">{v.label}</Badge>
       </div>
 
       <p className="margin-note mt-4 mb-5">{v.blurb}</p>

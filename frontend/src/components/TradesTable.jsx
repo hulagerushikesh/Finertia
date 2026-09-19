@@ -42,7 +42,7 @@ export default function TradesTable({ trades }) {
   return (
     <section className="sheet overflow-hidden">
       <div className="flex items-center justify-between px-5 pt-4 pb-3">
-        <h2 className="font-display text-lg font-medium text-foreground">Trade log</h2>
+        <h2 className="font-display text-lg font-semibold text-foreground">Trade log</h2>
         <span className="text-2xs font-mono text-graphite">{trades.length} entries</span>
       </div>
 

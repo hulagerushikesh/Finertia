@@ -37,17 +37,17 @@ export default function PortfolioLegs({ result }) {
       <div className="grid sm:grid-cols-3 gap-3">
         <div className="sheet p-4">
           <p className="eyebrow mb-1">Holdings</p>
-          <p className="font-display text-3xl font-medium text-foreground">{legs.length}</p>
+          <p className="font-display text-3xl font-semibold text-foreground">{legs.length}</p>
         </div>
         <div className="sheet p-4">
           <p className="eyebrow mb-1">Weighting</p>
-          <p className="font-display text-xl font-medium text-foreground mt-1.5">
+          <p className="font-display text-xl font-semibold text-foreground mt-1.5">
             {weighting === "inverse_vol" ? "Inverse volatility" : "Equal weight"}
           </p>
         </div>
         <div className="sheet p-4">
           <p className="eyebrow mb-1">Diversification</p>
-          <p className="font-display text-3xl font-medium text-foreground">
+          <p className="font-display text-3xl font-semibold text-foreground">
             {dr === null || dr === undefined ? "—" : dr.toFixed(2)}
           </p>
           <p className="text-xs text-faint mt-1 leading-relaxed">

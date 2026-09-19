@@ -18,7 +18,7 @@ export default function RollingSharpeChart({ data, window = 60 }) {
   if (!data || data.length === 0) {
     return (
       <section className="sheet px-5 py-4">
-        <h2 className="font-display text-lg font-medium text-foreground">Rolling Sharpe</h2>
+        <h2 className="font-display text-lg font-semibold text-foreground">Rolling Sharpe</h2>
         <p className="text-xs text-graphite mt-1">
           Needs at least {window} trading days. Try a longer date range.
         </p>
