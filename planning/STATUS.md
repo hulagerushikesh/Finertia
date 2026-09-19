@@ -1,12 +1,12 @@
 # Status
 
-_Current to `e10309b` (main) · 17 Sep 2026._
+_Current to `cdd060f` (main) · 19 Sep 2026._
 
 ## At a glance
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00007` (16 Sep: rolling walk-forward + volatility regimes); frontend = the shadcn redesign since 17 Sep (PR #6) |
+| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00007` (16 Sep: rolling walk-forward + volatility regimes); frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 603 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + secret scan) |
@@ -55,9 +55,13 @@ areas, one `<main>`, reduced-motion honoured; entry bundle 521 kB raw / 162 gz.
 1024 px, History, Profile displayName save, Register — every
 `firebase/firestore/lite` call. That smoke test is now against production.
 
-Follow-ups, now plain branches off `main`: "served from cache" note
+Follow-ups all landed 19 Sep: "served from cache" note
 (`data_source === "cache-stale"`), raw-vs-effective N in `ValidationPanel`,
-rolling fold table, regime table.
+rolling fold table and regime table (PR #13); favicon set, web manifest and
+`og.png` share card (PR #14); plain-language landing copy (PR #16); and a
+verdict card — "Is this real?", `N of 5 checks passed`, one plain word per
+check, the five sections folded behind "Show the working" (PR #17, replacing
+#15 after its stacked base was deleted). All frontend; rev 00007 unchanged.
 
 ## Timeline (condensed)
 
@@ -76,6 +80,7 @@ rolling fold table, regime table.
 | 15 Sep | **Phase 4 decided: portfolio piece**; write-up drafted from re-run figures on both windows | — |
 | 16 Sep | Volatility regimes (`regimes.py`): per-bar realised-vol terciles, Sharpe per regime on every backtest + the stitched OOS record; PR #11, rev 00007 | 14 + 2 tests, 603 total; 2 mutation checks; momentum OOS 2.26 calm / −0.76 turbulent |
 | 17 Sep | **Redesign merged** (PR #6, `e10309b`) on explicit go-ahead; `planning/PROGRESS.md` added | preview evidence; logged-in paths unverified |
+| 19 Sep | UI batch on `main`: rolling fold + regime tables, effective N, cache note (PR #13); favicon/manifest/OG (PR #14); plain landing copy (PR #16); verdict card over the validation tab (PR #17) | verified on a real AAPL 2018→2024 payload (2 of 5 checks passed) at 1280 + 375 px, both themes; prod serves the icons and the new copy |
 | 16 Sep | Rolling walk-forward (`rolling.py`): 4 anchored folds, market context per fold, stitched OOS + CI, parameter stability; wired as `rolling_walk_forward` in `/api/validate`; PR #10, rev 00006 | 18 + 3 tests, 588 total; 3 mutation checks; all three AAPL strategies read `regime_dependent` |
 
 ## Known risks
