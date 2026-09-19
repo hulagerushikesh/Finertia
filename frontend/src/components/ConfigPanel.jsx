@@ -315,14 +315,13 @@ function Segmented({ value, onChange, options, columns }) {
 /**
  * Collapsible group.
  *
- * The panel used to be fifteen fields in one flat column, which made the risk
- * overlays — off by default and irrelevant to a first run — look exactly as
- * required as the ticker. Grouping them and closing them by default puts the
- * decisions in the order they are actually made.
+ * A first run is a strategy, a ticker and two dates. Everything else — the
+ * strategy's own parameters, costs, portfolio mode, risk overlays — lives in
+ * one closed fold, so the panel a new reader sees has three decisions in it.
  *
- * `badge` is what makes closing them safe: a collapsed section still says how
- * many of its settings are no longer at their default, so nothing can be
- * silently affecting a result from inside a box you cannot see.
+ * `badge` is what makes closing it safe: the fold still says how many of its
+ * settings are no longer at their default, so nothing can be silently
+ * affecting a result from inside a box you cannot see.
  */
 function Section({ title, badge, defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -364,6 +363,16 @@ function Section({ title, badge, defaultOpen = false, children }) {
         )}
       </AnimatePresence>
     </Collapsible>
+  );
+}
+
+/** A labelled group inside the fold. */
+function Group({ title, children }) {
+  return (
+    <div className="flex flex-col gap-4 border-t border-border pt-4 first:border-t-0 first:pt-0">
+      <span className="eyebrow">{title}</span>
+      {children}
+    </div>
   );
 }
 
@@ -482,13 +491,14 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
 
   // What a collapsed section reports about itself. Counted against DEFAULTS so
   // the badge means "you changed this", not "this field exists".
-  const riskBadge =
+  const advancedBadge =
     (params.stop_loss != null ? 1 : 0) +
     (params.take_profit != null ? 1 : 0) +
-    (params.sizing !== DEFAULTS.sizing ? 1 : 0);
-  const tuningBadge =
+    (params.sizing !== DEFAULTS.sizing ? 1 : 0) +
     FIELDS[strategy].filter((f) => params[f.key] !== DEFAULTS[f.key]).length +
-    (params.transaction_cost !== DEFAULTS.transaction_cost ? 1 : 0);
+    (params.transaction_cost !== DEFAULTS.transaction_cost ? 1 : 0) +
+    (mode !== "single" ? 1 : 0) +
+    (mode === "portfolio" && params.weighting !== DEFAULTS.weighting ? 1 : 0);
 
   function handleChange(key, value) {
     setParams((p) => ({ ...p, [key]: value }));
@@ -535,19 +545,6 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
           <p className="text-xs text-faint leading-relaxed">{active.blurb}</p>
         </div>
 
-        {/* Single ticker vs portfolio */}
-        <div className="flex flex-col gap-2">
-          <span className="eyebrow">Universe</span>
-          <Segmented
-            value={mode}
-            onChange={(v) => handleChange("mode", v)}
-            options={[
-              { id: "single", label: "One ticker" },
-              { id: "portfolio", label: "Portfolio" },
-            ]}
-          />
-        </div>
-
         {mode === "single" ? (
           <Field label="Ticker" tip="Any symbol yfinance accepts — the suggestion list is only a shortcut, not a limit.">
             <TickerInput
@@ -586,181 +583,198 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
           </Field>
         </div>
 
-        {/* Strategy parameters. Open by default — these are what a run is. */}
-        <Section title="Tuning" badge={tuningBadge} defaultOpen>
-          {/* Two-up: these hold two or three characters, and a full-width box
-              for "20" wastes a row each. Matches the Start/End pair above. */}
-          <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-            {FIELDS[strategy].map((f) => (
-              <Field key={f.key} label={f.label} tip={f.tip} range={f.range}>
-                <Input
-                  type="number"
-                  className={inputClass}
-                  value={params[f.key]}
-                  min={f.min}
-                  max={f.max}
-                  step={f.step}
-                  onChange={(e) => handleChange(f.key, Number(e.target.value))}
-                />
-              </Field>
-            ))}
-          </div>
-
-          {macdInverted && (
-            <FieldError>Fast EMA must be shorter than the slow EMA.</FieldError>
-          )}
-
-          <Field
-            label="Transaction cost"
-            tip="Charged on turnover each time the position changes. A fraction, not a percent: 0.001 is 0.1% per trade. Set it to zero and a strategy that trades every day will look far better than it is."
-          >
-            <Input
-              type="number"
-              className={inputClass}
-              value={params.transaction_cost}
-              step={0.0005}
-              min={0}
-              onChange={(e) => handleChange("transaction_cost", Number(e.target.value))}
-            />
-          </Field>
-        </Section>
-
-        {mode === "portfolio" && (
-          <Section title="Weighting" defaultOpen>
-            <Segmented
-              value={params.weighting}
-              onChange={(v) => handleChange("weighting", v)}
-              options={[
-                { id: "equal", label: "Equal" },
-                { id: "inverse_vol", label: "Inverse vol" },
-              ]}
-            />
-            <p className="text-xs text-faint leading-relaxed">
-              {params.weighting === "inverse_vol"
-                ? "Quieter names get more of the book, so no single volatile holding dominates the portfolio's risk."
-                : "1/N in each name, rebalanced every bar back to target."}
-            </p>
-
-            {params.weighting === "inverse_vol" && (
-              <>
-                <Field label="Weight window" hint="Trailing bars used to measure volatility">
+        <Section title="Advanced" badge={advancedBadge}>
+          <Group title="Tuning">
+            {/* Two-up: these hold two or three characters, and a full-width box
+                for "20" wastes a row each. Matches the Start/End pair above. */}
+            <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+              {FIELDS[strategy].map((f) => (
+                <Field key={f.key} label={f.label} tip={f.tip} range={f.range}>
                   <Input
                     type="number"
                     className={inputClass}
-                    value={params.weight_window}
+                    value={params[f.key]}
+                    min={f.min}
+                    max={f.max}
+                    step={f.step}
+                    onChange={(e) => handleChange(f.key, Number(e.target.value))}
+                  />
+                </Field>
+              ))}
+            </div>
+
+            {macdInverted && (
+              <FieldError>Fast EMA must be shorter than the slow EMA.</FieldError>
+            )}
+
+            <Field
+              label="Transaction cost"
+              tip="Charged on turnover each time the position changes. A fraction, not a percent: 0.001 is 0.1% per trade. Set it to zero and a strategy that trades every day will look far better than it is."
+            >
+              <Input
+                type="number"
+                className={inputClass}
+                value={params.transaction_cost}
+                step={0.0005}
+                min={0}
+                onChange={(e) => handleChange("transaction_cost", Number(e.target.value))}
+              />
+            </Field>
+          </Group>
+
+          <Group title="Universe">
+            <Segmented
+              value={mode}
+              onChange={(v) => handleChange("mode", v)}
+              options={[
+                { id: "single", label: "One ticker" },
+                { id: "portfolio", label: "Portfolio" },
+              ]}
+            />
+            <p className="text-xs text-faint leading-relaxed">
+              {mode === "portfolio"
+                ? "The same strategy runs on each holding, then the legs are combined. Pick the holdings at the top."
+                : "One symbol. Switch to a portfolio to run the strategy across several and combine them."}
+            </p>
+          </Group>
+
+          {mode === "portfolio" && (
+            <Group title="Weighting">
+              <Segmented
+                value={params.weighting}
+                onChange={(v) => handleChange("weighting", v)}
+                options={[
+                  { id: "equal", label: "Equal" },
+                  { id: "inverse_vol", label: "Inverse vol" },
+                ]}
+              />
+              <p className="text-xs text-faint leading-relaxed">
+                {params.weighting === "inverse_vol"
+                  ? "Quieter names get more of the book, so no single volatile holding dominates the portfolio's risk."
+                  : "1/N in each name, rebalanced every bar back to target."}
+              </p>
+
+              {params.weighting === "inverse_vol" && (
+                <>
+                  <Field label="Weight window" hint="Trailing bars used to measure volatility">
+                    <Input
+                      type="number"
+                      className={inputClass}
+                      value={params.weight_window}
+                      min={2}
+                      max={250}
+                      step={1}
+                      onChange={(e) => handleChange("weight_window", Number(e.target.value))}
+                    />
+                  </Field>
+                  <Field
+                    label="Max weight"
+                    hint={`Cap per holding — at least ${minWeightCap} for ${params.tickers.length} names`}
+                  >
+                    <Input
+                      type="number"
+                      className={inputClass}
+                      value={params.max_weight}
+                      min={0.05}
+                      max={1}
+                      step={0.05}
+                      onChange={(e) => handleChange("max_weight", Number(e.target.value))}
+                    />
+                  </Field>
+                  {capTooSmall && (
+                    <FieldError>
+                      A cap of {params.max_weight} cannot fill a book of {params.tickers.length}{" "}
+                      holdings — it must be at least {minWeightCap}.
+                    </FieldError>
+                  )}
+                </>
+              )}
+            </Group>
+          )}
+
+          {/* Risk overlays — independent of the strategy above, and off by
+              default. */}
+          <Group title="Risk & sizing">
+            <p className="text-xs text-faint leading-relaxed -mt-1">
+              Applied on top of whichever strategy is selected. Leave these off to
+              see the strategy on its own.
+            </p>
+
+            <LimitField
+              label="Stop loss"
+              hint="Flatten once the trade is down this much from entry"
+              value={params.stop_loss}
+              onChange={(v) => handleChange("stop_loss", v)}
+              defaultPct={5}
+            />
+
+            <LimitField
+              label="Take profit"
+              hint="Flatten once the trade is up this much from entry"
+              value={params.take_profit}
+              onChange={(v) => handleChange("take_profit", v)}
+              defaultPct={15}
+            />
+
+            {targetTooTight && (
+              <FieldError>Take profit must be further from entry than the stop loss.</FieldError>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <span className="eyebrow">Position sizing</span>
+              <Segmented
+                value={params.sizing}
+                onChange={(v) => handleChange("sizing", v)}
+                options={[
+                  { id: "fixed", label: "Fixed" },
+                  { id: "vol_target", label: "Vol target" },
+                ]}
+              />
+              <p className="text-xs text-faint leading-relaxed">
+                {params.sizing === "vol_target"
+                  ? "Scales exposure so realised volatility sits near the target — smaller in turbulent markets, larger in calm ones."
+                  : "Full exposure whenever a signal is on."}
+              </p>
+            </div>
+
+            {params.sizing === "vol_target" && (
+              <>
+                <Field label="Target volatility" hint="Annualised, e.g. 0.15 = 15%">
+                  <Input
+                    type="number"
+                    className={inputClass}
+                    value={params.target_vol}
+                    min={0.01}
+                    max={2}
+                    step={0.01}
+                    onChange={(e) => handleChange("target_vol", Number(e.target.value))}
+                  />
+                </Field>
+                <Field label="Vol window" hint="Trailing bars used to measure it (2–250)">
+                  <Input
+                    type="number"
+                    className={inputClass}
+                    value={params.vol_window}
                     min={2}
                     max={250}
                     step={1}
-                    onChange={(e) => handleChange("weight_window", Number(e.target.value))}
+                    onChange={(e) => handleChange("vol_window", Number(e.target.value))}
                   />
                 </Field>
-                <Field
-                  label="Max weight"
-                  hint={`Cap per holding — at least ${minWeightCap} for ${params.tickers.length} names`}
-                >
+                <Field label="Max leverage" hint="Cap on the size multiplier">
                   <Input
                     type="number"
                     className={inputClass}
-                    value={params.max_weight}
-                    min={0.05}
-                    max={1}
-                    step={0.05}
-                    onChange={(e) => handleChange("max_weight", Number(e.target.value))}
+                    value={params.max_leverage}
+                    min={0.1}
+                    max={5}
+                    step={0.1}
+                    onChange={(e) => handleChange("max_leverage", Number(e.target.value))}
                   />
                 </Field>
-                {capTooSmall && (
-                  <FieldError>
-                    A cap of {params.max_weight} cannot fill a book of {params.tickers.length}{" "}
-                    holdings — it must be at least {minWeightCap}.
-                  </FieldError>
-                )}
               </>
             )}
-          </Section>
-        )}
-
-        {/* Risk overlays — independent of the strategy above, and off by
-            default, so this stays closed until someone wants it. */}
-        <Section title="Risk & sizing" badge={riskBadge}>
-          <p className="text-xs text-faint leading-relaxed -mt-1">
-            Applied on top of whichever strategy is selected. Leave these off to
-            see the strategy on its own.
-          </p>
-
-          <LimitField
-            label="Stop loss"
-            hint="Flatten once the trade is down this much from entry"
-            value={params.stop_loss}
-            onChange={(v) => handleChange("stop_loss", v)}
-            defaultPct={5}
-          />
-
-          <LimitField
-            label="Take profit"
-            hint="Flatten once the trade is up this much from entry"
-            value={params.take_profit}
-            onChange={(v) => handleChange("take_profit", v)}
-            defaultPct={15}
-          />
-
-          {targetTooTight && (
-            <FieldError>Take profit must be further from entry than the stop loss.</FieldError>
-          )}
-
-          <div className="flex flex-col gap-2">
-            <span className="eyebrow">Position sizing</span>
-            <Segmented
-              value={params.sizing}
-              onChange={(v) => handleChange("sizing", v)}
-              options={[
-                { id: "fixed", label: "Fixed" },
-                { id: "vol_target", label: "Vol target" },
-              ]}
-            />
-            <p className="text-xs text-faint leading-relaxed">
-              {params.sizing === "vol_target"
-                ? "Scales exposure so realised volatility sits near the target — smaller in turbulent markets, larger in calm ones."
-                : "Full exposure whenever a signal is on."}
-            </p>
-          </div>
-
-          {params.sizing === "vol_target" && (
-            <>
-              <Field label="Target volatility" hint="Annualised, e.g. 0.15 = 15%">
-                <Input
-                  type="number"
-                  className={inputClass}
-                  value={params.target_vol}
-                  min={0.01}
-                  max={2}
-                  step={0.01}
-                  onChange={(e) => handleChange("target_vol", Number(e.target.value))}
-                />
-              </Field>
-              <Field label="Vol window" hint="Trailing bars used to measure it (2–250)">
-                <Input
-                  type="number"
-                  className={inputClass}
-                  value={params.vol_window}
-                  min={2}
-                  max={250}
-                  step={1}
-                  onChange={(e) => handleChange("vol_window", Number(e.target.value))}
-                />
-              </Field>
-              <Field label="Max leverage" hint="Cap on the size multiplier">
-                <Input
-                  type="number"
-                  className={inputClass}
-                  value={params.max_leverage}
-                  min={0.1}
-                  max={5}
-                  step={0.1}
-                  onChange={(e) => handleChange("max_leverage", Number(e.target.value))}
-                />
-              </Field>
-            </>
-          )}
+          </Group>
         </Section>
       </div>
 

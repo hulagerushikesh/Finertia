@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import VerdictCard from "./VerdictCard";
 import RollingWalkForward from "./RollingWalkForward";
 import { Stagger, StaggerItem } from "./motion";
+import MoreToggle from "./MoreToggle";
+import useDisclosure from "../hooks/useDisclosure";
 import { cn } from "@/lib/utils";
 
 const WF_VERDICT = {
@@ -277,22 +279,7 @@ export default function ValidationPanel({ data }) {
   // The working is long — five sheets of figures — and most readers want
   // the answer first. Collapsed by default; the choice is remembered so a
   // researcher who always opens it never has to again.
-  const [showWorking, setShowWorking] = useState(() => {
-    try {
-      return localStorage.getItem("finertia-validation-working") === "open";
-    } catch {
-      return false;
-    }
-  });
-  const setWorking = (next) => {
-    setShowWorking(next);
-    try {
-      localStorage.setItem("finertia-validation-working", next ? "open" : "closed");
-    } catch {
-      /* private mode — the toggle still works for this page */
-    }
-  };
-  const toggleWorking = () => setWorking(!showWorking);
+  const [showWorking, setWorking, toggleWorking] = useDisclosure("finertia-validation-working");
   // A chip on the verdict card opens the working, then scrolls to its section
   // on the next frame, once the section has mounted.
   const jumpTo = (id) => {
@@ -310,18 +297,15 @@ export default function ValidationPanel({ data }) {
         <VerdictCard data={data} onJump={jumpTo} />
       </StaggerItem>
 
-      <StaggerItem className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <button
-          type="button"
-          onClick={toggleWorking}
-          aria-expanded={showWorking}
-          aria-controls="validation-working"
-          className="tap-safe inline-flex items-center gap-2 text-xs font-medium text-pencil hover:underline underline-offset-4 whitespace-nowrap"
-        >
-          <span aria-hidden="true" className="font-mono">{showWorking ? "−" : "+"}</span>
-          {showWorking ? "Hide the working" : "Show the working"}
-        </button>
-        <span className="text-2xs text-faint">every figure behind the verdict, with its interval</span>
+      <StaggerItem>
+        <MoreToggle
+          open={showWorking}
+          onToggle={toggleWorking}
+          controls="validation-working"
+          show="Show the working"
+          hide="Hide the working"
+          hint="every figure behind the verdict, with its interval"
+        />
       </StaggerItem>
 
       {showWorking && (
