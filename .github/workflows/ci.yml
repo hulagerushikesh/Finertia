@@ -56,6 +56,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Bundle budget
+        # Fails when the gzipped entry or total JS grows past
+        # frontend/bundle-budget.json (~10% over the 19 Sep build). Raise the
+        # limit in the same PR when the growth is intended.
+        run: npm run check:bundle
+
   secrets:
     name: Secret scan
     runs-on: ubuntu-latest
