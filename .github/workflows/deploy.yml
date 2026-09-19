@@ -1,23 +1,21 @@
 name: Deploy
 
+# Backend only. The frontend is deployed by Vercel on every push to main
+# (frontend/vercel.json carries the SPA fallback and the /api/* rewrite), so
+# there is nothing for this workflow to build or upload.
+#
 # Manual by default. Automatic deploys on every push to main are a good way to
-# ship a broken backtest engine to production at 2am; `workflow_dispatch` means
-# a deploy is always a decision. Uncomment the push trigger once you trust it.
+# ship a broken backtest engine to production at 2am — and, on Cloud Run, a
+# good way to change a billing cap by accident. `workflow_dispatch` means a
+# deploy is always a decision. Uncomment the push trigger once you trust it.
 on:
   workflow_dispatch:
-    inputs:
-      target:
-        description: What to deploy
-        required: true
-        default: both
-        type: choice
-        options: [both, frontend, backend]
   # push:
   #   branches: [main]
+  #   paths: [backend/**]
 
 concurrency:
-  # Two overlapping deploys can leave the frontend pointing at a backend
-  # revision that no longer exists.
+  # Two overlapping deploys race for the same revision name.
   group: deploy-production
   cancel-in-progress: false
 
@@ -43,7 +41,6 @@ jobs:
   backend:
     name: Backend → Cloud Run
     needs: test
-    if: inputs.target == 'both' || inputs.target == 'backend'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -61,20 +58,27 @@ jobs:
 
       - uses: google-github-actions/setup-gcloud@v2
 
+      # Same command as README "Deploy", flag for flag. The caps are the cost
+      # ceiling (idle = ₹0); change them here and in the README together, never
+      # in one place. ALLOWED_ORIGINS and LOG_LEVEL are set on the service and
+      # persist across deploys, so they are deliberately not passed here — an
+      # unset repo variable would otherwise blank them.
       - name: Deploy
         working-directory: backend
         run: |
           gcloud run deploy finertia-api \
             --source . \
-            --region "${{ vars.GCP_REGION || 'us-central1' }}" \
+            --region asia-south1 \
+            --project momentbacktracking \
+            --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 \
+            --set-secrets "FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest" \
             --allow-unauthenticated \
-            --set-secrets "FIREBASE_SERVICE_ACCOUNT_JSON=firebase-sa:latest" \
-            --set-env-vars "ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}"
+            --quiet
 
       - name: Verify the new revision is actually serving
         run: |
           URL=$(gcloud run services describe finertia-api \
-            --region "${{ vars.GCP_REGION || 'us-central1' }}" \
+            --region asia-south1 --project momentbacktracking \
             --format 'value(status.url)')
           echo "Deployed to $URL"
           # A deploy that "succeeded" but serves 500s is not a successful deploy.
@@ -84,51 +88,3 @@ jobs:
           done
           echo "::error::New revision never returned a healthy /api/health"
           exit 1
-
-  frontend:
-    name: Frontend → Firebase Hosting
-    needs: test
-    if: inputs.target == 'both' || inputs.target == 'frontend'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - run: npm ci
-        working-directory: frontend
-
-      - name: Build
-        working-directory: frontend
-        # VITE_* values are compiled into the bundle and are public by design —
-        # Firebase web config is not a secret. They live in repo *variables*
-        # rather than secrets to make that explicit.
-        env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
-          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
-        run: npm run build
-
-      - name: Fail if the API base URL was not set
-        working-directory: frontend
-        # Vite resolves a missing VITE_* to undefined without complaining, which
-        # would ship a build that silently calls localhost from production.
-        run: |
-          if grep -rq "localhost:8000" dist/assets/*.js; then
-            echo "::error::Built bundle still points at localhost — set the VITE_API_BASE_URL variable."
-            exit 1
-          fi
-
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
