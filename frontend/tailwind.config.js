@@ -2,22 +2,20 @@
 import animate from "tailwindcss-animate";
 
 /**
- * "Blue pencil."
+ * Ocean Breeze.
  *
- * The product is peer review for a backtest, so the interface is set like a
- * marked-up manuscript rather than a trading terminal: paper, ink, and an
- * editor's blue pencil on every number that was checked.
+ * tweakcn's preset, carried as HSL triples in src/index.css. The roles Finertia
+ * adds on top of the shadcn set keep their names so no component changes:
  *
- *   ink      — what you wrote: your strategy, your numbers, primary actions
- *   pencil   — what was checked: out-of-sample figures, verdicts, the one
- *              accent this palette spends its boldness on
- *   gain /   — kept strictly semantic. Blue for the accent is what frees red
- *   loss       and green to mean only loss and gain, which the previous
- *              violet/mint scheme could not promise.
+ *   ink      — your strategy, your numbers, body text (`foreground`)
+ *   pencil   — the accent as text and strokes: links, out-of-sample figures,
+ *              verdicts. Green here, so `gain` is a deeper, distinct green
+ *              and the brand colour never masquerades as a profit.
+ *   gain /   — strictly semantic; never used for chrome.
+ *   loss
  *
- * Every colour is an HSL triple in CSS variables (src/index.css) so the same
- * class resolves correctly in the light and dark sheets; nothing here is a
- * literal hex.
+ * Every colour is an HSL triple in CSS variables so the same class resolves
+ * correctly in the light and dark sheets; nothing here is a literal hex.
  */
 export default {
   darkMode: ["class"],
@@ -81,21 +79,20 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        // Newsreader carries the headlines and the big figures — an editorial
-        // serif with optical sizes, so it holds at 64px and at 28px.
-        display: ["Newsreader", "Georgia", "Times New Roman", "serif"],
-        // Plex Sans is the face of technical reports. It sets dense copy
-        // without reading as a marketing site.
-        sans: ["IBM Plex Sans", "system-ui", "-apple-system", "sans-serif"],
+        // One face. DM Sans has an optical-size axis, so it holds at 64px
+        // headlines and at 13px table copy; `display` stays as a name so the
+        // headline classes keep working.
+        display: ["DM Sans", "system-ui", "-apple-system", "sans-serif"],
+        sans: ["DM Sans", "system-ui", "-apple-system", "sans-serif"],
         mono: ["IBM Plex Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       fontSize: {
         tick: ["0.625rem", { lineHeight: "0.875rem" }],
         "2xs": ["0.6875rem", { lineHeight: "1rem" }],
-        "display-sm": ["1.875rem", { lineHeight: "1.05" }],
-        "display-md": ["2.75rem", { lineHeight: "1" }],
-        "display-lg": ["3.5rem", { lineHeight: "0.98" }],
-        "display-xl": ["4.25rem", { lineHeight: "0.96" }],
+        "display-sm": ["1.875rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
+        "display-md": ["2.75rem", { lineHeight: "1.05", letterSpacing: "-0.025em" }],
+        "display-lg": ["3.5rem", { lineHeight: "1.02", letterSpacing: "-0.03em" }],
+        "display-xl": ["4.25rem", { lineHeight: "1", letterSpacing: "-0.03em" }],
       },
       boxShadow: {
         // A sheet of paper lifted a millimetre off the desk. One soft shadow,
