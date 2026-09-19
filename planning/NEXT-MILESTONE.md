@@ -125,7 +125,7 @@ in `planning/` or published. **Met** (drafted; publishing waits on the result).
 
 - [x] Phase 0–3 exit criteria met (phase 0's `gh` token narrowing still on the user)
 - [x] STATUS.md refreshed: rev 00007, 603 tests, roadmap 5/5, redesign merged 17 Sep (PR #6)
-- [ ] Build-ledger artifact refreshed from STATUS.md
+- [x] Build-ledger artifact refreshed from STATUS.md (19 Sep, current to `8895e1e`)
 - [x] Phase 4 decision recorded (15 Sep)
 
 ## Explicitly not in M9
