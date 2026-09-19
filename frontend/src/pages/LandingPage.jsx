@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import { m, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import RealityTape from "../components/RealityTape";
@@ -63,6 +64,9 @@ function SplitDiagram() {
 }
 
 export default function LandingPage() {
+  // A signed-in reader who lands here wants the workspace, not a form.
+  const { user } = useAuth();
+  const start = user ? "/dashboard" : "/register";
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-20">
       {/* Hero. Left-aligned: the tape below is read left-to-right off a zero
@@ -81,7 +85,7 @@ export default function LandingPage() {
         </p>
         <div className="flex flex-wrap items-center gap-3 mt-9">
           <Button asChild size="lg">
-            <Link to="/register">Run a backtest</Link>
+            <Link to={start}>Run a backtest</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link to="/demo">See a real result</Link>

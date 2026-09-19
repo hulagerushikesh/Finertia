@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import MetricsGrid from "../components/MetricsGrid";
 import EquityCurveChart from "../components/EquityCurveChart";
@@ -20,6 +21,8 @@ import demo from "../demoData.json";
  * themselves.
  */
 export default function DemoPage() {
+  const { user } = useAuth();
+  const start = user ? "/dashboard" : "/register";
   const strategyEnd = demo.equity_curve[demo.equity_curve.length - 1].strategy;
   const benchmarkEnd = demo.equity_curve[demo.equity_curve.length - 1].benchmark;
 
@@ -37,7 +40,7 @@ export default function DemoPage() {
           </p>
         </div>
         <Button asChild>
-          <Link to="/register">Run your own</Link>
+          <Link to={start}>Run your own</Link>
         </Button>
       </Rise>
 
@@ -79,7 +82,7 @@ export default function DemoPage() {
           </p>
           <div className="flex items-center gap-3 flex-wrap mt-5">
             <Button asChild>
-              <Link to="/register">Create a free account</Link>
+              <Link to={start}>{user ? "Run it in your workspace" : "Create a free account"}</Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/docs">How it works</Link>
