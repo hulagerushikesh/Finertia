@@ -115,39 +115,43 @@ const SECONDARY = [
   { key: "worst_day", label: "Worst day", type: "pct", tone: "loss", tip: "Single worst daily return in the backtest." },
 ];
 
-export default function MetricsGrid({ metrics, confidenceIntervals }) {
+/** The four numbers a decision actually rests on. */
+export function HeadlineMetrics({ metrics, confidenceIntervals }) {
   const ci = confidenceIntervals?.available ? confidenceIntervals : null;
   const bands = ci?.metrics ?? {};
+  return (
+    // Four-up only from xl: beside a 21rem sidebar these are ~150px wide at lg.
+    <Stagger className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+      {HEADLINE.map(({ key, label, type, tone, tip }) => (
+        <StaggerItem key={key} className="sheet p-4 sm:p-5 flex flex-col gap-2 min-h-[6.5rem]">
+          <div className="flex items-start gap-1.5 min-w-0">
+            <span className="eyebrow">{label}</span>
+            <Tooltip label={ci ? tipWith(tip, bands[key], ci, type, tone) : tip} align="start" />
+          </div>
+          <span
+            className={cn(
+              "font-display text-3xl sm:text-display-sm font-semibold leading-none tracking-tight",
+              toneClass(tone, metrics[key]),
+            )}
+          >
+            {fmt(metrics[key], type, tone)}
+          </span>
+          <span className="mt-auto">
+            <Band band={bands[key]} type={type} tone={tone} />
+          </span>
+        </StaggerItem>
+      ))}
+    </Stagger>
+  );
+}
 
+/** Everything else, at the weight it deserves, plus the note on the intervals. */
+export function MoreMetrics({ metrics, confidenceIntervals }) {
+  const ci = confidenceIntervals?.available ? confidenceIntervals : null;
+  const bands = ci?.metrics ?? {};
   return (
     <div className="flex flex-col gap-3">
-      {/* The four numbers a decision actually rests on, set in the display
-          face at a size that makes them the first thing read. Four-up only
-          from xl: beside a 21rem sidebar these are ~150px wide at lg. */}
-      <Stagger className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-        {HEADLINE.map(({ key, label, type, tone, tip }) => (
-          <StaggerItem key={key} className="sheet p-4 sm:p-5 flex flex-col gap-2 min-h-[6.5rem]">
-            <div className="flex items-start gap-1.5 min-w-0">
-              <span className="eyebrow">{label}</span>
-              <Tooltip label={ci ? tipWith(tip, bands[key], ci, type, tone) : tip} align="start" />
-            </div>
-            <span
-              className={cn(
-                "font-display text-3xl sm:text-display-sm font-semibold leading-none tracking-tight",
-                toneClass(tone, metrics[key]),
-              )}
-            >
-              {fmt(metrics[key], type, tone)}
-            </span>
-            <span className="mt-auto">
-              <Band band={bands[key]} type={type} tone={tone} />
-            </span>
-          </StaggerItem>
-        ))}
-      </Stagger>
-
-      {/* Everything else, at the weight it deserves. Borders live on the
-          cells rather than in the gaps so wrapping is safe. */}
+      {/* Borders live on the cells rather than in the gaps so wrapping is safe. */}
       <div className="sheet overflow-hidden">
         <div className="grid sm:grid-cols-3 lg:grid-cols-4 -mr-px -mb-px">
           {SECONDARY.map(({ key, label, type, tone, tip }) => (
@@ -187,6 +191,16 @@ export default function MetricsGrid({ metrics, confidenceIntervals }) {
           No confidence intervals for this run — {confidenceIntervals.reason}
         </p>
       )}
+    </div>
+  );
+}
+
+/** Both halves together — the demo page and anything that wants the full sheet. */
+export default function MetricsGrid(props) {
+  return (
+    <div className="flex flex-col gap-3">
+      <HeadlineMetrics {...props} />
+      <MoreMetrics {...props} />
     </div>
   );
 }

@@ -3,7 +3,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { Link2, Check, Download } from "lucide-react";
 import ConfigPanel, { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
-import MetricsGrid from "../components/MetricsGrid";
+import { HeadlineMetrics, MoreMetrics } from "../components/MetricsGrid";
+import MoreToggle from "../components/MoreToggle";
+import useDisclosure from "../hooks/useDisclosure";
 import EquityCurveChart from "../components/EquityCurveChart";
 import DrawdownChart from "../components/DrawdownChart";
 import TradesTable from "../components/TradesTable";
@@ -57,6 +59,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   const [tab, setTab] = useState("results");
+  const [showDetail, , toggleDetail] = useDisclosure("finertia-results-detail");
   const [validation, setValidation] = useState(null);
   const [validating, setValidating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -294,8 +297,11 @@ export default function DashboardPage() {
 
                 {tab === "results" && (
                   <Stagger className="flex flex-col gap-5">
+                    {/* First screen: the four numbers and the curve. Everything
+                        else — seven more metrics, five more views — is one
+                        click down, remembered. */}
                     <StaggerItem>
-                      <MetricsGrid metrics={result.metrics} confidenceIntervals={result.confidence_intervals} />
+                      <HeadlineMetrics metrics={result.metrics} confidenceIntervals={result.confidence_intervals} />
                     </StaggerItem>
                     {isPortfolio && (
                       <StaggerItem>
@@ -303,19 +309,38 @@ export default function DashboardPage() {
                       </StaggerItem>
                     )}
                     <StaggerItem><EquityCurveChart data={result.equity_curve} /></StaggerItem>
-                    <StaggerItem><DrawdownChart data={result.drawdown} /></StaggerItem>
-                    {result.annual_returns?.length > 0 && (
-                      <StaggerItem><AnnualReturnsChart data={result.annual_returns} /></StaggerItem>
-                    )}
-                    {result.monthly_returns?.length > 0 && (
-                      <StaggerItem><MonthlyHeatmap data={result.monthly_returns} /></StaggerItem>
-                    )}
-                    <StaggerItem><RollingSharpeChart data={result.rolling_sharpe} /></StaggerItem>
-                    {result.regimes && (
-                      <StaggerItem><RegimeTable regimes={result.regimes} /></StaggerItem>
-                    )}
-                    {result.trades?.length > 0 && (
-                      <StaggerItem><TradesTable trades={result.trades} /></StaggerItem>
+
+                    <StaggerItem>
+                      <MoreToggle
+                        open={showDetail}
+                        onToggle={toggleDetail}
+                        controls="results-detail"
+                        show="Show all metrics and charts"
+                        hide="Hide the detail"
+                        hint="drawdown, year by year, month by month, rolling Sharpe, regimes, every trade"
+                      />
+                    </StaggerItem>
+
+                    {showDetail && (
+                      <div id="results-detail" className="flex flex-col gap-5">
+                        <StaggerItem>
+                          <MoreMetrics metrics={result.metrics} confidenceIntervals={result.confidence_intervals} />
+                        </StaggerItem>
+                        <StaggerItem><DrawdownChart data={result.drawdown} /></StaggerItem>
+                        {result.annual_returns?.length > 0 && (
+                          <StaggerItem><AnnualReturnsChart data={result.annual_returns} /></StaggerItem>
+                        )}
+                        {result.monthly_returns?.length > 0 && (
+                          <StaggerItem><MonthlyHeatmap data={result.monthly_returns} /></StaggerItem>
+                        )}
+                        <StaggerItem><RollingSharpeChart data={result.rolling_sharpe} /></StaggerItem>
+                        {result.regimes && (
+                          <StaggerItem><RegimeTable regimes={result.regimes} /></StaggerItem>
+                        )}
+                        {result.trades?.length > 0 && (
+                          <StaggerItem><TradesTable trades={result.trades} /></StaggerItem>
+                        )}
+                      </div>
                     )}
 
                     {/* The limits of the result, stated where the result is. */}
