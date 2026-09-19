@@ -7,6 +7,8 @@ import EquityCurveChart from "../components/EquityCurveChart";
 import DrawdownChart from "../components/DrawdownChart";
 import AnnualReturnsChart from "../components/AnnualReturnsChart";
 import RollingSharpeChart from "../components/RollingSharpeChart";
+import MonthlyHeatmap from "../components/MonthlyHeatmap";
+import RegimeTable from "../components/RegimeTable";
 import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import demo from "../demoData.json";
@@ -63,11 +65,13 @@ export default function DemoPage() {
       </Rise>
 
       <Stagger className="flex flex-col gap-5">
-        <StaggerItem><MetricsGrid metrics={demo.metrics} /></StaggerItem>
+        <StaggerItem><MetricsGrid metrics={demo.metrics} confidenceIntervals={demo.confidence_intervals} /></StaggerItem>
         <StaggerItem><EquityCurveChart data={demo.equity_curve} /></StaggerItem>
         <StaggerItem><DrawdownChart data={demo.drawdown} /></StaggerItem>
         <StaggerItem><AnnualReturnsChart data={demo.annual_returns} /></StaggerItem>
+        <StaggerItem><MonthlyHeatmap data={demo.monthly_returns} /></StaggerItem>
         <StaggerItem><RollingSharpeChart data={demo.rolling_sharpe} /></StaggerItem>
+        <StaggerItem><RegimeTable regimes={demo.regimes} /></StaggerItem>
       </Stagger>
 
       <div className="mt-10 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-8 border-t border-border pt-8">
