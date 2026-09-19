@@ -2,31 +2,72 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { m, useReducedMotion } from "motion/react";
+import {
+  ArrowRight,
+  BookOpen,
+  Compass,
+  LineChart,
+  MousePointerClick,
+  Play,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import RealityTape from "../components/RealityTape";
 import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
 
 /**
- * Three things, one sentence each. The method names (walk-forward,
- * deflated Sharpe, permutation) live in /docs; a first-time reader should
- * get the idea without them. No icons: a target/gear/chart-bar set is the
- * same one every tool ships.
+ * The page is written for someone who has never heard the word "backtest".
+ * Every section answers one question a stranger would ask, in order: what
+ * is this, how does it work, is it for me, can I see one, why trust it.
+ * The method names (walk-forward, deflated Sharpe, permutation) stay in
+ * /docs; here they are "checks".
  */
-const CAPABILITIES = [
+const STEPS = [
   {
-    tag: "The check",
-    title: "Tested on years it never saw",
-    desc: "Parameters are chosen on the early part of the period and scored on the later part. Only the later score counts.",
+    n: "01",
+    icon: MousePointerClick,
+    title: "Pick",
+    desc: "A stock, a simple rule, and a stretch of years.",
+    example: "AAPL · momentum · 2019–2024",
   },
   {
-    tag: "The correction",
-    title: "Graded against cherry-picking",
-    desc: "Try sixteen settings and keep the best, and the best will look good on its own. The result is marked against that.",
+    n: "02",
+    icon: Play,
+    title: "Run",
+    desc: "Finertia replays the rule on real prices, with real trading costs, and shows what it would have made.",
+    example: "+68% · just holding made +411%",
   },
   {
-    tag: "The engine",
-    title: "Maths you can read",
-    desc: "No backtesting library. Every signal, cost and metric is plain pandas and numpy you can open and check.",
+    n: "03",
+    icon: ShieldCheck,
+    title: "Check",
+    desc: "Then it re-tests the same rule on years it was never tuned on, and tells you if the result was skill or luck.",
+    example: "2 of 5 checks passed",
+  },
+];
+
+const AUDIENCES = [
+  {
+    icon: Compass,
+    title: "New to this?",
+    desc: "Start from the example run. Every number has a ? beside it that says what it means and whether it matters.",
+    to: "/demo",
+    cta: "Open the example",
+  },
+  {
+    icon: LineChart,
+    title: "Already trade?",
+    desc: "Stop trusting a curve you fitted yourself. See whether your rule holds on data it never saw before you put money on it.",
+    to: "/register",
+    cta: "Test a rule",
+  },
+  {
+    icon: BookOpen,
+    title: "Learning quant?",
+    desc: "No black box. The engine is plain pandas and numpy, every check has its formula written out, and 603 tests keep it honest.",
+    to: "/docs",
+    cta: "Read how it works",
   },
 ];
 
@@ -63,82 +104,162 @@ function SplitDiagram() {
   );
 }
 
+function SectionHead({ eyebrow, title, lede }) {
+  return (
+    <div className="max-w-2xl">
+      <p className="eyebrow mb-3">{eyebrow}</p>
+      <h2 className="font-display text-display-sm font-semibold text-foreground text-balance">{title}</h2>
+      {lede && <p className="text-base text-graphite leading-relaxed mt-3">{lede}</p>}
+    </div>
+  );
+}
+
 export default function LandingPage() {
   // A signed-in reader who lands here wants the workspace, not a form.
   const { user } = useAuth();
   const start = user ? "/dashboard" : "/register";
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-20">
-      {/* Hero. Left-aligned: the tape below is read left-to-right off a zero
-          line, and a centred headline above it would fight that axis. */}
+      {/* ── 1. What is this ─────────────────────────────────────────── */}
       <Rise className="max-w-3xl">
-        <p className="eyebrow mb-6">Backtest · then check it&apos;s real</p>
+        <Badge variant="pencil" className="mb-6">Free to start · no card</Badge>
         <h1 className="font-display font-semibold text-display-md sm:text-display-lg lg:text-display-xl tracking-[-0.02em] text-foreground text-balance">
-          Your backtest looks good.
-          <br />
-          That&apos;s the <em className="italic text-pencil">problem.</em>
+          Test a trading idea before you risk money on it.
         </h1>
         <p className="text-base sm:text-lg text-graphite leading-relaxed mt-7 max-w-2xl">
-          Pick a stock and a strategy. Finertia runs it on real prices, then re-tests the result
-          on years it was never tuned on. If the number was luck, you find out here — not after
-          you trade it.
+          Pick a stock, a simple rule and a stretch of years. Finertia shows what would have
+          happened — and then checks whether that result was skill or luck.
         </p>
         <div className="flex flex-wrap items-center gap-3 mt-9">
           <Button asChild size="lg">
-            <Link to={start}>Run a backtest</Link>
+            <Link to={start}>{user ? "Open your workspace" : "Try it free"}</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-            <Link to="/demo">See a real result</Link>
+            <Link to="/demo">See an example</Link>
           </Button>
         </div>
       </Rise>
 
-      {/* The signature. A live artifact rather than a claim about one. */}
-      <Rise delay={0.12} className="mt-16 sm:mt-20">
-        <RealityTape />
-      </Rise>
+      {/* ── 2. How it works ─────────────────────────────────────────── */}
+      <section className="mt-24" aria-labelledby="how-heading">
+        <SectionHead
+          eyebrow="How it works"
+          title={<span id="how-heading">Three steps. About a minute.</span>}
+        />
+        <Stagger className="mt-8 grid sm:grid-cols-3 gap-4">
+          {STEPS.map((s) => (
+            <StaggerItem key={s.n} className="sheet p-6 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex size-9 items-center justify-center rounded-lg bg-pencil/10 text-pencil">
+                  <s.icon className="size-4" aria-hidden="true" />
+                </span>
+                <span className="font-mono text-xs text-faint">{s.n}</span>
+              </div>
+              <div>
+                <h3 className="font-display text-xl font-semibold text-foreground">{s.title}</h3>
+                <p className="text-sm text-graphite leading-relaxed mt-1.5">{s.desc}</p>
+              </div>
+              <p className="mt-auto font-mono text-2xs text-pencil bg-pencil/5 rounded-md px-2.5 py-1.5 w-fit">
+                {s.example}
+              </p>
+            </StaggerItem>
+          ))}
+        </Stagger>
+      </section>
 
-      {/* Capabilities. Hairline rules instead of three more cards — the tape
-          is the only box on this page that should read as an object. */}
-      <Stagger className="mt-20 grid sm:grid-cols-3 gap-px bg-border border-y border-border">
-        {CAPABILITIES.map((c) => (
-          <StaggerItem key={c.tag} className="bg-background py-7 sm:px-6 first:sm:pl-0 last:sm:pr-0">
-            <p className="eyebrow mb-3">{c.tag}</p>
-            <h2 className="font-display text-xl font-semibold text-foreground mb-2 text-balance">{c.title}</h2>
-            <p className="text-sm text-graphite leading-relaxed">{c.desc}</p>
-          </StaggerItem>
-        ))}
-      </Stagger>
-      <p className="mt-4 text-sm">
-        <Link to="/docs" className="text-pencil hover:underline underline-offset-4">
-          How each check works, with the formulas →
-        </Link>
-      </p>
+      {/* ── 3. A real run ───────────────────────────────────────────── */}
+      <section className="mt-24" aria-labelledby="example-heading">
+        <SectionHead
+          eyebrow="A real run"
+          title={<span id="example-heading">This is what a result looks like.</span>}
+          lede="A momentum rule on Apple, year by year, against simply holding the stock. It beat holding in one year out of five — which is exactly the kind of thing you want to know before trading it."
+        />
+        <Rise delay={0.08} className="mt-8">
+          <RealityTape />
+        </Rise>
+        <p className="mt-4 text-sm">
+          <Link to="/demo" className="inline-flex items-center gap-1.5 text-pencil hover:underline underline-offset-4">
+            Open the full example, with every chart <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </p>
+      </section>
 
-      {/* The method, drawn once. */}
-      <div className="mt-20 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-10 items-center">
-        <div>
-          <p className="eyebrow mb-3">How to read a result</p>
-          <h2 className="font-display text-display-sm font-semibold text-foreground text-balance">
-            The green stretch is the only part that counts.
-          </h2>
-          <p className="text-sm text-graphite leading-relaxed mt-4 max-w-md">
-            Parameters are tuned on the first 70% of the period. The last 30% is scored untouched.
-            Every number from that stretch is{" "}
-            <span className="pencil-mark">in green, like this</span> across the
-            app, so you always know which figures were actually checked.
-          </p>
+      {/* ── 4. Who it's for ─────────────────────────────────────────── */}
+      <section className="mt-24" aria-labelledby="who-heading">
+        <SectionHead eyebrow="Who it's for" title={<span id="who-heading">Start where you are.</span>} />
+        <Stagger className="mt-8 grid sm:grid-cols-3 gap-4">
+          {AUDIENCES.map((a) => (
+            <StaggerItem key={a.title} className="sheet p-6 flex flex-col gap-3">
+              <a.icon className="size-5 text-pencil" aria-hidden="true" />
+              <h3 className="font-display text-lg font-semibold text-foreground">{a.title}</h3>
+              <p className="text-sm text-graphite leading-relaxed">{a.desc}</p>
+              <Link
+                to={a.to === "/register" ? start : a.to}
+                className="mt-auto pt-2 inline-flex items-center gap-1.5 text-sm font-medium text-pencil hover:underline underline-offset-4"
+              >
+                {a.cta} <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </StaggerItem>
+          ))}
+        </Stagger>
+      </section>
+
+      {/* ── 5. Why trust it ─────────────────────────────────────────── */}
+      <section className="mt-24" aria-labelledby="trust-heading">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-10 items-center">
+          <div>
+            <p className="eyebrow mb-3">Why the checks matter</p>
+            <h2 id="trust-heading" className="font-display text-display-sm font-semibold text-foreground text-balance">
+              Any rule looks good on the years it was tuned on.
+            </h2>
+            <p className="text-sm text-graphite leading-relaxed mt-4 max-w-md">
+              So Finertia tunes on the first 70% of the period and scores on the last 30%,
+              untouched. Every figure from that stretch is{" "}
+              <span className="pencil-mark">in green, like this</span>, so you always know
+              which numbers were actually checked.
+            </p>
+            <p className="mt-4 text-sm">
+              <Link to="/docs" className="inline-flex items-center gap-1.5 text-pencil hover:underline underline-offset-4">
+                Every check, with its formula <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </p>
+          </div>
+          <div className="sheet px-6 py-6">
+            <SplitDiagram />
+          </div>
         </div>
-        <div className="sheet px-6 py-6">
-          <SplitDiagram />
-        </div>
-      </div>
+        <ul className="mt-10 grid sm:grid-cols-3 gap-px bg-border border-y border-border">
+          {[
+            ["Real prices", "Daily closes from Yahoo Finance, with a trading cost on every position change."],
+            ["Open maths", "No backtesting library. Plain pandas and numpy you can read, with 603 tests on the engine."],
+            ["Honest numbers", "Every metric carries a confidence interval, and results that beat holding are the exception, not the sales pitch."],
+          ].map(([t, d]) => (
+            <li key={t} className="bg-background py-5 sm:px-6 first:sm:pl-0 last:sm:pr-0">
+              <p className="text-sm font-semibold text-foreground">{t}</p>
+              <p className="text-sm text-graphite leading-relaxed mt-1">{d}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-      {/* Proof, stated once and quietly. */}
-      <p className="mt-16 text-xs font-mono text-faint leading-relaxed">
-        0 external backtesting dependencies · 12 metrics, each with a confidence interval · 603
-        tests on the engine
-      </p>
+      {/* ── 6. Go ───────────────────────────────────────────────────── */}
+      <section className="mt-24 sheet px-6 py-10 sm:px-10 text-center" aria-labelledby="go-heading">
+        <h2 id="go-heading" className="font-display text-display-sm font-semibold text-foreground text-balance">
+          Try one idea today.
+        </h2>
+        <p className="text-base text-graphite mt-3 max-w-xl mx-auto">
+          Free plan runs the full engine on any stock. No card, nothing to install.
+        </p>
+        <div className="flex flex-wrap justify-center items-center gap-3 mt-7">
+          <Button asChild size="lg">
+            <Link to={start}>{user ? "Open your workspace" : "Create a free account"}</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link to="/pricing">See plans</Link>
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }
