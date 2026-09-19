@@ -31,7 +31,7 @@ const CAPABILITIES = [
 
 /**
  * The split, drawn. In-sample on the left in ink, a purged gap, then the
- * out-of-sample stretch marked in pencil — the only bars that count.
+ * out-of-sample stretch in the accent — the only bars that count.
  */
 function SplitDiagram() {
   const off = useReducedMotion();
@@ -69,7 +69,7 @@ export default function LandingPage() {
           line, and a centred headline above it would fight that axis. */}
       <Rise className="max-w-3xl">
         <p className="eyebrow mb-6">Backtest · then check it&apos;s real</p>
-        <h1 className="font-display font-medium text-display-md sm:text-display-lg lg:text-display-xl tracking-[-0.02em] text-foreground text-balance">
+        <h1 className="font-display font-semibold text-display-md sm:text-display-lg lg:text-display-xl tracking-[-0.02em] text-foreground text-balance">
           Your backtest looks good.
           <br />
           That&apos;s the <em className="italic text-pencil">problem.</em>
@@ -100,7 +100,7 @@ export default function LandingPage() {
         {CAPABILITIES.map((c) => (
           <StaggerItem key={c.tag} className="bg-background py-7 sm:px-6 first:sm:pl-0 last:sm:pr-0">
             <p className="eyebrow mb-3">{c.tag}</p>
-            <h2 className="font-display text-xl font-medium text-foreground mb-2 text-balance">{c.title}</h2>
+            <h2 className="font-display text-xl font-semibold text-foreground mb-2 text-balance">{c.title}</h2>
             <p className="text-sm text-graphite leading-relaxed">{c.desc}</p>
           </StaggerItem>
         ))}
@@ -115,17 +115,17 @@ export default function LandingPage() {
       <div className="mt-20 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-10 items-center">
         <div>
           <p className="eyebrow mb-3">How to read a result</p>
-          <h2 className="font-display text-display-sm font-medium text-foreground text-balance">
-            The blue stretch is the only part that counts.
+          <h2 className="font-display text-display-sm font-semibold text-foreground text-balance">
+            The green stretch is the only part that counts.
           </h2>
           <p className="text-sm text-graphite leading-relaxed mt-4 max-w-md">
             Parameters are tuned on the first 70% of the period. The last 30% is scored untouched.
             Every number from that stretch is{" "}
-            <span className="pencil-mark text-foreground">underlined like this</span> across the
+            <span className="pencil-mark">in green, like this</span> across the
             app, so you always know which figures were actually checked.
           </p>
         </div>
-        <div className="sheet px-6 py-6 graph-paper">
+        <div className="sheet px-6 py-6">
           <SplitDiagram />
         </div>
       </div>

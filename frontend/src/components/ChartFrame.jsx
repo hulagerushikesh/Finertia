@@ -11,12 +11,12 @@ export default function ChartFrame({ title, caption, aside, className, children 
     <section className={cn("sheet overflow-hidden", className)}>
       <div className="flex items-start justify-between gap-4 flex-wrap px-5 pt-4 pb-3">
         <div>
-          <h2 className="font-display text-lg font-medium text-foreground leading-tight">{title}</h2>
+          <h2 className="font-display text-lg font-semibold text-foreground leading-tight">{title}</h2>
           {caption && <p className="text-2xs text-graphite mt-0.5">{caption}</p>}
         </div>
         {aside}
       </div>
-      <div className="graph-paper px-2 pb-3">{children}</div>
+      <div className="px-2 pb-3">{children}</div>
     </section>
   );
 }

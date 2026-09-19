@@ -126,7 +126,7 @@ export default function HistoryPage() {
       <Rise className="flex items-end justify-between gap-4 flex-wrap mb-8">
         <div>
           <p className="eyebrow mb-3">Saved runs</p>
-          <h1 className="font-display text-display-sm font-medium text-foreground">History</h1>
+          <h1 className="font-display text-display-sm font-semibold text-foreground">History</h1>
         </div>
         {!comparison && runs.length > 1 && (
           <p className="text-xs text-graphite">Tick two or more runs to overlay their equity curves</p>
@@ -142,7 +142,7 @@ export default function HistoryPage() {
       {comparison ? (
         <div className="flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h2 className="font-display text-xl font-medium text-foreground">Comparison</h2>
+            <h2 className="font-display text-xl font-semibold text-foreground">Comparison</h2>
             <Button variant="outline" size="sm" onClick={clearComparison}>
               ← Back to history
             </Button>
@@ -232,7 +232,7 @@ export default function HistoryPage() {
                   {!loading && runs.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-14">
-                        <p className="font-display text-xl font-medium text-foreground">No runs yet.</p>
+                        <p className="font-display text-xl font-semibold text-foreground">No runs yet.</p>
                         <p className="text-sm text-graphite mt-1">
                           Run a backtest in the workspace and it will be kept here with its parameters.
                         </p>
@@ -286,7 +286,7 @@ export default function HistoryPage() {
           {selected && (
             <>
               <SheetHeader className="text-left">
-                <SheetTitle className="font-display text-2xl font-medium">{selected.ticker}</SheetTitle>
+                <SheetTitle className="font-display text-2xl font-semibold">{selected.ticker}</SheetTitle>
                 <SheetDescription className="font-mono text-xs">
                   {selected.start} → {selected.end}
                   <span className="ml-2 text-pencil">{strategyLabel(selected.strategy)}</span>

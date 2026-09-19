@@ -8,9 +8,6 @@ import { m, useReducedMotion } from "motion/react";
  *             and for a result replacing an empty state.
  *   Stagger — a list of rises, 40ms apart, so a grid of cards reads as one
  *             thing settling rather than eleven things popping.
- *   Stamp   — the verdict. Scale 1.6 → 1 with a small overshoot, like a
- *             rubber stamp landing. The only motion here with personality,
- *             which is why it is reserved for the one moment that earns it.
  *
  * Every variant collapses to an instant cut under prefers-reduced-motion —
  * these carry no information that is lost by skipping them.

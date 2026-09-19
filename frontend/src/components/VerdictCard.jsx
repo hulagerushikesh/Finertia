@@ -1,5 +1,5 @@
 import React from "react";
-import Stamp from "./Stamp";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 /**
@@ -159,14 +159,14 @@ export default function VerdictCard({ data, className, onJump }) {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="max-w-prose">
           <p className="eyebrow mb-2">Is this real?</p>
-          <h2 id="verdict-heading" className="font-display text-display-sm font-medium text-foreground text-balance">
+          <h2 id="verdict-heading" className="font-display text-display-sm font-semibold text-foreground text-balance">
             {headline}
           </h2>
           {meaning && <p className="margin-note mt-3">{meaning}</p>}
         </div>
-        <Stamp tone={overall[1]} size="lg" className="shrink-0">
+        <Badge variant={overall[1]} size="lg" className="shrink-0">
           {overall[0]}
-        </Stamp>
+        </Badge>
       </div>
 
       {checks.length > 0 && (
@@ -176,7 +176,7 @@ export default function VerdictCard({ data, className, onJump }) {
               <button
                 type="button"
                 onClick={() => jump(c.id)}
-                className="tap-safe inline-flex items-center gap-2 rounded-md border border-border bg-muted/40 hover:bg-muted px-2.5 py-1.5 text-2xs font-mono text-graphite transition-colors"
+                className="tap-safe inline-flex items-center gap-2 rounded-md border border-border bg-muted/40 hover:bg-muted px-2.5 py-1.5 text-xs text-graphite transition-colors"
               >
                 <span className={cn("h-1.5 w-1.5 rounded-full", TONE_DOT[c.tone])} aria-hidden="true" />
                 <span className="text-foreground">{c.name}</span>

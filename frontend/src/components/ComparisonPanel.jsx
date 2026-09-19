@@ -138,7 +138,7 @@ export default function ComparisonPanel({ data }) {
           </Table>
         </div>
         <p className="text-xs text-faint px-5 py-3 border-t border-border leading-relaxed">
-          The pencil-marked value is the best in each column. Comparing runs on different tickers
+          The green value is the best in each column. Comparing runs on different tickers
           or periods compares two different markets as much as two strategies — the fair test holds
           everything but one variable fixed.
         </p>

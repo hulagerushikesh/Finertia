@@ -176,39 +176,32 @@
 }
 
 @layer components {
-  /* A sheet of paper on the desk. The only container treatment in the app. */
+  /*
+   * `.sheet` is the shadcn Card recipe as a class, so `<section>` and
+   * `<figure>` landmarks can carry it without losing their element.
+   * Same classes as components/ui/card.jsx — keep them in step.
+   */
   .sheet {
-    @apply bg-card text-card-foreground rounded-lg shadow-sheet;
+    @apply bg-card text-card-foreground rounded-xl border shadow-sm;
   }
   .sheet-lifted {
-    @apply bg-card text-card-foreground rounded-lg shadow-lifted;
+    @apply bg-card text-card-foreground rounded-xl border shadow-md;
   }
 
-  /* Caption above a reading: small, wide-tracked, mono. */
+  /* Caption above a reading. */
   .eyebrow {
-    @apply font-mono text-2xs uppercase tracking-[0.14em] text-graphite;
+    @apply text-xs font-medium uppercase tracking-wider text-muted-foreground;
   }
 
-  /*
-   * The editor's mark. An out-of-sample figure, a verdict, a checked number
-   * — anything the product has argued back on — is underlined in pencil.
-   */
+  /* A checked figure: out-of-sample, a verdict, anything the product argued
+     back on. Colour only — the accent does the marking. */
   .pencil-mark {
-    @apply text-pencil underline decoration-pencil decoration-2 underline-offset-4;
+    @apply text-pencil font-medium;
   }
 
-  /* Margin note: the explanation of a metric, set beside it in the margin
-     the way an editor writes, rather than hidden in a tooltip. */
+  /* The explanation of a metric, set beside it rather than in a tooltip. */
   .margin-note {
-    @apply font-display italic text-pencil text-[0.95rem] leading-snug border-l-2 border-pencil pl-3;
-  }
-
-  /* Graph paper behind a chart. 24px cells match the chart grid. */
-  .graph-paper {
-    background-image: linear-gradient(hsl(var(--border) / 0.55) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border) / 0.55) 1px, transparent 1px);
-    background-size: 24px 24px;
-    background-position: -1px -1px;
+    @apply text-sm text-muted-foreground leading-snug;
   }
 
   /*

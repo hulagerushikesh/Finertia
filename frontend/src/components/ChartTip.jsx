@@ -7,7 +7,7 @@ import React from "react";
  */
 export default function ChartTip({ label, rows }) {
   return (
-    <div className="bg-popover text-popover-foreground shadow-pop rounded-md px-3 py-2 text-2xs font-mono min-w-[9rem]">
+    <div className="bg-popover text-popover-foreground shadow-lg border rounded-md px-3 py-2 text-2xs font-mono min-w-[9rem]">
       {label && <p className="text-graphite mb-1">{label}</p>}
       <div className="flex flex-col gap-0.5">
         {rows.map((r) => (

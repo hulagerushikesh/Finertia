@@ -150,7 +150,7 @@ function TickerInput({ value, onChange, onCommit, placeholder = "e.g. AAPL" }) {
       {open && matches.length > 0 && (
         <ul
           role="listbox"
-          className="absolute z-20 left-0 right-0 mt-1 bg-popover text-popover-foreground rounded-md shadow-pop overflow-hidden max-h-60 overflow-y-auto"
+          className="absolute z-20 left-0 right-0 mt-1 bg-popover text-popover-foreground rounded-md shadow-lg border overflow-hidden max-h-60 overflow-y-auto"
         >
           {matches.map((t, i) => (
             <li key={t.symbol} role="option" aria-selected={i === cursor}>
@@ -301,7 +301,7 @@ function Segmented({ value, onChange, options, columns }) {
           className={cn(
             "text-xs font-medium py-1.5 rounded-sm transition-colors",
             value === o.id
-              ? "bg-card text-foreground shadow-sheet"
+              ? "bg-card text-foreground shadow-sm border"
               : "text-graphite hover:text-foreground",
           )}
         >
@@ -517,7 +517,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
     <aside className="w-full lg:w-[21rem] lg:flex-shrink-0 sheet flex flex-col lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100vh-6rem)] overflow-hidden">
       <div className="flex flex-col gap-5 p-5 lg:overflow-y-auto lg:flex-1">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-medium text-foreground">Set-up</h2>
+          <h2 className="font-display text-lg font-semibold text-foreground">Set-up</h2>
           <Button variant="ghost" size="sm" onClick={reset} className="text-graphite -mr-2">
             <RotateCcw className="size-3.5" aria-hidden="true" /> Reset
           </Button>

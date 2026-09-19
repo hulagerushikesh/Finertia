@@ -33,7 +33,7 @@ export default function UsageMeter() {
   return (
     <div className="sheet p-5">
       <div className="flex items-baseline justify-between gap-3 flex-wrap mb-4">
-        <h2 className="font-display text-lg font-medium text-foreground">Usage · {usage.plan_label}</h2>
+        <h2 className="font-display text-lg font-semibold text-foreground">Usage · {usage.plan_label}</h2>
         <span className="text-2xs font-mono text-graphite">{usage.period}</span>
       </div>
 
@@ -45,7 +45,7 @@ export default function UsageMeter() {
       ) : (
         <>
           <div className="flex items-baseline justify-between mb-2">
-            <span className="font-display text-2xl font-medium text-foreground">
+            <span className="font-display text-2xl font-semibold text-foreground">
               {usage.used} <span className="text-graphite text-base">/ {usage.limit} runs</span>
             </span>
             <span className="text-xs font-mono text-graphite">{usage.remaining} left</span>

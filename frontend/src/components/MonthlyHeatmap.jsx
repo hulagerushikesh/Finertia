@@ -28,7 +28,7 @@ export default function MonthlyHeatmap({ data }) {
   return (
     <section className="sheet px-5 py-4">
       <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
-        <h2 className="font-display text-lg font-medium text-foreground">Monthly returns</h2>
+        <h2 className="font-display text-lg font-semibold text-foreground">Monthly returns</h2>
         <div className="flex items-center gap-2 text-2xs font-mono text-graphite">
           <span>loss</span>
           <span className="flex">
