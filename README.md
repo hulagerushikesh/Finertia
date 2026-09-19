@@ -447,7 +447,7 @@ cd firestore-tests && npm install && npm test
 
 `.github/workflows/ci.yml` runs on every push and PR: backend tests, frontend build, and a secret scan that fails if a `.env` or service-account key is ever tracked. None of them need credentials — a pipeline that requires secrets is one that silently stops running.
 
-`deploy.yml` is manual (`workflow_dispatch`) rather than push-triggered, so shipping is always a decision. Its frontend job still targets Firebase Hosting from before the move to Vercel and is not used; the backend job mirrors the `gcloud run deploy` above. It runs the tests first, authenticates to GCP by Workload Identity Federation rather than a long-lived key in a repo secret, polls `/api/health` afterwards (a deploy that "succeeded" but serves 500s is not a successful deploy), and fails the frontend build if the bundle still points at localhost.
+`deploy.yml` is backend-only (Vercel deploys the frontend on its own) and manual (`workflow_dispatch`) rather than push-triggered, so shipping is always a decision. It runs the same `gcloud run deploy` as the Deploy section, flag for flag, after the tests pass. It authenticates to GCP by Workload Identity Federation rather than a long-lived key in a repo secret, and polls `/api/health` afterwards (a deploy that "succeeded" but serves 500s is not a successful deploy). The WIF secrets are not set on the repo today; deploys are run by hand.
 
 ---
 
