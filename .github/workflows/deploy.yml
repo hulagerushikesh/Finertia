@@ -43,7 +43,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write   # moves the backend-deployed tag after a healthy deploy
       id-token: write
     steps:
       - uses: actions/checkout@v5
@@ -88,3 +88,10 @@ jobs:
           done
           echo "::error::New revision never returned a healthy /api/health"
           exit 1
+
+      # backend-drift.yml diffs backend/ against this tag on every push to
+      # main and comments on the merged PR when production is behind.
+      - name: Mark this commit as deployed
+        run: |
+          git tag -f backend-deployed "$GITHUB_SHA"
+          git push -f origin backend-deployed
