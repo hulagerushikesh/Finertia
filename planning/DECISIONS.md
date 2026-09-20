@@ -3,6 +3,22 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-09-20 — Cloud Run runs as a service account with no project roles
+
+Until rev 00007 the API ran as the default compute service account, which
+carries `roles/editor` on the whole project — an RCE in the API would have
+owned everything. Rev 00008 runs as `finertia-api-runtime`, which has no
+project-level roles; its single grant is `secretmanager.secretAccessor` on
+`finertia-sa`. That is enough because the backend never uses the runtime
+identity: `firebase_admin_init.py` builds `credentials.Certificate` from the
+mounted key JSON, and Firestore, Auth and the price cache all go through that
+app. The default compute SA's grant on the secret was removed the same day.
+
+Consequences: `--service-account` is now part of the deploy command (README
+and `deploy.yml`, flag for flag); a rollback to 00007 cannot be a traffic
+shift, because that revision can no longer read the secret. Rev 00008 is the
+same image as 00007, so the `backend-deployed` tag does not move.
+
 ## 2026-09-17 — Redesign merged before the Pitch Fest result
 
 The 14 Sep constraint was "nothing that changes what a judge sees merges to

@@ -1,12 +1,12 @@
 # Status
 
-_Current to `1168def` (main) · 20 Sep 2026._
+_Current to `02025c1` (main) · 20 Sep 2026._
 
 ## At a glance
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00007` (16 Sep: rolling walk-forward + volatility regimes); frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17) and the same-day simplification (PRs #19–#23: Ocean Breeze theme, plain shadcn surfaces, folded set-up/results, signed-in CTA fix, newcomer landing) |
+| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00008` (20 Sep: same image as 00007, runtime SA rotated to `finertia-api-runtime`; 16 Sep code: rolling walk-forward + volatility regimes); frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17) and the same-day simplification (PRs #19–#23: Ocean Breeze theme, plain shadcn surfaces, folded set-up/results, signed-in CTA fix, newcomer landing) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 603 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + bundle budget + secret scan); `backend-drift.yml` comments on the merged PR when `backend/` is ahead of the `backend-deployed` tag |
@@ -26,7 +26,7 @@ compiles, never exercised end to end.
 |---|---|---|
 | S1 Connect — Firebase end to end | **Verified** | 3 real AAPL runs on the live site before submission; rules diffed byte-identical against the released ruleset |
 | S2 Harden — guards, validators, error paths | **Verified** | Route tests mutation-checked; Docker image built 3× by Cloud Build |
-| S3 Deploy — Vercel + Cloud Run | **Verified** | Live since 6 Sep; same-origin `/api/*` proxy; secret in Secret Manager |
+| S3 Deploy — Vercel + Cloud Run | **Verified** | Live since 6 Sep; same-origin `/api/*` proxy; secret in Secret Manager, readable by the dedicated runtime SA only (20 Sep) |
 | S4 Deepen — analytics, comparison, permalinks | **Verified** | Walked through on live |
 | S5 Strategies — MACD, Bollinger, risk overlays, portfolios | **Verified** | Walked through on live; 535 tests |
 | S6 Billing — plans, quota, Stripe | Built | `plans.py` tested; Stripe env-gated and unset in prod, never exercised |
@@ -81,6 +81,7 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 | 16 Sep | Volatility regimes (`regimes.py`): per-bar realised-vol terciles, Sharpe per regime on every backtest + the stitched OOS record; PR #11, rev 00007 | 14 + 2 tests, 603 total; 2 mutation checks; momentum OOS 2.26 calm / −0.76 turbulent |
 | 17 Sep | **Redesign merged** (PR #6, `e10309b`) on explicit go-ahead; `planning/PROGRESS.md` added | preview evidence; logged-in paths unverified |
 | 19 Sep | UI batch on `main`: rolling fold + regime tables, effective N, cache note (PR #13); favicon/manifest/OG (PR #14); plain landing copy (PR #16); verdict card over the validation tab (PR #17) | verified on a real AAPL 2018→2024 payload (2 of 5 checks passed) at 1280 + 375 px, both themes; prod serves the icons and the new copy |
+| 20 Sep | Runtime SA rotated: `finertia-api-runtime` (no project roles, `secretAccessor` on `finertia-sa` only) replaces the default compute SA (`roles/editor`); rev 00008, same image; default SA's secret grant removed; `--service-account` added to README + deploy.yml | health 200 via proxy and direct; bogus bearer → 401 "Invalid token" (Admin SDK initialised under the new SA); zero ERROR logs on 00008 |
 | 19 Sep | **Simplification**, user's call after reading the site as a customer: tweakcn Ocean Breeze palette + DM Sans (PR #19, contrast re-measured ≥ 4.5:1); notebook metaphor dropped — stamps → Badge, no pencil underlines, no graph paper (PR #20); set-up = strategy/ticker/dates + one Advanced fold, results = 4 numbers + curve + one fold (PR #21); signed-in users no longer sent to /register (PR #22, bug found on prod); landing rewritten for someone who has never heard of a backtest (PR #23) | each PR previewed on the real payload at 375 + 528/1280 px, light + dark; prod title + bundle strings confirmed after merge |
 | 16 Sep | Rolling walk-forward (`rolling.py`): 4 anchored folds, market context per fold, stitched OOS + CI, parameter stability; wired as `rolling_walk_forward` in `/api/validate`; PR #10, rev 00006 | 18 + 3 tests, 588 total; 3 mutation checks; all three AAPL strategies read `regime_dependent` |
 
@@ -93,3 +94,4 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 2. **Backend redeploy is manual** and was forgotten once (5 days of stale prod). Since 20 Sep `backend-drift.yml` comments on the merged PR whenever `backend/` is ahead of the `backend-deployed` tag (PR #34).
 3. **Shared python** — local pandas 2.3.1 vs prod 3.0.5; suite passes on both today.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry.
+5. **Rollback to rev 00007 no longer works by traffic shift** — that revision runs as the default compute SA, which lost its secret grant on 20 Sep. Rolling back means redeploying the 00007 source with `--service-account finertia-api-runtime@…`, or re-granting the secret first.
