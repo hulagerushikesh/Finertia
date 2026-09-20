@@ -175,13 +175,20 @@ gcloud run deploy finertia-api \
   --region asia-south1 \
   --project momentbacktracking \
   --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 \
+  --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
   --set-secrets FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest \
   --allow-unauthenticated
 ```
 
 The service-account JSON lives in Secret Manager, never in an env var or the
-repo. `ALLOWED_ORIGINS=https://finertia.hulage.in` and `LOG_LEVEL` are set on
-the service and persist across deploys. `backend/.gcloudignore` keeps `.env`
+repo. The service runs as `finertia-api-runtime`, a service account with no
+project roles at all — its only grant is `secretmanager.secretAccessor` on
+`finertia-sa` (the Firebase Admin SDK authenticates with the mounted key, not
+with the runtime identity). Keep `--service-account` in the command so a
+fresh deploy of the service never lands on the default compute account, which
+can no longer read the secret; on an existing service the flag, like
+`ALLOWED_ORIGINS=https://finertia.hulage.in` and `LOG_LEVEL`, persists across
+deploys. `backend/.gcloudignore` keeps `.env`
 and `tests/` out of the source upload. The caps (`min-instances 0`, max 2,
 512Mi) are the cost ceiling — idle costs nothing; do not raise them casually.
 
