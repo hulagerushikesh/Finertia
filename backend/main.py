@@ -686,6 +686,7 @@ async def validate_strategy(req: ValidateRequest, authorization: Optional[str] =
             base_params=params,
             user_params=user_params,
             split_ratio=req.split_ratio,
+            seed=stable_seed(req.ticker.upper(), req.start, req.end, req.strategy, "snooping"),
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
