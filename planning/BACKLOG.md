@@ -5,7 +5,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 ## Small and unblocked
 
 - [ ] Narrow the `gh` token → in M9 phase 0
-- [ ] Project venv → in M9 phase 0
+- [x] Project venv → M9 phase 0, done 14 Sep
 - [x] Bundle-size CI check — `frontend/scripts/check-bundle.mjs` + `bundle-budget.json`, gzip entry + total, limits ~10% over the 19 Sep build; CI step "Bundle budget" (19 Sep)
 - [x] Backend deploy reminder — `backend-drift.yml` diffs `backend/` against the `backend-deployed` tag on every push to main and comments on the merged PR; deploy.yml moves the tag, manual deploys move it per README (19 Sep)
 - [ ] Rotate the Cloud Run runtime SA to a dedicated one (currently the default compute SA)
@@ -36,8 +36,8 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 
 ## Docs
 
-- [ ] README "Deploy" section still describes Firebase Hosting; production is Vercel + Cloud Run — rewrite to match STATUS.md
-- [ ] README route count and test count are stale (say 16 routes, 535 tests)
+- [x] README "Deploy" section rewritten for Vercel + Cloud Run (13 Sep)
+- [x] README route and test counts — 16 routes, 603 tests (19 Sep)
 - [ ] Retire or refresh the four stale artifacts in artifacts.md
 
 ## Done (moved from earlier lists, kept for the record)
