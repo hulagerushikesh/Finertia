@@ -38,7 +38,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 
 - [x] README "Deploy" section rewritten for Vercel + Cloud Run (13 Sep)
 - [x] README route and test counts — 16 routes, 603 tests (19 Sep)
-- [ ] Retire or refresh the four stale artifacts in artifacts.md
+- [x] Retire the stale artifacts in artifacts.md — five republished with a retirement banner (checklist, product brief, learning path, progress tracker, 20 Aug orphan ledger); execution plan already deleted (20 Sep)
 
 ## Done (moved from earlier lists, kept for the record)
 
