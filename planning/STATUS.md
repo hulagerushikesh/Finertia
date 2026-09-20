@@ -1,6 +1,6 @@
 # Status
 
-_Current to `02025c1` (main) · 20 Sep 2026._
+_Current to `846e828` (main) · 20 Sep 2026._
 
 ## At a glance
 
@@ -8,9 +8,9 @@ _Current to `02025c1` (main) · 20 Sep 2026._
 |---|---|
 | Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00008` (20 Sep: same image as 00007, runtime SA rotated to `finertia-api-runtime`; 16 Sep code: rolling walk-forward + volatility regimes); frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17) and the same-day simplification (PRs #19–#23: Ocean Breeze theme, plain shadcn surfaces, folded set-up/results, signed-in CTA fix, newcomer landing) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
-| Tests | 603 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
+| Tests | 620 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + bundle budget + secret scan); `backend-drift.yml` comments on the merged PR when `backend/` is ahead of the `backend-deployed` tag |
-| Commits | 100 on main (`git rev-list --count`) · 33 PRs merged |
+| Commits | 106 on main (`git rev-list --count`, counted 20 Sep) · 36 PRs merged (`gh pr list --state merged`) |
 | API | 16 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
 | Blocked on user | 3 — login smoke test **on production** (redesign is live) · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
@@ -42,6 +42,7 @@ compiles, never exercised end to end.
 | Purge + embargo | Done `e840a3c` | 20 tests; boundary trade measured at 33 bars |
 | Block-bootstrap CIs | Done `7b178ca` PR #1 | 54 tests; coverage measured on 300 GARCH paths; serving since rev 00003 |
 | Effective N of the grid | Done PR #8 | 15 tests; eigen + clusters, headline = larger; canonical AAPL 16→6 / 4→2 / 12→7; mutation-checked |
+| Whole-grid inference (post-roadmap, open-questions §4) | Done 20 Sep | `snooping.py`: Reality Check, SPA l/c/u, Romano-Wolf stepdown vs buy-and-hold; 17 tests, 6 mutations caught; 0 survivors on 5 tickers × 2 windows × 3 grids; snooping gap printed per cell |
 
 ## The redesign — PR #6, merged 17 Sep
 
@@ -81,6 +82,7 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 | 16 Sep | Volatility regimes (`regimes.py`): per-bar realised-vol terciles, Sharpe per regime on every backtest + the stitched OOS record; PR #11, rev 00007 | 14 + 2 tests, 603 total; 2 mutation checks; momentum OOS 2.26 calm / −0.76 turbulent |
 | 17 Sep | **Redesign merged** (PR #6, `e10309b`) on explicit go-ahead; `planning/PROGRESS.md` added | preview evidence; logged-in paths unverified |
 | 19 Sep | UI batch on `main`: rolling fold + regime tables, effective N, cache note (PR #13); favicon/manifest/OG (PR #14); plain landing copy (PR #16); verdict card over the validation tab (PR #17) | verified on a real AAPL 2018→2024 payload (2 of 5 checks passed) at 1280 + 375 px, both themes; prod serves the icons and the new copy |
+| 20 Sep | Whole-grid inference (`snooping.py`): White RC + Hansen SPA + Romano-Wolf stepdown over the walk-forward candidate matrix vs buy-and-hold, in every `/api/validate` as `walk_forward.snooping`; open-questions §4 closed; write-up gains a table | 17 tests, 620 total; 6 mutation checks; AAPL 2018→24 momentum best −6.4%/yr vs B&H, RC p 0.89, SPA 1.0; no cell survives anywhere; **backend not yet redeployed** — first live run of the drift comment |
 | 20 Sep | Runtime SA rotated: `finertia-api-runtime` (no project roles, `secretAccessor` on `finertia-sa` only) replaces the default compute SA (`roles/editor`); rev 00008, same image; default SA's secret grant removed; `--service-account` added to README + deploy.yml | health 200 via proxy and direct; bogus bearer → 401 "Invalid token" (Admin SDK initialised under the new SA); zero ERROR logs on 00008 |
 | 19 Sep | **Simplification**, user's call after reading the site as a customer: tweakcn Ocean Breeze palette + DM Sans (PR #19, contrast re-measured ≥ 4.5:1); notebook metaphor dropped — stamps → Badge, no pencil underlines, no graph paper (PR #20); set-up = strategy/ticker/dates + one Advanced fold, results = 4 numbers + curve + one fold (PR #21); signed-in users no longer sent to /register (PR #22, bug found on prod); landing rewritten for someone who has never heard of a backtest (PR #23) | each PR previewed on the real payload at 375 + 528/1280 px, light + dark; prod title + bundle strings confirmed after merge |
 | 16 Sep | Rolling walk-forward (`rolling.py`): 4 anchored folds, market context per fold, stitched OOS + CI, parameter stability; wired as `rolling_walk_forward` in `/api/validate`; PR #10, rev 00006 | 18 + 3 tests, 588 total; 3 mutation checks; all three AAPL strategies read `regime_dependent` |

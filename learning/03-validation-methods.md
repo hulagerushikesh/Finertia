@@ -43,7 +43,7 @@ The best in-sample result was the worst out-of-sample one.
   IS number is still the max of N draws (→ §3).
 - [ ] **Grid sizes**: momentum 16, MACD 4, Bollinger 12 combinations
   (`strategies.py` → `param_grid`).
-- [ ] The candidate return matrix is built ONCE here and reused by §4.
+- [ ] The candidate return matrix is built ONCE here and reused by §4 and §9.
   Re-running `build_positions` per split would be 70× the work.
 
 Read: López de Prado, *Advances in Financial Machine Learning* (AFML), ch. 11–12.
@@ -274,7 +274,66 @@ Read: Ang & Bekaert (2002), "International Asset Allocation with Regime
 Shifts" — the two-state vol regime as the minimal model; AFML ch. 17 for
 structural breaks as the harder version of the same question.
 
-## How the eight fit together
+## 9. Whole-grid inference — `backend/snooping.py` → `whole_grid_test()`
+
+- [ ] **The question**: §3 deflates the *winner*; §4 asks whether *selecting*
+  works. This asks White's (2000) question: across every cell in the grid at
+  once, is there evidence that *any* of them beats a benchmark — with the
+  search inside the bootstrap, so the best is judged against the
+  distribution of a best, not of a single draw.
+- [ ] **The comparison**: each cell's per-bar net return minus buy-and-hold on
+  the same bars, full period, trimmed to the longest warm-up (the same
+  matrix §4 uses). Statistic = mean excess return. Buy-and-hold because
+  "beats the market" is the claim a user is making, and it is the one
+  benchmark every grid shares.
+- [ ] **Reality Check** (White 2000): `T_RC = max_k √T·d̄_k`; bootstrap the
+  same maximum with every cell recentred to its own mean; p = share of
+  resampled maxima ≥ observed. Not studentised; and recentring *every* cell
+  means junk cells inflate the null maximum — a bad grid makes rejection
+  harder, which is backwards.
+- [ ] **SPA** (Hansen 2005): studentise, `t_k = √T·d̄_k / ω̂_k` with ω̂ the
+  bootstrap s.e.; and leave cells with `t_k ≤ −√(2 log log T)` at their
+  negative mean instead of recentring, so they cannot pad the null. Three
+  p-values: lower (every negative mean kept), consistent (the rule above),
+  upper (everything recentred = White's treatment). Always
+  `lower ≤ consistent ≤ upper`. When no cell has a positive mean the
+  statistic clips to 0 and p is 1.000 — correct, and blunt.
+- [ ] **Romano-Wolf stepdown** (2005): the answer to "which cells". Rank by
+  t; test the top against the max over all, the next against the max over
+  the rest, carrying `max()` forward so adjusted p is monotone in rank.
+  Family-wise error at α; `cells[].p_adjusted ≤ α` are the survivors.
+- [ ] **Resampling**: `stationary_bootstrap_indices` from §6 with the
+  Politis-White block length chosen on the winner's excess series; ONE
+  index draw applied to every column, which is what makes the maximum's
+  distribution joint. B = 1000, `(1 + hits)/(B + 1)` so p never reads 0.
+- [ ] **What it says on AAPL 2018→2024**: buy-and-hold made ~30%/yr, so every
+  long-only cell trails it — momentum's best −6.4%/yr, RC p 0.89, SPA 1.0,
+  0 of 16 survive; MACD 0 of 4; Bollinger 0 of 12. Five tickers × two
+  windows × three grids: **0 survivors anywhere**. The snooping gap is
+  visible even so — BABA Bollinger's best cell reads p 0.17 alone, 0.33
+  inside its grid. And momentum on AAPL 2018→2025 is `held_up` on §1
+  while trailing buy-and-hold by 9.6%/yr: "held up" is against zero, not
+  against the market.
+- [ ] **What it does not say**: full-period inference with the snooping
+  removed — whether the grid *contains* outperformance over this period,
+  not whether it persists (§1, §7). Long-only cells against a rising
+  benchmark will rarely clear it; that is the finding, not a defect.
+- [ ] Tests (`tests/test_snooping.py`, 17): shape contract; grid-of-one is
+  the naive test; p floor; determinism; the snooping gap on a null grid;
+  Hansen's ordering; junk padding hurts RC more than SPA; stepdown finds
+  exactly one / exactly two planted cells with monotone adjusted p; FWER
+  ≤ bound over 40 null grids; flat cell excluded from studentisation;
+  consistent < upper with junk present; stepdown's second test is over
+  the rest, not the whole grid; wiring into `walk_forward` (labels,
+  seed). Six mutations each caught: no recentring, RC ignoring the grid,
+  consistent = upper, non-monotone stepdown, single-step, no
+  studentisation.
+
+Read: White (2000) "A Reality Check for Data Snooping"; Hansen (2005) "A Test
+for Superior Predictive Ability"; Romano & Wolf (2005) "Stepwise Multiple
+Testing as Formalized Data Snooping".
+
+## How the nine fit together
 
 ```
                  ┌─ §5 purge/embargo (no bar paid twice)
@@ -284,6 +343,7 @@ rolling (§7) ────── the same, K times, walked forward: is the verdi
 regimes (§8) ────── which third of the market's conditions carried the return?
 
 CSCV (§4)  ─────── is *selecting on IS score* better than random at all?
+snooping (§9) ──── does *anything* in the grid beat buy-and-hold, search included?
 permutation (§2) ─ is the *timing* better than a shuffle?
 bootstrap (§6) ─── how wide is the band around every number you printed?
 ```
