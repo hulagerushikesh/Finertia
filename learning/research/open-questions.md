@@ -45,12 +45,18 @@ Still open, narrower: the label is one-dimensional (vol). A trend/range label
 from "calm and flat", which is where momentum's calm-regime beta hides. And
 the vol-CI coverage failure (§5) shares the cause — regimes do not resample.
 
-## 4. Whole-grid inference instead of winner inference
+## 4. ~~Whole-grid inference instead of winner inference~~ — done 20 Sep 2026 (`backend/snooping.py`)
 
-DSR corrects the *winner*. White's Reality Check / Hansen's SPA / Romano-Wolf
-test the *whole grid* against the benchmark in one bootstrap. Would replace the
-permutation test with something that handles N candidates and gives "which
-cells survive" rather than "does the best cell survive".
+All three built on the candidate matrix walk-forward already has: Reality
+Check, SPA (lower / consistent / upper), Romano-Wolf stepdown with a
+per-cell adjusted p. Benchmark is buy-and-hold on the same bars. On every
+run tried (AAPL both windows, INTC, BABA, T, PYPL; three grids) not one cell
+survives at 5%, and the snooping gap is visible in every table. What is left
+of this question: (a) the benchmark — against *zero* rather than buy-and-hold
+the test would say whether the grid makes money at all, a different and
+weaker claim; (b) it did not replace the permutation test, it sits beside
+it — permutation is about timing at fixed exposure, this is about level;
+(c) not surfaced in the UI yet (BACKLOG).
 
 ## 5. Max-drawdown interval
 

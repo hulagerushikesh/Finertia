@@ -3,6 +3,8 @@
 Both answer questions a single backtest cannot:
 
   walk_forward()     Did these parameters work on data they were not chosen on?
+                     (and, on the same grid: deflated Sharpe, effective N,
+                     PBO, and the whole-grid test against buy-and-hold)
   permutation_test() Is this Sharpe ratio better than random timing at the same exposure?
 
 Pure pandas/numpy, consistent with the rest of the engine.
@@ -16,6 +18,7 @@ import pandas as pd
 from deflated import TRADING_DAYS, deflated_sharpe_ratio
 from pbo import combinatorial_pbo
 from purge import purged_split
+from snooping import whole_grid_test
 from trials import effective_trials_clusters, effective_trials_eigen
 from engine import compute_returns
 from metrics import compute_metrics
@@ -55,6 +58,7 @@ def walk_forward(
     user_params: dict | None = None,
     split_ratio: float = 0.7,
     grid: list[dict] | None = None,
+    seed: int = 0,
 ) -> dict:
     """Optimise parameters on the first split_ratio of the period, score on the rest.
 
@@ -192,6 +196,23 @@ def walk_forward(
             "reason": "Only one parameter combination fits this period, so there was no selection to test.",
         }
 
+    # Whole-grid inference against buy-and-hold, on the same candidate matrix.
+    #
+    # Everything above reasons about the winner: DSR deflates it, PBO asks
+    # whether picking it was better than chance. This asks whether the grid
+    # contains *any* cell that beats simply holding the ticker, with the
+    # search inside the bootstrap — White's Reality Check and Hansen's SPA
+    # for "does the best survive", Romano-Wolf stepdown for "which cells do".
+    # Full period, so it is in-sample inference with the snooping removed,
+    # not a persistence check; that is walk-forward's job.
+    trim = max(warmups)
+    snooping = whole_grid_test(
+        np.column_stack(candidate_returns)[trim:],
+        returns.to_numpy()[trim:],
+        labels=[r["params"] for r in grid_results],
+        seed=seed,
+    )
+
     return {
         "strategy": strategy,
         "split_date": str(close.index[split_at].date()),
@@ -212,6 +233,7 @@ def walk_forward(
         "sharpe_degradation": round(degradation, 6),
         "deflated": deflated,
         "overfitting": overfitting,
+        "snooping": snooping,
         "verdict": _verdict(best_is["sharpe_ratio"], best_oos["sharpe_ratio"]),
         "user_params": user_block,
         "grid": sorted(grid_results, key=lambda r: r["sharpe_ratio"], reverse=True),
