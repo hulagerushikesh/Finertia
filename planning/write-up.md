@@ -199,6 +199,34 @@ built for. Neither is a good or bad strategy. Each is a bet on a regime, and
 the single-split walk-forward was scoring which regime the split happened to
 land in.
 
+## Against the market, with the search inside the test
+
+Every check so far judges the winner, or the act of selecting it. None asks
+the question a reader actually has: across everything the grid tried, does
+*anything* beat simply holding the stock — once you account for having tried
+all of it? White's Reality Check, Hansen's SPA and the Romano-Wolf stepdown
+answer that in one bootstrap: every cell's excess return over buy-and-hold,
+resampled jointly, the maximum compared with the distribution of a maximum.
+Stepdown adds the per-cell version — which cells survive at 5%.
+
+| Ticker, window | Grid | Best cell vs buy-and-hold | p alone | p, whole grid (RC / SPA) | Survivors |
+|---|---|---|---|---|---|
+| AAPL 2018→2024 | Momentum, 16 | −6.4%/yr | 0.63 | 0.89 / 1.00 | 0 |
+| AAPL 2018→2024 | Bollinger, 12 | −25.0%/yr | 0.98 | 0.99 / 1.00 | 0 |
+| AAPL 2018→2025 | Momentum, 16 | −9.6%/yr | 0.76 | 0.96 / 1.00 | 0 |
+| BABA 2018→2024 | Bollinger, 12 | +15.4%/yr | 0.17 | 0.33 / 0.33 | 0 |
+| PYPL 2018→2024 | Bollinger, 12 | +8.8%/yr | 0.31 | 0.47 / 0.47 | 0 |
+| INTC 2018→2024 | Bollinger, 12 | +5.7%/yr | 0.37 | 0.52 / 0.53 | 0 |
+
+Five tickers, two windows, three grids: not one cell beats buy-and-hold at
+5% once the search is in the test. Two things in that table are worth
+more than the zeros. The gap between "p alone" and "p, whole grid" is the
+size of the data snooping — BABA's best Bollinger cell looks like a
+one-in-six fluke on its own and a one-in-three fluke inside the grid that
+found it. And AAPL momentum on the 2025 window reads *held up* on
+walk-forward while trailing buy-and-hold by 9.6% a year: "held up" was
+always a statement against zero, not against the market.
+
 ## What is still open
 
 The label is one-dimensional. A trend/range label alongside vol would
@@ -213,10 +241,10 @@ currently gets metrics and confidence intervals but no overfitting checks.
   end 2024-01-01 then 2025-01-01, default parameters, split 0.7.
 - Source: `backend/validation.py` (`walk_forward`, `permutation_test`),
   `backend/rolling.py`, `backend/regimes.py`, `backend/deflated.py`, `backend/trials.py`,
-  `backend/pbo.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
+  `backend/pbo.py`, `backend/snooping.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
   backtesting or statistics library; the normal CDF is `math.erf`.
-- Tests: 603 in `backend/tests/`, including reproductions of the DSR paper's
+- Tests: 620 in `backend/tests/`, including reproductions of the DSR paper's
   worked example and Lo (2002) to 1e-12, and mutation checks on every check
   above.
-- Figures are as of 15 Sep 2026 with yfinance adjusted prices; Yahoo
+- Figures are as of 15 Sep 2026 (whole-grid table: 20 Sep) with yfinance adjusted prices; Yahoo
   re-adjusts on corporate actions, so the third decimal will drift.
