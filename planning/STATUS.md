@@ -1,6 +1,6 @@
 # Status
 
-_Current to `232520c` (main) · 19 Sep 2026._
+_Current to `47f9bbc` (main) · 20 Sep 2026._
 
 ## At a glance
 
@@ -9,8 +9,8 @@ _Current to `232520c` (main) · 19 Sep 2026._
 | Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00007` (16 Sep: rolling walk-forward + volatility regimes); frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17) and the same-day simplification (PRs #19–#23: Ocean Breeze theme, plain shadcn surfaces, folded set-up/results, signed-in CTA fix, newcomer landing) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 603 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
-| CI | green on `main` (backend tests + frontend build + secret scan) |
-| Commits | 94 on main (`git rev-list --count`) · 30 PRs merged |
+| CI | green on `main` (backend tests + frontend build + bundle budget + secret scan); `backend-drift.yml` comments on the merged PR when `backend/` is ahead of the `backend-deployed` tag |
+| Commits | 100 on main (`git rev-list --count`) · 33 PRs merged |
 | API | 16 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
 | Blocked on user | 3 — login smoke test **on production** (redesign is live) · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
@@ -90,6 +90,6 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
    survives cold starts, stale-on-error serves the last good copy. Residual: a
    never-seen ticker during a Yahoo outage still 503s; prod cold-read latency
    still unmeasured.
-2. **Backend redeploy is manual** and was forgotten once (5 days of stale prod).
+2. **Backend redeploy is manual** and was forgotten once (5 days of stale prod). Since 20 Sep `backend-drift.yml` comments on the merged PR whenever `backend/` is ahead of the `backend-deployed` tag (PR #34).
 3. **Shared python** — local pandas 2.3.1 vs prod 3.0.5; suite passes on both today.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry.
