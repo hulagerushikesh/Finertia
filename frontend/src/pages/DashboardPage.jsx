@@ -18,7 +18,7 @@ import PortfolioLegs from "../components/PortfolioLegs";
 import Spinner from "../components/Spinner";
 import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
-import { runBacktest, validateStrategy, runPortfolio } from "../api";
+import { runBacktest, validateStrategy, runPortfolio, validatePortfolio } from "../api";
 import { exportEquityCurve, exportTrades, exportMetrics } from "../utils/csv";
 import { encodeParams, decodeParams, permalinkFor } from "../utils/permalink";
 import { useToast } from "../hooks/useToast";
@@ -111,7 +111,7 @@ export default function DashboardPage() {
     setValidating(true);
     setTab("validation");
     try {
-      const data = await validateStrategy(params);
+      const data = isPortfolio ? await validatePortfolio(params) : await validateStrategy(params);
       setValidation(data);
       const [msg, tone] = WF_TOAST[data.walk_forward.verdict] || WF_TOAST.inconclusive;
       showToast(msg, tone);
@@ -262,9 +262,9 @@ export default function DashboardPage() {
                   </Button>
                 </div>
 
-                {/* Results / Validation switcher. Walk-forward and the
-                    permutation test are defined on a single position series,
-                    so they have no portfolio meaning yet. */}
+                {/* Results / Validation switcher. A basket goes to
+                    /api/portfolio/validate: the grid is scored on the book and
+                    every leg is re-timed on its own. */}
                 <Tabs value={tab} onValueChange={handleTab}>
                   <div className="flex items-center justify-between gap-3 border-b border-border">
                     <TabsList className="bg-transparent p-0 h-auto gap-1 rounded-none">
@@ -274,18 +274,16 @@ export default function DashboardPage() {
                       >
                         Results
                       </TabsTrigger>
-                      {!isPortfolio && (
-                        <TabsTrigger
-                          value="validation"
-                          disabled={validating}
-                          className="rounded-none border-b-2 border-transparent data-[state=active]:border-pencil data-[state=active]:shadow-none data-[state=active]:bg-transparent px-4 py-2 -mb-px text-sm"
-                        >
-                          Validation
-                          {!validation && !validating && (
-                            <span className="ml-2 font-mono text-2xs text-pencil">run</span>
-                          )}
-                        </TabsTrigger>
-                      )}
+                      <TabsTrigger
+                        value="validation"
+                        disabled={validating}
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-pencil data-[state=active]:shadow-none data-[state=active]:bg-transparent px-4 py-2 -mb-px text-sm"
+                      >
+                        Validation
+                        {!validation && !validating && (
+                          <span className="ml-2 font-mono text-2xs text-pencil">run</span>
+                        )}
+                      </TabsTrigger>
                     </TabsList>
                     {tab === "validation" && validation && (
                       <Button variant="ghost" size="sm" onClick={handleValidate} disabled={validating} className="text-graphite">
@@ -362,7 +360,7 @@ export default function DashboardPage() {
                           </strong>{" "}
                           A single result is one draw from a distribution.{" "}
                           {isPortfolio
-                            ? "Validation runs on a single position series, so it is not available for portfolios yet — check the strategy on individual names first."
+                            ? "Run the Validation tab to see whether these parameters hold for the whole basket on data they were never fitted to, and which names carried it."
                             : "Run the Validation tab to see whether these parameters hold on data they were never fitted to."}
                         </li>
                         <li>
@@ -408,8 +406,9 @@ export default function DashboardPage() {
                     <div className="flex flex-col items-center justify-center h-72 border-2 border-dashed border-border rounded-lg text-graphite px-6 text-center">
                       <p className="font-display text-xl font-semibold text-foreground">Check for overfitting</p>
                       <p className="text-sm mt-1 max-w-sm leading-relaxed">
-                        Tests whether these parameters survive on data they were not tuned on, and
-                        whether the signal timing beats random entries.
+                        {isPortfolio
+                          ? "Tests whether these parameters survive for the whole basket on data they were not tuned on, and whether any name's timing beats random entries."
+                          : "Tests whether these parameters survive on data they were not tuned on, and whether the signal timing beats random entries."}
                       </p>
                       <Button onClick={handleValidate} className="mt-4">
                         Run validation
