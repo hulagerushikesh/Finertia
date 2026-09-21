@@ -1,5 +1,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import VerdictCard from "./VerdictCard";
 import RollingWalkForward from "./RollingWalkForward";
 import { Stagger, StaggerItem } from "./motion";
@@ -90,7 +91,28 @@ const PBO_VERDICT = {
   },
 };
 
+const GRID_VERDICT = {
+  grid_beats_benchmark: {
+    label: "Beats holding",
+    tone: "gain",
+    blurb: "At least one combination earns more than holding the stock, and it still does once every other combination the search tried is inside the same test.",
+  },
+  weak_evidence: {
+    label: "Borderline",
+    tone: "warn",
+    blurb: "The best combination edges out holding the stock, but not by enough to separate it from the best of a search over noise.",
+  },
+  no_evidence: {
+    label: "Nothing beats holding",
+    tone: "loss",
+    blurb: "Once the search is accounted for, no combination in the grid does better than simply holding the stock for the whole period.",
+  },
+};
+
 const pct = (v) => (v === null || v === undefined ? "—" : `${(v * 100).toFixed(2)}%`);
+const signedPct = (v, dp = 1) =>
+  v === null || v === undefined ? "—" : `${v >= 0 ? "+" : "−"}${(Math.abs(v) * 100).toFixed(dp)}%`;
+const pval = (v) => (v === null || v === undefined ? "—" : v.toFixed(3));
 const num = (v) => (v === null || v === undefined ? "—" : v.toFixed(3));
 
 const PARAM_LABELS = {
@@ -274,9 +296,11 @@ export default function ValidationPanel({ data }) {
   const ov = wf.overfitting;
   const boundary = wf.boundary;
   const pboVerdict = PBO_VERDICT[ov?.verdict] || PBO_VERDICT.fragile;
+  const sn = wf.snooping;
+  const gridVerdict = GRID_VERDICT[sn?.verdict] || GRID_VERDICT.no_evidence;
   const verdict = WF_VERDICT[wf.verdict] || WF_VERDICT.inconclusive;
 
-  // The working is long — five sheets of figures — and most readers want
+  // The working is long — six sheets of figures — and most readers want
   // the answer first. Collapsed by default; the choice is remembered so a
   // researcher who always opens it never has to again.
   const [showWorking, setWorking, toggleWorking] = useDisclosure("finertia-validation-working");
@@ -519,6 +543,121 @@ export default function ValidationPanel({ data }) {
             both halves cover the same years. That is deliberate — it isolates
             whether selection works at all — but it means this test cannot see a
             regime change. The chronological split above is what catches that.
+          </p>
+        </StaggerItem>
+      )}
+
+      {/* Whole-grid inference. The three sections above ask whether the
+          chosen cell is real; this one asks the question a reader actually
+          has — does anything in the grid beat holding the stock — with the
+          search inside the test rather than corrected for afterwards. */}
+      {sn?.computable && (
+        <StaggerItem as="section" id="validation-snooping" className="sheet p-6 scroll-mt-20">
+          <Head
+            title="The whole grid against holding"
+            blurb={`Every one of the ${sn.n_candidates} combinations the search tried is set beside simply holding ${data.ticker} for the whole period, after costs. All ${sn.n_candidates} go into one bootstrap of ${sn.n_bootstrap} draws, so the best is judged as the best of a search — not as if it had been the only idea.`}
+            stamp={gridVerdict.label}
+            tone={gridVerdict.tone}
+          />
+
+          <p className="margin-note mt-4 mb-5">{gridVerdict.blurb}</p>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <Figure
+              label="Best cell vs holding"
+              value={signedPct(sn.best.excess_return_annualised)}
+              sub={`a year · ${describeParams(sn.best.params)}`}
+              tone={sn.best.excess_return_annualised > 0 ? "text-gain" : "text-loss"}
+              mark
+            />
+            <Figure
+              label="Tested alone"
+              value={`p = ${pval(sn.best.p_value_naive)}`}
+              sub="as if it were the only cell"
+              tone="text-graphite"
+            />
+            <Figure
+              label="Reality Check"
+              value={`p = ${pval(sn.reality_check.p_value)}`}
+              sub="White 2000 · whole grid"
+              tone={sn.reality_check.p_value <= sn.alpha ? "text-gain" : "text-loss"}
+              mark
+            />
+            <Figure
+              label="SPA"
+              value={`p = ${pval(sn.spa.p_value)}`}
+              sub={
+                sn.spa.p_value_lower !== undefined && sn.spa.p_value_lower !== sn.spa.p_value_upper
+                  ? `Hansen 2005 · ${pval(sn.spa.p_value_lower)} to ${pval(sn.spa.p_value_upper)} by recentring`
+                  : "Hansen 2005 · whole grid"
+              }
+              tone={sn.spa.p_value <= sn.alpha ? "text-gain" : "text-loss"}
+              mark
+            />
+          </div>
+
+          {/* The gap between "tested alone" and the two grid-wide p-values
+              is the cost of the search. It is the one number here a reader
+              cannot get from any single backtest. */}
+          <p className="text-xs text-graphite mt-4 leading-relaxed max-w-prose">
+            Tested on its own, the best cell reads p = {pval(sn.best.p_value_naive)}. With the other{" "}
+            {sn.n_candidates - 1} combinations inside the same bootstrap it reads p ={" "}
+            {pval(sn.reality_check.p_value)}. That gap is what searching a grid costs, and it is
+            what a report of the winning cell alone would leave out.
+            {sn.spa.poor_candidates_recentred > 0 &&
+              ` SPA sets ${sn.spa.poor_candidates_recentred} clearly-losing ${
+                sn.spa.poor_candidates_recentred === 1 ? "cell" : "cells"
+              } aside so they cannot pad the comparison.`}
+          </p>
+
+          <div className="mt-5 overflow-x-auto -mx-6">
+            <Table className="text-xs font-mono">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">Cell</TableHead>
+                  <TableHead className="text-right">vs holding / yr</TableHead>
+                  <TableHead className="text-right">t ↓</TableHead>
+                  <TableHead className="text-right">p alone</TableHead>
+                  <TableHead className="text-right text-pencil">p, search included</TableHead>
+                  <TableHead className="pr-6">Beats holding at {Math.round(sn.alpha * 100)}%</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sn.cells.map((c, i) => {
+                  // Rows come in stepdown order (by t); the best cell by raw
+                  // excess return is usually first but need not be.
+                  const isBest = describeParams(c.params) === describeParams(sn.best.params);
+                  return (
+                  <TableRow key={i} className={cn(isBest && "bg-muted/40")}>
+                    <TableCell className="pl-6 whitespace-nowrap text-graphite">
+                      {describeParams(c.params)}
+                      {isBest && <span className="ml-2 font-sans text-2xs text-faint">best</span>}
+                    </TableCell>
+                    <TableCell className={cn("text-right", c.excess_return_annualised >= 0 ? "text-gain" : "text-loss")}>
+                      {signedPct(c.excess_return_annualised)}
+                    </TableCell>
+                    <TableCell className="text-right text-graphite">{c.t_ratio === null ? "—" : c.t_ratio.toFixed(2)}</TableCell>
+                    <TableCell className="text-right text-graphite">{pval(c.p_naive)}</TableCell>
+                    <TableCell className={cn("text-right pencil-mark", c.beats_benchmark ? "text-gain" : "text-foreground")}>
+                      {pval(c.p_adjusted)}
+                    </TableCell>
+                    <TableCell className={cn("pr-6 font-sans", c.beats_benchmark ? "text-gain" : "text-faint")}>
+                      {c.beats_benchmark ? "yes" : "no"}
+                    </TableCell>
+                  </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          <p className="text-xs text-faint mt-4 leading-relaxed">
+            The last column is Romano–Wolf's stepdown: cells are tested best-first and each p-value is
+            adjusted for every cell still in the running, so a "yes" holds at the {Math.round(sn.alpha * 100)}%
+            level for the whole grid at once. The comparison is against holding {data.ticker}, not
+            against zero — the bar the walk-forward and deflated Sharpe sections do not set — and it runs
+            on the full period, so it cannot see a regime change. The bootstrap resamples in blocks of
+            about {sn.block_length.block_length} bars.
           </p>
         </StaggerItem>
       )}

@@ -15,7 +15,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 - [ ] Portfolio-level validation — needs a definition of a portfolio permutation first (open-questions §2)
 - [x] Regime-aware walk-forward — anchored rolling folds + realised-vol regime label, both 16 Sep (`rolling.py`, `regimes.py`, §3). Remaining, narrower: a trend/range label beside vol
 - [x] Whole-grid inference: White Reality Check / Hansen SPA / Romano-Wolf stepdown (§4) — `backend/snooping.py`, in every `/api/validate` as `walk_forward.snooping`; 17 tests, 6 mutations (20 Sep)
-- [ ] Surface the `snooping` block in `ValidationPanel` (a sixth row on the verdict card: "beats buy-and-hold, search included") and in the `/demo` payload
+- [x] Surface the `snooping` block in `ValidationPanel` — sixth verdict-card check "Whole grid", a "The whole grid against holding" section with the four p-values and the per-cell stepdown table, glossary entry (21 Sep). Not in `/demo`: that page is a frozen `/api/backtest` payload and carries no validation block at all; putting one there is a separate decision
 - [ ] Max-drawdown interval with honest coverage (§5)
 - [ ] Vol-scaled transaction-cost model (§7)
 - [ ] Ledoit-Wolf test for strategy-vs-benchmark Sharpe difference — the "does it beat buy-and-hold" question with a p-value
