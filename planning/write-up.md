@@ -277,7 +277,6 @@ timing is real. It was not worth doing.
 
 ## What is still open
 
-The trend label is on the API but not yet on the regime table in the UI.
 A rolling walk-forward for a book is not built. The bootstrap intervals
 still do not resample by regime, so the vol-CI coverage gap stands.
 
