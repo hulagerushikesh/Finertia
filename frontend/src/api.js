@@ -53,6 +53,9 @@ export const startCheckout = () =>
 export const runPortfolio = (params) =>
   apiFetch("/api/portfolio", { method: "POST", body: JSON.stringify(params) });
 
+export const validatePortfolio = (params) =>
+  apiFetch("/api/portfolio/validate", { method: "POST", body: JSON.stringify(params) });
+
 export const compareRuns = (runIds) =>
   apiFetch("/api/compare", { method: "POST", body: JSON.stringify({ run_ids: runIds }) });
 

@@ -298,6 +298,12 @@ export default function ValidationPanel({ data }) {
   const pboVerdict = PBO_VERDICT[ov?.verdict] || PBO_VERDICT.fragile;
   const sn = wf.snooping;
   const gridVerdict = GRID_VERDICT[sn?.verdict] || GRID_VERDICT.no_evidence;
+  // A basket payload names its tickers and carries per-leg blocks; every
+  // sentence that says "holding AAPL" says "holding the basket" instead.
+  const isBasket = Array.isArray(data.tickers);
+  const held = isBasket ? `the ${data.tickers.length}-name basket at the same weights` : data.ticker;
+  const legs = wf.legs ? Object.entries(wf.legs) : null;
+  const legTests = pm.legs ? Object.entries(pm.legs) : null;
   const verdict = WF_VERDICT[wf.verdict] || WF_VERDICT.inconclusive;
 
   // The working is long — six sheets of figures — and most readers want
@@ -338,7 +344,11 @@ export default function ValidationPanel({ data }) {
       <StaggerItem as="section" id="validation-walk-forward" className="sheet p-6 scroll-mt-20">
         <Head
           title="Walk-forward validation"
-          blurb="Parameters were optimised on the earlier part of the period, then scored on the later part. Only the green figures are evidence."
+          blurb={
+            isBasket
+              ? "One parameter set for every name, optimised on the basket's earlier returns, then scored on the later part. Only the green figures are evidence."
+              : "Parameters were optimised on the earlier part of the period, then scored on the later part. Only the green figures are evidence."
+          }
           stamp={verdict.label}
           tone={verdict.tone}
         />
@@ -398,6 +408,38 @@ export default function ValidationPanel({ data }) {
                 </span>
               </span>
             </div>
+          </div>
+        )}
+
+        {/* A basket that held up may have done so on one name. */}
+        {legs && (
+          <div className="mt-3 overflow-x-auto -mx-6">
+            <Table className="text-xs font-mono">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">Name</TableHead>
+                  <TableHead className="text-right">Weight</TableHead>
+                  <TableHead className="text-right">Tuned Sharpe</TableHead>
+                  <TableHead className="pr-6 text-right text-pencil">Unseen Sharpe</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {legs.map(([t, l]) => (
+                  <TableRow key={t}>
+                    <TableCell className="pl-6 text-foreground">{t}</TableCell>
+                    <TableCell className="text-right text-graphite">{(l.mean_weight * 100).toFixed(0)}%</TableCell>
+                    <TableCell className="text-right text-graphite">{num(l.in_sample_sharpe)}</TableCell>
+                    <TableCell className={cn("pr-6 text-right pencil-mark", l.out_of_sample_sharpe >= 0 ? "text-gain" : "text-loss")}>
+                      {num(l.out_of_sample_sharpe)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <p className="text-2xs text-faint px-6 mt-2 leading-relaxed">
+              The winning parameters, scored on each name alone. The basket's number above is not their
+              average — weights and diversification sit between the two.
+            </p>
           </div>
         )}
       </StaggerItem>
@@ -555,7 +597,7 @@ export default function ValidationPanel({ data }) {
         <StaggerItem as="section" id="validation-snooping" className="sheet p-6 scroll-mt-20">
           <Head
             title="The whole grid against holding"
-            blurb={`Every one of the ${sn.n_candidates} combinations the search tried is set beside simply holding ${data.ticker} for the whole period, after costs. All ${sn.n_candidates} go into one bootstrap of ${sn.n_bootstrap} draws, so the best is judged as the best of a search — not as if it had been the only idea.`}
+            blurb={`Every one of the ${sn.n_candidates} combinations the search tried is set beside simply holding ${held} for the whole period, after costs. All ${sn.n_candidates} go into one bootstrap of ${sn.n_bootstrap} draws, so the best is judged as the best of a search — not as if it had been the only idea.`}
             stamp={gridVerdict.label}
             tone={gridVerdict.tone}
           />
@@ -654,7 +696,7 @@ export default function ValidationPanel({ data }) {
           <p className="text-xs text-faint mt-4 leading-relaxed">
             The last column is Romano–Wolf's stepdown: cells are tested best-first and each p-value is
             adjusted for every cell still in the running, so a "yes" holds at the {Math.round(sn.alpha * 100)}%
-            level for the whole grid at once. The comparison is against holding {data.ticker}, not
+            level for the whole grid at once. The comparison is against holding {held}, not
             against zero — the bar the walk-forward and deflated Sharpe sections do not set — and it runs
             on the full period, so it cannot see a regime change. The bootstrap resamples in blocks of
             about {sn.block_length.block_length} bars.
@@ -665,7 +707,11 @@ export default function ValidationPanel({ data }) {
       <StaggerItem as="section" id="validation-timing" className="sheet p-6 scroll-mt-20">
         <Head
           title="Signal timing test"
-          blurb={`The position series was randomly reordered ${pm.trials} times, keeping the exact same number of long, short, and flat days. If real timing beats the shuffles, the entries are doing work that market exposure alone would not.`}
+          blurb={
+            isBasket
+              ? `Each name's position series was randomly reordered ${pm.trials} times on its own, keeping its exact number of long, short, and flat days, with the weights left as they were. If the real basket beats the shuffled ones, some name's entries are doing work that exposure and diversification alone would not.`
+              : `The position series was randomly reordered ${pm.trials} times, keeping the exact same number of long, short, and flat days. If real timing beats the shuffles, the entries are doing work that market exposure alone would not.`
+          }
           stamp={pm.significant ? "Significant" : "Not significant"}
           tone={pm.significant ? "gain" : "loss"}
         />
@@ -707,6 +753,43 @@ export default function ValidationPanel({ data }) {
               : `Random timing matched or beat this result ${(pm.p_value * 100).toFixed(0)}% of the time. The returns look like market exposure rather than signal quality.`}
           </p>
         </div>
+
+        {/* Which names carried it: the ordinary single-name test on each leg,
+            from the same draws. */}
+        {legTests && (
+          <div className="mt-5 overflow-x-auto -mx-6">
+            <Table className="text-xs font-mono">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">Name</TableHead>
+                  <TableHead className="text-right">Real Sharpe</TableHead>
+                  <TableHead className="text-right">Random mean</TableHead>
+                  <TableHead className="text-right text-pencil">p-value</TableHead>
+                  <TableHead className="pr-6">Beats random timing</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {legTests.map(([t, l]) => (
+                  <TableRow key={t}>
+                    <TableCell className="pl-6 text-foreground">{t}</TableCell>
+                    <TableCell className="text-right text-graphite">{num(l.real_sharpe)}</TableCell>
+                    <TableCell className="text-right text-graphite">{num(l.random_sharpe_mean)}</TableCell>
+                    <TableCell className={cn("text-right pencil-mark", l.significant ? "text-gain" : "text-loss")}>
+                      {l.p_value.toFixed(3)}
+                    </TableCell>
+                    <TableCell className={cn("pr-6 font-sans", l.significant ? "text-gain" : "text-faint")}>
+                      {l.significant ? "yes" : "no"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <p className="text-2xs text-faint px-6 mt-2 leading-relaxed">
+              {pm.legs_significant} of {legTests.length} names beat random timing on their own. The basket's
+              p-value is not a combination of these — it is the same shuffle, scored on the book.
+            </p>
+          </div>
+        )}
       </StaggerItem>
 
       <p className="text-2xs text-graphite leading-relaxed max-w-prose">

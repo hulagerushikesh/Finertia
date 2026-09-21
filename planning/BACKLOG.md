@@ -13,7 +13,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 ## Research (after effective N)
 
 - [x] Portfolio-level validation — null decided (each leg re-timed independently, weights fixed; DECISIONS 21 Sep); `portfolio_validation.py` + `POST /api/portfolio/validate`, 21 tests, 4 mutations caught (21 Sep)
-- [ ] Show the validation tab in portfolio mode, reading `/api/portfolio/validate` (same verdict card; add the `legs` blocks)
+- [x] Show the validation tab in portfolio mode, reading `/api/portfolio/validate` — same verdict card, per-name tables in walk-forward and timing, basket wording (21 Sep)
 - [ ] Weight-path permutation null for inverse-vol baskets (the other half of open-questions §2) — only if anyone asks
 - [x] Regime-aware walk-forward — anchored rolling folds + realised-vol regime label, both 16 Sep (`rolling.py`, `regimes.py`, §3). Remaining, narrower: a trend/range label beside vol
 - [x] Whole-grid inference: White Reality Check / Hansen SPA / Romano-Wolf stepdown (§4) — `backend/snooping.py`, in every `/api/validate` as `walk_forward.snooping`; 17 tests, 6 mutations (20 Sep)
