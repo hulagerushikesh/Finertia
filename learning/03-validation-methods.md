@@ -265,10 +265,34 @@ vs rolling distinction and why purging still applies per fold.
 - [ ] **What it says on AAPL**, out-of-sample: momentum Sharpe 2.26 in the
   calm third (market 2.49 — beta), −0.76 in the turbulent third (market
   +0.60 — whipsaw). Bollinger the mirror: −1.83 calm, +1.31 turbulent.
-- [ ] Tests (`tests/test_regimes.py`, 14): tercile shares, unlabelled warm-up,
-  thresholds match cut points, vol formula, block series → label, market-
-  not-strategy labelling, shorter strategy series labelled on the full
-  market, contributions sum, degrade on short input.
+- [ ] **The second axis — trend (21 Sep)**: `label_trend` gives every bar
+  the t-statistic of the market's trailing 60-day mean return,
+  `sum(r) / (std(r) · √60)`; above +1 `up`, below −1 `down`, else `flat`.
+  A fixed ±1σ cut, not a tercile, because "flat" has to mean flat
+  (DECISIONS 21 Sep); scaled by the window's own vol so it is unit-free
+  across tickers and harder to earn in turbulence. `trend_breakdown` is the
+  same table by trend label; `joint_breakdown` crosses the two into a 3 × 3
+  vol × trend grid, Sharpe per cell, cells under 21 bars reported by count
+  only. Both ride along in every `regimes` block as `trend` and `joint`.
+- [ ] **What the grid says on AAPL** (2018→24, out-of-sample): the guess
+  that momentum's calm edge was beta in disguise was wrong — calm-flat 2.40,
+  calm-rising 2.29. What it does separate is the turbulent third: momentum
+  −1.88 in turbulent-*flat* bars (199) and +1.29 in turbulent-rising (84).
+  The loss the vol label pinned on "turbulence" is chop. Bollinger reads the
+  same cell the other way, +2.19 turbulent-flat and −1.01 turbulent-rising;
+  MACD earns in flat markets at any vol (2.65 / 3.38 calm / mid) and loses
+  in rising ones. "Down" is 5% of AAPL's bars, 62 of 72 in the turbulent third
+  — on a bull-market stock that cell is honest about being empty.
+- [ ] Tests (`tests/test_regimes.py`, 14; `tests/test_trend_regimes.py`,
+  21): tercile shares, unlabelled warm-up, thresholds match cut points, vol
+  formula, block series → label, market-not-strategy labelling, shorter
+  strategy series labelled on the full market, contributions sum, degrade on
+  short input; z is the t-statistic, compounded window return, steady drift
+  → up/down, zero drift mostly flat, same move is a trend in calm and noise
+  in turbulence, zero variance → flat, labels sit on the σ cut, grid cells
+  partition the bars, sparse cell has no Sharpe, calm-and-rising found when
+  planted. Six mutations caught (drop √n, flip the cut, OR for AND in the
+  grid, unscaled z, score sparse cells, centred window).
 
 Read: Ang & Bekaert (2002), "International Asset Allocation with Regime
 Shifts" — the two-state vol regime as the minimal model; AFML ch. 17 for
@@ -383,7 +407,8 @@ Testing as Formalized Data Snooping".
 walk-forward ────┤
   (§1)           └─ §3 DSR   (was the IS winner better than max-of-N noise?)
 rolling (§7) ────── the same, K times, walked forward: is the verdict a regime?
-regimes (§8) ────── which third of the market's conditions carried the return?
+regimes (§8) ────── which third of the market's conditions carried the return —
+                   and, crossed with trend, which cell of the 3 × 3?
 
 CSCV (§4)  ─────── is *selecting on IS score* better than random at all?
 snooping (§9) ──── does *anything* in the grid beat buy-and-hold, search included?

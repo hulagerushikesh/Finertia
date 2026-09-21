@@ -286,6 +286,11 @@ def test_backtest_carries_the_regime_breakdown(api):
     assert regimes["computable"]
     assert set(regimes["regimes"]) == {"low", "mid", "high"}
     assert regimes["best_regime"] in regimes["regimes"]
+    # And the second axis beside it: which way the market was going, plus
+    # the two labels crossed into a 3 x 3 grid.
+    assert set(regimes["trend"]["regimes"]) == {"down", "flat", "up"}
+    assert set(regimes["joint"]["cells"]) == {"low", "mid", "high"}
+    assert set(regimes["joint"]["cells"]["low"]) == {"down", "flat", "up"}
 
 
 def test_validation_carries_the_rolling_walk_forward(api):
@@ -297,8 +302,10 @@ def test_validation_carries_the_rolling_walk_forward(api):
     assert rolling["verdict"] in {"consistent", "regime_dependent", "failed"}
     # One verdict per fold, each with the market's own move beside it.
     assert all("benchmark_return" in f for f in rolling["folds"])
-    # And the stitched out-of-sample record split by volatility regime.
-    assert "regimes" in rolling["out_of_sample_stitched"]
+    # And the stitched out-of-sample record split by volatility regime,
+    # with the trend label and the vol x trend grid beside it.
+    stitched = rolling["out_of_sample_stitched"]["regimes"]
+    assert "trend" in stitched and "joint" in stitched
 
 
 def test_rolling_folds_is_a_request_knob(api):

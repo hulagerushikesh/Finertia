@@ -199,6 +199,27 @@ built for. Neither is a good or bad strategy. Each is a bet on a regime, and
 the single-split walk-forward was scoring which regime the split happened to
 land in.
 
+One more axis, added 21 Sep, because "calm" could be hiding "rising": every
+bar also gets a trend label — the t-statistic of the market's trailing 60-day
+mean return, `up` above +1σ, `down` below −1σ, `flat` between (a fixed cut,
+not a tercile, so flat means flat). Crossing the two on momentum's
+out-of-sample bars, same window:
+
+| Momentum OOS Sharpe | Flat | Rising |
+|---|---|---|
+| Low vol | 2.40 (124 bars) | 2.29 (135) |
+| Mid | 0.81 (195) | 0.45 (81) |
+| High vol | **−1.88** (199) | **+1.29** (84) |
+
+The guess was wrong: momentum's calm edge is there whether the market was
+rising or not. What the grid separates is the turbulent third — the −0.76
+above is −1.88 in turbulent *flat* bars and +1.29 when turbulence had a
+direction. The loss the vol label called "turbulence" is chop. Bollinger reads
+the same cell the other way round (+2.19 turbulent-flat, −1.01
+turbulent-rising). "Down" is left off the table because AAPL hardly had any:
+5% of bars, nearly all turbulent, too few per cell for a Sharpe worth printing —
+which the grid says by reporting the count and no number.
+
 ## Against the market, with the search inside the test
 
 Every check so far judges the winner, or the act of selecting it. None asks
@@ -256,10 +277,9 @@ timing is real. It was not worth doing.
 
 ## What is still open
 
-The label is one-dimensional. A trend/range label alongside vol would
-separate "calm and rising" from "calm and flat", which is where momentum's
-calm-regime beta hides. Basket validation runs but is not on the tab yet,
-and a rolling walk-forward for a book is not built.
+The trend label is on the API but not yet on the regime table in the UI.
+A rolling walk-forward for a book is not built. The bootstrap intervals
+still do not resample by regime, so the vol-CI coverage gap stands.
 
 ## Reproduce it
 
@@ -269,8 +289,8 @@ and a rolling walk-forward for a book is not built.
   `backend/rolling.py`, `backend/regimes.py`, `backend/deflated.py`, `backend/trials.py`,
   `backend/pbo.py`, `backend/snooping.py`, `backend/portfolio_validation.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
   backtesting or statistics library; the normal CDF is `math.erf`.
-- Tests: 641 in `backend/tests/`, including reproductions of the DSR paper's
+- Tests: 662 in `backend/tests/`, including reproductions of the DSR paper's
   worked example and Lo (2002) to 1e-12, and mutation checks on every check
   above.
-- Figures are as of 15 Sep 2026 (whole-grid table: 20 Sep; basket table: 21 Sep) with yfinance adjusted prices; Yahoo
+- Figures are as of 15 Sep 2026 (whole-grid table: 20 Sep; basket and vol × trend tables: 21 Sep) with yfinance adjusted prices; Yahoo
   re-adjusts on corporate actions, so the third decimal will drift.

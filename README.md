@@ -15,7 +15,7 @@ Four more checks sit behind those, each built because the previous one was found
 - **Purge and embargo** (`purge.py`) — the trade straddling the in/out-of-sample cut cannot earn on both sides.
 - **Block-bootstrap confidence intervals** (`bootstrap.py`) — on every metric, every plan; coverage measured on GARCH paths, the two metrics that fail are flagged.
 - **Rolling walk-forward** (`rolling.py`) — the single 70/30 split is one draw, and the verdict below flips when the window moves. So the split is walked forward: anchored in-sample stretch, the grid re-optimised at each of four folds, each winner scored only on the segment that follows, the market's own return and volatility beside every fold, and the segments stitched into one out-of-sample curve with a bootstrap interval. A strategy that earned in 2020–21 and lost in 2022 is reported as exactly that, not as an average.
-- **Volatility regimes** (`regimes.py`) — every bar labelled by the market's trailing 21-day realised volatility, cut into terciles of the period; the strategy's Sharpe, contribution, and time in market on each third, with the market's own Sharpe beside it. On every backtest and on the stitched out-of-sample record. "Earns in calm markets, gives it back in turbulent ones" becomes three numbers.
+- **Volatility and trend regimes** (`regimes.py`) — every bar labelled by the market's trailing 21-day realised volatility, cut into terciles of the period, and by its direction: the t-statistic of the trailing 60-day mean return, `up` / `flat` / `down` at ±1σ. The strategy's Sharpe, contribution, and time in market on each label, with the market's own Sharpe beside it, and a 3 × 3 vol × trend grid with Sharpe per cell. On every backtest and on the stitched out-of-sample record. "Earns in calm markets, gives it back in turbulent ones" becomes three numbers — and the grid says whether the turbulent loss was chop or a bear market.
 - **Whole-grid inference** (`snooping.py`, White 2000; Hansen 2005; Romano & Wolf 2005) — every other check judges the winner. This takes every cell of the grid against buy-and-hold in one joint bootstrap: the Reality Check and SPA p-values for "does anything here beat the market once the search is accounted for", and a Romano-Wolf stepdown for "which cells". On AAPL 2018→2024, five other tickers and both windows, no cell survives at 5% — and the best cell's p-value alone versus inside its grid is the size of the snooping, printed.
 
 See [learning/03-validation-methods.md](learning/03-validation-methods.md) for formulas, traps, and where each lives.
@@ -233,7 +233,7 @@ Finertia/
 │   ├── purge.py             # purge + embargo at the split
 │   ├── bootstrap.py         # stationary block bootstrap, BCa intervals
 │   ├── rolling.py           # anchored rolling walk-forward, one verdict per fold
-│   ├── regimes.py           # realised-vol terciles, Sharpe per regime
+│   ├── regimes.py           # realised-vol terciles × trend label, Sharpe per regime and per cell
 │   ├── price_store.py       # Firestore / in-memory price cache tiers
 │   ├── risk.py              # stop-loss / take-profit + volatility sizing
 │   ├── portfolio.py         # alignment, weighting, aggregation, attribution
@@ -484,7 +484,7 @@ cd backend
 pytest tests/ -q
 ```
 
-641 tests covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference, basket validation), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
+662 tests covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference, basket validation), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
 
 `test_routes.py` covers the part that decides who may call everything else: token handling, suspended accounts, admin gating, quota and entitlement enforcement, rate limiting, and how failures become status codes. `verify_token`, the profile lookup, the Firestore client, and the price fetch are all replaced, so no network or credentials are involved.
 
