@@ -3,6 +3,21 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-09-21 — A basket's permutation null re-times every leg on its own
+
+Validation for portfolios needed a definition of "random timing" for a book
+before any code (open-questions §2). Two candidates: shuffle each leg's
+position series independently with the weight path fixed (null: no leg can
+time its own market), or shuffle the weight path with the legs fixed (null: the
+allocation rule adds nothing). The first was chosen: it is the direct extension
+of the single-ticker test, a one-leg book reproduces `/api/validate` exactly, and
+it is the question a user of a shared-parameter strategy is actually asking.
+The second is a question about the weighting, only meaningful when weighting is
+not equal, and stays unbuilt. Not one shared permutation across legs — that
+would let mirror-image legs cancel under the null and read a flat book as
+skill. The grid is scored on the book's Sharpe, and the whole-grid benchmark is
+holding the basket at the same weights.
+
 ## 2026-09-20 — Cloud Run runs as a service account with no project roles
 
 Until rev 00007 the API ran as the default compute service account, which

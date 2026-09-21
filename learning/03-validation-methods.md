@@ -333,7 +333,49 @@ Read: White (2000) "A Reality Check for Data Snooping"; Hansen (2005) "A Test
 for Superior Predictive Ability"; Romano & Wolf (2005) "Stepwise Multiple
 Testing as Formalized Data Snooping".
 
-## How the nine fit together
+## 10. The same questions, asked of a basket — `backend/portfolio_validation.py`
+
+- [ ] **What changes**: nothing in the maths of §1, §3, §4, §5 or §9 — all of
+  it is reused. Two *decisions* change, and each is a null hypothesis in
+  disguise.
+- [ ] **What is optimised**: `/api/portfolio` runs one strategy with one
+  parameter set shared by every leg, so the grid is scored on the **book's**
+  in-sample Sharpe. Per cell: leg positions → each leg's net return after its
+  own costs → weighted sum. A cell that flatters one leg and ruins another is
+  judged on the net. The whole-grid benchmark (§9) becomes *holding the basket
+  at the same weights*. A `legs` block reports the winner's IS/OOS Sharpe per
+  ticker, because a book that held up may have done so on one name.
+- [ ] **What "random timing" means for a book** — the choice that had to be
+  made before any code (open-questions §2). Two candidate nulls:
+  1. *Shuffle each leg's position series independently, weights fixed.* Null =
+     no leg can time its own market. The book under the null still has
+     exposure and diversification, so its null distribution is **not** where a
+     single leg's would be — which is the point: a basket of un-timed legs
+     should not look timed. ← **implemented**.
+  2. *Shuffle the weight path, keep the legs.* Null = the allocation rule adds
+     nothing over a random one. A question about the weighting, not the
+     signal; only meaningful when weighting ≠ equal. Not implemented.
+- [ ] **Why independent, not one shared permutation**: with a shared draw two
+  legs that are mirror images would cancel on every trial as they do in
+  reality, the null would be pure cost drag, and a flat book would read as
+  timing skill (`test_legs_are_shuffled_independently`; the shared-draw
+  mutant survived the first draft of the suite, which is why that test reads
+  the way it does).
+- [ ] **Per-leg block**: the ordinary §2 test on each leg, from the same draws.
+  A significant book can be traced to the legs that carried it.
+- [ ] **Anchor**: a one-leg book with weight 1 reproduces `walk_forward()` and
+  `permutation_test()` *bit for bit* (same seed, same draw order). That is
+  what lets the verdict card mean the same thing on either universe.
+- [ ] **Measured 21 Sep 2026, AAPL+MSFT+GOOGL 2018→2024 equal weight**:
+  momentum fails (IS 0.42 → OOS −0.51; PBO 0.70; only AAPL beats random
+  timing, p 0.022). Bollinger **holds up** (0.83 → 0.77; PBO 0.21; all three
+  legs beat random timing, book p 0.002) — and the best grid cell trails
+  holding the basket by 18.7 %/yr, SPA p 1.0. Timed, and not worth timing:
+  the two-verdict case the card's new sentence was written for.
+- [ ] **Not done**: rolling walk-forward (§7) and regimes (§8) for a book;
+  the validation tab is still hidden in portfolio mode.
+
+## How the ten fit together
 
 ```
                  ┌─ §5 purge/embargo (no bar paid twice)
@@ -346,11 +388,15 @@ CSCV (§4)  ─────── is *selecting on IS score* better than random 
 snooping (§9) ──── does *anything* in the grid beat buy-and-hold, search included?
 permutation (§2) ─ is the *timing* better than a shuffle?
 bootstrap (§6) ─── how wide is the band around every number you printed?
+
+basket (§10) ───── §1 + §3 + §4 + §9 on the book's returns; §2 with every leg
+                   re-timed on its own, weights fixed
 ```
 
 Each answers a different question. None replaces another. The UI shows all of
-them (`ValidationPanel.jsx`: walk-forward → deflated → PBO → permutation;
-`MetricsGrid.jsx`: CI bands).
+them (`ValidationPanel.jsx`: walk-forward → rolling → deflated → PBO → whole
+grid → permutation; `MetricsGrid.jsx`: CI bands) — for one ticker. The basket
+route exists; its tab does not yet.
 
 ## Test discipline that made this trustworthy
 
