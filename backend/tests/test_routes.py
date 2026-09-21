@@ -330,6 +330,66 @@ def test_rolling_too_short_degrades_instead_of_failing_the_run(api, monkeypatch)
     assert "fewer folds" in body["rolling_walk_forward"]["reason"]
 
 
+PORTFOLIO = {"tickers": ["AAPL", "MSFT"], "start": "2020-01-01", "end": "2022-01-01",
+             "strategy": "momentum"}
+
+
+def test_portfolio_validation_is_refused_on_the_free_plan(api):
+    client, _ = api
+    r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
+    assert r.status_code == 402
+    assert "pro" in r.json()["detail"].lower()
+
+
+def test_portfolio_validation_carries_both_checks_for_the_book(api):
+    client, state = api
+    state["profile"] = dict(PRO)
+    r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["tickers"] == ["AAPL", "MSFT"]
+    assert body["weighting"] == "equal"
+    wf = body["walk_forward"]
+    assert wf["verdict"] in {"held_up", "weakened", "overfit", "failed", "inconclusive"}
+    assert set(wf["legs"]) == {"AAPL", "MSFT"}
+    assert wf["snooping"]["benchmark"] == "buy_and_hold_basket"
+    # Same shape the single-ticker verdict card reads.
+    for k in ("best_params", "best_out_of_sample", "deflated", "overfitting", "snooping"):
+        assert k in wf
+    pm = body["permutation"]
+    assert pm["trials"] == 500
+    assert set(pm["legs"]) == {"AAPL", "MSFT"}
+    assert pm["null"].startswith("each leg")
+    # Nothing was persisted: diagnostics do not count as runs in history.
+    assert "rolling_walk_forward" not in body
+
+
+def test_portfolio_validation_respects_the_plan_size_cap(api, monkeypatch):
+    client, state = api
+    state["profile"] = dict(PRO)
+    monkeypatch.setattr(main, "max_portfolio_size", lambda profile: 1)
+    r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
+    assert r.status_code == 402
+    assert "up to 1" in r.json()["detail"]
+
+
+def test_portfolio_validation_shares_the_validate_rate_budget(api):
+    client, state = api
+    state["profile"] = dict(PRO)
+    limit = main.validate_limiter.limit
+    for _ in range(limit):
+        assert client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH).status_code == 200
+    assert client.post("/api/validate", json=BACKTEST, headers=AUTH).status_code == 429
+
+
+def test_portfolio_validation_too_short_is_a_400(api, monkeypatch):
+    client, state = api
+    state["profile"] = dict(PRO)
+    monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices(days=40))
+    r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
+    assert r.status_code == 400
+
+
 def test_pro_is_not_capped_by_the_free_quota(api):
     client, state = api
     state["profile"] = {**PRO, "runsThisPeriod": 10_000,

@@ -46,11 +46,13 @@ from schemas import (
     ValidateRequest,
     CompareRequest,
     PortfolioRequest,
+    PortfolioValidateRequest,
     UserPatch,
     RISK_KEYS,
 )
 from strategies import build_positions, longest_window, param_grid, STRATEGY_NAMES, STRATEGIES
 from validation import walk_forward, permutation_test
+from portfolio_validation import leg_positions, portfolio_walk_forward, portfolio_permutation_test
 from firebase_admin_init import verify_token, get_user_profile, get_db
 
 # ---------------------------------------------------------------------------
@@ -727,6 +729,137 @@ async def validate_strategy(req: ValidateRequest, authorization: Optional[str] =
     }
 
 
+
+def _fetch_aligned(req: PortfolioRequest) -> tuple[pd.DataFrame, dict, str]:
+    """Fetch every leg, align on shared days, reject a book too short to warm up.
+
+    Every leg is fetched before anything is computed — one bad ticker should
+    fail the request outright rather than silently yielding a smaller
+    portfolio than the user asked for.
+    """
+    closes = {}
+    sources = set()
+    for symbol in req.tickers:
+        try:
+            df = fetch_ohlcv(symbol, req.start, req.end)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=f"{symbol}: {exc}") from exc
+        except DataUnavailableError as exc:
+            raise HTTPException(status_code=503, detail=f"{symbol}: {exc}") from exc
+        closes[symbol] = df["Close"]
+        sources.add(df.attrs.get("data_source", "yfinance"))
+    # One stale leg makes the whole portfolio stale — that is the flag that matters.
+    data_source = "cache-stale" if "cache-stale" in sources else "mixed" if len(sources) > 1 else next(iter(sources))
+
+    try:
+        aligned = align_closes(closes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if len(aligned) < req.warmup_bars() + 2:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Only {len(aligned)} trading days are shared by all "
+                f"{len(req.tickers)} tickers — not enough for the chosen "
+                "indicator and weighting windows."
+            ),
+        )
+    return aligned, closes, data_source
+
+
+def _portfolio_weights(req: PortfolioRequest, aligned: pd.DataFrame) -> pd.DataFrame:
+    """The weight path the request asked for, on the aligned index."""
+    if req.weighting == "inverse_vol":
+        # Weights follow the *assets'* volatility, not the strategy's, so a leg
+        # that happens to sit flat does not get an unbounded weight.
+        asset_returns = aligned.pct_change().fillna(0.0)
+        try:
+            return inverse_vol_weights(
+                asset_returns, window=req.weight_window, max_weight=req.max_weight
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return equal_weights(list(aligned.columns), aligned.index)
+
+
+@app.post("/api/portfolio/validate")
+async def validate_portfolio(req: PortfolioValidateRequest, authorization: Optional[str] = Header(None)):
+    """The overfitting checks, asked of the whole book.
+
+    One parameter set is optimised on the basket's in-sample Sharpe and scored
+    on the rest; the permutation test re-times every leg independently with
+    the weight path held fixed (see `portfolio_validation.py` for why that is
+    the null). Same plan gate and rate budget as `/api/validate`, plus the
+    plan's portfolio-size cap. Diagnostic; not persisted.
+    """
+    user = await inject_user(authorization)
+    _enforce(validate_limiter, user["uid"], "validation runs")
+    if not may_validate(user["profile"]):
+        raise HTTPException(
+            status_code=402,
+            detail=(
+                "Walk-forward validation and the permutation test are Pro features. "
+                "Each run sweeps a parameter grid and then reshuffles the signals "
+                "hundreds of times, so they cost far more than a single backtest."
+            ),
+        )
+    allowed_size = max_portfolio_size(user["profile"])
+    if len(req.tickers) > allowed_size:
+        raise HTTPException(
+            status_code=402,
+            detail=(
+                f"Your plan allows portfolios of up to {allowed_size} holdings; "
+                f"you selected {len(req.tickers)}. Upgrade to run larger baskets."
+            ),
+        )
+    _enforce_quota(user)
+
+    start_time = time.time()
+    aligned, _, data_source = _fetch_aligned(req)
+    weights = _portfolio_weights(req, aligned)
+
+    params = req.strategy_params()
+    swept_keys = param_grid(req.strategy)[0].keys()
+    user_params = {k: params[k] for k in swept_keys if k in params}
+    seed_key = ("|".join(req.tickers), req.start, req.end, req.strategy, req.weighting)
+
+    try:
+        wf = portfolio_walk_forward(
+            aligned,
+            weights,
+            transaction_cost=req.transaction_cost,
+            strategy=req.strategy,
+            base_params=params,
+            user_params=user_params,
+            split_ratio=req.split_ratio,
+            seed=stable_seed(*seed_key, "snooping"),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    permutation = portfolio_permutation_test(
+        leg_positions(aligned, req.strategy, params),
+        aligned.pct_change(),
+        weights,
+        req.transaction_cost,
+        n_trials=req.permutation_trials,
+    )
+
+    return {
+        "tickers": req.tickers,
+        "start": req.start,
+        "end": req.end,
+        "strategy": req.strategy,
+        "weighting": req.weighting,
+        "bars": len(aligned),
+        "walk_forward": wf,
+        "permutation": permutation,
+        "data_source": data_source,
+        "duration_ms": int((time.time() - start_time) * 1000),
+    }
+
+
 @app.post("/api/portfolio")
 async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(None)):
     """Run one strategy across several tickers and combine the legs.
@@ -755,28 +888,7 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
 
     start_time = time.time()
 
-    # 1. Fetch every leg before computing anything — one bad ticker should fail
-    # the request outright rather than silently yielding a smaller portfolio
-    # than the user asked for.
-    closes = {}
-    sources = set()
-    for symbol in req.tickers:
-        try:
-            df = fetch_ohlcv(symbol, req.start, req.end)
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=f"{symbol}: {exc}") from exc
-        except DataUnavailableError as exc:
-            raise HTTPException(status_code=503, detail=f"{symbol}: {exc}") from exc
-        closes[symbol] = df["Close"]
-        sources.add(df.attrs.get("data_source", "yfinance"))
-    # One stale leg makes the whole portfolio stale — that is the flag that matters.
-    data_source = "cache-stale" if "cache-stale" in sources else "mixed" if len(sources) > 1 else next(iter(sources))
-
-    # 2. Align on shared trading days.
-    try:
-        aligned = align_closes(closes)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    aligned, closes, data_source = _fetch_aligned(req)
 
     # How much history the inner join actually cost, measured against the leg
     # with the longest record rather than against the requested start date.
@@ -785,16 +897,6 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
     longest_ticker = max(closes, key=lambda t: len(closes[t]))
     dropped_bars = len(closes[longest_ticker]) - len(aligned)
     limiting_ticker = min(closes, key=lambda t: len(closes[t])) if dropped_bars else None
-
-    if len(aligned) < req.warmup_bars() + 2:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Only {len(aligned)} trading days are shared by all "
-                f"{len(req.tickers)} tickers — not enough for the chosen "
-                "indicator and weighting windows."
-            ),
-        )
 
     # 3. Run each leg exactly as a single-ticker backtest would.
     leg_returns = {}
@@ -827,19 +929,7 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
     legs_frame = pd.DataFrame(leg_returns)
 
     # 4. Weight and combine.
-    if req.weighting == "inverse_vol":
-        # Weights follow the *assets'* volatility, not the strategy's, so a leg
-        # that happens to sit flat does not get an unbounded weight.
-        asset_returns = aligned.pct_change().fillna(0.0)
-        try:
-            weights = inverse_vol_weights(
-                asset_returns, window=req.weight_window, max_weight=req.max_weight
-            )
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
-    else:
-        weights = equal_weights(list(legs_frame.columns), legs_frame.index)
-
+    weights = _portfolio_weights(req, aligned)
     portfolio = combine(legs_frame, weights)
 
     net_return = portfolio["net_return"]
