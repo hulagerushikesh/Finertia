@@ -227,13 +227,39 @@ found it. And AAPL momentum on the 2025 window reads *held up* on
 walk-forward while trailing buy-and-hold by 9.6% a year: "held up" was
 always a statement against zero, not against the market.
 
+## The same questions, asked of a basket
+
+Every check above is defined on one position series. A 2–10-ticker basket
+had none of them, and extending them turned out to be two decisions rather
+than any new maths. First, what is optimised: a basket runs one parameter set
+across every leg, so the grid is scored on the *book's* in-sample Sharpe and
+the whole-grid benchmark is holding the basket at the same weights. Second,
+what "random timing" means for a book. Shuffling the weight path asks whether
+the allocation rule adds anything; shuffling each leg's timing independently,
+weights fixed, asks whether any leg can time its own market. The second is
+the question a shared-parameter strategy poses, so that is the null — and it
+has to be independent per leg, not one shared draw, or two mirror-image legs
+would cancel under the null exactly as they do in reality and a flat book
+would read as skill.
+
+AAPL + MSFT + GOOGL, 2018→2024, equal weight, on the first split:
+
+| Strategy | Walk-forward | Timing p (book) | Legs beating random timing | Best cell vs holding the basket | SPA p |
+|---|---|---|---|---|---|
+| Momentum | failed, 0.42 → −0.51 | 0.134 | 1 of 3 (AAPL) | −23.9%/yr | 1.00 |
+| Bollinger | **held up**, 0.83 → 0.77 | **0.002** | **3 of 3** | −18.7%/yr | 1.00 |
+
+Bollinger on the mega-cap basket is the cleanest two-verdict result in the
+whole piece: it survived the split, every leg beat random timing, and it
+still trails simply holding the three stocks by nineteen points a year. The
+timing is real. It was not worth doing.
+
 ## What is still open
 
 The label is one-dimensional. A trend/range label alongside vol would
 separate "calm and rising" from "calm and flat", which is where momentum's
-calm-regime beta hides. And portfolio-mode validation: walk-forward and
-permutation are defined on one position series, so a 2–10-ticker basket
-currently gets metrics and confidence intervals but no overfitting checks.
+calm-regime beta hides. Basket validation runs but is not on the tab yet,
+and a rolling walk-forward for a book is not built.
 
 ## Reproduce it
 
@@ -241,10 +267,10 @@ currently gets metrics and confidence intervals but no overfitting checks.
   end 2024-01-01 then 2025-01-01, default parameters, split 0.7.
 - Source: `backend/validation.py` (`walk_forward`, `permutation_test`),
   `backend/rolling.py`, `backend/regimes.py`, `backend/deflated.py`, `backend/trials.py`,
-  `backend/pbo.py`, `backend/snooping.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
+  `backend/pbo.py`, `backend/snooping.py`, `backend/portfolio_validation.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
   backtesting or statistics library; the normal CDF is `math.erf`.
-- Tests: 620 in `backend/tests/`, including reproductions of the DSR paper's
+- Tests: 641 in `backend/tests/`, including reproductions of the DSR paper's
   worked example and Lo (2002) to 1e-12, and mutation checks on every check
   above.
-- Figures are as of 15 Sep 2026 (whole-grid table: 20 Sep) with yfinance adjusted prices; Yahoo
+- Figures are as of 15 Sep 2026 (whole-grid table: 20 Sep; basket table: 21 Sep) with yfinance adjusted prices; Yahoo
   re-adjusts on corporate actions, so the third decimal will drift.

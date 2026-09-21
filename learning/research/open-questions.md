@@ -11,12 +11,19 @@ left of this question: the two disagree by 2–3× on the shipped grids with
 silhouettes ~0.25. Sharper grids (more cells, wider ranges) would let the
 clustering speak; that is a grid-design question now, not a statistics one.
 
-## 2. Validation for portfolios
+## 2. ~~Validation for portfolios~~ — decided and built 21 Sep 2026
 
-Walk-forward and permutation are defined on a single position series, so the
+~~Walk-forward and permutation are defined on a single position series, so the
 tab is hidden in portfolio mode. What is a portfolio-level permutation — shuffle
 each leg's timing independently, or shuffle the weight path? Each answers a
-different null. Needs a definition before code.
+different null. Needs a definition before code.~~
+
+**Decided**: shuffle each leg independently, weight path fixed — null = "no leg
+can time its own market" (DECISIONS.md, 21 Sep). `backend/portfolio_validation.py`,
+`POST /api/portfolio/validate`, 03-validation-methods §10. What is left: the
+weight-path null (only meaningful for inverse-vol) is not built; rolling
+walk-forward and regimes for a book are not built; the tab is still hidden in
+portfolio mode.
 
 ## 3. Regime awareness
 
