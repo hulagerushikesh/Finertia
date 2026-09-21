@@ -347,7 +347,16 @@ Inverse-vol weights shift the trailing window one bar, like everything else in t
 
 Reported alongside the usual metrics: each leg's **average weight**, its **contribution** (arithmetic, so the column sums to the total), its **standalone return**, and a **diversification ratio** — weighted average leg volatility over portfolio volatility. 1.0 means the holdings move as one and you bought no diversification; it reports as undefined rather than 0.0 when the portfolio has no volatility, since perfectly offsetting legs are maximally diversified, not minimally.
 
-Walk-forward and the permutation test are defined on a single position series, so validation is not offered for portfolios yet.
+### Validating a basket
+
+`POST /api/portfolio/validate` (`portfolio_validation.py`) asks the same questions of the whole book. Two things had to be decided, not derived:
+
+- **What is optimised.** A portfolio runs one strategy with one parameter set shared by every leg, so the grid is scored on the *book's* in-sample Sharpe, not on any leg's. The deflated Sharpe, PBO and the whole-grid test then run on the per-cell book returns exactly as they do for one ticker; the whole-grid benchmark is holding the basket at the same weights. The response adds a `legs` block — the winner's in- and out-of-sample Sharpe per ticker — because a book that held up may have done so on one name.
+- **What "random timing" means for a book.** Each leg's position series is shuffled *independently*, keeping its own count of long, short and flat days, with the weight path held fixed. The null is "no leg can time its own market"; a basket of un-timed legs still has exposure and diversification, so the null distribution is not where a single leg's would be. The other candidate null — shuffle the weight path, keep the legs — asks whether the allocation rule adds anything, a different question, not implemented. A per-leg block runs the ordinary single-ticker test on the same draws so a significant book can be traced to the legs that carried it.
+
+A one-leg book with weight 1 reproduces `/api/validate` key for key, so a verdict means the same thing on either universe. Legs are built from the raw signal without the stop and sizing overlays, as `/api/validate` does. Same Pro gate and rate budget as `/api/validate`, plus the plan's basket-size cap. Not yet on the validation tab in portfolio mode.
+
+On AAPL+MSFT+GOOGL 2018→2024, equal weight: momentum fails walk-forward (0.42 → −0.51), no leg beats random timing but AAPL; Bollinger holds up (0.83 → 0.77), all three legs beat random timing (book p = 0.002) — and the best grid cell still trails holding the basket by 18.7 % a year, SPA p = 1.0. The book was timed; it was not worth timing.
 
 ## Comparing runs
 
@@ -475,7 +484,7 @@ cd backend
 pytest tests/ -q
 ```
 
-620 tests covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
+641 tests covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference, basket validation), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
 
 `test_routes.py` covers the part that decides who may call everything else: token handling, suspended accounts, admin gating, quota and entitlement enforcement, rate limiting, and how failures become status codes. `verify_token`, the profile lookup, the Firestore client, and the price fetch are all replaced, so no network or credentials are involved.
 

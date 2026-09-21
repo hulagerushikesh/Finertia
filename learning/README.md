@@ -13,7 +13,7 @@ explain the concept out loud without looking — not when you have read about it
 |---|---|---|---|
 | [01-foundations.md](01-foundations.md) | Prices, returns, signals, equity curves, drawdown, Sharpe; pandas/numpy needed to compute them | Basics | ~35h |
 | [02-stack.md](02-stack.md) | FastAPI, Firebase, React, Recharts, SaaS patterns, the deployed architecture | Intermediate | ~60h |
-| [03-validation-methods.md](03-validation-methods.md) | What Finertia does that most backtesters do not: walk-forward, permutation, DSR, PBO, purging, bootstrap CIs, rolling folds, regimes, whole-grid inference — with formulas, traps, and where each lives | Advanced | ~40h |
+| [03-validation-methods.md](03-validation-methods.md) | What Finertia does that most backtesters do not: walk-forward, permutation, DSR, PBO, purging, bootstrap CIs, rolling folds, regimes, whole-grid inference, basket validation — with formulas, traps, and where each lives | Advanced | ~40h |
 | [research/reading-list.md](research/reading-list.md) | Papers and books, in the order to read them | Research | ongoing |
 | [research/open-questions.md](research/open-questions.md) | What is not solved yet — the research frontier of this project | Research | — |
 

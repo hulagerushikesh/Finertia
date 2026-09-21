@@ -246,6 +246,13 @@ class PortfolioRequest(BacktestRequest):
         return warmup
 
 
+class PortfolioValidateRequest(PortfolioRequest):
+    """A portfolio config plus the knobs for the overfitting checks."""
+
+    split_ratio: float = Field(0.7, ge=0.5, le=0.9)
+    permutation_trials: int = Field(500, ge=100, le=2000)
+
+
 class CompareRequest(BaseModel):
     """Run ids to overlay against each other.
 
