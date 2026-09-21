@@ -104,7 +104,7 @@ export function readChecks(data) {
 }
 
 /** The sentence after the count — what this particular combination usually means. */
-function interpret(byId) {
+function interpret(byId, held) {
   const wf = byId["walk-forward"]?.tone;
   const timing = byId.timing?.tone;
   const dsr = byId.deflated?.tone;
@@ -125,7 +125,7 @@ function interpret(byId) {
     return "It held up on unseen data, but with this many combinations tried a Sharpe this high could still be a lucky pick.";
   }
   if (wf === "gain" && grid === "loss") {
-    return "It held up on unseen data, but not one combination in the grid beats simply holding the stock once the search is inside the test. Beating doing nothing is the harder bar, and it was not cleared.";
+    return `It held up on unseen data, but not one combination in the grid beats simply holding ${held} once the search is inside the test. Beating doing nothing is the harder bar, and it was not cleared.`;
   }
   if (rolling === "warn") {
     return "The result depends on where the split falls. Treat it as an edge in some years, not a general one.";
@@ -158,7 +158,7 @@ export default function VerdictCard({ data, className, onJump }) {
     counted.length === 0
       ? "None of the checks could run on this configuration."
       : `${passed.length} of ${counted.length} checks passed.`;
-  const meaning = interpret(byId);
+  const meaning = interpret(byId, Array.isArray(data.tickers) ? "the basket" : "the stock");
 
   // The sections may be collapsed; the parent opens them and scrolls once
   // they exist. Without a parent, scroll directly.

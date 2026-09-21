@@ -372,8 +372,9 @@ Testing as Formalized Data Snooping".
   legs beat random timing, book p 0.002) — and the best grid cell trails
   holding the basket by 18.7 %/yr, SPA p 1.0. Timed, and not worth timing:
   the two-verdict case the card's new sentence was written for.
-- [ ] **Not done**: rolling walk-forward (§7) and regimes (§8) for a book;
-  the validation tab is still hidden in portfolio mode.
+- [ ] **Not done**: rolling walk-forward (§7) and regimes (§8) for a book.
+  The validation tab reads the basket route in portfolio mode (same verdict
+  card, four checks instead of five since §7 is absent, per-name tables).
 
 ## How the ten fit together
 
@@ -395,8 +396,8 @@ basket (§10) ───── §1 + §3 + §4 + §9 on the book's returns; §2 w
 
 Each answers a different question. None replaces another. The UI shows all of
 them (`ValidationPanel.jsx`: walk-forward → rolling → deflated → PBO → whole
-grid → permutation; `MetricsGrid.jsx`: CI bands) — for one ticker. The basket
-route exists; its tab does not yet.
+grid → permutation; `MetricsGrid.jsx`: CI bands). In portfolio mode the same
+panel reads `/api/portfolio/validate` — no rolling section, per-name tables.
 
 ## Test discipline that made this trustworthy
 
