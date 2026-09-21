@@ -3,11 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 /**
- * The one-paragraph answer that sits above the five validation sections.
+ * The one-paragraph answer that sits above the six validation sections.
  *
  * Each section below ends in its own verdict, and a reader who wants the
  * evidence can have all of it. But the first question is always the same —
- * "is this real?" — and five stamps on five sheets do not answer it. This
+ * "is this real?" — and six stamps on six sheets do not answer it. This
  * card counts the checks, names the ones that failed in plain words, and
  * says what the combination usually means. Every chip scrolls to its
  * section, so the card is a table of contents, not a replacement.
@@ -71,6 +71,16 @@ const CHECKS = [
     },
   },
   {
+    id: "snooping",
+    name: "Whole grid",
+    read: (d) => (d.walk_forward?.snooping?.computable ? d.walk_forward.snooping.verdict : null),
+    words: {
+      grid_beats_benchmark: ["beats holding", "gain"],
+      weak_evidence: ["borderline vs holding", "warn"],
+      no_evidence: ["nothing beats holding", "loss"],
+    },
+  },
+  {
     id: "timing",
     name: "Timing vs luck",
     read: (d) => (d.permutation ? (d.permutation.significant ? "yes" : "no") : null),
@@ -99,6 +109,7 @@ function interpret(byId) {
   const timing = byId.timing?.tone;
   const dsr = byId.deflated?.tone;
   const rolling = byId.rolling?.tone;
+  const grid = byId.snooping?.tone;
   const all = Object.values(byId).filter((c) => c.tone !== "faint");
 
   if (all.length && all.every((c) => c.tone === "gain")) {
@@ -112,6 +123,9 @@ function interpret(byId) {
   }
   if (wf === "gain" && (dsr === "loss" || dsr === "warn")) {
     return "It held up on unseen data, but with this many combinations tried a Sharpe this high could still be a lucky pick.";
+  }
+  if (wf === "gain" && grid === "loss") {
+    return "It held up on unseen data, but not one combination in the grid beats simply holding the stock once the search is inside the test. Beating doing nothing is the harder bar, and it was not cleared.";
   }
   if (rolling === "warn") {
     return "The result depends on where the split falls. Treat it as an edge in some years, not a general one.";

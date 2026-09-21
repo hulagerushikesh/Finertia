@@ -163,6 +163,14 @@ export default function DocsPage() {
             is checked against the other. If it lands below the median at least
             half the time, the selection is no better than choosing at random.
           </Term>
+          <Term name="Whole-grid test">
+            The three checks above ask whether the chosen combination is real.
+            This one asks whether <em>anything</em> in the grid beats simply
+            holding the stock, with every combination inside one bootstrap so
+            the winner is judged as the best of a search. Three readings of the
+            same draw — White's Reality Check, Hansen's SPA, and a Romano–Wolf
+            stepdown that names which cells, if any, survive.
+          </Term>
           <Term name="Confidence intervals">
             Every metric carries a band from a block bootstrap of the returns —
             resampled in blocks so the autocorrelation survives. A Sharpe whose
