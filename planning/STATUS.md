@@ -1,20 +1,20 @@
 # Status
 
-_Current to `e98ac8c` (main) · 21 Sep 2026._
+_Current to `cb6790e` (main) · 21 Sep 2026._
 
 ## At a glance
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00009` (20 Sep: whole-grid inference, built from `bb5c5fb`, runs as `finertia-api-runtime`) — **`backend/` on `main` is ahead by one merge (#41, basket validation; drift comment posted, route has no caller yet)**; frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17) and the same-day simplification (PRs #19–#23: Ocean Breeze theme, plain shadcn surfaces, folded set-up/results, signed-in CTA fix, newcomer landing) |
+| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00009` (20 Sep: whole-grid inference, built from `bb5c5fb`, runs as `finertia-api-runtime`) — **`backend/` on `main` is ahead by one merge (#41, basket validation; drift comment posted) — and since #43 the frontend calls it, so the portfolio-mode Validation tab 404s on prod until rev `00010` ships**; frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17) and the same-day simplification (PRs #19–#23: Ocean Breeze theme, plain shadcn surfaces, folded set-up/results, signed-in CTA fix, newcomer landing) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 641 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + bundle budget + secret scan); `backend-drift.yml` comments on the merged PR when `backend/` is ahead of the `backend-deployed` tag |
-| Commits | 114 on main (`git rev-list --count`, counted 21 Sep) · 40 PRs merged (`gh pr list --state merged`) |
+| Commits | 118 on main (`git rev-list --count`, counted 21 Sep) · 42 PRs merged (`gh pr list --state merged`) |
 | API | 17 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
-| Blocked on user | 3 — login smoke test **on production** (redesign is live) · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
-| In flight | validation tab in portfolio mode (frontend, reads `/api/portfolio/validate`) — started 21 Sep |
+| Blocked on user | 4 — **backend deploy of `cb6790e` (rev 00010) + tag move**, without which the basket Validate button 404s · login smoke test **on production** · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
+| In flight | nothing — every branch is merged; next is r3, a trend / range label beside the volatility regime |
 | Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); draft at [write-up.md](write-up.md) |
 
 ## Stages — verified vs built
@@ -85,6 +85,7 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 | 19 Sep | UI batch on `main`: rolling fold + regime tables, effective N, cache note (PR #13); favicon/manifest/OG (PR #14); plain landing copy (PR #16); verdict card over the validation tab (PR #17) | verified on a real AAPL 2018→2024 payload (2 of 5 checks passed) at 1280 + 375 px, both themes; prod serves the icons and the new copy |
 | 20 Sep | Whole-grid inference (`snooping.py`): White RC + Hansen SPA + Romano-Wolf stepdown over the walk-forward candidate matrix vs buy-and-hold, in every `/api/validate` as `walk_forward.snooping`; open-questions §4 closed; write-up gains a table | 17 tests, 620 total; 6 mutation checks; AAPL 2018→24 momentum best −6.4%/yr vs B&H, RC p 0.89, SPA 1.0; no cell survives anywhere; deployed same day as rev 00009 (`bb5c5fb`), health 200 both URLs, 401 on a bogus token, zero errors; `backend-drift.yml` posted its first live comment on #38 (correct sha, diff and tag command) and the tag moved to `bb5c5fb` |
 | 21 Sep | Whole-grid test on the validation tab (PR #40): sixth verdict check "Whole grid", section with the four p-values and the per-cell Romano–Wolf table; glossary entry | previewed on real AAPL/BABA payloads + a synthetic winner, 1280 + 375 px, both themes; prod bundle strings confirmed after merge; budget 8.7% headroom |
+| 21 Sep | Validation tab in portfolio mode (PR #43): same verdict card, walk-forward gains a per-name table (weight, tuned vs unseen Sharpe), timing test gains a per-name table and explains the independent-leg null; "holding the basket" wording; STATUS sync (PR #42) | previewed on real AAPL+MSFT+GOOGL Bollinger + momentum payloads, 1280 + 375 px, no overflow; budget 8.6% headroom; prod chunk `DashboardPage-DuW21dRS.js` carries the strings; route 404s on prod until the backend deploys |
 | 21 Sep | Basket validation (PR #41): `portfolio_validation.py`, `POST /api/portfolio/validate`, null decided and recorded; write-up gains the basket table | 641 tests; 4 mutation checks; not yet deployed (no caller), drift comment posted on #41 |
 | 20 Sep | Runtime SA rotated: `finertia-api-runtime` (no project roles, `secretAccessor` on `finertia-sa` only) replaces the default compute SA (`roles/editor`); rev 00008, same image; default SA's secret grant removed; `--service-account` added to README + deploy.yml | health 200 via proxy and direct; bogus bearer → 401 "Invalid token" (Admin SDK initialised under the new SA); zero ERROR logs on 00008 |
 | 19 Sep | **Simplification**, user's call after reading the site as a customer: tweakcn Ocean Breeze palette + DM Sans (PR #19, contrast re-measured ≥ 4.5:1); notebook metaphor dropped — stamps → Badge, no pencil underlines, no graph paper (PR #20); set-up = strategy/ticker/dates + one Advanced fold, results = 4 numbers + curve + one fold (PR #21); signed-in users no longer sent to /register (PR #22, bug found on prod); landing rewritten for someone who has never heard of a backtest (PR #23) | each PR previewed on the real payload at 375 + 528/1280 px, light + dark; prod title + bundle strings confirmed after merge |
