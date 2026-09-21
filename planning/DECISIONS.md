@@ -3,6 +3,24 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-09-21 — The trend label is a fixed ±1σ t-statistic, not a tercile
+
+The second regime axis (open-questions §3) had to say which way the market
+was going without inheriting the vol label's relativity. Candidates: terciles
+of the trailing 60-day return (balanced by construction, but the middle third
+of a bull market is not "flat"), a fixed return threshold (scale-dependent —
+a 10% move means different things on T and on BABA), or the t-statistic of
+the window's mean daily return, `sum(r) / (std(r) · √n)`, cut at ±1. The
+t-statistic was chosen: it is unit-free across tickers, "flat" means the move
+is inside one standard deviation of the window's own noise, and it is
+deliberately harder to earn in turbulent stretches — a 10% move over 60 days
+is a trend at 12% vol and noise at 60%. The cost is imbalance: on a
+bull-market stock "down" is rare (AAPL 2018→24: 5% of bars, 62 of the 72 in the
+turbulent third), and the vol × trend grid reports such cells by count with
+no Sharpe below 21 bars rather than printing a number off a handful of days.
+The window ends at the bar it labels, as the vol window does — a description,
+not a signal.
+
 ## 2026-09-21 — A basket's permutation null re-times every leg on its own
 
 Validation for portfolios needed a definition of "random timing" for a book

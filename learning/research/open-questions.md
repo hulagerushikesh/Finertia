@@ -47,10 +47,21 @@ realised-vol terciles, Sharpe per regime on every backtest and on the stitched
 OOS record. AAPL OOS: momentum 2.26 calm / −0.76 turbulent, Bollinger the
 mirror. Item closed as scoped.
 
-Still open, narrower: the label is one-dimensional (vol). A trend/range label
+~~Still open, narrower: the label is one-dimensional (vol). A trend/range label
 (e.g. sign and strength of a 60-day return) would separate "calm and rising"
-from "calm and flat", which is where momentum's calm-regime beta hides. And
-the vol-CI coverage failure (§5) shares the cause — regimes do not resample.
+from "calm and flat", which is where momentum's calm-regime beta hides.~~
+**Built 21 Sep — `label_trend` / `trend_breakdown` / `joint_breakdown` in
+`regimes.py`, DECISIONS 21 Sep.** Trend = t-statistic of the trailing 60-day
+mean return, cut at ±1σ (`down` / `flat` / `up`), crossed with the vol
+tercile into a 3 × 3 grid. The hypothesis was wrong in an instructive way:
+momentum's calm-regime Sharpe on AAPL out-of-sample is 2.40 in calm-*flat*
+bars and 2.29 in calm-rising — the calm edge is not beta in disguise. What the
+grid does separate is the turbulent third: momentum reads −1.88 in
+turbulent-flat (whipsaw, 199 bars) and +1.29 in turbulent-rising (84). The
+vol label alone blamed all turbulence; the loss is chop, not volatility.
+Bollinger's turbulent edge is the same cell read the other way: +2.19 in
+turbulent-flat, −1.01 in turbulent-rising. Still open: the vol-CI coverage
+failure (§5) — regimes do not resample.
 
 ## 4. ~~Whole-grid inference instead of winner inference~~ — done 20 Sep 2026 (`backend/snooping.py`)
 
