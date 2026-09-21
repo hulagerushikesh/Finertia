@@ -22,8 +22,8 @@ different null. Needs a definition before code.~~
 can time its own market" (DECISIONS.md, 21 Sep). `backend/portfolio_validation.py`,
 `POST /api/portfolio/validate`, 03-validation-methods §10. What is left: the
 weight-path null (only meaningful for inverse-vol) is not built; rolling
-walk-forward and regimes for a book are not built; the tab is still hidden in
-portfolio mode.
+walk-forward and regimes for a book are not built. The tab shows in portfolio
+mode since 21 Sep.
 
 ## 3. Regime awareness
 
