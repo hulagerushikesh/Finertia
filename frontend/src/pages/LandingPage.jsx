@@ -43,7 +43,7 @@ const STEPS = [
     icon: ShieldCheck,
     title: "Check",
     desc: "Then it re-tests the same rule on years it was never tuned on, and tells you if the result was skill or luck.",
-    example: "2 of 5 checks passed",
+    example: "2 of 6 checks passed",
   },
 ];
 
