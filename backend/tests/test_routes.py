@@ -293,6 +293,32 @@ def test_backtest_carries_the_regime_breakdown(api):
     assert set(regimes["joint"]["cells"]["low"]) == {"down", "flat", "up"}
 
 
+def test_backtest_carries_the_sharpe_difference_test(api):
+    """The p-value that belongs between the two Sharpe ratios on the page."""
+    client, _ = api
+    body = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    test = body["benchmark_test"]
+    assert test["computable"]
+    assert test["benchmark"] == "buy_and_hold"
+    assert 0 < test["p_value"] <= 1
+    assert test["difference"] == pytest.approx(
+        test["strategy_sharpe"] - test["benchmark_sharpe"], abs=1e-3
+    )
+    # Not the headline Sharpe: that one is geometric, and the block says which
+    # pair the p-value actually belongs to.
+    assert "sqrt(252)" in test["sharpe_definition"]
+
+
+def test_the_sharpe_test_is_stable_across_identical_runs(api):
+    """Its seed comes from the request, so the same backtest returns the same
+    p-value — a number that drifted every refresh would teach the reader it
+    was arbitrary."""
+    client, _ = api
+    first = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    again = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    assert first["benchmark_test"] == again["benchmark_test"]
+
+
 def test_validation_carries_the_rolling_walk_forward(api):
     client, state = api
     state["profile"] = dict(PRO)
@@ -339,6 +365,15 @@ def test_rolling_too_short_degrades_instead_of_failing_the_run(api, monkeypatch)
 
 PORTFOLIO = {"tickers": ["AAPL", "MSFT"], "start": "2020-01-01", "end": "2022-01-01",
              "strategy": "momentum"}
+
+
+def test_portfolio_carries_the_sharpe_test_against_the_held_basket(api):
+    client, state = api
+    state["profile"] = dict(PRO)
+    body = client.post("/api/portfolio", json=PORTFOLIO, headers=AUTH).json()
+    test = body["benchmark_test"]
+    assert test["computable"]
+    assert test["bars"] == body["aligned_bars"]
 
 
 def test_portfolio_validation_is_refused_on_the_free_plan(api):

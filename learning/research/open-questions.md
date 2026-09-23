@@ -94,6 +94,21 @@ Costs are a constant rate on turnover. Real costs scale with volatility and
 inverse with liquidity. A vol-scaled cost model is one line; deciding the
 coefficient is the research.
 
+## 8. Is the Sharpe gap on the page significant? — **closed 23 Sep 2026**
+
+~~The dashboard prints the strategy's Sharpe beside buy-and-hold's and leaves
+the reader to judge the gap by eye.~~ Built: `sharpe_test.py`, Ledoit-Wolf
+(2008) on the paired series, HAC standard error and a studentised bootstrap,
+two-sided, on every backtest and every portfolio run. What it found is the
+part worth keeping: **none of the three strategies on AAPL, BABA or SPY has a
+Sharpe gap against buy-and-hold that six years of daily bars can distinguish
+from noise** — standard errors of 0.5 to 0.7, and the one significant result
+(AAPL 2015→20 Bollinger, p 0.031) is a *loss*. The power table says why: about
+a full point of Sharpe is needed over five years before the test will call it.
+Still open beside it — the same test on the *rolling* stitched record rather
+than the full period, where the sample is shorter still.
+
 ---
 
-Item 3 is done as scoped (rolling folds + vol label). Next: whole-grid inference (4) or the max-drawdown interval (5).
+Item 3 is done as scoped (rolling folds + vol label); 2, 4 and 8 are closed.
+Next: the max-drawdown interval (5).

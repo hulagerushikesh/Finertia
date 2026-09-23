@@ -402,7 +402,75 @@ Testing as Formalized Data Snooping".
   The validation tab reads the basket route in portfolio mode (same verdict
   card, four checks instead of five since §7 is absent, per-name tables).
 
-## How the ten fit together
+## 11. Is the Sharpe gap real? — `backend/sharpe_test.py`
+
+- [ ] **The gap this fills**: every backtest page prints the strategy's Sharpe
+  and, on the curve beside it, buy-and-hold's. Two numbers invite exactly one
+  comparison and give no way to make it. §9 tests the whole grid against
+  buy-and-hold on *mean return*; this tests the run in front of the user, on
+  *Sharpe*, which is the number the page actually shows.
+- [ ] **Method**: Ledoit & Wolf (2008), "Robust performance hypothesis testing
+  with the Sharpe ratio". Δ = SRa − SRb is a smooth function of four moments
+  (μa, μb, γa, γb); the delta method turns their long-run covariance into
+  s²(Δ) = ∇f'Ψ∇f / T. Because ∇f is a fixed vector, ∇f'Ψ∇f is just the long-run
+  variance of the **scalar** series u_t = ∇f'(y_t − ȳ) — so the HAC step is
+  one-dimensional, which is both cheaper and far easier to test than a 4×4
+  kernel estimate.
+- [ ] **Why not a t-test**: the strategy trades the benchmark's own asset, so
+  the two series share most of their bars. Treating them as independent throws
+  the pairing away and the test becomes far too conservative. Measured: same
+  two Sharpe ratios, correlated 0.95 vs correlated 0.0 — the paired standard
+  error is under 40% of the unpaired one (`test_pairing_shrinks_the_error_bar`).
+- [ ] **Kernel**: Bartlett, bandwidth from Andrews (1991)'s AR(1) plug-in. Not
+  chosen for efficiency — Parzen and QS converge faster — but because the
+  Bartlett estimate is a sum of squares and *cannot* come back negative. The
+  clamp that would hide a broken kernel is deliberately absent, and the test
+  for it is the alternating series where a rectangular kernel returns −1.
+- [ ] **Two p-values, both reported**: the normal one off the HAC statistic,
+  and the headline — Ledoit-Wolf's studentised bootstrap, which resamples the
+  pair (one index draw, applied to *both* series) and recomputes the standard
+  error on each resample. Resampler and block length are §6's.
+- [ ] **Size and power, measured** (500 paths × 1250 bars, GARCH marginals; the
+  null is a mixture carrying the benchmark's own mean and variance, so its
+  Sharpe is equal by construction):
+
+  | size — null, correlation with benchmark | rejects @5% |
+  |---|---|
+  | 0.9, a strategy trading the benchmark's own bars | 5.2% |
+  | 0.7 | 6.8% |
+  | 0.0, an unrelated asset | 8.8% |
+
+  | power — alternative | true gap | rejects @5% |
+  |---|---|---|
+  | +5%/yr mean | +0.47 SR | 27.8% |
+  | +10%/yr mean | +0.92 SR | 74.4% |
+  | +20%/yr mean | +1.78 SR | 98.8% |
+
+  Mildly anticonservative, worst in the case this module is least likely to
+  meet. The power column is the more useful half: **a strategy needs about a
+  full point of Sharpe over five years before this test will call it** — worth
+  knowing before reading p = 0.3 as evidence of no edge.
+- [ ] **Measured 23 Sep 2026, three strategies × four runs**: every strategy on
+  AAPL, BABA and SPY trails buy-and-hold on Sharpe, and *not one of those gaps
+  is distinguishable from noise* — the standard error is 0.5 to 0.7 over six
+  years. The single significant result is AAPL 2015→2020 Bollinger: −1.45,
+  p = 0.031, significantly **worse**. The honest summary of the canonical demo
+  is not "momentum loses to holding AAPL" but "six years cannot tell, and the
+  point estimate is a loss".
+- [ ] **A caveat the UI has to carry**: this Sharpe is mean/σ×√252; the
+  headline card's is geometric (annualised return / annualised vol). Volatility
+  drag puts the arithmetic figure 0.05–0.19 *above* the headline one on these
+  runs (AAPL momentum: 0.59 here, 0.48 on the card). Always the same direction,
+  so the tested pair flatters the strategy; show the pair that was tested.
+- [ ] **Mutation-checked, and one survivor recorded rather than hidden**: 7 of 8
+  mutants die. The survivor is "draw each series its own bootstrap path" —
+  measured at 200 null paths and 200 alternatives, size and power move by under
+  a point, because a *studentised* statistic normalises by the resample's own
+  standard error and so barely notices. The paired draw is kept (it is what the
+  method specifies and it is free), but no test in the suite pins it, and
+  pretending otherwise would be worse than saying so.
+
+## How the eleven fit together
 
 ```
                  ┌─ §5 purge/embargo (no bar paid twice)
@@ -419,6 +487,8 @@ bootstrap (§6) ─── how wide is the band around every number you printed?
 
 basket (§10) ───── §1 + §3 + §4 + §9 on the book's returns; §2 with every leg
                    re-timed on its own, weights fixed
+sharpe gap (§11) ─ is the Sharpe printed on the page above buy-and-hold's by
+                   more than this many bars can tell? (paired, HAC, two-sided)
 ```
 
 Each answers a different question. None replaces another. The UI shows all of
@@ -432,6 +502,6 @@ panel reads `/api/portfolio/validate` — no rolling section, per-name tables.
 - Constants pinned to the papers (3.26; Lo 2002 to 1e-12).
 - Coverage *measured* on synthetic GARCH paths, failures shipped as flags.
 - Mutation-checked: delete the check, watch exactly the right tests fail.
-- 603 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
+- 697 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
 
 Next: [research/reading-list.md](research/reading-list.md)

@@ -19,6 +19,7 @@ from engine import compute_returns, apply_positions, compute_benchmark
 from bootstrap import bootstrap_metrics, stable_seed
 from rolling import rolling_walk_forward
 from regimes import regime_breakdown
+from sharpe_test import sharpe_difference_test
 from metrics import compute_metrics
 from analytics import monthly_returns, annual_returns, rolling_sharpe
 import billing
@@ -588,6 +589,19 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
     # Where the return was earned, in the market's own terms: the strategy's
     # Sharpe on the calm, middling and turbulent thirds of the period.
     regimes = regime_breakdown(net_return, position, benchmark_daily)
+    # The page prints the strategy's Sharpe beside buy-and-hold's. This is the
+    # p-value that belongs between them — Ledoit-Wolf on the paired series, so
+    # the shared bars work for the reader instead of against them. Same
+    # reasoning as the confidence intervals above for not gating it: 50-90ms on
+    # a series already in memory, and the free tier is the tier most likely to
+    # read "1.2 vs 0.6" as a settled fact.
+    benchmark_test = sharpe_difference_test(
+        net_return,
+        benchmark_daily,
+        seed=stable_seed(
+            req.ticker.upper(), req.start, req.end, req.strategy, "sharpe-test"
+        ),
+    )
 
     signals_summary = {
         "long_days": int((position > 0).sum()),
@@ -630,6 +644,7 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
         "annual_returns": annual,
         "rolling_sharpe": rolling,
         "regimes": regimes,
+        "benchmark_test": benchmark_test,
         "signals_summary": signals_summary,
         "confidence_intervals": confidence_intervals,
         # "yfinance" | "cache" | "cache-stale" | "memory". Stale means Yahoo
@@ -955,6 +970,14 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
     bench_daily = aligned.pct_change().fillna(0.0).mean(axis=1)
     bench_equity = (1 + bench_daily).cumprod()
 
+    benchmark_test = sharpe_difference_test(
+        net_return,
+        bench_daily,
+        seed=stable_seed(
+            ",".join(req.tickers), req.start, req.end, req.strategy, "sharpe-test"
+        ),
+    )
+
     return {
         "tickers": req.tickers,
         "strategy": req.strategy,
@@ -970,6 +993,8 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
         "longest_ticker_bars": int(len(closes[longest_ticker])),
         "metrics": metrics,
         "diversification_ratio": diversification_ratio(legs_frame, weights, net_return),
+        # Against an equal-weight hold of the same names, not any one ticker.
+        "benchmark_test": benchmark_test,
         "equity_curve": [
             {"date": d, "strategy": round(s, 6), "benchmark": round(b, 6)}
             for d, s, b in zip(dates_out, equity.tolist(), bench_equity.tolist())

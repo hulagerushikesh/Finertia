@@ -275,6 +275,46 @@ whole piece: it survived the split, every leg beat random timing, and it
 still trails simply holding the three stocks by nineteen points a year. The
 timing is real. It was not worth doing.
 
+## Two numbers, and the gap between them
+
+Every result page prints the strategy's Sharpe with buy-and-hold's curve
+beside it. The comparison is irresistible and, as printed, unmakeable: the
+two series share most of their bars, and nothing on the page says how wide
+the gap would have to be to mean anything. Ledoit and Wolf (2008) is the test
+for exactly this — paired, because the strategy trades the benchmark's own
+asset; HAC, because daily returns are neither independent nor
+homoskedastic; and studentised-bootstrap rather than normal, because a few
+thousand bars is not asymptotia. Two-sided, because a strategy significantly
+*worse* than holding is the more common finding and the reader deserves it.
+
+Sharpe here is mean over standard deviation, annualised — the delta method is
+defined on the moments, and the geometric figure on the results card sits
+0.05 to 0.19 lower on these runs. The pair below is the pair that was tested.
+
+| Ticker, window | Strategy | Sharpe | Buy-and-hold | Gap | Std. error | p |
+|---|---|---|---|---|---|---|
+| AAPL 2018→2024 | Momentum | 0.59 | 0.98 | −0.39 | 0.51 | 0.40 |
+| AAPL 2018→2024 | Bollinger | 0.06 | 0.98 | −0.91 | 0.54 | 0.15 |
+| AAPL 2018→2024 | MACD | 0.53 | 0.98 | −0.44 | 0.54 | 0.39 |
+| AAPL 2015→2020 | Bollinger | −0.46 | 0.99 | −1.45 | 0.60 | **0.031** |
+| SPY 2018→2024 | Momentum | −0.26 | 0.65 | −0.91 | 0.62 | 0.076 |
+| BABA 2018→2024 | Bollinger | 0.13 | −0.08 | +0.21 | 0.57 | 0.71 |
+
+The standard error is the column to read. Six years of daily bars pins a
+Sharpe *difference* to about ±0.5 — so a strategy trailing the market by four
+tenths of a Sharpe, which looks like a settled verdict on the page, is not
+distinguishable from a strategy that matches it. The one significant row is a
+loss: Bollinger on AAPL's 2015→2020 window is genuinely worse than holding
+the stock, not unluckier.
+
+This cuts both ways, and the simulated power table says how much. Against a
+benchmark it correlates with, this test needs roughly a full point of Sharpe
+over five years before it will reject at 5% (74% power at +0.92, 28% at
++0.47). So a p of 0.4 here is not evidence that the gap is zero — it is the
+honest statement that five years of one stock cannot resolve it. That is a
+limit of the data, and it is worth printing beside the number rather than
+leaving the reader to infer a verdict the sample cannot support.
+
 ## What is still open
 
 A rolling walk-forward for a book is not built. The bootstrap intervals
@@ -286,10 +326,10 @@ still do not resample by regime, so the vol-CI coverage gap stands.
   end 2024-01-01 then 2025-01-01, default parameters, split 0.7.
 - Source: `backend/validation.py` (`walk_forward`, `permutation_test`),
   `backend/rolling.py`, `backend/regimes.py`, `backend/deflated.py`, `backend/trials.py`,
-  `backend/pbo.py`, `backend/snooping.py`, `backend/portfolio_validation.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
+  `backend/pbo.py`, `backend/snooping.py`, `backend/sharpe_test.py`, `backend/portfolio_validation.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
   backtesting or statistics library; the normal CDF is `math.erf`.
-- Tests: 662 in `backend/tests/`, including reproductions of the DSR paper's
+- Tests: 697 in `backend/tests/`, including reproductions of the DSR paper's
   worked example and Lo (2002) to 1e-12, and mutation checks on every check
   above.
-- Figures are as of 15 Sep 2026 (whole-grid table: 20 Sep; basket and vol × trend tables: 21 Sep) with yfinance adjusted prices; Yahoo
+- Figures are as of 15 Sep 2026 (whole-grid table: 20 Sep; basket and vol × trend tables: 21 Sep; Sharpe-gap table: 23 Sep) with yfinance adjusted prices; Yahoo
   re-adjusts on corporate actions, so the third decimal will drift.
