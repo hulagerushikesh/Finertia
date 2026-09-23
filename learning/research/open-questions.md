@@ -76,11 +76,28 @@ weaker claim; (b) it did not replace the permutation test, it sits beside
 it — permutation is about timing at fixed exposure, this is about level;
 (c) not surfaced in the UI yet (BACKLOG).
 
-## 5. Max-drawdown interval
+## 5. ~~Max-drawdown interval~~ — **closed 23 Sep 2026**
 
-79% coverage at nominal 95%. Resamples preserve order only within a block.
-Options: longer blocks specifically for path statistics; parametric drawdown
-distribution (AFML ch. 15); or report it honestly as a one-sided bound.
+79% coverage at nominal 95%. All three options listed here — longer blocks for
+path statistics, a parametric drawdown distribution (AFML ch. 15), or an honest
+one-sided bound — were attempts to fix a band that was too NARROW. It was not.
+Measured against the true sampling distribution the band was the right width
+(0.2204 against a central-95% range of 0.2255, 98%) and the estimator was
+unbiased. The defect was BCa's own bias correction: `z0` reads the share of
+replicates below the observed statistic as estimator bias, and for a drawdown
+that share is set by the block scheme rather than by the estimator.
+
+The damage is mostly noise rather than drift — `z0` has mean ≈ 0 but sd
+0.44–0.63, so each run got a large *random* shift. Suppressing it and keeping
+the acceleration takes coverage 79% → 95.0%, holding on Gaussian GARCH, GARCH
+t(5) and Markov regime-switching. `calmar_ratio` is treated the same way.
+DECISIONS 23 Sep; `NO_BIAS_CORRECTION` in `backend/bootstrap.py`.
+
+Worth recording how the original note went wrong, because it is the failure this
+file exists to prevent: it named a real mechanism (blocks cannot rebuild long
+declines) and asserted a consequence nobody measured (the band is "optimistic
+about long, slow declines"). The band was in fact *pessimistic* — dragged deep.
+A plausible mechanism is not a measurement.
 
 ## 6. Survivorship-free data
 
@@ -110,5 +127,5 @@ than the full period, where the sample is shorter still.
 
 ---
 
-Item 3 is done as scoped (rolling folds + vol label); 2, 4 and 8 are closed.
-Next: the max-drawdown interval (5).
+Item 3 is done as scoped (rolling folds + vol label); 2, 4, 5 and 8 are closed.
+Next: vol-scaled transaction costs (7).
