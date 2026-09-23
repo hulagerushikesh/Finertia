@@ -20,8 +20,8 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 - [x] Surface the `snooping` block in `ValidationPanel` — sixth verdict-card check "Whole grid", a "The whole grid against holding" section with the four p-values and the per-cell stepdown table, glossary entry (21 Sep). Not in `/demo`: that page is a frozen `/api/backtest` payload and carries no validation block at all; putting one there is a separate decision
 - [ ] Max-drawdown interval with honest coverage (§5)
 - [ ] Vol-scaled transaction-cost model (§7)
-- [x] Ledoit-Wolf test for strategy-vs-benchmark Sharpe difference — the "does it beat buy-and-hold" question with a p-value; `sharpe_test.py`, paired HAC + studentised bootstrap, two-sided, on every `/api/backtest` and `/api/portfolio` as `benchmark_test`; 32 tests, 7 of 8 mutations caught and the survivor documented; size and power measured (DECISIONS 23 Sep) — not yet beside the Sharpe on the UI
-- [ ] Show `benchmark_test` on the results card — the p-value between the strategy's Sharpe and buy-and-hold's, labelled as the arithmetic pair the test actually used
+- [x] Ledoit-Wolf test for strategy-vs-benchmark Sharpe difference — the "does it beat buy-and-hold" question with a p-value; `sharpe_test.py`, paired HAC + studentised bootstrap, two-sided, on every `/api/backtest` and `/api/portfolio` as `benchmark_test`; 32 tests, 7 of 8 mutations caught and the survivor documented; size and power measured (DECISIONS 23 Sep); on the UI since PR #49
+- [x] Show `benchmark_test` on the results card — `BenchmarkTest.jsx` under the headline metrics on Dashboard and Demo, its own arithmetic Sharpe pair with the standard error beside the gap, colour only on a called difference (PR #49, 23 Sep). Renders once rev 00010 ships the block
 
 ## Product (parked — Phase 4 picked "portfolio"; reopen only on the reversal conditions in DECISIONS.md)
 
