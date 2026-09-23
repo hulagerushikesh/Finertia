@@ -13,6 +13,7 @@ import ValidationPanel from "../components/ValidationPanel";
 import MonthlyHeatmap from "../components/MonthlyHeatmap";
 import RollingSharpeChart from "../components/RollingSharpeChart";
 import RegimeTable from "../components/RegimeTable";
+import BenchmarkTest from "../components/BenchmarkTest";
 import AnnualReturnsChart from "../components/AnnualReturnsChart";
 import PortfolioLegs from "../components/PortfolioLegs";
 import Spinner from "../components/Spinner";
@@ -301,6 +302,17 @@ export default function DashboardPage() {
                     <StaggerItem>
                       <HeadlineMetrics metrics={result.metrics} confidenceIntervals={result.confidence_intervals} />
                     </StaggerItem>
+                    {/* The Sharpe above and the benchmark curve below invite a
+                        comparison the page could not previously support. This
+                        is the p-value between them. */}
+                    {result.benchmark_test && (
+                      <StaggerItem>
+                        <BenchmarkTest
+                          test={result.benchmark_test}
+                          benchmarkLabel={isPortfolio ? "holding the basket" : "holding it"}
+                        />
+                      </StaggerItem>
+                    )}
                     {isPortfolio && (
                       <StaggerItem>
                         <PortfolioLegs result={result} />
