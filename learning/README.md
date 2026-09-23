@@ -48,6 +48,7 @@ backend/
   trials.py      effective number of trials (eigenvalue + clustering)
   rolling.py     anchored rolling walk-forward, one verdict per fold
   regimes.py     market volatility terciles × trend (±1σ t-stat), Sharpe per regime and per cell
+  sharpe_test.py Ledoit-Wolf test of the strategy's Sharpe against buy-and-hold's
   main.py        17 FastAPI routes; auth, quota, rate limit, error mapping
 frontend/src/    React 18 + Vite + Tailwind + Recharts
 ```

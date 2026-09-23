@@ -3,6 +3,29 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-09-23 — The Sharpe gap is tested paired, two-sided, on the arithmetic Sharpe
+
+Putting a p-value between the two Sharpe ratios the page already prints forced
+three choices. (1) **Paired, not two-sample.** The strategy trades the
+benchmark's own asset; treating the series as independent throws away the
+shared bars and roughly triples the standard error, so the test would almost
+never reject. Ledoit-Wolf (2008) is the paired, HAC version and is what is
+implemented — headline p-value from their studentised bootstrap, the normal
+one reported beside it so the gap between them is visible. (2) **Two-sided.**
+A strategy significantly *worse* than holding the asset is information the
+reader wants at least as much as the other direction, and the verdict string
+says which way. (3) **The arithmetic Sharpe, mean/σ×√252, not the card's
+geometric one.** The delta method is defined on the moments; there is no
+matching expansion for annualised-return-over-annualised-vol. The two differ
+by 0.05–0.19 on the canonical runs — volatility drag, always in the same
+direction — so the block reports the pair it tested and says which pair that
+is, rather than borrowing the headline numbers and quietly testing something
+else. Bartlett kernel over the faster-converging Parzen and QS for one reason:
+its variance estimate cannot come back negative, so there is no clamp hiding a
+broken kernel. Not gated behind Pro, for the same reason the confidence
+intervals are not: the free tier is the one most likely to read "1.2 against
+0.6" as settled.
+
 ## 2026-09-21 — The trend label is a fixed ±1σ t-statistic, not a tercile
 
 The second regime axis (open-questions §3) had to say which way the market
