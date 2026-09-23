@@ -9,6 +9,7 @@ import AnnualReturnsChart from "../components/AnnualReturnsChart";
 import RollingSharpeChart from "../components/RollingSharpeChart";
 import MonthlyHeatmap from "../components/MonthlyHeatmap";
 import RegimeTable from "../components/RegimeTable";
+import BenchmarkTest from "../components/BenchmarkTest";
 import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import demo from "../demoData.json";
@@ -66,6 +67,9 @@ export default function DemoPage() {
 
       <Stagger className="flex flex-col gap-5">
         <StaggerItem><MetricsGrid metrics={demo.metrics} confidenceIntervals={demo.confidence_intervals} /></StaggerItem>
+        {demo.benchmark_test && (
+          <StaggerItem><BenchmarkTest test={demo.benchmark_test} /></StaggerItem>
+        )}
         <StaggerItem><EquityCurveChart data={demo.equity_curve} /></StaggerItem>
         <StaggerItem><DrawdownChart data={demo.drawdown} /></StaggerItem>
         <StaggerItem><AnnualReturnsChart data={demo.annual_returns} /></StaggerItem>
