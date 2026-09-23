@@ -74,7 +74,7 @@ of this question: (a) the benchmark — against *zero* rather than buy-and-hold
 the test would say whether the grid makes money at all, a different and
 weaker claim; (b) it did not replace the permutation test, it sits beside
 it — permutation is about timing at fixed exposure, this is about level;
-(c) not surfaced in the UI yet (BACKLOG).
+(c) surfaced in the UI on 21 Sep (PR #40: a sixth verdict check and the per-cell stepdown table).
 
 ## 5. ~~Max-drawdown interval~~ — **closed 23 Sep 2026**
 
