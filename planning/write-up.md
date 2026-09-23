@@ -317,10 +317,8 @@ leaving the reader to infer a verdict the sample cannot support.
 
 ## What is still open
 
-The trend label is on the API but not yet on the regime table in the UI, and
-the Sharpe-difference p-value is on the API but not yet beside the Sharpe it
-belongs to. A rolling walk-forward for a book is not built. The bootstrap
-intervals still do not resample by regime, so the vol-CI coverage gap stands.
+A rolling walk-forward for a book is not built. The bootstrap intervals
+still do not resample by regime, so the vol-CI coverage gap stands.
 
 ## Reproduce it
 
