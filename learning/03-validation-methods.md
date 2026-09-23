@@ -273,7 +273,9 @@ vs rolling distinction and why purging still applies per fold.
   across tickers and harder to earn in turbulence. `trend_breakdown` is the
   same table by trend label; `joint_breakdown` crosses the two into a 3 × 3
   vol × trend grid, Sharpe per cell, cells under 21 bars reported by count
-  only. Both ride along in every `regimes` block as `trend` and `joint`.
+  only. Both ride along in every `regimes` block as `trend` and `joint`;
+  `RegimeTable.jsx` shows them under the vol table as a direction table
+  and a 3 × 3 grid with the best and worst cell marked.
 - [ ] **What the grid says on AAPL** (2018→24, out-of-sample): the guess
   that momentum's calm edge was beta in disguise was wrong — calm-flat 2.40,
   calm-rising 2.29. What it does separate is the turbulent third: momentum
