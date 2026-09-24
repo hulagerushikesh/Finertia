@@ -41,25 +41,32 @@ delete-one-*block* jackknife, which is also ~L times cheaper.
 
 Does it actually work
 ---------------------
-Coverage was simulated rather than assumed: 300 independent GARCH(1,1) paths of
+Coverage was simulated rather than assumed: 400 independent GARCH(1,1) paths of
 1250 bars, nominal 95% interval, target = the same statistic's population value
-at that sample length. `boot se / true sd` is how much of the real sampling
-spread the resample reproduces.
+at that sample length, measured through this module's own entry point rather
+than a reimplementation of it. `boot se / true sd` is how much of the real
+sampling spread the resample reproduces.
 
     metric                  coverage   boot se / true sd
-    total_return               92.7%          101%
-    annualized_return          92.7%           95%
-    annualized_volatility      69.7%           56%   <- flagged
-    sharpe_ratio               93.0%           95%
-    max_drawdown               79.0%           84%   <- flagged
-    calmar_ratio               95.0%          100%
-    win_rate                   94.0%           95%
-    profit_factor              92.7%           95%
-    avg_daily_return           92.7%           95%
+    total_return               92.5%           98%
+    annualized_return          92.8%           95%
+    annualized_volatility      73.5%           57%   <- flagged
+    sharpe_ratio               91.2%           95%
+    max_drawdown               95.0%           87%
+    calmar_ratio               92.5%           98%
+    win_rate                   93.0%           95%
+    profit_factor              92.0%           95%
+    avg_daily_return           92.8%           95%
 
-Seven of the nine land at 92.7-95.0%, mildly anticonservative in the way BCa
-usually is at this sample size. Two do not, and the reasons are structural
+Eight of the nine land at 91.2-95.0%, mildly anticonservative in the way BCa
+usually is at this sample size. One does not, and its reason is structural
 rather than fixable by tuning -- see UNDERSTATED.
+
+max_drawdown used to sit in that flagged group at 79%. It does not any more, and
+the fix was not a better resample: BCa's bias correction was being applied to a
+bias that belongs to the block scheme rather than to the estimator, and
+suppressing it recovers nominal coverage. NO_BIAS_CORRECTION carries the
+measurement, including the three generators it was checked on.
 
 Pure numpy and stdlib, like the rest of the engine.
 """
@@ -145,9 +152,42 @@ EXCLUDED: dict[str, str] = {
 }
 
 
-# Metrics whose interval is measurably too narrow, with the measurement. Both
-# are still shown -- a band that is known to be too narrow is more useful than
-# no band, but only if it says so.
+# Metrics whose bootstrap distribution is biased by the RESAMPLING SCHEME rather
+# than by the estimator, so BCa's bias correction must be switched off for them.
+#
+# BCa reads `share_below` -- the fraction of replicates under the observed
+# statistic -- as evidence that the estimator is biased, and shifts the interval
+# by z0 = Phi^-1(share_below) to undo it. That inference is only valid when the
+# resample reproduces the estimator's sampling behaviour. A drawdown is built by
+# the ORDER of returns, and a block resample preserves order only inside a block,
+# so its replicates are systematically shallower than the observed drawdown for a
+# reason that has nothing to do with the estimator. Measured on 300 paths of
+# GARCH(1,1), n=1250, the observed drawdown is unbiased (median error 0.0014)
+# while the replicates sit 0.0057 shallow -- exactly the pattern z0 misreads.
+#
+# The damage is mostly noise, not drift. Across three generators z0 has a mean
+# near zero but a standard deviation of 0.44-0.63 for max_drawdown, so every run
+# gets a large RANDOM shift in its interval location:
+#
+#     coverage, nominal 95%, 300 paths x 1000 resamples
+#     generator        metric          z0 sd   with z0   z0 suppressed
+#     Gaussian GARCH   max_drawdown    0.539     0.823          0.950
+#     GARCH t(5)       max_drawdown    0.628     0.707          0.947
+#     Markov regime    max_drawdown    0.439     0.870          0.957
+#     Gaussian GARCH   calmar_ratio    0.230     0.900          0.930
+#     Gaussian GARCH   sharpe_ratio    0.043     0.937          0.940
+#
+# The harm tracks that spread: sharpe_ratio's z0 barely moves and it is
+# unaffected, calmar_ratio inherits a muted version through its drawdown
+# denominator, max_drawdown loses 8-24 points. The acceleration term is NOT at
+# fault -- suppressing z0 alone recovers nominal coverage, and acceleration on
+# its own measures 0.950/0.947/0.957.
+NO_BIAS_CORRECTION: frozenset[str] = frozenset({"max_drawdown", "calmar_ratio"})
+
+
+# Metrics whose interval is measurably too narrow, with the measurement. It is
+# still shown -- a band that is known to be too narrow is more useful than no
+# band, but only if it says so.
 UNDERSTATED: dict[str, str] = {
     "annualized_volatility": (
         "Measured coverage 70% against a nominal 95%, reproducing 56% of the real "
@@ -158,12 +198,6 @@ UNDERSTATED: dict[str, str] = {
         "from 0.0087 to 0.0104 against a true 0.0190, so this is not a tuning "
         "problem. The Sharpe escapes it because it is a ratio and the regime level "
         "largely cancels between numerator and denominator."
-    ),
-    "max_drawdown": (
-        "Measured coverage 79% against a nominal 95%. A drawdown is built by the "
-        "order of returns, and the resample only preserves order inside a block, so "
-        "a decline that took longer than the block length to unfold cannot survive "
-        "one. Read this interval as optimistic about long, slow declines."
     ),
 }
 
@@ -461,8 +495,14 @@ def _bca_interval(
     replicates: np.ndarray,
     jackknife: np.ndarray | None,
     confidence: float,
+    bias_correct: bool = True,
 ) -> dict:
-    """One BCa interval, falling back to percentile when BCa is undefined."""
+    """One BCa interval, falling back to percentile when BCa is undefined.
+
+    `bias_correct=False` holds z0 at zero and keeps the acceleration, for the
+    metrics in NO_BIAS_CORRECTION whose replicates are biased by the resampling
+    scheme rather than by the estimator. See that constant for the measurement.
+    """
     alpha = (1.0 - confidence) / 2.0
     finite = replicates[np.isfinite(replicates)]
 
@@ -486,10 +526,13 @@ def _bca_interval(
     # distribution. At exactly 0 or 1 the Normal quantile is infinite, which
     # means the bootstrap never straddled the observed value and BCa has no
     # correction to make.
-    share_below = float((finite < observed).mean())
-    if share_below <= 0.0 or share_below >= 1.0:
-        return percentile_interval()
-    z0 = _norm_ppf(share_below)
+    if bias_correct:
+        share_below = float((finite < observed).mean())
+        if share_below <= 0.0 or share_below >= 1.0:
+            return percentile_interval()
+        z0 = _norm_ppf(share_below)
+    else:
+        z0 = 0.0
 
     # Acceleration from the third moment of the jackknife values.
     if jackknife is None:
@@ -523,7 +566,7 @@ def _bca_interval(
         "low": float(np.quantile(finite, a_lo)),
         "high": float(np.quantile(finite, a_hi)),
         "std_error": float(finite.std(ddof=1)),
-        "method": "bca",
+        "method": "bca" if bias_correct else "bca_acceleration_only",
     }
 
 
@@ -599,6 +642,7 @@ def bootstrap_metrics(
             replicates[name],
             jackknife[name] if jackknife is not None else None,
             confidence,
+            bias_correct=name not in NO_BIAS_CORRECTION,
         )
         point = observed[name]
         # An interval that is not ordered around the point estimate is a bug

@@ -2,6 +2,37 @@ import { auth } from "./firebase";
 
 const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
+/**
+ * Turn FastAPI's `detail` into something a person can read.
+ *
+ * It arrives in two shapes. `HTTPException(detail="...")` gives a string, and
+ * that has always worked. Every 422 — which is what a request becomes the
+ * moment a parameter combination fails validation — gives an ARRAY of
+ * `{loc, msg}` objects instead, and `new Error(array)` stringifies it to
+ * "[object Object]". So the backend's written-out messages ("Date range is too
+ * short: ~21 trading days available, but the momentum strategy needs 50 bars
+ * to warm up") never reached the screen, and the errors the user could
+ * actually fix were the only ones rendered as noise.
+ */
+function describeDetail(detail, status) {
+  if (typeof detail === "string" && detail) return detail;
+
+  const items = Array.isArray(detail) ? detail : detail && typeof detail === "object" ? [detail] : [];
+  const lines = items
+    .map((item) => {
+      // Pydantic prefixes anything raised by a custom validator with
+      // "Value error, ", which is machinery, not information.
+      const msg = String(item?.msg || "").replace(/^Value error,\s*/, "");
+      // loc is ["body"] for a whole-model check and ["body", "field"] for a
+      // single field. Only the second has a name worth naming.
+      const field = Array.isArray(item?.loc) ? item.loc.slice(1).join(".") : "";
+      return field && msg ? `${field}: ${msg}` : msg;
+    })
+    .filter(Boolean);
+
+  return lines.length ? lines.join("\n") : `HTTP ${status}`;
+}
+
 async function apiFetch(path, options = {}) {
   const token = await auth.currentUser?.getIdToken();
   const headers = {
@@ -25,7 +56,7 @@ async function apiFetch(path, options = {}) {
   const data = await res.json().catch(() => ({ detail: "Unknown error" }));
 
   if (!res.ok) {
-    const error = new Error(data.detail || `HTTP ${res.status}`);
+    const error = new Error(describeDetail(data.detail, res.status));
     error.status = res.status;
     // Present on 500s so a bug report can quote the id that keys the server
     // traceback; on 429s so the UI can say how long to wait.

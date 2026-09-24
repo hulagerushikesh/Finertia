@@ -505,6 +505,6 @@ panel reads `/api/portfolio/validate` — no rolling section, per-name tables.
 - A negative control before believing a regression: the vol-scaled cost model
   died because the estimator that would have calibrated it reports the same
   slope on data where the effect is absent by construction (`costs.py`).
-- 712 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
+- 717 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
 
 Next: [research/reading-list.md](research/reading-list.md)
