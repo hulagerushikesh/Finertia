@@ -14,6 +14,7 @@ import MonthlyHeatmap from "../components/MonthlyHeatmap";
 import RollingSharpeChart from "../components/RollingSharpeChart";
 import RegimeTable from "../components/RegimeTable";
 import BenchmarkTest from "../components/BenchmarkTest";
+import CostSensitivity from "../components/CostSensitivity";
 import AnnualReturnsChart from "../components/AnnualReturnsChart";
 import PortfolioLegs from "../components/PortfolioLegs";
 import Spinner from "../components/Spinner";
@@ -311,6 +312,15 @@ export default function DashboardPage() {
                           test={result.benchmark_test}
                           benchmarkLabel={isPortfolio ? "holding the basket" : "holding it"}
                         />
+                      </StaggerItem>
+                    )}
+                    {/* The cost box in the config panel takes a number on
+                        trust. This says how much that trust is worth — the
+                        charge at which the Sharpe above reaches zero. Absent
+                        on portfolios and on backends older than the block. */}
+                    {result.cost_sensitivity && (
+                      <StaggerItem>
+                        <CostSensitivity data={result.cost_sensitivity} />
                       </StaggerItem>
                     )}
                     {isPortfolio && (
