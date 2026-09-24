@@ -502,6 +502,9 @@ panel reads `/api/portfolio/validate` — no rolling section, per-name tables.
 - Constants pinned to the papers (3.26; Lo 2002 to 1e-12).
 - Coverage *measured* on synthetic GARCH paths, failures shipped as flags.
 - Mutation-checked: delete the check, watch exactly the right tests fail.
-- 697 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
+- A negative control before believing a regression: the vol-scaled cost model
+  died because the estimator that would have calibrated it reports the same
+  slope on data where the effect is absent by construction (`costs.py`).
+- 712 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
 
 Next: [research/reading-list.md](research/reading-list.md)

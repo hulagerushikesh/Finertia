@@ -3,6 +3,80 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-09-24 — No vol-scaled cost model. The cost LEVEL ships instead
+
+The backlog item asked for costs that scale with volatility: real spreads
+widen when vol rises, momentum trades when vol is high, so a flat charge
+should flatter it exactly where it hurts. Both halves are true and the
+conclusion still does not follow. Two measurements killed it.
+
+**The coefficient is not identifiable from daily OHLCV.** A vol-scaled model
+needs k in `cost_t = base * (sigma_t/sigma_ref)^k`, and with free data k can
+only come from a high-low spread estimator. Simulating bars whose true spread
+is CONSTANT under GARCH vol, then regressing estimated monthly spread on
+realised vol in logs — true slope zero by construction — gives Abdi-Ranaldo:
+
+    true spread    5bps   10bps   25bps   50bps   100bps
+    measured slope 1.07    0.99    0.86    0.57     0.23
+
+The mechanism, not just the number: when the true spread is small next to
+daily vol the estimator returns its own noise floor, and that floor is
+proportional to vol. The bias shrinks monotonically as the true spread grows,
+which is the pattern above. On real tickers 2010-2025 the same estimator gives
+0.73-1.03 — inside the range a constant spread produces — and puts SPY at
+24bps and AAPL at 38bps, one to two orders of magnitude too high. Corwin-
+Schultz returns a non-positive estimate in 69-96% of months. A regression
+whose slope is the same whether or not the effect exists measures nothing.
+
+**It would not matter if it were.** Separate the two channels, because
+conflating them is what makes the original claim sound obvious: LEVEL (a model
+that charges more on average scores worse) and TIMING (holding total cost paid
+fixed, does moving the charge onto high-vol bars hurt). Only TIMING is about
+the model's shape. Rescaling each vol-scaled model to pay exactly what the
+flat model pays, across three strategies x eight tickers, 2010-2025:
+
+    model                            cost paid vs flat   max |Sharpe shift|
+    k = 1                               1.02 - 1.33x           0.002
+    k = 2                               1.28 - 2.30x           0.003
+    k = 3                               1.88 - 5.32x           0.015
+    5x multiplier in top vol decile     1.28 - 1.45x           0.002
+
+The LEVEL channel moves Sharpe by -0.16 to -0.32 per extra 10bps. The shape is
+worth about a thirtieth of the level, and that is at k=3 with a crisis
+multiplier, neither of which anyone would defend as calibrated.
+
+The reason is structural. Redistributing a fixed cost budget leaves the mean
+net return unchanged by construction, so it reaches Sharpe only through the
+variance the cost series adds, which is second order next to return variance.
+Forced to the absurd extreme — the entire budget charged on the top 1% of vol
+bars, ~37 bars in fifteen years — the shift finally reaches 0.157, and it goes
+the WRONG WAY: concentrating cost inflates return variance and shrinks
+|Sharpe| toward zero, which for a losing strategy is an improvement. The flat
+model is not flattering anybody.
+
+Momentum also does not trade especially when vol is high: turnover-weighted
+vol ratio 1.07-1.27 against an unweighted 1.06-1.31, and on three of eight
+tickers it trades at LOWER vol than average. The premise that survived
+measurement was the spread one, not the timing one.
+
+**What ships instead.** If the level is what matters, report the level.
+`costs.py` returns the breakeven cost — the per-unit-turnover charge at which
+annualised return, and therefore the Sharpe on the page, reaches exactly zero
+— plus the ratio of that to what the user assumed, and the metrics at 0x, 0.5x,
+1x, 2x and 5x their assumption. Equity ending at 1.0 means sum(log1p(net)) = 0
+and every term is non-increasing in cost with at least one strictly
+decreasing, so the root is unique and bisection cannot pick the wrong one. On
+momentum 20/50/2% at the default 10bps, AAPL breaks even at 19bps — a factor
+of 1.9 — and five of the eight tickers tested never had an edge to lose.
+
+**Not decided.** This says nothing about whether a vol-scaled model is right
+in principle; it says the coefficient cannot be measured with free daily data
+and that no plausible value changes a Sharpe. Two things would reopen it: a
+paid quote or spread feed, which makes k measurable; or a strategy whose
+turnover really is concentrated in a handful of high-vol bars, where the
+variance channel stops being second order. Neither applies to anything the
+product runs today.
+
 ## 2026-09-23 — The Sharpe gap is tested paired, two-sided, on the arithmetic Sharpe
 
 Putting a p-value between the two Sharpe ratios the page already prints forced
