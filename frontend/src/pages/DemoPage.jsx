@@ -10,6 +10,7 @@ import RollingSharpeChart from "../components/RollingSharpeChart";
 import MonthlyHeatmap from "../components/MonthlyHeatmap";
 import RegimeTable from "../components/RegimeTable";
 import BenchmarkTest from "../components/BenchmarkTest";
+import CostSensitivity from "../components/CostSensitivity";
 import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import demo from "../demoData.json";
@@ -69,6 +70,9 @@ export default function DemoPage() {
         <StaggerItem><MetricsGrid metrics={demo.metrics} confidenceIntervals={demo.confidence_intervals} /></StaggerItem>
         {demo.benchmark_test && (
           <StaggerItem><BenchmarkTest test={demo.benchmark_test} /></StaggerItem>
+        )}
+        {demo.cost_sensitivity && (
+          <StaggerItem><CostSensitivity data={demo.cost_sensitivity} /></StaggerItem>
         )}
         <StaggerItem><EquityCurveChart data={demo.equity_curve} /></StaggerItem>
         <StaggerItem><DrawdownChart data={demo.drawdown} /></StaggerItem>
