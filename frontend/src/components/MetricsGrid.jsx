@@ -182,7 +182,10 @@ export function MoreMetrics({ metrics, confidenceIntervals }) {
           whether the strategy works on data it has never seen.{" "}
           <span className="text-warn">Amber</span> marks an interval that still contains the value
           meaning "no effect". Intervals marked understated are known to be too narrow: measured
-          coverage was 70% for volatility and 79% for max drawdown against a nominal 95%.
+          coverage for volatility was 74% against a nominal 95%. Max drawdown used to carry the
+          same mark and no longer does — its interval was not too narrow, it was mis-centred by a
+          bias correction that does not apply to a path-dependent statistic. Suppressing that
+          correction took its coverage from 79% to 95%.
         </p>
       )}
 

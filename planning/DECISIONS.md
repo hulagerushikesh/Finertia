@@ -3,6 +3,53 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-09-23 — The drawdown interval drops BCa's bias correction, keeps its acceleration
+
+`max_drawdown`'s interval had measured 79% coverage against a nominal 95% since
+the bootstrap shipped, flagged in the response and the UI with a note blaming
+the resample: a block cannot rebuild a decline longer than itself, so read the
+band as "optimistic about long, slow declines". **That note was wrong about the
+consequence**, and the three fixes queued against it (longer blocks for path
+statistics, a parametric drawdown distribution, an honest one-sided bound) were
+all aimed at a band being too narrow.
+
+The band was not too narrow. Against the true sampling distribution it measured
+0.2204 wide versus a central-95% range of 0.2255 — 98% — and the estimator was
+unbiased (median error 0.0014). The defect was BCa's bias correction. `z0` reads
+the share of replicates falling below the observed statistic as evidence that
+the *estimator* is biased; for a drawdown that share is set by the block scheme,
+so `z0` corrects a bias that is not in the estimator at all. Decomposing the
+formula term by term on identical replicates:
+
+    max_drawdown, 400 paths, nominal 95%
+    percentile (no z0, no accel)   0.950
+    z0 only                        0.823
+    acceleration only              0.960
+    full BCa                       0.810
+
+The acceleration is not at fault; `z0` accounts for the entire loss. And the
+loss is mostly noise rather than drift: `z0` has mean ≈ 0 but sd 0.44–0.63
+across generators, and ranges −0.79 to +0.58 on real tickers, so each run got a
+large random shift in its band rather than a consistent one. On real data the
+bands move 0.045–0.131, in both directions — TSLA's positive `z0` had been
+pushing its band shallow.
+
+**Decided**: hold `z0` at zero for path-dependent statistics, keep the
+acceleration. Coverage 79% → 95.0%, confirmed on Gaussian GARCH, GARCH t(5) and
+a Markov regime-switching generator with no GARCH in it. `calmar_ratio` joins on
+its own measurement (0.900 → 0.930), not by analogy — its denominator is the
+drawdown. `max_drawdown` leaves `UNDERSTATED`, so the "understates" caveat
+disappears from the metrics grid; `annualized_volatility` stays flagged at
+73.5%, where the construction genuinely is irrelevant and the regime argument
+holds.
+
+**Not decided**: that percentile-type intervals are better in general. Eight of
+nine metrics are unaffected either way, and BCa's correction is doing legitimate
+work wherever the resample reproduces the estimator's behaviour. The rule is
+scoped to statistics built from the *order* of returns, which the block scheme
+provably distorts, and `NO_BIAS_CORRECTION` names them explicitly rather than
+inferring the set at runtime.
+
 ## 2026-09-23 — The Sharpe gap is tested paired, two-sided, on the arithmetic Sharpe
 
 Putting a p-value between the two Sharpe ratios the page already prints forced
