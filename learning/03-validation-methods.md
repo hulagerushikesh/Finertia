@@ -169,14 +169,25 @@ the free tier is exactly who takes a Sharpe at face value.
 - [ ] **BCa intervals** with a **delete-one-BLOCK jackknife** — delete-one-
   observation is invalid under serial dependence (Künsch 1989).
   Code: `_bca_interval()`, `_block_jackknife()`.
-- [ ] **Measured coverage, not assumed**: 300 GARCH(1,1) paths, n = 1250,
-  nominal 95% → 7 of 9 metrics 92.7–95.0%. Two fail and are FLAGGED in the
-  response and the UI:
-  - `annualized_volatility` 69.7% — reproduces 56% of true spread. Not fixable by
+- [ ] **Measured coverage, not assumed**: 400 GARCH(1,1) paths, n = 1250,
+  nominal 95%, measured through `bootstrap_metrics` itself → 8 of 9 metrics
+  91.2–95.0%. One fails and is FLAGGED in the response and the UI:
+  - `annualized_volatility` 73.5% — reproduces 57% of true spread. Not fixable by
     tuning: half the variation in a 5y realised vol is which regime the period
     sat in, and no resample can recreate a regime it did not contain. Sharpe
     escapes because it is a ratio — regime level cancels.
-  - `max_drawdown` 79.0% — a resample preserves order only inside a block.
+- [ ] **`max_drawdown` was the second flagged one at 79%, and the fix was not a
+  better resample** — BCa's bias correction `z0` was the whole defect. It reads
+  the share of replicates below the observed statistic as *estimator* bias, but
+  for a drawdown that share is moved by the block scheme, which cannot rebuild a
+  decline longer than one block. Measured: the estimator is unbiased (median
+  error 0.0014) while the replicates sit 0.0057 shallow. Worse, `z0` is mostly
+  NOISE — mean ≈ 0 but sd 0.44–0.63 across three generators, and ±0.79 on real
+  tickers — so every run got a large random shift in its band. Suppressing `z0`
+  and keeping the acceleration: **79% → 95.0%**, confirmed on Gaussian GARCH,
+  GARCH t(5) and a Markov regime-switching generator. `calmar_ratio` inherits a
+  muted version through its drawdown denominator and is treated the same way.
+  Code: `NO_BIAS_CORRECTION`, `_bca_interval(bias_correct=...)`.
 - [ ] **Three metrics get no interval, on purpose**: `best_day` / `worst_day`
   (a resample draws only from days that happened — the interval would be bounded
   by the statistic it bounds, understating tail risk exactly where it matters)
@@ -502,6 +513,6 @@ panel reads `/api/portfolio/validate` — no rolling section, per-name tables.
 - Constants pinned to the papers (3.26; Lo 2002 to 1e-12).
 - Coverage *measured* on synthetic GARCH paths, failures shipped as flags.
 - Mutation-checked: delete the check, watch exactly the right tests fail.
-- 697 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
+- 702 tests, `cd backend && .venv/bin/python -m pytest tests/ -q`, no credentials, no network.
 
 Next: [research/reading-list.md](research/reading-list.md)
