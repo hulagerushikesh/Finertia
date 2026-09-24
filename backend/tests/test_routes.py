@@ -25,6 +25,7 @@ from fastapi.testclient import TestClient
 os.environ.setdefault("FIREBASE_SERVICE_ACCOUNT_JSON", "{}")
 
 import main  # noqa: E402
+from schemas import BacktestRequest  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -307,6 +308,26 @@ def test_backtest_carries_the_sharpe_difference_test(api):
     # Not the headline Sharpe: that one is geometric, and the block says which
     # pair the p-value actually belongs to.
     assert "sqrt(252)" in test["sharpe_definition"]
+
+
+def test_backtest_carries_the_cost_sensitivity_block(api):
+    """How far the cost assumption can be wrong before the edge is gone."""
+    client, _ = api
+    body = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    block = body["cost_sensitivity"]
+    # BACKTEST leaves transaction_cost off, so this is the schema default.
+    assumed = BacktestRequest(**BACKTEST).transaction_cost
+    assert block["assumed_cost"] == pytest.approx(assumed)
+    assert block["status"] in {"measured", "unprofitable", "no_trades"}
+    # The curve is priced in multiples of what the user asked for, so their own
+    # assumption is always one of the points on it.
+    costs = [p["cost"] for p in block["curve"]]
+    assert costs == sorted(costs)
+    assert any(c == pytest.approx(assumed) for c in costs)
+    if block["status"] == "measured":
+        assert block["headroom"] == pytest.approx(
+            block["breakeven_cost"] / assumed, rel=1e-3
+        )
 
 
 def test_the_sharpe_test_is_stable_across_identical_runs(api):

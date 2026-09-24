@@ -17,6 +17,7 @@ from firebase_admin import firestore
 from data import DataUnavailableError, fetch_ohlcv
 from engine import compute_returns, apply_positions, compute_benchmark
 from bootstrap import bootstrap_metrics, stable_seed
+from costs import cost_sensitivity
 from rolling import rolling_walk_forward
 from regimes import regime_breakdown
 from sharpe_test import sharpe_difference_test
@@ -603,6 +604,14 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
         ),
     )
 
+    # How far the cost assumption can be wrong before the edge is gone.
+    #
+    # This is the level question, and the level is the only part of the cost
+    # model that moves the number on the page — see costs.py for the
+    # measurement that ruled out shipping a vol-scaled model instead. Five
+    # engine runs plus a bisection, ~5ms, so it is not gated either.
+    cost_block = cost_sensitivity(position, returns, req.transaction_cost)
+
     signals_summary = {
         "long_days": int((position > 0).sum()),
         "short_days": int((position < 0).sum()),
@@ -645,6 +654,7 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
         "rolling_sharpe": rolling,
         "regimes": regimes,
         "benchmark_test": benchmark_test,
+        "cost_sensitivity": cost_block,
         "signals_summary": signals_summary,
         "confidence_intervals": confidence_intervals,
         # "yfinance" | "cache" | "cache-stale" | "memory". Stale means Yahoo
