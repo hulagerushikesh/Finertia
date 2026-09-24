@@ -328,7 +328,7 @@ still do not resample by regime, so the vol-CI coverage gap stands.
   `backend/rolling.py`, `backend/regimes.py`, `backend/deflated.py`, `backend/trials.py`,
   `backend/pbo.py`, `backend/snooping.py`, `backend/sharpe_test.py`, `backend/portfolio_validation.py`, `backend/purge.py`, `backend/bootstrap.py`. Pure pandas + numpy; no
   backtesting or statistics library; the normal CDF is `math.erf`.
-- Tests: 712 in `backend/tests/`, including reproductions of the DSR paper's
+- Tests: 717 in `backend/tests/`, including reproductions of the DSR paper's
   worked example and Lo (2002) to 1e-12, and mutation checks on every check
   above.
 - Figures are as of 15 Sep 2026 (whole-grid table: 20 Sep; basket and vol × trend tables: 21 Sep; Sharpe-gap table: 23 Sep) with yfinance adjusted prices; Yahoo

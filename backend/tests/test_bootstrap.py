@@ -20,6 +20,7 @@ from bootstrap import (
     EXCLUDED,
     MIN_EXPECTED_BLOCKS,
     MIN_OBS,
+    NO_BIAS_CORRECTION,
     UNDERSTATED,
     _bca_interval,
     _block_jackknife,
@@ -489,6 +490,88 @@ def test_a_narrower_confidence_level_gives_a_narrower_interval():
         w = wide["metrics"][name]
         t = tight["metrics"][name]
         assert (w["high"] - w["low"]) > (t["high"] - t["low"]), name
+
+
+# ---------------------------------------------------------------------------
+# The bias correction, and where it must not be applied
+# ---------------------------------------------------------------------------
+
+
+def test_path_dependent_metrics_skip_the_bias_correction():
+    """BCa's z0 reads `share_below` as estimator bias. For a drawdown that share
+    is moved by the block scheme -- replicates cannot rebuild a decline longer
+    than a block -- so correcting for it shifted the band deep and cost 16 points
+    of coverage. These two metrics keep the acceleration and drop z0."""
+    out = bootstrap_metrics(_noise(600, seed=40), n_resamples=400, seed=40)
+    assert NO_BIAS_CORRECTION == {"max_drawdown", "calmar_ratio"}
+    for name in NO_BIAS_CORRECTION:
+        assert out["metrics"][name]["method"] in {
+            "bca_acceleration_only",
+            "percentile",
+            "degenerate",
+        }, name
+    # Everything else still gets the full correction.
+    assert out["metrics"]["sharpe_ratio"]["method"] in {"bca", "percentile"}
+
+
+def test_suppressing_the_bias_correction_actually_moves_the_interval():
+    """A switch that changes nothing would pass the method-name test above and
+    still be a no-op. Given replicates deliberately biased away from the observed
+    value -- the drawdown situation -- the two intervals must differ."""
+    rng = np.random.default_rng(41)
+    observed = -0.20
+    # Replicates sitting shallow of the observed statistic, as a block resample
+    # of a drawdown does: share_below is well under a half, so z0 is negative.
+    replicates = rng.normal(-0.14, 0.03, 2000)
+    jack = rng.normal(-0.20, 0.02, 60)
+
+    corrected = _bca_interval(observed, replicates, jack, 0.95, bias_correct=True)
+    plain = _bca_interval(observed, replicates, jack, 0.95, bias_correct=False)
+
+    assert corrected["method"] == "bca"
+    assert plain["method"] == "bca_acceleration_only"
+    # z0 < 0 drags both endpoints toward the deep tail.
+    assert corrected["low"] < plain["low"]
+    assert corrected["high"] < plain["high"]
+
+
+def test_the_acceleration_survives_when_the_bias_correction_goes():
+    """Suppressing z0 must not quietly degrade the interval to a percentile one.
+    With a skewed jackknife the acceleration still has to bend the endpoints."""
+    rng = np.random.default_rng(42)
+    replicates = rng.normal(-0.15, 0.03, 2000)
+    skewed = np.concatenate([rng.normal(-0.15, 0.01, 55), [-0.35, -0.33, -0.31]])
+
+    accelerated = _bca_interval(-0.15, replicates, skewed, 0.95, bias_correct=False)
+    flat = _bca_interval(-0.15, replicates, None, 0.95, bias_correct=False)
+
+    assert accelerated["method"] == "bca_acceleration_only"
+    assert (accelerated["low"], accelerated["high"]) != (flat["low"], flat["high"])
+
+
+def test_the_suppressed_correction_is_exactly_zero():
+    """z0 = 0.0, not merely "small". With no jackknife the acceleration is zero
+    as well, so the adjustment collapses to the identity and the interval must
+    land exactly on the plain 2.5/97.5 quantiles. A z0 of even 0.1 moves them,
+    and a mutation that substitutes one survives every other test here."""
+    rng = np.random.default_rng(44)
+    replicates = rng.normal(-0.15, 0.03, 4000)
+    # Observed deliberately off-centre: a live bias correction would shift this.
+    out = _bca_interval(-0.20, replicates, None, 0.95, bias_correct=False)
+
+    assert out["method"] == "bca_acceleration_only"
+    assert out["low"] == pytest.approx(float(np.quantile(replicates, 0.025)))
+    assert out["high"] == pytest.approx(float(np.quantile(replicates, 0.975)))
+
+
+def test_max_drawdown_is_no_longer_flagged_as_understating():
+    """It measured 79% before the z0 change and 95.0% after, so the warning that
+    used to ride along with it would now be the false statement."""
+    out = bootstrap_metrics(_noise(600, seed=43), n_resamples=400, seed=43)
+    assert "max_drawdown" not in UNDERSTATED
+    assert out["metrics"]["max_drawdown"]["reliability"] == "good"
+    assert "reliability_note" not in out["metrics"]["max_drawdown"]
+    assert set(UNDERSTATED) == {"annualized_volatility"}
 
 
 def test_excluded_and_understated_reasons_are_all_present():

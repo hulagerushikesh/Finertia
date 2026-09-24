@@ -486,7 +486,7 @@ cd backend
 pytest tests/ -q
 ```
 
-712 tests covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference, basket validation, the Sharpe-difference test), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
+717 tests covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference, basket validation, the Sharpe-difference test), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
 
 `test_routes.py` covers the part that decides who may call everything else: token handling, suspended accounts, admin gating, quota and entitlement enforcement, rate limiting, and how failures become status codes. `verify_token`, the profile lookup, the Firestore client, and the price fetch are all replaced, so no network or credentials are involved.
 
