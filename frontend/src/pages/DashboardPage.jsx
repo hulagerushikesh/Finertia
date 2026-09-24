@@ -87,6 +87,21 @@ export default function DashboardPage() {
 
   const isPortfolio = params.mode === "portfolio";
 
+  // The results card reads its shape from the payload on screen, NOT from the
+  // config panel beside it. Those two disagree the instant the mode toggle
+  // moves: a single-asset payload has no `tickers`, a portfolio payload has no
+  // `signals_summary`, and rendering either through the other's branch throws
+  // rather than merely looking wrong.
+  const resultIsPortfolio = Array.isArray(result?.tickers);
+
+  // Switching mode invalidates the result outright — a basket is not the same
+  // run as one ticker. Clearing it is what the empty state is for; leaving it
+  // up would show a stale answer under a config that can no longer produce it.
+  useEffect(() => {
+    setResult(null);
+    setValidation(null);
+  }, [params.mode]);
+
   async function handleRun() {
     setError("");
     setLoading(true);
@@ -229,7 +244,7 @@ export default function DashboardPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
                       <h2 className="font-display text-display-sm font-semibold text-foreground tracking-tight">
-                        {isPortfolio ? result.tickers.join(" · ") : params.ticker}
+                        {resultIsPortfolio ? result.tickers.join(" · ") : params.ticker}
                       </h2>
                      <Badge variant="outline" className="font-mono text-2xs uppercase tracking-wider text-graphite">
                         {strategyLabel}
@@ -243,7 +258,7 @@ export default function DashboardPage() {
                     <p className="text-xs font-mono text-graphite mt-1.5">
                       {result.start || params.start} → {result.end || params.end}
                       <span className="text-faint"> · </span>
-                      {isPortfolio
+                      {resultIsPortfolio
                         ? `${result.aligned_bars} bars shared by all ${result.tickers.length} holdings`
                         : `${result.signals_summary.long_days}d long · ${result.signals_summary.short_days}d short · ${result.signals_summary.flat_days}d flat`}
                       <span className="text-faint"> · </span>
@@ -310,7 +325,7 @@ export default function DashboardPage() {
                       <StaggerItem>
                         <BenchmarkTest
                           test={result.benchmark_test}
-                          benchmarkLabel={isPortfolio ? "holding the basket" : "holding it"}
+                          benchmarkLabel={resultIsPortfolio ? "holding the basket" : "holding it"}
                         />
                       </StaggerItem>
                     )}
@@ -323,7 +338,7 @@ export default function DashboardPage() {
                         <CostSensitivity data={result.cost_sensitivity} />
                       </StaggerItem>
                     )}
-                    {isPortfolio && (
+                    {resultIsPortfolio && (
                       <StaggerItem>
                         <PortfolioLegs result={result} />
                       </StaggerItem>
@@ -370,18 +385,18 @@ export default function DashboardPage() {
                         <li>
                           <strong className="text-foreground font-medium">Survivorship bias.</strong>{" "}
                           Price history only exists for companies that still trade. Testing on{" "}
-                          {isPortfolio ? result.tickers.join(", ") : params.ticker} is testing on
+                          {resultIsPortfolio ? result.tickers.join(", ") : params.ticker} is testing on
                           survivors — the delisted and bankrupt names that would have dragged the same
                           strategy down are simply not in the data.
-                          {isPortfolio &&
+                          {resultIsPortfolio &&
                             " A hand-picked basket of names you already know did well is the sharpest form of this."}
                         </li>
                         <li>
                           <strong className="text-foreground font-medium">
-                            {isPortfolio ? "One basket, one period." : "One ticker, one period."}
+                            {resultIsPortfolio ? "One basket, one period." : "One ticker, one period."}
                           </strong>{" "}
                           A single result is one draw from a distribution.{" "}
-                          {isPortfolio
+                          {resultIsPortfolio
                             ? "Run the Validation tab to see whether these parameters hold for the whole basket on data they were never fitted to, and which names carried it."
                             : "Run the Validation tab to see whether these parameters hold on data they were never fitted to."}
                         </li>
