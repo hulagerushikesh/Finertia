@@ -105,11 +105,34 @@ Not fixable on yfinance. If a paid or point-in-time source is ever added, the
 first research task is re-running the canonical AAPL demo on a delisted-inclusive
 universe and reporting how much of the buy-and-hold benchmark was survivorship.
 
-## 7. Transaction-cost realism
+## 7. ~~Transaction-cost realism~~ — **closed 24 Sep 2026**
 
-Costs are a constant rate on turnover. Real costs scale with volatility and
-inverse with liquidity. A vol-scaled cost model is one line; deciding the
-coefficient is the research.
+"A vol-scaled cost model is one line; deciding the coefficient is the
+research." The research says there is no coefficient to decide, and that it
+would not matter if there were.
+
+It cannot be measured. With only daily OHLCV the coefficient has to come from
+a high-low spread estimator, and on a simulation whose true spread is CONSTANT
+those estimators report a vol slope of 0.23 to 1.07 — because when the spread
+is small next to daily vol they return their own noise floor, which is itself
+proportional to vol. Real tickers give 0.73-1.03, inside the range a constant
+spread produces. Corwin-Schultz yields no number at all in 69-96% of months.
+
+It would not matter. Holding the TOTAL cost paid fixed and changing only where
+the charge lands moves Sharpe by at most 0.015 across three strategies and
+eight tickers, even at k=3 or with a 5x crisis multiplier. The cost LEVEL
+moves it by 0.16-0.32 per 10bps — about thirty times more. Redistributing a
+fixed budget leaves the mean untouched by construction, so it can only reach
+Sharpe through variance, which is second order. Pushed to the extreme it
+finally bites, and in the wrong direction: concentrating cost inflates
+variance and shrinks |Sharpe| toward zero.
+
+So the level shipped instead: `costs.py` reports the breakeven cost and how
+far the user's assumption is from it. See DECISIONS 24 Sep.
+
+The item had the same shape as §5. It named a real mechanism — spreads do
+widen with vol — and then asserted a consequence for the backtest that nobody
+had measured. The mechanism was real; the consequence was not there.
 
 ## 8. Is the Sharpe gap on the page significant? — **closed 23 Sep 2026**
 
@@ -127,5 +150,7 @@ than the full period, where the sample is shorter still.
 
 ---
 
-Item 3 is done as scoped (rolling folds + vol label); 2, 4, 5 and 8 are closed.
-Next: vol-scaled transaction costs (7).
+Item 3 is done as scoped (rolling folds + vol label); 2, 4, 5, 7 and 8 are
+closed. 6 needs a paid survivorship-free source. Next: nothing unblocked at
+zero cost — the queue is empty until 6 gets a data budget or a new question
+arrives.
