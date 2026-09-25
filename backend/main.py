@@ -17,7 +17,7 @@ from firebase_admin import firestore
 from data import DataUnavailableError, fetch_ohlcv
 from engine import compute_returns, apply_positions, compute_benchmark
 from bootstrap import bootstrap_metrics, stable_seed
-from costs import cost_sensitivity
+from costs import cost_sensitivity, portfolio_cost_sensitivity
 from rolling import rolling_walk_forward
 from regimes import regime_breakdown
 from sharpe_test import sharpe_difference_test
@@ -926,6 +926,11 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
     # 3. Run each leg exactly as a single-ticker backtest would.
     leg_returns = {}
     leg_metrics = {}
+    # Kept so the cost block can re-run the legs at other costs. The loop
+    # below reuses one `positions` name per iteration, so without this the
+    # only surviving position series is the last leg's.
+    leg_positions = {}
+    leg_asset_returns = {}
     for symbol in req.tickers:
         close = aligned[symbol]
         returns = compute_returns(close)
@@ -944,6 +949,8 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
         out = apply_positions(positions, returns, req.transaction_cost)
         leg_net = out["net_return"].fillna(0)
         leg_returns[symbol] = leg_net
+        leg_positions[symbol] = out["position"]
+        leg_asset_returns[symbol] = returns
         leg_metrics[symbol] = compute_metrics(
             leg_net,
             out["equity_curve"].fillna(1),
@@ -988,6 +995,13 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
         ),
     )
 
+    # Same question as a single-ticker run, on the book. Valid because the
+    # book is affine in cost exactly as one leg is — nothing upstream of the
+    # weighted sum reads the cost. costs.py carries the check.
+    cost_block = portfolio_cost_sensitivity(
+        leg_positions, leg_asset_returns, weights, req.transaction_cost
+    )
+
     return {
         "tickers": req.tickers,
         "strategy": req.strategy,
@@ -1005,6 +1019,7 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
         "diversification_ratio": diversification_ratio(legs_frame, weights, net_return),
         # Against an equal-weight hold of the same names, not any one ticker.
         "benchmark_test": benchmark_test,
+        "cost_sensitivity": cost_block,
         "equity_curve": [
             {"date": d, "strategy": round(s, 6), "benchmark": round(b, 6)}
             for d, s, b in zip(dates_out, equity.tolist(), bench_equity.tolist())

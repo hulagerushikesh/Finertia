@@ -106,6 +106,7 @@ import pandas as pd
 
 from engine import apply_positions
 from metrics import compute_metrics
+from portfolio import combine
 
 # Cost multiples of the user's own assumption. 0 is the frictionless upper
 # bound, 1 is what they ran, and the rest ask "what if I am wrong by 2x/5x" —
@@ -156,17 +157,16 @@ def _wipeout_cost(gross: np.ndarray, turnover: np.ndarray) -> float:
     return float(((1.0 + gross[trades]) / turnover[trades]).min())
 
 
-def breakeven_cost(position: pd.Series, returns: pd.Series) -> tuple[float | None, str]:
-    """The cost per unit turnover at which annualised return hits zero.
+def _breakeven_from(gross: np.ndarray, turnover: np.ndarray) -> tuple[float | None, str]:
+    """The breakeven, given the two series the cost actually acts on.
 
-    Returns (cost, status):
-        ("measured")     a positive breakeven exists; the float is it
-        ("unprofitable") the strategy loses before any cost, so 0.0
-        ("no_trades")    nothing ever trades, so no cost can bite; None
+    Everything above this line is about GETTING gross and turnover; the solve
+    itself only needs `net(c) = gross - turnover * c`. A portfolio satisfies
+    that identity too — its book return is a weighted sum of leg returns, each
+    of them affine in the same cost, and nothing upstream of it (positions,
+    stops, sizing, or either weighting scheme) reads the cost at all. Measured
+    rather than assumed: `test_a_book_is_affine_in_cost_like_a_single_leg`.
     """
-    gross = (position * returns.fillna(0.0)).to_numpy(dtype=float)
-    turnover = _turnover(position).to_numpy(dtype=float)
-
     if not np.any(turnover > 0):
         return None, "no_trades"
 
@@ -188,6 +188,20 @@ def breakeven_cost(position: pd.Series, returns: pd.Series) -> tuple[float | Non
         else:
             high = mid
     return (low + high) / 2.0, "measured"
+
+
+def breakeven_cost(position: pd.Series, returns: pd.Series) -> tuple[float | None, str]:
+    """The cost per unit turnover at which annualised return hits zero.
+
+    Returns (cost, status):
+        ("measured")     a positive breakeven exists; the float is it
+        ("unprofitable") the strategy loses before any cost, so 0.0
+        ("no_trades")    nothing ever trades, so no cost can bite; None
+    """
+    return _breakeven_from(
+        (position * returns.fillna(0.0)).to_numpy(dtype=float),
+        _turnover(position).to_numpy(dtype=float),
+    )
 
 
 def cost_sensitivity(
@@ -232,6 +246,97 @@ def cost_sensitivity(
     # How wrong the assumption can be before the edge is gone. Undefined when
     # they assumed zero cost (everything is infinitely many times zero) or
     # when there was no edge in the first place.
+    headroom = (
+        round(breakeven / assumed_cost, 4)
+        if status == "measured" and assumed_cost > 0
+        else None
+    )
+
+    return {
+        "assumed_cost": round(float(assumed_cost), 8),
+        "breakeven_cost": round(breakeven, 8) if breakeven is not None else None,
+        "headroom": headroom,
+        "status": status,
+        "curve": curve,
+    }
+
+
+def portfolio_cost_sensitivity(
+    leg_positions: dict[str, pd.Series],
+    leg_returns: dict[str, pd.Series],
+    weights: pd.DataFrame,
+    assumed_cost: float,
+) -> dict:
+    """The same question for a book rather than a single name.
+
+    A portfolio's return is `sum_i w_i * leg_net_i`, and each leg net is
+    `gross_i - turnover_i * c` against the same cost. Nothing that produces
+    those parts reads the cost: positions, stops and sizing come off the close
+    series, and both weighting schemes come off the close returns. So the book
+    collapses to the same shape a single leg has —
+
+        book(c) = sum_i w_i * gross_i  -  c * sum_i w_i * turnover_i
+
+    — and the identical bisection applies. That is the load-bearing claim here
+    and it is checked against the real `combine`, not reasoned about: see
+    `test_a_book_is_affine_in_cost_like_a_single_leg`, which holds to 2e-17
+    across both weighting schemes.
+
+    The curve is still built by re-running every leg and re-combining at each
+    cost, so each point is exactly what re-running the portfolio would print.
+    """
+    symbols = list(leg_positions)
+    index = weights.index
+
+    aligned_weights = weights.reindex(index).fillna(0.0)
+    gross = pd.Series(0.0, index=index)
+    turnover = pd.Series(0.0, index=index)
+    for symbol in symbols:
+        w = aligned_weights[symbol]
+        position = leg_positions[symbol].reindex(index)
+        gross = gross.add(w * (position * leg_returns[symbol].reindex(index).fillna(0.0)), fill_value=0.0)
+        turnover = turnover.add(w * _turnover(position), fill_value=0.0)
+
+    breakeven, status = _breakeven_from(
+        gross.to_numpy(dtype=float), turnover.to_numpy(dtype=float)
+    )
+
+    levels = (
+        tuple(assumed_cost * m for m in CURVE_MULTIPLES)
+        if assumed_cost > 0
+        else CURVE_ABSOLUTE
+    )
+
+    curve = []
+    for cost in levels:
+        legs = {
+            symbol: apply_positions(leg_positions[symbol], leg_returns[symbol], cost)[
+                "net_return"
+            ].fillna(0)
+            for symbol in symbols
+        }
+        book = combine(pd.DataFrame(legs), weights)
+        # compute_metrics counts trades from position changes and a book has no
+        # single position, so it gets the weighted exposure — the same thing
+        # main.py hands it, for consistency rather than necessity: `position`
+        # reaches only `num_trades`, and none of the four fields kept below
+        # depend on it. A mutation swapping this for `.max(axis=1)` survives
+        # the suite for exactly that reason. It is pinned to main.py's choice
+        # so that adding a trade count to the curve later cannot silently
+        # start reporting a different one.
+        exposure = book["weights"].sum(axis=1)
+        m = compute_metrics(
+            book["net_return"], book["equity_curve"], book["drawdown"], exposure
+        )
+        curve.append(
+            {
+                "cost": round(float(cost), 8),
+                "sharpe_ratio": m["sharpe_ratio"],
+                "annualized_return": m["annualized_return"],
+                "total_return": m["total_return"],
+            }
+        )
+
     headroom = (
         round(breakeven / assumed_cost, 4)
         if status == "measured" and assumed_cost > 0
