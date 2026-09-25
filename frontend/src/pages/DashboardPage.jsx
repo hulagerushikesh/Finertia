@@ -331,8 +331,9 @@ export default function DashboardPage() {
                     )}
                     {/* The cost box in the config panel takes a number on
                         trust. This says how much that trust is worth — the
-                        charge at which the Sharpe above reaches zero. Absent
-                        on portfolios and on backends older than the block. */}
+                        charge at which the Sharpe above reaches zero. Single
+                        names and baskets both carry it; gated on presence so
+                        a backend older than the block renders nothing. */}
                     {result.cost_sensitivity && (
                       <StaggerItem>
                         <CostSensitivity data={result.cost_sensitivity} />

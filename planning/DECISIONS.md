@@ -69,6 +69,17 @@ decreasing, so the root is unique and bisection cannot pick the wrong one. On
 momentum 20/50/2% at the default 10bps, AAPL breaks even at 19bps — a factor
 of 1.9 — and five of the eight tickers tested never had an edge to lose.
 
+**Extended to portfolios, 25 Sep.** A book is affine in cost exactly as one
+leg is: its return is `sum_i w_i * leg_net_i`, each leg net is
+`gross_i - turnover_i * c`, and nothing that builds those parts reads the cost
+— positions, stops and sizing come off the close series, and both weighting
+schemes come off the close returns. So the same bisection solves it. That was
+the one thing worth checking rather than deriving, since a weighting scheme
+that sized off NET returns would break it silently; measured against the real
+`combine` at 2e-17 on equal and inverse-vol weights. If a future weighting or
+stop ever starts reading the cost, `test_a_book_is_affine_in_cost_like_a_single_leg`
+is what fails.
+
 **Not decided.** This says nothing about whether a vol-scaled model is right
 in principle; it says the coefficient cannot be measured with free daily data
 and that no plausible value changes a Sharpe. Two things would reopen it: a

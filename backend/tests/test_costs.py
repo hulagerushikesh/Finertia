@@ -32,6 +32,7 @@ import pytest
 from costs import (
     CURVE_ABSOLUTE,
     CURVE_MULTIPLES,
+    portfolio_cost_sensitivity,
     _log_growth,
     _turnover,
     _wipeout_cost,
@@ -40,6 +41,7 @@ from costs import (
 )
 from engine import apply_positions
 from metrics import compute_metrics
+from portfolio import combine
 
 
 def _sharpe_at(position, returns, cost):
@@ -222,3 +224,120 @@ def test_an_edge_of_exactly_nothing_is_not_an_edge():
     cost, status = breakeven_cost(position, returns)
     assert status == "unprofitable"
     assert cost == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Portfolios
+#
+# The whole portfolio path rests on one claim: a book is affine in cost the
+# same way a single leg is, so the same bisection solves it. That claim is
+# checked against the real `combine` rather than argued from the algebra.
+#
+# Five mutations on the portfolio path, four caught. The survivor swaps the
+# exposure series handed to compute_metrics for a different reduction: it is
+# unobservable, because `position` reaches only `num_trades` and the curve
+# reports cost, Sharpe, annualised return and total return. Pinning it would
+# be a test of an intermediate nothing reads; costs.py says why it still
+# matches main.py's choice.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def book():
+    """Two legs with real turnover, on a shared index."""
+    rng = np.random.default_rng(17)
+    n = 500
+    idx = pd.date_range("2020-01-01", periods=n, freq="B")
+    symbols = ["AAA", "BBB"]
+    positions, returns = {}, {}
+    for i, s in enumerate(symbols):
+        returns[s] = pd.Series(rng.normal(0.0011 + i * 0.0002, 0.011 + i * 0.004, n), index=idx)
+        positions[s] = pd.Series(
+            np.where((np.arange(n) + i * 3) % 9 < 5, 1.0, 0.0), index=idx
+        )
+    weights = pd.DataFrame(0.5, index=idx, columns=symbols)
+    return positions, returns, weights
+
+
+def _book_net(positions, returns, weights, cost):
+    legs = {
+        s: apply_positions(positions[s], returns[s], cost)["net_return"].fillna(0)
+        for s in positions
+    }
+    return combine(pd.DataFrame(legs), weights)["net_return"]
+
+
+def test_a_book_is_affine_in_cost_like_a_single_leg(book):
+    """book(c) == book(0) - c * sum_i w_i * turnover_i, exactly.
+
+    If anything upstream ever starts reading the cost — a weighting scheme
+    that sizes off net returns, a stop that triggers on a net loss — this is
+    the test that fails, and `portfolio_cost_sensitivity` stops being valid.
+    """
+    positions, returns, weights = book
+    base = _book_net(positions, returns, weights, 0.0)
+    slope = sum(weights[s] * _turnover(positions[s]) for s in positions)
+    for cost in (0.0005, 0.001, 0.005, 0.02, 0.1):
+        actual = _book_net(positions, returns, weights, cost)
+        assert np.allclose(actual.to_numpy(), (base - cost * slope).to_numpy(), atol=1e-15)
+
+
+def test_the_portfolio_breakeven_zeroes_the_book_sharpe(book):
+    """Same promise as the single-asset one, against the real combine."""
+    positions, returns, weights = book
+    out = portfolio_cost_sensitivity(positions, returns, weights, 0.001)
+    assert out["status"] == "measured"
+    net = _book_net(positions, returns, weights, out["breakeven_cost"])
+    legs = {
+        s: apply_positions(positions[s], returns[s], out["breakeven_cost"])["net_return"].fillna(0)
+        for s in positions
+    }
+    b = combine(pd.DataFrame(legs), weights)
+    m = compute_metrics(b["net_return"], b["equity_curve"], b["drawdown"], b["weights"].sum(axis=1))
+    assert m["sharpe_ratio"] == pytest.approx(0.0, abs=1e-4)
+    assert net.equals(b["net_return"])
+
+
+def test_the_portfolio_curve_is_what_a_rerun_would_show(book):
+    positions, returns, weights = book
+    out = portfolio_cost_sensitivity(positions, returns, weights, 0.001)
+    assert [p["cost"] for p in out["curve"]] == [round(0.001 * m, 8) for m in CURVE_MULTIPLES]
+    for point in out["curve"]:
+        legs = {
+            s: apply_positions(positions[s], returns[s], point["cost"])["net_return"].fillna(0)
+            for s in positions
+        }
+        b = combine(pd.DataFrame(legs), weights)
+        m = compute_metrics(
+            b["net_return"], b["equity_curve"], b["drawdown"], b["weights"].sum(axis=1)
+        )
+        assert point["sharpe_ratio"] == pytest.approx(m["sharpe_ratio"], abs=1e-6)
+
+
+def test_uneven_weights_move_the_portfolio_breakeven(book):
+    """The book's tolerance is the weighted one, not an average of the legs'.
+
+    Tilting the book toward the leg with the better cost tolerance has to move
+    the number, or the weights are being ignored somewhere.
+    """
+    positions, returns, idx_weights = book
+    idx = idx_weights.index
+    legs = list(positions)
+    per_leg = {s: breakeven_cost(positions[s], returns[s])[0] for s in legs}
+    tough, fragile = max(per_leg, key=per_leg.get), min(per_leg, key=per_leg.get)
+    assert per_leg[tough] > per_leg[fragile]
+
+    toward_tough = pd.DataFrame({tough: 0.9, fragile: 0.1}, index=idx)[legs]
+    toward_fragile = pd.DataFrame({tough: 0.1, fragile: 0.9}, index=idx)[legs]
+    a = portfolio_cost_sensitivity(positions, returns, toward_tough, 0.001)["breakeven_cost"]
+    b = portfolio_cost_sensitivity(positions, returns, toward_fragile, 0.001)["breakeven_cost"]
+    assert a > b
+
+
+def test_a_book_that_never_trades_has_no_breakeven(book):
+    positions, returns, weights = book
+    flat = {s: pd.Series(0.0, index=weights.index) for s in positions}
+    out = portfolio_cost_sensitivity(flat, returns, weights, 0.001)
+    assert out["status"] == "no_trades"
+    assert out["breakeven_cost"] is None
+    assert out["headroom"] is None
