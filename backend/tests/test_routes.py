@@ -388,6 +388,37 @@ PORTFOLIO = {"tickers": ["AAPL", "MSFT"], "start": "2020-01-01", "end": "2022-01
              "strategy": "momentum"}
 
 
+def test_portfolio_carries_the_cost_sensitivity_block(api):
+    """The breakeven must survive a real re-run of the whole endpoint at it.
+
+    Anything weaker only checks the solver against its own arithmetic. This
+    posts the number back as `transaction_cost` and reads the Sharpe off the
+    response the user would actually get.
+    """
+    client, state = api
+    state["profile"] = dict(PRO)
+    body = client.post("/api/portfolio", json=PORTFOLIO, headers=AUTH).json()
+    block = body["cost_sensitivity"]
+    assert block["status"] in {"measured", "unprofitable", "no_trades"}
+
+    if block["status"] == "measured":
+        again = client.post(
+            "/api/portfolio",
+            json={**PORTFOLIO, "transaction_cost": block["breakeven_cost"]},
+            headers=AUTH,
+        ).json()
+        assert again["metrics"]["sharpe_ratio"] == pytest.approx(0.0, abs=1e-4)
+
+    # And every point on the curve is a real run at that cost, not a rescale.
+    for point in block["curve"]:
+        rerun = client.post(
+            "/api/portfolio", json={**PORTFOLIO, "transaction_cost": point["cost"]}, headers=AUTH
+        ).json()
+        assert rerun["metrics"]["sharpe_ratio"] == pytest.approx(
+            point["sharpe_ratio"], abs=1e-6
+        )
+
+
 def test_portfolio_carries_the_sharpe_test_against_the_held_basket(api):
     client, state = api
     state["profile"] = dict(PRO)
