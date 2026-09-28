@@ -165,10 +165,24 @@ Set the `VITE_*` values from `.env.example` as Vercel environment variables.
 not the Cloud Run URL — that is what makes the proxy do its job. Pull requests
 get a preview URL; the preview still proxies to production Cloud Run.
 
-### Backend → Cloud Run (manual, by design)
+### Backend → Cloud Run (manual trigger, by design)
 
-The backend does **not** auto-deploy. After merging a backend change, deploy by
-hand so a change never silently turns on a meter:
+The backend does **not** auto-deploy. After merging a backend change, run the
+Deploy workflow so a change never silently turns on a meter:
+
+```bash
+gh workflow run deploy.yml --ref main
+```
+
+It runs the tests, deploys with the command below, waits for `/api/health` to
+return 200, then moves the `backend-deployed` tag. It authenticates as
+`finertia-deployer` through Workload Identity Federation — no key exists
+anywhere — and the provider only accepts tokens from this repo on
+`refs/heads/main`. The one-time GCP + secrets setup is
+[`.github/scripts/setup-wif.sh`](.github/scripts/setup-wif.sh) (run 28 Sep 2026;
+first workflow deploy was rev `00011-cwn`).
+
+To deploy by hand instead (the fallback if Actions is down):
 
 ```bash
 cd backend
@@ -475,7 +489,7 @@ cd firestore-tests && npm install && npm test
 
 `.github/workflows/ci.yml` runs on every push and PR: backend tests, frontend build, and a secret scan that fails if a `.env` or service-account key is ever tracked. None of them need credentials — a pipeline that requires secrets is one that silently stops running.
 
-`deploy.yml` is backend-only (Vercel deploys the frontend on its own) and manual (`workflow_dispatch`) rather than push-triggered, so shipping is always a decision. It runs the same `gcloud run deploy` as the Deploy section, flag for flag, after the tests pass. It authenticates to GCP by Workload Identity Federation rather than a long-lived key in a repo secret, and polls `/api/health` afterwards (a deploy that "succeeded" but serves 500s is not a successful deploy). The WIF secrets are not set on the repo today; deploys are run by hand.
+`deploy.yml` is backend-only (Vercel deploys the frontend on its own) and manual (`workflow_dispatch`) rather than push-triggered, so shipping is always a decision. It runs the same `gcloud run deploy` as the Deploy section, flag for flag, after the tests pass. It authenticates to GCP by Workload Identity Federation rather than a long-lived key in a repo secret, and polls `/api/health` afterwards (a deploy that "succeeded" but serves 500s is not a successful deploy). The WIF secrets have been set since 28 Sep 2026 (`.github/scripts/setup-wif.sh`); the workflow is the normal way to deploy.
 
 ---
 
