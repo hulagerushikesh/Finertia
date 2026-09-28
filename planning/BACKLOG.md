@@ -9,6 +9,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 - [x] Bundle-size CI check — `frontend/scripts/check-bundle.mjs` + `bundle-budget.json`, gzip entry + total, limits ~10% over the 19 Sep build; CI step "Bundle budget" (19 Sep)
 - [x] Backend deploy reminder — `backend-drift.yml` diffs `backend/` against the `backend-deployed` tag on every push to main and comments on the merged PR; deploy.yml moves the tag, manual deploys move it per README (19 Sep)
 - [x] Rotate the Cloud Run runtime SA to a dedicated one — `finertia-api-runtime`, zero project roles, `secretAccessor` on `finertia-sa` only; default compute SA's secret grant removed; rev 00008 (20 Sep)
+- [x] Deploy workflow runnable — WIF pool/provider `github` (this repo, `main` only), `finertia-deployer` SA with deploy-only roles, both repo secrets; `.github/scripts/setup-wif.sh`; first workflow deploy rev `00011-cwn`, tag moved by the workflow (28 Sep)
 
 ## Research (after effective N)
 
