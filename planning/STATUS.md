@@ -1,20 +1,20 @@
 # Status
 
-_Current to `4bfbfe6` (main) · 23 Sep 2026._
+_Current to `8d2a866` (main) · 28 Sep 2026._
 
 ## At a glance
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00009` (20 Sep: whole-grid inference, built from `bb5c5fb`, runs as `finertia-api-runtime`) — **`backend/` on `main` is ahead by three merges (#41 basket validation, #45 trend label, #48 Sharpe-difference test) and the `backend-deployed` tag is WRONG: it was moved to `e8b62e7` on 23 Sep while prod still serves `bb5c5fb`, so `backend-drift.yml` now under-reports (its comment on #48 named only `da07ed5` and claimed prod was on `e8b62e7`). Until rev `00010` ships: the portfolio-mode Validation tab 404s, the regime table shows no direction section, and the Sharpe p-value strip does not render — all three UIs are live on Vercel and waiting on the payload.** Fix = deploy, or `git tag -f backend-deployed bb5c5fb && git push -f origin backend-deployed` until then; frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17), the same-day simplification (PRs #19–#23) and the 21–23 Sep research UIs (#46 direction table + vol × direction grid, #49 the Sharpe p-value strip) 
+| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00010-rdj` (28 Sep, built from `8d2a866`, runs as `finertia-api-runtime`). **`backend/` on `main` == prod == `backend-deployed` tag.** Rev 00010 ships the six backend PRs that had queued since rev 00009: basket validation (#41), trend label (#45), Sharpe-difference test (#48), drawdown-interval fix (#51), cost level (#52), portfolio cost sensitivity (#55) — so the portfolio-mode Validation tab, the regime direction section, the Sharpe p-value strip and the cost-tolerance strip now have their payloads. Frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17), the same-day simplification (PRs #19–#23), the 21–23 Sep research UIs (#46 direction table + vol × direction grid, #49 the Sharpe p-value strip) and the 24 Sep batch (#53 readable 422s + mode-toggle crash, #54 cost-tolerance strip) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
-| Tests | 723 backend (`cd backend && pytest tests/ -q`), 20 Firestore-rule (`cd firestore-tests && npm test`) |
+| Tests | 723 backend (`cd backend && pytest tests/ -q`, re-run 28 Sep before the deploy), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + bundle budget + secret scan); `backend-drift.yml` comments on the merged PR when `backend/` is ahead of the `backend-deployed` tag |
-| Commits | 131 on main (`git rev-list --count`, counted 23 Sep) · 48 PRs merged (`gh pr list --state merged`) |
+| Commits | 147 on main (`git rev-list --count`, counted 28 Sep) · 54 PRs merged (`gh pr list --state merged`) |
 | API | 17 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
-| Blocked on user | 4 — **backend deploy of `4bfbfe6` (rev 00010) + tag correction** (the tag currently points at `e8b62e7`, which prod never served) · login smoke test **on production** · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
-| In flight | nothing — every branch is merged; next is open-questions §5, the max-drawdown interval |
+| Blocked on user | 3 — login smoke test **on production**, now also covering the four panels rev 00010 unblocked (every data route needs a bearer, so they were not checked from the CLI) · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
+| In flight | nothing — every branch is merged; research backlog is empty bar the inverse-vol weight-path null ("only if anyone asks") |
 | Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); draft at [write-up.md](write-up.md) |
 
 ## Stages — verified vs built
@@ -33,7 +33,7 @@ compiles, never exercised end to end.
 | S7 Ops — rate limit, JSON logs, CI | **Verified** | CI green; deps pinned to prod 13 Sep |
 | S8 Grow — demo, docs, support, SEO, email verification | **Verified** | All public routes walked before submission |
 
-## Research roadmap — 5 of 5, plus four post-roadmap
+## Research roadmap — 5 of 5, plus six post-roadmap
 
 | Item | State | Evidence |
 |---|---|---|
@@ -46,6 +46,8 @@ compiles, never exercised end to end.
 | Sharpe vs buy-and-hold (post-roadmap, open-questions §8) | Done 23 Sep | `sharpe_test.py`: Ledoit-Wolf (2008) paired Sharpe-difference test — HAC (Bartlett, Andrews bandwidth) + studentised block bootstrap, two-sided, in every `/api/backtest` and `/api/portfolio` as `benchmark_test`; 32 tests, 7 of 8 mutations caught and the survivor documented; size 5.2–8.8% at nominal 5%, power needs ~1 Sharpe point over 5 years; **no strategy's gap against buy-and-hold on AAPL, BABA or SPY is distinguishable from noise** (s.e. 0.5–0.7), and the one significant result (AAPL 2015→20 Bollinger, p 0.031) is a loss |
 | Basket validation (post-roadmap, open-questions §2) | Done 21 Sep | `portfolio_validation.py` + `POST /api/portfolio/validate`: grid scored on the book, every leg re-timed independently (null decided, DECISIONS 21 Sep); 21 tests, 4 mutations caught; one-leg book == single-ticker bit for bit; AAPL+MSFT+GOOGL Bollinger held up 0.83→0.77, timing p 0.002, still −18.7%/yr vs holding the basket |
 | Whole-grid inference (post-roadmap, open-questions §4) | Done 20 Sep | `snooping.py`: Reality Check, SPA l/c/u, Romano-Wolf stepdown vs buy-and-hold; 17 tests, 6 mutations caught; 0 survivors on 5 tickers × 2 windows × 3 grids; snooping gap printed per cell |
+| Max-drawdown interval (post-roadmap, open-questions §5) | Done 24 Sep, PR #51 | BCa's `z0` suppressed for `max_drawdown` and `calmar_ratio` (`NO_BIAS_CORRECTION`); the band was never too narrow (98% of the true central-95% range); coverage 79% → 95.0% on three generators and five tickers; 6 mutations, 1 survivor closed |
+| Transaction-cost realism (post-roadmap, open-questions §7) | Done 24–25 Sep, PRs #52, #54, #55 | vol-scaled model **not** shipped — coefficient unidentifiable from daily OHLCV, shape worth ~1/30 of the level; `costs.py` ships breakeven cost + headroom as `cost_sensitivity` on every `/api/backtest` and `/api/portfolio`, cost-tolerance strip on the results card; 20 tests across the two backend PRs |
 
 ## The redesign — PR #6, merged 17 Sep
 
@@ -99,6 +101,9 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 | 20 Sep | Runtime SA rotated: `finertia-api-runtime` (no project roles, `secretAccessor` on `finertia-sa` only) replaces the default compute SA (`roles/editor`); rev 00008, same image; default SA's secret grant removed; `--service-account` added to README + deploy.yml | health 200 via proxy and direct; bogus bearer → 401 "Invalid token" (Admin SDK initialised under the new SA); zero ERROR logs on 00008 |
 | 19 Sep | **Simplification**, user's call after reading the site as a customer: tweakcn Ocean Breeze palette + DM Sans (PR #19, contrast re-measured ≥ 4.5:1); notebook metaphor dropped — stamps → Badge, no pencil underlines, no graph paper (PR #20); set-up = strategy/ticker/dates + one Advanced fold, results = 4 numbers + curve + one fold (PR #21); signed-in users no longer sent to /register (PR #22, bug found on prod); landing rewritten for someone who has never heard of a backtest (PR #23) | each PR previewed on the real payload at 375 + 528/1280 px, light + dark; prod title + bundle strings confirmed after merge |
 | 16 Sep | Rolling walk-forward (`rolling.py`): 4 anchored folds, market context per fold, stitched OOS + CI, parameter stability; wired as `rolling_walk_forward` in `/api/validate`; PR #10, rev 00006 | 18 + 3 tests, 588 total; 3 mutation checks; all three AAPL strategies read `regime_dependent` |
+| 24 Sep | UI fixes (PR #53): FastAPI's array-shaped 422 `detail` rendered as `[object Object]` — now the backend's own messages reach the screen; switching to portfolio mode no longer crashes results. Cost-tolerance strip (PR #54): breakeven cost beside the assumed one, headroom multiple, metrics at 0×–5× | both bugs reported from a live session; strip reads `cost_sensitivity`, waited on rev 00010 |
+| 23 Sep | STATUS sync after #49 (PR #50) recorded the lying tag; the tag was reset to `bb5c5fb` after it | `git rev-parse backend-deployed` = `bb5c5fb` on 28 Sep, matching rev 00009 |
+| 28 Sep | **Rev `00010-rdj` deployed from `8d2a866`** (manual `gcloud run deploy`, README flags; the Deploy workflow has never run — no WIF secrets on the repo). First attempt from the user's terminal never reached Cloud Build; second run from the session. Tag moved `bb5c5fb` → `8d2a866`, drift now zero | 723 tests green before deploy; revision serving 100%; `/api/health` 200 via the proxy; `POST /api/portfolio/validate` 404 → 422 through `finertia.hulage.in`; service config (runtime SA, `finertia-sa` secret, `ALLOWED_ORIGINS`, `LOG_LEVEL`, caps) diffed unchanged before the deploy. New panels **not** yet seen on a logged-in run |
 
 ## Known risks
 
@@ -106,7 +111,7 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
    survives cold starts, stale-on-error serves the last good copy. Residual: a
    never-seen ticker during a Yahoo outage still 503s; prod cold-read latency
    still unmeasured.
-2. **Backend redeploy is manual** and was forgotten once (5 days of stale prod). Since 20 Sep `backend-drift.yml` comments on the merged PR whenever `backend/` is ahead of the `backend-deployed` tag (PR #34); first live comment on PR #38 the same day, redeploy followed within the hour. **The detector trusts the tag, and on 23 Sep the tag was moved to `e8b62e7` without a deploy — so it now reports against a commit production never served, and under-reports by two merges.** Moving the tag is part of deploying, not a substitute for it; until rev 00010 ships the honest tag is `bb5c5fb`.
+2. **Backend redeploy is manual** and was forgotten once (5 days of stale prod). Since 20 Sep `backend-drift.yml` comments on the merged PR whenever `backend/` is ahead of the `backend-deployed` tag (PR #34); first live comment on PR #38 the same day, redeploy followed within the hour. The detector trusts the tag, and on 23 Sep the tag was moved to `e8b62e7` without a deploy, so it under-reported for two days; corrected to `bb5c5fb` and then, with rev 00010 on 28 Sep, to `8d2a866`. Moving the tag is part of deploying, not a substitute for it — move it only after the revision serves and `/api/health` returns 200. The Deploy workflow would do both, but has never run: the repo has no `GCP_WORKLOAD_IDENTITY_PROVIDER` / `GCP_SERVICE_ACCOUNT` secrets.
 3. **Shared python** — local pandas 2.3.1 vs prod 3.0.5; suite passes on both today.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry.
-5. **Rollback to rev 00007 no longer works by traffic shift** — that revision runs as the default compute SA, which lost its secret grant on 20 Sep. Rolling back means redeploying the 00007 source with `--service-account finertia-api-runtime@…`, or re-granting the secret first.
+5. **Rollback target is rev `00009-65g`** — runs as `finertia-api-runtime`, so a traffic shift works: `gcloud run services update-traffic finertia-api --region asia-south1 --project momentbacktracking --to-revisions finertia-api-00009-65g=100`. **Rollback to rev 00007 no longer works by traffic shift** — that revision runs as the default compute SA, which lost its secret grant on 20 Sep. Rolling back means redeploying the 00007 source with `--service-account finertia-api-runtime@…`, or re-granting the secret first.
