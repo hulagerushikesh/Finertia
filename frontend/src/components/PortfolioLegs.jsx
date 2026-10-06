@@ -81,13 +81,10 @@ export default function PortfolioLegs({ result }) {
                   <TableCell
                     className={cn(
                       "text-right",
-                      leg.contribution === best
-                        ? "text-gain font-medium"
-                        : leg.contribution === worst
-                          ? "text-loss font-medium"
-                          : leg.contribution >= 0
-                            ? "text-gain"
-                            : "text-loss",
+                      // Colour is the sign; weight marks best and worst. Colouring
+                      // the best leg green painted a smaller loss as a gain.
+                      leg.contribution >= 0 ? "text-gain" : "text-loss",
+                      (leg.contribution === best || leg.contribution === worst) && "font-medium",
                     )}
                   >
                     {leg.contribution >= 0 ? "+" : ""}
