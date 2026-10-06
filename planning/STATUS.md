@@ -10,11 +10,11 @@ _Current to `552ec3e` (main) · 7 Oct 2026._
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 723 backend (`cd backend && pytest tests/ -q`, re-run 28 Sep before the deploy), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + bundle budget + secret scan); `backend-drift.yml` comments on the merged PR when `backend/` is ahead of the `backend-deployed` tag |
-| Commits | 147 on main (`git rev-list --count`, counted 28 Sep) · 54 PRs merged (`gh pr list --state merged`) |
+| Commits | 147 on main (`git rev-list --count`, counted 28 Sep) · 58 PRs merged (`gh pr list --state merged`, 7 Oct) |
 | API | 17 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
-| Blocked on user | 3 — login smoke test **on production**, now also covering the four panels rev 00010 unblocked (every data route needs a bearer, so they were not checked from the CLI) · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
-| In flight | PR #58 (contribution colour by sign, green, awaiting merge) · M10 drafted 7 Oct: publish the write-up, then put the product in front of 5 outside users — [NEXT-MILESTONE.md](NEXT-MILESTONE.md) |
+| Blocked on user | 3, one partly done — login smoke test **on production**: a logged-in AAPL+MSFT momentum portfolio run on 28 Sep rendered the Sharpe-difference strip (p 0.001), the cost-tolerance strip ("loses money before a single basis point") and the per-leg table, which surfaced the contribution-colour bug fixed in PR #58; still unwalked: validation tab in portfolio mode, regime direction table, History, Profile save, Register · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
+| In flight | M10 phase 0 — [NEXT-MILESTONE.md](NEXT-MILESTONE.md): publish the write-up, then put the product in front of 5 outside users. PR #58 merged 7 Oct |
 | Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); draft at [write-up.md](write-up.md), unpublished. M10 phase 4 revisits the decision with outside-user evidence |
 
 ## Stages — verified vs built
@@ -105,6 +105,7 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 | 23 Sep | STATUS sync after #49 (PR #50) recorded the lying tag; the tag was reset to `bb5c5fb` after it | `git rev-parse backend-deployed` = `bb5c5fb` on 28 Sep, matching rev 00009 |
 | 28 Sep | **Rev `00010-rdj` deployed from `8d2a866`** (manual `gcloud run deploy`, README flags; the Deploy workflow has never run — no WIF secrets on the repo). First attempt from the user's terminal never reached Cloud Build; second run from the session. Tag moved `bb5c5fb` → `8d2a866`, drift now zero | 723 tests green before deploy; revision serving 100%; `/api/health` 200 via the proxy; `POST /api/portfolio/validate` 404 → 422 through `finertia.hulage.in`; service config (runtime SA, `finertia-sa` secret, `ALLOWED_ORIGINS`, `LOG_LEVEL`, caps) diffed unchanged before the deploy. New panels **not** yet seen on a logged-in run |
 | 28 Sep | **Deploy workflow live** — Workload Identity Federation: `finertia-deployer` SA (run.admin, cloudbuild.builds.editor, artifactregistry.writer, storage.admin, serviceUsageConsumer; actAs on `finertia-api-runtime` and the Cloud Build compute SA only), pool/provider `github` accepting only `hulagerushikesh/Finertia` on `refs/heads/main`, secrets `GCP_WORKLOAD_IDENTITY_PROVIDER` / `GCP_SERVICE_ACCOUNT`; setup in `.github/scripts/setup-wif.sh`. First run failed at the build (deployer lacked actAs on the compute SA Cloud Build runs as) — binding added, script updated | run 36444594928 green: tests → rev `00011-cwn` 100% traffic as `finertia-api-runtime` → `/api/health` 200 via the proxy → `backend-deployed` moved to `26a6a10` by the workflow itself; `POST /api/portfolio/validate` 422 through `finertia.hulage.in`; re-run of the failed 36444541475 → rev `00012-7zc`, dispatches 36445752188, 36445780974, 36447370616 → revs `00013-7xd`, `00014-5g2`, `00015-z4f`, all green, identical code |
+| 28 Sep | Contribution colour (PR #58): `PortfolioLegs` coloured the best leg green and the worst red whatever their sign — AAPL's −32.91% showed green beside MSFT's −41.67% because it was the smaller loss. Colour is now the sign; best/worst keep the bolder weight | found on the user's production portfolio run; frontend build + bundle budget pass |
 
 ## Known risks
 
