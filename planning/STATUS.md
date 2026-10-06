@@ -1,12 +1,12 @@
 # Status
 
-_Current to `26a6a10` (main) · 28 Sep 2026._
+_Current to `552ec3e` (main) · 7 Oct 2026._
 
 ## At a glance
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00015-z4f` (28 Sep, same code as 00010 — `26a6a10`; 00011–00015 are the Deploy workflow's first five runs, all identical code; runs as `finertia-api-runtime`). **`backend/` on `main` == prod == `backend-deployed` tag.** Rev 00010 ships the six backend PRs that had queued since rev 00009: basket validation (#41), trend label (#45), Sharpe-difference test (#48), drawdown-interval fix (#51), cost level (#52), portfolio cost sensitivity (#55) — so the portfolio-mode Validation tab, the regime direction section, the Sharpe p-value strip and the cost-tolerance strip now have their payloads. Frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17), the same-day simplification (PRs #19–#23), the 21–23 Sep research UIs (#46 direction table + vol × direction grid, #49 the Sharpe p-value strip) and the 24 Sep batch (#53 readable 422s + mode-toggle crash, #54 cost-tolerance strip) |
+| Live | https://finertia.hulage.in — Vercel (frontend) + Cloud Run `finertia-api` asia-south1 rev `00016-rzn` (28 Sep, built from `552ec3e` by the Deploy workflow; `backend/` unchanged since 00010, so 00011–00016 all serve the same code; runs as `finertia-api-runtime`). **`backend/` on `main` == prod == `backend-deployed` tag.** Rev 00010 ships the six backend PRs that had queued since rev 00009: basket validation (#41), trend label (#45), Sharpe-difference test (#48), drawdown-interval fix (#51), cost level (#52), portfolio cost sensitivity (#55) — so the portfolio-mode Validation tab, the regime direction section, the Sharpe p-value strip and the cost-tolerance strip now have their payloads. Frontend = the shadcn redesign since 17 Sep (PR #6), plus the 19 Sep UI batch (PRs #13, #14, #16, #17), the same-day simplification (PRs #19–#23), the 21–23 Sep research UIs (#46 direction table + vol × direction grid, #49 the Sharpe p-value strip) and the 24 Sep batch (#53 readable 422s + mode-toggle crash, #54 cost-tolerance strip) |
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 723 backend (`cd backend && pytest tests/ -q`, re-run 28 Sep before the deploy), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + bundle budget + secret scan); `backend-drift.yml` comments on the merged PR when `backend/` is ahead of the `backend-deployed` tag |
@@ -14,8 +14,8 @@ _Current to `26a6a10` (main) · 28 Sep 2026._
 | API | 17 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
 | Blocked on user | 3 — login smoke test **on production**, now also covering the four panels rev 00010 unblocked (every data route needs a bearer, so they were not checked from the CLI) · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
-| In flight | nothing — every branch is merged; research backlog is empty bar the inverse-vol weight-path null ("only if anyone asks") |
-| Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); draft at [write-up.md](write-up.md) |
+| In flight | PR #58 (contribution colour by sign, green, awaiting merge) · M10 drafted 7 Oct: publish the write-up, then put the product in front of 5 outside users — [NEXT-MILESTONE.md](NEXT-MILESTONE.md) |
+| Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); draft at [write-up.md](write-up.md), unpublished. M10 phase 4 revisits the decision with outside-user evidence |
 
 ## Stages — verified vs built
 
@@ -115,4 +115,4 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 2. **Backend redeploy is a manual trigger** and was forgotten once (5 days of stale prod). Since 28 Sep it is one command — `gh workflow run deploy.yml --ref main` — which tests, deploys, health-checks and moves the `backend-deployed` tag itself, so the tag can no longer be moved without a deploy behind it (the 23 Sep failure). `backend-drift.yml` still comments on any merged PR that leaves `backend/` ahead of the tag. Still not push-triggered, deliberately: a deploy stays a decision. Hand-deploys (README fallback) must still move the tag only after the revision serves and `/api/health` returns 200.
 3. **Shared python** — local pandas 2.3.1 vs prod 3.0.5; suite passes on both today.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry.
-5. **Rollback target is rev `00010-rdj`** (same code as 00011–00015; `00009-65g` is the one before the six rev-00010 PRs) — both run as `finertia-api-runtime`, so a traffic shift works: `gcloud run services update-traffic finertia-api --region asia-south1 --project momentbacktracking --to-revisions finertia-api-00010-rdj=100`. **Rollback to rev 00007 no longer works by traffic shift** — that revision runs as the default compute SA, which lost its secret grant on 20 Sep. Rolling back means redeploying the 00007 source with `--service-account finertia-api-runtime@…`, or re-granting the secret first.
+5. **Rollback target is rev `00010-rdj`** (same code as 00011–00016; `00009-65g` is the one before the six rev-00010 PRs) — both run as `finertia-api-runtime`, so a traffic shift works: `gcloud run services update-traffic finertia-api --region asia-south1 --project momentbacktracking --to-revisions finertia-api-00010-rdj=100`. **Rollback to rev 00007 no longer works by traffic shift** — that revision runs as the default compute SA, which lost its secret grant on 20 Sep. Rolling back means redeploying the 00007 source with `--service-account finertia-api-runtime@…`, or re-granting the secret first.

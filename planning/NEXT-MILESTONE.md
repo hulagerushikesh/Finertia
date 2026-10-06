@@ -1,134 +1,95 @@
-# Next milestone — M9: "Land the redesign, close the roadmap, make data survive"
+# Next milestone — M10: "Publish the finding, then let a real user decide"
 
-_Drafted 14 Sep 2026. Target: ~3 weeks part-time. Previous milestone (M8, deploy +
-submit + bootstrap CIs + redeploy hygiene) closed 13 Sep._
+_Drafted 7 Oct 2026. Target: ~2 weeks part-time. Previous milestone (M9, land
+the redesign + close the roadmap + make data survive) closed 15 Sep; its full
+text is [archive/M9.md](archive/M9.md)._
 
 ## Why this milestone
 
 Three things are true today:
 
-1. A full UI rebuild sits uncommitted on `redesign` — 45 files, builds clean,
-   verified nowhere. Unmerged work rots; this is the largest risk to the codebase.
-2. The research roadmap is 4 of 5. The last item (effective N) is the one that
-   decides whether the DSR is calling real edges noise.
-3. The live demo depends on yfinance with a cache that dies on every cold start.
-   That is the most likely way the product fails in front of a judge or a hirer.
+1. The engineering is done. Roadmap 5 of 5 plus seven post-roadmap research
+   items, 723 tests, prod == `main`, and since 28 Sep a backend deploy is one
+   command (`gh workflow run deploy.yml --ref main`, WIF, PR #57). Nothing
+   technical is blocking anything.
+2. The deliverable chosen on 15 Sep — the write-up — is drafted (3,300 words,
+   now covering whole-grid inference, the Sharpe-difference test, baskets and
+   costs) and **unpublished**. A finding nobody can read is worth nothing as a
+   portfolio piece.
+3. No one but the author has used the product. That is the input the 15 Sep
+   decision named for reversing it ("a Pitch Fest placement that brings users,
+   or a second person willing to own support") — and it has never been
+   collected.
 
-Everything else in the backlog is optional until these three are settled.
-
-## Constraint that orders everything
-
-**`main` auto-deploys the judged site.** Until the Pitch Fest result is in,
-nothing merges to `main` that changes what a judge sees. Backend work merges
-to `main` freely (no auto-deploy) but is *not* redeployed until the result.
-Frontend work stays on its branch until then.
+So M10 ships the write-up and collects the one piece of evidence that decides
+what Finertia is next. It adds no features.
 
 ## Phases, in order
 
-### Phase 0 — Hygiene (1 hour, day 1)
+### Phase 0 — Close what M9 left on the user (≈1 hour)
 
-- [x] Project venv — `backend/.venv`, pandas 3.0.5 / numpy 2.4.6 / fastapi 0.141.1, 535 pass (14 Sep).
-- [ ] Narrow the `gh` token — a fine-grained PAT (`github_pat_…`) over the 6 active repos; `gh auth status` still shows the `gho_` token with `repo, workflow` as of 14 Sep. `echo TOKEN | gh auth login --with-token`.
-- [x] Add `learning/` and `planning/` to the repo — PR #5, merged 14 Sep.
+- [ ] Narrow the `gh` token — fine-grained PAT over the active repos; `gh auth status` shows `github_pat_…`.
+- [ ] Finish the production smoke test — portfolio results card done 28 Sep (it found the colour bug, PR #58); still to walk: validation tab in portfolio mode, regime direction table, History, Profile displayName save, Register a throwaway.
+- [ ] One logged-in `/dashboard` AAPL run with the network panel open — record the prod cache read latency in STATUS (the M9 phase 2 number that was never taken).
+- [ ] Merge PR #58 (contribution colour by sign).
 
-**Exit:** local suite matches prod's pins; `gh auth status` shows a scoped token.
+**Exit:** STATUS "Blocked on user" row reads 0.
 
-### Phase 1 — Land the redesign (week 1)
+### Phase 1 — Publish the write-up (week 1)
 
-The branch reverses the 22 Aug "no shadcn" decision. That is fine — the
-decision is logged with the reason in DECISIONS.md — but it must clear the same
-bars the old UI cleared, or it is a regression wearing new clothes.
+The 15 Sep plan said "not before the Pitch Fest result". Three weeks on, the
+result is either in or overdue; either way it no longer gates publishing.
+Record which in DECISIONS.md when this phase starts.
 
-- [x] **Commit the WIP** in reviewable slices — 5 commits, tokens → primitives → charts → panels → shell/pages (14 Sep).
-- [x] **Bundle audit.** recharts was never in the entry — the growth was motion
-  + radix + sonner + tailwind-merge. LazyMotion/domAnimation and
-  `firebase/firestore/lite` took the entry from 746/221 to 521/162 (raw/gz kB).
-  Landing total 196 gz vs 169 on main; the rest is the price of radix.
-- [ ] **Verification checklist** — the bars the old UI passed, re-run on the new one:
-  - [x] text ≥ 4.5:1 on every surface, both themes, measured — 4 light tokens + dark faint fixed; min now 4.58
-  - [x] `:focus-visible` outline global; `prefers-reduced-motion` in CSS and every `m.*`/Recharts animation
-  - [x] tooltips open on touch — radix Popover on click, verified on `/demo`
-  - [x] hit targets: `.tap-safe` 24/44 intact, 0 overlapping pairs at either size, 375 px
-  - [x] 375 px: zero horizontal overflow on all 9 public routes
-  - [x] `/demo` at 650 / 1024 / 1280: no clipped or colliding labels
-  - [ ] **Dashboard proper at ~650 px — needs a login on the Vercel preview (you)**
-  - [x] exactly one `<main>`, one h1 per route, zero `title=`
-  - [x] theme toggle + `finertia-theme` persistence + pre-mount paint script
-- [x] **PR** `redesign → main` — see STATUS.md for the evidence list.
-- [ ] **Your smoke test — now on production:** login → dashboard at 1024 px → run → History → Profile displayName save → Register a throwaway (exercises every firestore/lite call).
-- [x] **Merged 17 Sep on explicit go-ahead** (`e10309b`), before the result. Frontend
-  only — no backend redeploy needed. Override logged in DECISIONS.md.
+- [ ] Fact-check pass: every figure in `planning/write-up.md` against a fresh run on rev 00016+ (prod serves `552ec3e`); fix any drift, date the run.
+- [ ] Cut to a readable length — target ≤ 2,000 words in the main text; move the per-check detail to an appendix rather than delete it.
+- [ ] Home: a `/writeup` route on finertia.hulage.in (frontend only, static content, no API call) — keeps the finding next to the tool that produced it. hulage.in post is the fallback.
+- [ ] Link it from README (top, beside "What it found") and from the landing page.
+- [ ] Share card: the in-sample vs out-of-sample table as the og image for `/writeup`.
 
-**Exit:** PR open with every checklist line evidenced; bundle no larger than before.
+**Exit:** a public URL, linked from README and landing; every number in it re-run after 28 Sep.
 
-### Phase 2 — Price data that survives — BUILT, PR #7 open
+### Phase 2 — Make the demo explain itself (week 1–2)
 
-- [x] Persistent read-through cache in Firestore: `prices/{TICKER}_{YEAR}`, columnar. `backend/price_store.py` + `backend/data.py`.
-- [x] Correctness rule that surfaced while designing: yfinance adjusts as of fetch date, so every cached year of a ticker must come from ONE download — any miss/stale refetches the whole ticker history under a new batch id; reads require a uniform batch. Pinned by test.
-- [x] Stale-on-error → `data_source: "cache-stale"`; nothing cached + Yahoo down → 503 (was a misleading 400).
-- [x] Pre-listing years stored as empty docs; current year expires after 6 h; past years never.
-- [x] 17 tests, 552 total; two mutation checks each fail exactly one test.
-- [x] Rules deny `prices` to clients — deployed 15 Sep, released ruleset byte-identical to the file.
-- [x] Prewarm: 28/28 suggested tickers, 2015→today, ~300 docs. First real run of `FirestorePriceStore` — worked.
-- [x] Latency measured (Mac in India → nam5): yfinance direct ~1.0 s; cache read 0.8–2.3 s. **A wash, not a win** — Firestore is in `nam5`, Cloud Run in `asia-south1`, both cross-continent. The PR buys resilience and zero rate-limit exposure on cold starts, not speed. Prod number after the Cloud Run deploy.
-- [x] PR #7 merged; rev 00004 (then 00005). Prod cold-read latency still unmeasured — needs one logged-in run from `/dashboard` (the `/demo` page never calls the API).
-- [x] "Served from cache" note in the UI — PR #13, merged 19 Sep.
-- Option, not taken: a second named Firestore DB in `asia-south1` for `prices` (not free-tier; ≈₹0 in practice) if the latency ever matters.
+- [ ] Demo GIF for the README: `/demo` → results → the cost and benchmark strips → validation tab. ≤ 4 MB, under 30 s.
+- [ ] Decide: does `/demo` get a frozen validation payload? Today it shows no validation at all, so the product's USP is invisible without an account. Log the decision either way; if yes, it is a frozen JSON like the existing demo payload, no API call.
 
-**Exit:** with yfinance mocked to 429, a cached-ticker backtest still returns (test) — met. Latency recorded — met, unflattering.
+**Exit:** a logged-out visitor can see the verdict card, or DECISIONS.md says why not.
 
-### Phase 3 — Effective N — DONE
+### Phase 3 — One outside user (week 2)
 
-Roadmap 5 of 5. `backend/trials.py`; wired into `walk_forward` as `deflated.effective_trials`.
+The 15 Sep reversal condition, made concrete.
 
-- [x] Correlation matrix from the in-sample candidate returns the sweep already builds.
-- [x] Eigenvalue estimate (Li & Ji 2005).
-- [x] Clustering estimate (LdP & Lewis 2019) — hand-written average linkage + silhouette; cluster spread only from K ≥ 3; one-blob fallback when silhouette finds nothing but every ρ > 0.875.
-- [x] `deflated_sharpe_ratio` takes `n_trials_effective` + `trial_sharpes_effective`; response carries `under_raw / under_eigen / under_clusters / under_effective`, `n_trials_effective`, `n_trials_lower_bound`, `dsr_gap`.
-- [x] **Headline = the larger estimate** — lowering N flatters; pinned by test.
-- [x] 15 tests, 567 total; three mutation checks (min-for-max, drop one-blob, drop eigen fractional term) each fail exactly one test.
-- [x] Canonical AAPL 2018→2024-01-01: momentum 16→6 (3), MACD 4→2, Bollinger 12→7 (2). DSR +0.07…+0.12. No verdict changes.
-- [x] **Found while measuring:** the walk-forward verdict flips when the window extends one year (split Feb→Oct 2022). README now states the window and the flip; open-questions §3 promoted to the top research item.
-- [x] Merged; Cloud Run rev 00005 serving, health 200, no warnings (15 Sep).
-- [x] `ValidationPanel.jsx`: raw vs effective side by side — PR #13, merged 19 Sep.
+- [ ] Put Finertia in front of 5 people who are not the author: at least one trader, one finance student, one engineer. The field guide's pitches are the script.
+- [ ] For each, record in `planning/feedback.md`: did they finish a run unaided, did they open Validation, what confused them, would they pay $12 / ₹1,000 a month for it.
+- [ ] Count sign-ups and runs from Firestore (`users`, `runs`) at the start and end of the phase — the only usage number that exists.
 
-### Phase 4 — Decide what Finertia is for (end of milestone)
+**Exit:** `feedback.md` has 5 entries and the two counts.
 
-Not a task; a written decision. Inputs: the Pitch Fest result, and whether
-anyone other than the author has used it.
+### Phase 4 — The decision, revisited (end of milestone)
 
-| Path | Needs | Cost |
-|---|---|---|
-| **Portfolio piece + write-up** (recommended) | live URL ✓, README ✓, a 1,500-word write-up of the walk-forward + bootstrap finding | ~2 days |
-| Product | Stripe live, a support inbox someone reads, a business entity for payouts, ongoing ₹ | open-ended |
+Not a task; a written decision, with phase 3 as its input.
 
-Recommendation: portfolio path. There is no funding and no second person to
-answer support email. The write-up is the highest-leverage remaining artefact:
-it turns "I built a backtester" into "I found that the best in-sample strategy
-was the worst out-of-sample one, and here is the statistics that proves it".
-Record the outcome in DECISIONS.md.
+| If phase 3 shows | Then |
+|---|---|
+| Nobody returns, nobody would pay | Stay portfolio. Finertia is finished software; maintenance only. |
+| Students or educators engage, traders don't | Education path: class accounts, a course built on the write-up. Stripe still off. |
+| Two or more would pay | Product path: Stripe live (keys + `STRIPE_WEBHOOK_SECRET`, one real test payment), a support inbox, legal check on SEBI positioning and the Yahoo data licence before charging. |
 
-- [x] **Decided 15 Sep: portfolio path.** DECISIONS.md entry with inputs and
-  what would reverse it. Pitch Fest result still pending — it is a possible
-  reversal input, not a blocker.
-- [x] Write-up drafted: `planning/write-up.md`, ~1,550 words, every figure
-  re-run on 15 Sep on both windows (2024-01-01 and 2025-01-01) including the
-  per-check disagreement (DSR/PBO/permutation vs walk-forward) and bootstrap
-  intervals on the OOS Sharpes.
-- [ ] Publish: README link + a home for it (hulage.in post, or a `/writeup`
-  route off `main`). Not before the Pitch Fest result.
+- [ ] DECISIONS.md entry with the phase 3 numbers and the path chosen.
 
-**Exit:** DECISIONS.md has an entry; if portfolio path, the write-up is drafted
-in `planning/` or published. **Met** (drafted; publishing waits on the result).
+**Exit:** DECISIONS.md has the entry; BACKLOG reordered to match.
 
-## Definition of done for M9
+## Definition of done for M10
 
-- [x] Phase 0–3 exit criteria met (phase 0's `gh` token narrowing still on the user)
-- [x] STATUS.md refreshed: rev 00007, 603 tests, roadmap 5/5, redesign merged 17 Sep (PR #6)
-- [x] Build-ledger artifact refreshed from STATUS.md (19 Sep, current to `8895e1e`)
-- [x] Phase 4 decision recorded (15 Sep)
+- [ ] STATUS "Blocked on user" is 0
+- [ ] Write-up public, linked, re-run after 28 Sep
+- [ ] README has the demo GIF; `/demo` validation decided
+- [ ] `feedback.md` with 5 outside users and usage counts
+- [ ] Phase 4 decision recorded
 
-## Explicitly not in M9
+## Explicitly not in M10
 
-Stripe go-live · Sentry DSN · portfolio-mode validation · regime-aware
-walk-forward · admin counters · whole-grid SPA/Reality Check. All in BACKLOG.md.
+New strategies · user-written strategies · intraday data · the inverse-vol
+weight-path null · Sentry · admin counters · Stripe go-live (unless phase 4
+picks the product path). All in BACKLOG.md.
