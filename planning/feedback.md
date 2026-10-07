@@ -40,8 +40,9 @@ _(paste the script's output here)_
    stays warm about 15 minutes after the last request; for an async tester,
    say "the first run can take 10 seconds" in the message instead.
 1. Send the message for their type (below). If they will register, add: "the
-   confirmation email comes from momentbacktracking — that's us" (Firebase's
-   project ID; the template cannot be renamed on this project). Live is better than async: a call
+   confirmation email is from noreply@momentbacktracking.firebaseapp.com —
+   that's us" (the subject says Finertia; the sender address is the Firebase
+   project ID and cannot change without custom SMTP). Live is better than async: a call
    with their screen shared, or sitting beside them.
 2. **Don't help.** Say once, "think out loud; I'll stay quiet." When they get
    stuck, write down where and wait 30 seconds before saying anything. Where
