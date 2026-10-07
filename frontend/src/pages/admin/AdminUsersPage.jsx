@@ -3,8 +3,8 @@ import { getAdminUsers, updateUser } from "../../api";
 import { SkeletonRows } from "../../components/SkeletonRow";
 import { useToast } from "../../hooks/useToast";
 
-// Mirrors the 7 columns of the users table.
-const SKELETON_WIDTHS = ["80%", "40%", "60%", "60%", "35%", "45%", "70%"];
+// Mirrors the 8 columns of the users table.
+const SKELETON_WIDTHS = ["80%", "40%", "40%", "60%", "60%", "35%", "45%", "70%"];
 
 function fmtDate(ts) {
   if (!ts) return "—";
@@ -93,11 +93,12 @@ export default function AdminUsersPage() {
               swipe away. The table scrolls inside its own box so the page
               itself never scrolls sideways. */}
           <div className="panel overflow-x-auto">
-            <table className="w-full text-sm min-w-[46rem]">
+            <table className="w-full text-sm min-w-[52rem]">
               <thead>
                 <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">
                   <th className="text-left px-5 py-3">Email</th>
                   <th className="text-left px-5 py-3">Role</th>
+                  <th className="text-left px-5 py-3">Plan</th>
                   <th className="text-left px-5 py-3">Joined</th>
                   <th className="text-left px-5 py-3">Last Active</th>
                   <th className="text-right px-5 py-3">Runs</th>
@@ -113,6 +114,13 @@ export default function AdminUsersPage() {
                     <td className="px-5 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.role === "admin" ? "bg-accent/10 text-accent" : "bg-border text-text-muted"}`}>
                         {u.role}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      {/* "comp" marks Pro granted here rather than paid for. */}
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.plan === "pro" ? "bg-success/10 text-success" : "bg-border text-text-muted"}`}>
+                        {u.plan === "pro" ? "pro" : "free"}
+                        {u.plan === "pro" && u.planSource === "admin" && <span className="ml-1 opacity-70">· comp</span>}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-text-muted text-xs">{fmtDate(u.createdAt)}</td>
@@ -143,6 +151,22 @@ export default function AdminUsersPage() {
                         </button>
                         <button
                           onClick={() => {
+                            const granting = u.plan !== "pro";
+                            confirmAction(
+                              granting
+                                ? `Give ${u.email} Pro? They get validation, unlimited runs and portfolios up to 10, without paying. It is marked as a comp.`
+                                : `Move ${u.email} back to Free? Validation and unlimited runs stop at their next request.`,
+                              u.uid,
+                              { plan: granting ? "pro" : "free" },
+                              granting ? `${u.email} is now on Pro.` : `${u.email} is back on Free.`
+                            );
+                          }}
+                          className="text-xs text-accent hover:underline"
+                        >
+                          {u.plan === "pro" ? "Remove Pro" : "Give Pro"}
+                        </button>
+                        <button
+                          onClick={() => {
                             const nextRole = u.role === "admin" ? "user" : "admin";
                             confirmAction(
                               `Change ${u.email} role to ${nextRole}?`,
@@ -160,7 +184,7 @@ export default function AdminUsersPage() {
                   </tr>
                 ))}
                 {!loading && users.length === 0 && (
-                  <tr><td colSpan={7} className="text-center py-12 text-text-muted">No users found.</td></tr>
+                  <tr><td colSpan={8} className="text-center py-12 text-text-muted">No users found.</td></tr>
                 )}
               </tbody>
             </table>
