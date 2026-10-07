@@ -278,3 +278,6 @@ class UserPatch(BaseModel):
 
     isActive: Optional[bool] = None
     role: Optional[str] = None
+    # Granted by hand, for testers and comps while Stripe is not live. The
+    # route checks it against plans.PLAN_NAMES.
+    plan: Optional[str] = None
