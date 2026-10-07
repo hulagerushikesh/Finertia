@@ -1,8 +1,9 @@
 # The best in-sample strategy was the worst out-of-sample one — and then the window moved
 
-_Draft 2, 16 Sep 2026 (draft 1: 15 Sep). Every number below is reproducible on
-https://finertia.hulage.in (Validate tab) or from `backend/` with
-`walk_forward` + `permutation_test`; the source for each check is named._
+_Draft 3, 7 Oct 2026 (draft 1: 15 Sep; draft 2: 16 Sep). Every number below
+is reproducible on https://finertia.hulage.in (Validate tab), and all 174 of
+them are re-run and checked by `backend/scripts/reproduce_writeup.py`, last
+run 7 Oct 2026; the source for each check is named._
 
 ## The setup
 
@@ -82,9 +83,10 @@ one whose entries cannot be told apart from shuffled entries.
 **Block-bootstrap confidence intervals** (`bootstrap.py`, stationary block
 bootstrap, BCa) sit under every metric on every plan. They do not change the
 story above; they widen it. Momentum's out-of-sample Sharpe of −0.30 comes
-from 437 bars and its 95 % interval is [−1.40, +1.41] — it contains zero, and
-it contains Bollinger's 1.17. Bollinger's own interval is [0.20, 2.05], which
-does exclude zero. So "failed" and "held up" are the right labels, but the
+from 437 bars and its 95 % interval is [−1.4, +1.4] — it contains zero, and
+it contains Bollinger's 1.17. Bollinger's own interval is [0.2, 2.2], which
+does exclude zero. (One decimal on purpose: at 1,000 resamples an endpoint
+moves by up to 0.3 between random seeds, so a second decimal would be noise.) So "failed" and "held up" are the right labels, but the
 gap between them is smaller than two point estimates make it look.
 
 Put the five side by side for momentum: walk-forward says failed, DSR says
@@ -160,7 +162,7 @@ AAPL 2018-01-01 → 2024-01-01, out-of-sample Sharpe per segment:
 | May 2021 → Mar 2022 | +30 % | **1.10** | 0.58 | −0.60 |
 | Apr 2022 → Feb 2023 | −15 % | **−0.80** | 0.06 | **1.90** |
 | Feb 2023 → Dec 2023 | +31 % | 0.88 | −0.60 | −1.73 |
-| Stitched | | 0.12 [−0.84, 1.45] | −0.08 | 0.44 [−0.46, 1.22] |
+| Stitched | | 0.12 [−0.8, 1.3] | −0.08 | 0.44 [−0.4, 1.2] |
 | Winning parameters changed | | 4 of 4 folds | 2 sets | never |
 
 Now the first window's headline reads differently. Momentum "failed" in the
@@ -293,12 +295,12 @@ defined on the moments, and the geometric figure on the results card sits
 
 | Ticker, window | Strategy | Sharpe | Buy-and-hold | Gap | Std. error | p |
 |---|---|---|---|---|---|---|
-| AAPL 2018→2024 | Momentum | 0.59 | 0.98 | −0.39 | 0.51 | 0.40 |
-| AAPL 2018→2024 | Bollinger | 0.06 | 0.98 | −0.91 | 0.54 | 0.15 |
+| AAPL 2018→2024 | Momentum | 0.59 | 0.98 | −0.39 | 0.51 | 0.36 |
+| AAPL 2018→2024 | Bollinger | 0.06 | 0.98 | −0.91 | 0.54 | 0.13 |
 | AAPL 2018→2024 | MACD | 0.53 | 0.98 | −0.44 | 0.54 | 0.39 |
-| AAPL 2015→2020 | Bollinger | −0.46 | 0.99 | −1.45 | 0.60 | **0.031** |
-| SPY 2018→2024 | Momentum | −0.26 | 0.65 | −0.91 | 0.62 | 0.076 |
-| BABA 2018→2024 | Bollinger | 0.13 | −0.08 | +0.21 | 0.57 | 0.71 |
+| AAPL 2015→2020 | Bollinger | −0.46 | 0.99 | −1.45 | 0.60 | **0.038** |
+| SPY 2018→2024 | Momentum | −0.26 | 0.65 | −0.91 | 0.62 | 0.080 |
+| BABA 2018→2024 | Bollinger | 0.13 | −0.08 | +0.21 | 0.57 | 0.73 |
 
 The standard error is the column to read. Six years of daily bars pins a
 Sharpe *difference* to about ±0.5 — so a strategy trailing the market by four
@@ -310,7 +312,7 @@ the stock, not unluckier.
 This cuts both ways, and the simulated power table says how much. Against a
 benchmark it correlates with, this test needs roughly a full point of Sharpe
 over five years before it will reject at 5% (74% power at +0.92, 28% at
-+0.47). So a p of 0.4 here is not evidence that the gap is zero — it is the
++0.47). So a p of 0.36 here is not evidence that the gap is zero — it is the
 honest statement that five years of one stock cannot resolve it. That is a
 limit of the data, and it is worth printing beside the number rather than
 leaving the reader to infer a verdict the sample cannot support.
@@ -331,5 +333,14 @@ still do not resample by regime, so the vol-CI coverage gap stands.
 - Tests: 723 in `backend/tests/`, including reproductions of the DSR paper's
   worked example and Lo (2002) to 1e-12, and mutation checks on every check
   above.
-- Figures are as of 15 Sep 2026 (whole-grid table: 20 Sep; basket and vol × trend tables: 21 Sep; Sharpe-gap table: 23 Sep) with yfinance adjusted prices; Yahoo
-  re-adjusts on corporate actions, so the third decimal will drift.
+- Check every figure: `cd backend && .venv/bin/python scripts/reproduce_writeup.py runs.json`
+  re-runs each call through the production route handlers (auth faked, fresh
+  yfinance prices, nothing written) and prints each quoted figure beside its
+  fresh value; it exits non-zero if any no longer matches at the precision
+  printed.
+- Figures were first taken 15–23 Sep 2026 and re-run on 7 Oct 2026: every
+  deterministic figure reproduced to the digit. The bootstrap figures (interval
+  endpoints and the Sharpe-gap p-values) had been taken in research runs with a
+  different random seed than the product's, so draft 3 replaces them with the
+  seeded values the site prints; no conclusion changed. Yahoo re-adjusts on
+  corporate actions, so the third decimal can still drift.
