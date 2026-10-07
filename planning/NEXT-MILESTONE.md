@@ -62,7 +62,7 @@ The 15 Sep reversal condition, made concrete.
 
 - [ ] Put Finertia in front of 5 people who are not the author: at least one trader, one finance student, one engineer. The field guide's pitches are the script.
 - [ ] For each, record in `planning/feedback.md`: did they finish a run unaided, did they open Validation, what confused them, would they pay $12 / ₹1,000 a month for it.
-- [ ] Count sign-ups and runs from Firestore (`users`, `runs`) at the start and end of the phase — the only usage number that exists.
+- [ ] Count sign-ups and runs from Firestore (`users`, `runs`) at the start and end of the phase — the only usage number that exists. `scripts/usage_counts.py`; start taken 7 Oct: **0** outside sign-ups, 0 outside runs.
 
 **Exit:** `feedback.md` has 5 entries and the two counts.
 
