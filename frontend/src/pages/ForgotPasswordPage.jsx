@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../firebase";
+import { sendResetEmail } from "../firebase";
 import AuthShell, { AuthField } from "../components/AuthShell";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,7 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email.trim());
+      await sendResetEmail(email.trim());
       setSent(true);
     } catch (err) {
       setError(ERROR_MAP[err.code] || err.message);
