@@ -30,6 +30,7 @@ from plans import (
     current_period,
     may_validate,
     max_portfolio_size,
+    PLAN_NAMES,
     plan_for,
     public_plans,
 )
@@ -441,7 +442,7 @@ async def stripe_webhook(request: Request):
         log.warning("webhook referenced an unknown user", extra={"uid": uid})
         return {"received": True, "applied": False}
 
-    ref.update({"plan": new_plan})
+    ref.update({"plan": new_plan, "planSource": "stripe"})
     log.info(
         "plan updated from stripe",
         extra={"uid": uid, "plan": new_plan, "event": event.get("type")},
@@ -1313,7 +1314,11 @@ async def admin_patch_user(
     patch: UserPatch,
     authorization: Optional[str] = Header(None),
 ):
-    """Update isActive or role on a user document — admin only."""
+    """Update isActive, role or plan on a user document — admin only.
+
+    A plan set here is stamped `planSource: "admin"` so a comped Pro account is
+    never counted as a paying one; the Stripe webhook stamps "stripe".
+    """
     await inject_admin(authorization)
 
     db = get_db()
@@ -1328,6 +1333,11 @@ async def admin_patch_user(
         if patch.role not in ("user", "admin"):
             raise HTTPException(status_code=400, detail="role must be 'user' or 'admin'")
         update_data["role"] = patch.role
+    if patch.plan is not None:
+        if patch.plan not in PLAN_NAMES:
+            raise HTTPException(status_code=400, detail=f"plan must be one of {', '.join(PLAN_NAMES)}")
+        update_data["plan"] = patch.plan
+        update_data["planSource"] = "admin"
 
     if not update_data:
         raise HTTPException(status_code=400, detail="Nothing to update")

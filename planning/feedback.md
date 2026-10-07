@@ -45,9 +45,9 @@ _(paste the script's output here)_
 only, and Stripe is not live, so a free account hits an upgrade prompt there.
 Record what they do at that point; it is the most honest willingness-to-pay
 signal the round will get. `/demo#validation` shows them the checks without
-it. If a tester wants to run validation on their own idea, set
-`users/{uid}.plan` to `"pro"` by hand in the Firebase console. The admin API
-cannot change plans. Note it in their entry.
+it. If a tester wants to run validation on their own idea, give them Pro from
+**Admin → Users → Give Pro**. It is stamped `planSource: "admin"`, and
+`usage_counts.py` counts it as comped, not paid. Note it in their entry.
 
 ## Messages
 

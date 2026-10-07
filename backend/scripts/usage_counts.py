@@ -65,7 +65,9 @@ def main():
     print(f"| Saved backtest runs | {len(runs)} | {len(recent)} |")
     print(f"| Users with a saved run | {len({r['uid'] for r in runs})} | {len({r['uid'] for r in recent})} |")
     print(f"| Backtest + portfolio runs (`totalRuns` sum) | {sum(u.get('totalRuns') or 0 for u in users)} | — |")
-    print(f"| Pro accounts | {sum(1 for u in users if u.get('plan') == 'pro')} | — |")
+    pro = [u for u in users if u.get("plan") == "pro"]
+    comp = sum(1 for u in pro if u.get("planSource") == "admin")
+    print(f"| Pro accounts (paid / comped by admin) | {len(pro) - comp} / {comp} | — |")
 
 
 if __name__ == "__main__":
