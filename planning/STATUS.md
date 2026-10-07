@@ -13,7 +13,7 @@ _Current to `421eeb2` (main) · 7 Oct 2026._
 | Commits | 182 on main (`git rev-list --count`, 7 Oct) · 68 PRs merged (`gh pr list --state merged`, 7 Oct) |
 | API | 17 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
-| Blocked on user | 3, one partly done — login smoke test **on production**: a logged-in AAPL+MSFT momentum portfolio run on 28 Sep rendered the Sharpe-difference strip (p 0.001), the cost-tolerance strip ("loses money before a single basis point") and the per-leg table, which surfaced the contribution-colour bug fixed in PR #58; still unwalked: validation tab in portfolio mode, regime direction table, History, Profile save, Register · one logged-in `/dashboard` AAPL run for the prod cache latency · `gh` fine-grained PAT |
+| Blocked on user | 3 — login smoke test **on production**: 28 Sep covered the portfolio results card (found PR #58); 7 Oct covered the regime direction table, History and Profile save (pass) and found the dead-end Pro-wall banner (PR #71); still unwalked: Register a throwaway, portfolio-mode Validation on a Pro account · **no admin account exists** — needed for Give Pro in phase 3 · `gh` fine-grained PAT |
 | In flight | M10 phase 3 — [NEXT-MILESTONE.md](NEXT-MILESTONE.md). Phases 1–2 shipped 7 Oct: `/writeup` live with its own share card (#61, #62), `/demo` Validation tab + README GIF (#63). Phase 3 kit in [feedback.md](feedback.md) (#64): 5 outside sessions, start count **0** outside sign-ups / runs. Testers who need validation get Pro from Admin → Users (#68), counted as comped |
 | Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); write-up **published** at [/writeup](https://finertia.hulage.in/writeup) 7 Oct, every figure checked by `reproduce_writeup.py`. M10 phase 4 revisits the decision with outside-user evidence |
 
@@ -116,8 +116,11 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 
 1. **yfinance in production** — mitigated since rev 00004: Firestore cache
    survives cold starts, stale-on-error serves the last good copy. Residual: a
-   never-seen ticker during a Yahoo outage still 503s; prod cold-read latency
-   still unmeasured.
+   never-seen ticker during a Yahoo outage still 503s. Measured 7 Oct
+   (AAPL momentum 2020–2024, logged in): **cold 11.4 s** = ~6.9 s instance start
+   + 4.7 s handler (1.2 s of it compute); **warm 2.4 s** handler, 0.3 s compute.
+   The ~2 s outside compute is price-cache read + auth + saving the run; the
+   cache read is not logged on its own, so it cannot be split further.
 2. **Backend redeploy is a manual trigger** and was forgotten once (5 days of stale prod). Since 28 Sep it is one command — `gh workflow run deploy.yml --ref main` — which tests, deploys, health-checks and moves the `backend-deployed` tag itself, so the tag can no longer be moved without a deploy behind it (the 23 Sep failure). `backend-drift.yml` still comments on any merged PR that leaves `backend/` ahead of the tag. Still not push-triggered, deliberately: a deploy stays a decision. Hand-deploys (README fallback) must still move the tag only after the revision serves and `/api/health` returns 200.
 3. **Shared python** — local pandas 2.3.1 vs prod 3.0.5; suite passes on both today.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry.
