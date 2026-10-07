@@ -31,7 +31,7 @@ what Finertia is next. It adds no features.
 - [ ] Narrow the `gh` token — fine-grained PAT over the active repos; `gh auth status` shows `github_pat_…`.
 - [ ] Finish the production smoke test — portfolio results card done 28 Sep (it found the colour bug, PR #58); still to walk: validation tab in portfolio mode, regime direction table, History, Profile displayName save, Register a throwaway.
 - [ ] One logged-in `/dashboard` AAPL run with the network panel open — record the prod cache read latency in STATUS (the M9 phase 2 number that was never taken).
-- [ ] Merge PR #58 (contribution colour by sign).
+- [x] Merge PR #58 (contribution colour by sign). Merged 7 Oct.
 
 **Exit:** STATUS "Blocked on user" row reads 0.
 
@@ -45,7 +45,7 @@ Record which in DECISIONS.md when this phase starts.
 - [x] Cut to a readable length — draft 4: main text ~2,050 words (from 3,400), per-check detail, the vol × trend grid and the Sharpe-gap table moved to appendices A–C; every one of the 174 figures still in it (7 Oct).
 - [x] Home: `/writeup` renders `planning/write-up.md` itself (`?raw` import + a hand-written renderer for the subset it uses, React elements only), so the published page cannot drift from the file the script checks. Lazy chunk, 9.9 kB gz (7 Oct).
 - [x] Linked from README ("What it found"), the landing page, the logged-out nav ("The finding") and the footer (7 Oct).
-- [ ] Share card: the in-sample vs out-of-sample table as the og image for `/writeup`.
+- [x] Share card: the in-sample vs out-of-sample table as the og image for `/writeup`. `og-writeup.png`; the build emits `writeup.html` with its own meta so crawlers see it.
 
 **Exit:** a public URL, linked from README and landing; every number in it re-run after 28 Sep.
 
