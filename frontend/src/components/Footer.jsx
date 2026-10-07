@@ -5,6 +5,7 @@ import { Wordmark } from "./Navbar";
 const LINKS = [
   ["/docs", "How it works"],
   ["/demo", "A real result"],
+  ["/writeup", "The write-up"],
   ["/pricing", "Pricing"],
   ["/support", "Support"],
 ];

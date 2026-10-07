@@ -21,11 +21,12 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import PricingPage from "./pages/PricingPage";
 
-// Public marketing pages, lazy because neither is on the critical path to the
-// landing page but both pull in charts or long copy.
+// Public marketing pages, lazy because none is on the critical path to the
+// landing page and each pulls in charts or long copy.
 const DemoPage = lazy(() => import("./pages/DemoPage"));
 const DocsPage = lazy(() => import("./pages/DocsPage"));
 const SupportPage = lazy(() => import("./pages/SupportPage"));
+const WriteupPage = lazy(() => import("./pages/WriteupPage"));
 
 // Lazy: everything behind a login. The charting library alone is ~536 kB, and
 // nobody reading the landing page needs it.
@@ -98,6 +99,7 @@ export default function App() {
                           <Route path="/pricing" element={<PricingPage />} />
                           <Route path="/demo" element={<DemoPage />} />
                           <Route path="/docs" element={<DocsPage />} />
+                          <Route path="/writeup" element={<WriteupPage />} />
                           <Route path="/support" element={<SupportPage />} />
                           <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
                           <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />

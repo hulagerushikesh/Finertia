@@ -43,6 +43,7 @@ export default function Navbar() {
       ]
     : [
         ["/demo", "A real result"],
+        ["/writeup", "The finding"],
         ["/docs", "How it works"],
         ["/pricing", "Pricing"],
       ];
