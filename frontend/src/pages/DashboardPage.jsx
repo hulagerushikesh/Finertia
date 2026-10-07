@@ -58,7 +58,9 @@ export default function DashboardPage() {
   );
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  // { message, status, action } — `action` ("run" | "validate") is what
+  // failed, so the banner repeats that and not always the backtest.
+  const [error, setError] = useState(null);
 
   const [tab, setTab] = useState("results");
   const [showDetail, , toggleDetail] = useDisclosure("finertia-results-detail");
@@ -103,7 +105,7 @@ export default function DashboardPage() {
   }, [params.mode]);
 
   async function handleRun() {
-    setError("");
+    setError(null);
     setLoading(true);
     try {
       const data = isPortfolio ? await runPortfolio(params) : await runBacktest(params);
@@ -116,7 +118,7 @@ export default function DashboardPage() {
       showToast(`${subject} complete — ${pct}% total return`, "success");
     } catch (err) {
       const message = err.message || "Backtest failed.";
-      setError(message);
+      setError({ message, status: err.status, action: "run" });
       showToast(message, "error");
     } finally {
       setLoading(false);
@@ -124,7 +126,7 @@ export default function DashboardPage() {
   }
 
   async function handleValidate() {
-    setError("");
+    setError(null);
     setValidating(true);
     setTab("validation");
     try {
@@ -134,7 +136,7 @@ export default function DashboardPage() {
       showToast(msg, tone);
     } catch (err) {
       const message = err.message || "Validation failed.";
-      setError(message);
+      setError({ message, status: err.status, action: "validate" });
       showToast(message, "error");
     } finally {
       setValidating(false);
@@ -163,14 +165,23 @@ export default function DashboardPage() {
 
         <div className="flex-1 min-w-0">
           {/* An error with no way forward is just an accusation. The button
-              repeats the action that failed. */}
+              repeats the action that failed — except a 402, the plan
+              boundary (Pro-only validation, the monthly run cap, basket
+              size), where repeating can never succeed and the way forward is
+              the pricing page. */}
           {error && (
             <Alert variant="destructive" className="mb-5">
               <AlertDescription className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <span className="flex-1 min-w-[14rem]">{error}</span>
-                <Button variant="outline" size="sm" onClick={handleRun} disabled={loading}>
-                  Try again
-                </Button>
+                <span className="flex-1 min-w-[14rem]">{error.message}</span>
+                {error.status === 402 ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/pricing">See Pro</Link>
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={error.action === "validate" ? handleValidate : handleRun} disabled={loading || validating}>
+                    Try again
+                  </Button>
+                )}
               </AlertDescription>
             </Alert>
           )}
@@ -448,9 +459,15 @@ export default function DashboardPage() {
                           ? "Tests whether these parameters survive for the whole basket on data they were not tuned on, and whether any name's timing beats random entries."
                           : "Tests whether these parameters survive on data they were not tuned on, and whether the signal timing beats random entries."}
                       </p>
-                      <Button onClick={handleValidate} className="mt-4">
-                        Run validation
-                      </Button>
+                      {error?.action === "validate" && error.status === 402 ? (
+                        <Button asChild className="mt-4">
+                          <Link to="/pricing">Validation is on Pro — see plans</Link>
+                        </Button>
+                      ) : (
+                        <Button onClick={handleValidate} className="mt-4">
+                          Run validation
+                        </Button>
+                      )}
                     </div>
                   ))}
               </m.div>
