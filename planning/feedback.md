@@ -6,10 +6,11 @@ one engineer. **Exit:** five entries below and both usage counts filled in.
 ## Usage counts
 
 Taken with `backend/scripts/usage_counts.py` (read-only, prints no emails),
-author's account excluded:
+author's accounts excluded (the `+fin1` one is the 7 Oct smoke-test throwaway):
 
 ```bash
-cd backend && .venv/bin/python scripts/usage_counts.py --since 2026-10-07 --exclude <your email>
+cd backend && .venv/bin/python scripts/usage_counts.py --since 2026-10-07 \
+    --exclude hulagerushikesh@gmail.com --exclude hulagerushikesh+fin1@gmail.com
 ```
 
 **Start, 7 Oct 2026:**
