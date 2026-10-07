@@ -2,6 +2,10 @@
 
 Production-grade backtesting platform for momentum, MACD, and Bollinger mean-reversion strategies. All signal, position, and metric logic is hand-written pure Python (pandas + numpy). Zero external backtesting libraries — you can read the exact lines that produce your Sharpe ratio.
 
+![The /demo page: a momentum backtest on AAPL that lost to holding, then its Validation tab: 2 of 6 checks passed](docs/demo.gif)
+
+<sub>[finertia.hulage.in/demo](https://finertia.hulage.in/demo), no account needed. Re-record with `frontend/design/record-demo-gif.mjs`.</sub>
+
 Beyond a single backtest, Finertia answers the two questions that decide whether a result means anything:
 
 - **Walk-forward validation** — optimises parameters on the first 70% of the period and scores them on the remaining 30%. Only the out-of-sample number is evidence.
