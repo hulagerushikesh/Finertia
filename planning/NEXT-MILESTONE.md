@@ -31,7 +31,7 @@ what Finertia is next. It adds no features.
 - [ ] Narrow the `gh` token — fine-grained PAT over the active repos; `gh auth status` shows `github_pat_…`.
 - [ ] Finish the production smoke test — portfolio results card done 28 Sep (it found the colour bug, PR #58); still to walk: validation tab in portfolio mode, regime direction table, History, Profile displayName save, Register a throwaway.
 - [ ] One logged-in `/dashboard` AAPL run with the network panel open — record the prod cache read latency in STATUS (the M9 phase 2 number that was never taken).
-- [x] Merge PR #58 (contribution colour by sign). Merged 7 Oct.
+- [x] Merge PR #58 (contribution colour by sign).
 
 **Exit:** STATUS "Blocked on user" row reads 0.
 
