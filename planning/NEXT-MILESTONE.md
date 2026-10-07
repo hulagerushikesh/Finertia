@@ -29,7 +29,7 @@ what Finertia is next. It adds no features.
 ### Phase 0 — Close what M9 left on the user (≈1 hour)
 
 - [ ] Narrow the `gh` token — fine-grained PAT over the active repos; `gh auth status` shows `github_pat_…`.
-- [ ] Finish the production smoke test — portfolio results card done 28 Sep (it found the colour bug, PR #58). 7 Oct, via the user's Chrome: regime direction table, History, Profile displayName save all pass; portfolio-mode Validation hit the Pro wall (the account is Free) and found the dead-end 402 banner, PR #71. Still to walk: Register a throwaway; portfolio-mode Validation on a Pro account.
+- [ ] Finish the production smoke test — portfolio results card done 28 Sep (it found the colour bug, PR #58). 7 Oct, via the user's Chrome: regime direction table, History, Profile displayName save all pass; portfolio-mode Validation hit the Pro wall (the account is Free) and found the dead-end 402 banner, PR #71. Later on 7 Oct, after the author's account was made admin: Give Pro on Admin → Users showed "pro · comp", AAPL+MSFT portfolio-mode Validation ran on Pro (0 of 5 checks, Not proven), Remove Pro put the account back on Free — all pass. Still to walk: Register a throwaway.
 - [x] One logged-in `/dashboard` AAPL run with the network panel open — taken 7 Oct, in STATUS known risk 1: cold 11.4 s, warm 2.4 s.
 - [x] Merge PR #58 (contribution colour by sign).
 
