@@ -22,7 +22,9 @@ permissions:
 jobs:
   drift:
     name: Compare backend/ with what is deployed
-    runs-on: ubuntu-latest
+    # Pinned, not ubuntu-latest: the image changes on our schedule, not
+    # GitHub's (latest moves to 26.04 from 19 Oct 2026). Bump all jobs together.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
         with:
