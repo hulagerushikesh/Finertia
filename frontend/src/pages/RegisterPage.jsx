@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore/lite";
-import { auth, db } from "../firebase";
+import { auth, db, sendVerificationEmail } from "../firebase";
 import AuthShell, { AuthField } from "../components/AuthShell";
 import PasswordInput from "../components/PasswordInput";
 import Spinner from "../components/Spinner";
@@ -45,7 +45,7 @@ export default function RegisterPage() {
       // its profile document both exist by this point. The workspace banner
       // surfaces it, with the resend button.
       try {
-        await sendEmailVerification(cred.user);
+        await sendVerificationEmail(cred.user);
       } catch {
         /* surfaced by VerifyEmailBanner */
       }

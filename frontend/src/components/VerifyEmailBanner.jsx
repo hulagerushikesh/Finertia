@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { sendEmailVerification } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, sendVerificationEmail } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../hooks/useToast";
 import { X } from "lucide-react";
@@ -67,7 +66,7 @@ export default function VerifyEmailBanner() {
     }
     setBusy(true);
     try {
-      await sendEmailVerification(auth.currentUser);
+      await sendVerificationEmail(auth.currentUser);
       setCooldown(RESEND_COOLDOWN_S);
       showToast("Verification email sent. Check your inbox.", "success");
     } catch (err) {
