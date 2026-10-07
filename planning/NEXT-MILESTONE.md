@@ -29,8 +29,8 @@ what Finertia is next. It adds no features.
 ### Phase 0 — Close what M9 left on the user (≈1 hour)
 
 - [ ] Narrow the `gh` token — fine-grained PAT over the active repos; `gh auth status` shows `github_pat_…`.
-- [ ] Finish the production smoke test — portfolio results card done 28 Sep (it found the colour bug, PR #58); still to walk: validation tab in portfolio mode, regime direction table, History, Profile displayName save, Register a throwaway.
-- [ ] One logged-in `/dashboard` AAPL run with the network panel open — record the prod cache read latency in STATUS (the M9 phase 2 number that was never taken).
+- [ ] Finish the production smoke test — portfolio results card done 28 Sep (it found the colour bug, PR #58). 7 Oct, via the user's Chrome: regime direction table, History, Profile displayName save all pass; portfolio-mode Validation hit the Pro wall (the account is Free) and found the dead-end 402 banner, PR #71. Still to walk: Register a throwaway; portfolio-mode Validation on a Pro account.
+- [x] One logged-in `/dashboard` AAPL run with the network panel open — taken 7 Oct, in STATUS known risk 1: cold 11.4 s, warm 2.4 s.
 - [x] Merge PR #58 (contribution colour by sign).
 
 **Exit:** STATUS "Blocked on user" row reads 0.
