@@ -246,6 +246,55 @@ def test_role_comes_from_the_profile_not_the_token(api, monkeypatch):
     assert client.get("/api/admin/stats", headers=AUTH).status_code == 403
 
 
+@pytest.fixture
+def admin_db(api, monkeypatch):
+    """The api fixture with one shared fake database holding a target user.
+
+    The default fixture builds a fresh FakeDb on every get_db() call, which is
+    right for routes that only write; a patch reads back what it wrote.
+    """
+    client, state = api
+    state["profile"] = dict(ADMIN)
+    db = FakeDb()
+    db.store["users/t1"] = {"uid": "t1", "email": "t@example.com", **FREE}
+    monkeypatch.setattr(main, "get_db", lambda: db)
+    return client, state, db
+
+
+def test_admin_can_grant_and_remove_pro(admin_db):
+    client, _, db = admin_db
+    r = client.patch("/api/admin/users/t1", json={"plan": "pro"}, headers=AUTH)
+    assert r.status_code == 200
+    assert r.json()["plan"] == "pro"
+    # Stamped, so a comped account is never counted as a paying one.
+    assert db.store["users/t1"]["planSource"] == "admin"
+
+    r = client.patch("/api/admin/users/t1", json={"plan": "free"}, headers=AUTH)
+    assert r.status_code == 200
+    assert db.store["users/t1"]["plan"] == "free"
+
+
+def test_admin_plan_must_be_a_real_plan(admin_db):
+    client, _, db = admin_db
+    r = client.patch("/api/admin/users/t1", json={"plan": "enterprise"}, headers=AUTH)
+    assert r.status_code == 400
+    assert "plan" not in db.store["users/t1"]
+
+
+def test_a_user_cannot_grant_themselves_pro(admin_db):
+    client, state, db = admin_db
+    state["profile"] = dict(FREE)
+    r = client.patch("/api/admin/users/t1", json={"plan": "pro"}, headers=AUTH)
+    assert r.status_code == 403
+    assert "plan" not in db.store["users/t1"]
+
+
+def test_admin_plan_patch_on_a_missing_user_is_404(admin_db):
+    client, _, _ = admin_db
+    r = client.patch("/api/admin/users/nobody", json={"plan": "pro"}, headers=AUTH)
+    assert r.status_code == 404
+
+
 # ---------------------------------------------------------------------------
 # Quota and entitlement — 402, deliberately distinct from the limiter's 429
 # ---------------------------------------------------------------------------
