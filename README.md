@@ -23,6 +23,8 @@ See [learning/03-validation-methods.md](learning/03-validation-methods.md) for f
 
 ### What it found
 
+The full write-up, with every figure re-run and checked by a script: **[finertia.hulage.in/writeup](https://finertia.hulage.in/writeup)** (source: [planning/write-up.md](planning/write-up.md)).
+
 Those two checks are only worth building if they change the answer. Run against
 AAPL, 2018-01-01 → 2024-01-01, they do — ranking the three strategies on the
 data they were tuned on gives you exactly the wrong order.
