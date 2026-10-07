@@ -1,6 +1,6 @@
 # Status
 
-_Current to `421eeb2` (main) · 7 Oct 2026._
+_Current to `a66d7b2` (main) · 7 Oct 2026._
 
 ## At a glance
 
@@ -10,11 +10,11 @@ _Current to `421eeb2` (main) · 7 Oct 2026._
 | Judged link | https://finertia.hulage.in/demo — Builders Pitch Fest 2026, BFSI, submitted 6 Sep; result pending |
 | Tests | 723 backend (`cd backend && pytest tests/ -q`, re-run 28 Sep before the deploy), 20 Firestore-rule (`cd firestore-tests && npm test`) |
 | CI | green on `main` (backend tests + frontend build + bundle budget + secret scan); `backend-drift.yml` comments on the merged PR when `backend/` is ahead of the `backend-deployed` tag |
-| Commits | 182 on main (`git rev-list --count`, 7 Oct) · 68 PRs merged (`gh pr list --state merged`, 7 Oct) |
+| Commits | 200 on main (`git rev-list --count`, 7 Oct) · 76 PRs merged (`gh pr list --state merged`, 7 Oct) |
 | API | 17 routes |
 | Cost | ₹0 idle (`min-instances 0`, max 2, 512Mi) |
 | Blocked on user | 0 — login smoke test **on production**: 28 Sep covered the portfolio results card (found PR #58); 7 Oct covered the regime direction table, History and Profile save (pass) and found the dead-end Pro-wall banner (PR #71); later the same day Give Pro → portfolio-mode Validation on Pro → Remove Pro (pass; the author's account is now admin, back on Free); Register walked with a throwaway (found the verify-page dead end, PR #74) — **smoke test complete** · `gh` PAT skipped (user's call 7 Oct, keeps the OAuth token) · auth emails now say "Finertia": Firebase locks template edits on this project, so the name was set as the app name on Google Auth Platform → Branding (External, no OAuth client); reset email checked 7 Oct — subject "Reset your password for Finertia", link carries `continueUrl=…/login` (#74). Sender address stays `noreply@momentbacktracking.firebaseapp.com` |
-| In flight | M10 phase 3 — [NEXT-MILESTONE.md](NEXT-MILESTONE.md). Phases 1–2 shipped 7 Oct: `/writeup` live with its own share card (#61, #62), `/demo` Validation tab + README GIF (#63). Phase 3 kit in [feedback.md](feedback.md) (#64): 5 outside sessions, start count **0** outside sign-ups / runs. Testers who need validation get Pro from Admin → Users (#68), counted as comped |
+| In flight | M10 phase 3 — [NEXT-MILESTONE.md](NEXT-MILESTONE.md). Phase 0 closed 7 Oct (#76). Phases 1–2 shipped 7 Oct: `/writeup` live with its own share card (#61, #62), `/demo` Validation tab + README GIF (#63). Phase 3 kit in [feedback.md](feedback.md) (#64): 5 outside sessions, start count **0** outside sign-ups / runs. Testers who need validation get Pro from Admin → Users (#68), counted as comped |
 | Direction | **Portfolio piece + write-up** (decided 15 Sep, DECISIONS.md); write-up **published** at [/writeup](https://finertia.hulage.in/writeup) 7 Oct, every figure checked by `reproduce_writeup.py`. M10 phase 4 revisits the decision with outside-user evidence |
 
 ## Stages — verified vs built
@@ -111,6 +111,10 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 | 7 Oct | Phase 3 kit (#64): `planning/feedback.md` + read-only `scripts/usage_counts.py` | first count: 1 sign-up, 21 saved runs, all the author's |
 | 7 Oct | **Rev `00017-jq8`** — admin Pro grant (#68): Give / Remove Pro on Admin → Users; the server accepts only `free` / `pro` and stamps `planSource: "admin"` (the Stripe webhook stamps `"stripe"`), so `usage_counts.py` splits paid from comped. Firestore rules unchanged: clients still cannot write `plan` | 4 new tests, 727 green, mutation-checked; run 37577534153 green; unauthenticated `PATCH` on the live route 401. Clicked on prod the same day: Give Pro → "pro · comp", portfolio Validation ran, Remove Pro → free |
 | 7 Oct | CI deprecations (#69): `google-github-actions/auth` + `setup-gcloud` v2 → v3 (Node 24); every job pinned to `ubuntu-24.04` ahead of `ubuntu-latest` → 26.04 on 19 Oct | run 37578295198 → rev `00018-ml7` green, no deprecation annotations |
+| 7 Oct | Pro-wall banner (#71): a 402 on Validation offered "Try again", which re-ran the backtest and could never succeed — now "See Pro" → /pricing, and the empty Validation tab says "Validation is on Pro — see plans" | live on Vercel, walked on prod as a Free account |
+| 7 Oct | Production smoke test finished (#72, #75): author's account made admin in Firestore; Give Pro → "pro · comp" → AAPL+MSFT portfolio Validation on Pro (0 of 5, Not proven) → Remove Pro → free; Register walked with a `+fin1` throwaway (verified, USER, kept off /admin) | all through the user's Chrome on finertia.hulage.in |
+| 7 Oct | Auth emails (#74): verify and reset emails carry a continue URL, so Firebase's hosted page shows Continue back to `/dashboard` / `/login`; retries without it if the domain is refused. Firebase template edits are locked on this project, so the name "Finertia" was set as the Google Auth Platform app name | reset email checked: subject "…for Finertia", link has `continueUrl=https://finertia.hulage.in/login` |
+| 7 Oct | Phase 0 closed (#73, #76, #77): session warm-up step in feedback.md (free alternative to `min-instances=1`); `gh` PAT skipped by the user's choice | STATUS "Blocked on user" = 0 |
 
 ## Known risks
 
