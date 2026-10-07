@@ -41,7 +41,7 @@ The 15 Sep plan said "not before the Pitch Fest result". Three weeks on, the
 result is either in or overdue; either way it no longer gates publishing.
 Record which in DECISIONS.md when this phase starts.
 
-- [ ] Fact-check pass: every figure in `planning/write-up.md` against a fresh run on rev 00016+ (prod serves `552ec3e`); fix any drift, date the run.
+- [x] Fact-check pass — `backend/scripts/reproduce_writeup.py` re-runs every call through the production route handlers and checks all 174 quoted figures (7 Oct). Every deterministic figure reproduced to the digit; the 9 bootstrap figures had come from research runs with a different seed and were replaced with the product's seeded values, endpoints now to one decimal (they move up to 0.3 between seeds). No conclusion changed. Draft 3.
 - [ ] Cut to a readable length — target ≤ 2,000 words in the main text; move the per-check detail to an appendix rather than delete it.
 - [ ] Home: a `/writeup` route on finertia.hulage.in (frontend only, static content, no API call) — keeps the finding next to the tool that produced it. hulage.in post is the fallback.
 - [ ] Link it from README (top, beside "What it found") and from the landing page.

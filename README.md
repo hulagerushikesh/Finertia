@@ -57,7 +57,7 @@ chosen before it:
 | May 2021 → Mar 2022 | +30% | **1.10** | −0.60 |
 | Apr 2022 → Feb 2023 | −15% | **−0.80** | **1.90** |
 | Feb 2023 → Dec 2023 | +31% | 0.88 | −1.73 |
-| Stitched, 95% CI | | 0.12 [−0.84, 1.45] | 0.44 [−0.46, 1.22] |
+| Stitched, 95% CI | | 0.12 [−0.8, 1.3] | 0.44 [−0.4, 1.2] |
 
 Momentum's "failed" was the one segment where the market fell; Bollinger's
 "held up" was that same segment carrying the one after it. Momentum's winning
