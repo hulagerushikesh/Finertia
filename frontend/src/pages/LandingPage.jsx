@@ -183,6 +183,11 @@ export default function LandingPage() {
             Open the full example, with every chart <ArrowRight className="size-3.5" aria-hidden="true" />
           </Link>
         </p>
+        <p className="mt-2 text-sm">
+          <Link to="/writeup" className="inline-flex items-center gap-1.5 text-pencil hover:underline underline-offset-4">
+            Read the write-up: the best-looking strategy was the worst on new data <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </p>
       </section>
 
       {/* ── 4. Who it's for ─────────────────────────────────────────── */}
