@@ -1,8 +1,62 @@
 <!--
-  Source for public/og.png. Render with headless Chrome at exactly 1200×630
-  (fonts come from Google Fonts, so give it a virtual-time budget):
+  Source for public/og.png, the site-wide share card. Render with headless
+  Chrome at exactly 1200×630 (fonts come from Google Fonts, so give it a
+  virtual-time budget), from frontend/:
 
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
       --disable-gpu --hide-scrollbars --window-size=1200,630 --virtual-time-budget=8000 \
       --screenshot=public/og.png "file://$PWD/design/og.html"
+
+  Rebuilt 7 Oct 2026 from the shipped PNG. The original source was never
+  committed; this file only ever held the comment above. Keep og:image:alt in
+  index.html in step with the headline.
 -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink: #0F172A; --chalk: #F1F5F9; --mute: #94A3B8; --line: #1E293B; --mint: #34D399; --slate: #334155; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; background: var(--ink); }
+  body { font-family: "DM Sans", sans-serif; color: var(--chalk); padding: 64px 72px; position: relative; }
+  .brand { display: flex; align-items: center; gap: 14px; font-weight: 700; font-size: 27px; letter-spacing: -0.01em; }
+  .brand span { color: var(--mint); }
+  h1 { margin-top: 52px; font-weight: 700; font-size: 70px; line-height: 1.1; letter-spacing: -0.03em; max-width: 780px; }
+  h1 em { font-style: normal; color: var(--mint); }
+  p { margin-top: 30px; font-size: 26px; line-height: 1.4; color: var(--mute); max-width: 760px; }
+  .run { position: absolute; right: 85px; top: 191px; }
+  .pill { position: absolute; left: 72px; bottom: 64px; display: flex; align-items: center; gap: 10px;
+          padding: 10px 18px; border: 1px solid var(--line); border-radius: 999px; font-size: 17.5px; font-weight: 500; color: #CBD5E1; }
+  .pill i { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); }
+  .url { position: absolute; right: 72px; bottom: 71px; font-family: "IBM Plex Mono", monospace; font-size: 20px; color: var(--mute); }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="14" fill="#1E293B"/>
+      <g fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 47 L23 36 L31 42 L40 29" stroke="#F1F5F9"/>
+        <path d="M40 29 L54 15" stroke="#34D399"/>
+      </g>
+    </svg>
+    <div>Finertia<span>.</span></div>
+  </div>
+
+  <h1>Test a trading idea <em>before</em> you risk money on it.</h1>
+  <p>Pick a stock, a rule and a stretch of years. See what would have happened — then find out if it was skill or luck.</p>
+
+  <!-- The mark's run, large: tuned stretch in slate, the stretch that counts in green. -->
+  <svg class="run" width="282" height="226" viewBox="0 0 300 240" aria-hidden="true">
+    <g fill="none" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 220 L78 160 L128 196 L180 110" stroke="#334155"/>
+      <path d="M180 110 L280 20" stroke="#34D399"/>
+    </g>
+  </svg>
+
+  <div class="pill"><i></i>Free to start · no card</div>
+  <div class="url">finertia.hulage.in</div>
+</body>
+</html>
