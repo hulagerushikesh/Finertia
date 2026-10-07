@@ -38,6 +38,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      // /writeup imports planning/write-up.md, which sits outside the Vite root.
+      fs: { allow: [".", "../planning"] },
       // Pinned so the origin always matches ALLOWED_ORIGINS on the backend.
       // strictPort makes a clash fail loudly instead of silently sliding to
       // 5175, which would then be blocked by CORS with no obvious cause.

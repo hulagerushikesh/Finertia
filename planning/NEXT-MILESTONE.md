@@ -42,9 +42,9 @@ result is either in or overdue; either way it no longer gates publishing.
 Record which in DECISIONS.md when this phase starts.
 
 - [x] Fact-check pass — `backend/scripts/reproduce_writeup.py` re-runs every call through the production route handlers and checks all 174 quoted figures (7 Oct). Every deterministic figure reproduced to the digit; the 9 bootstrap figures had come from research runs with a different seed and were replaced with the product's seeded values, endpoints now to one decimal (they move up to 0.3 between seeds). No conclusion changed. Draft 3.
-- [ ] Cut to a readable length — target ≤ 2,000 words in the main text; move the per-check detail to an appendix rather than delete it.
-- [ ] Home: a `/writeup` route on finertia.hulage.in (frontend only, static content, no API call) — keeps the finding next to the tool that produced it. hulage.in post is the fallback.
-- [ ] Link it from README (top, beside "What it found") and from the landing page.
+- [x] Cut to a readable length — draft 4: main text ~2,050 words (from 3,400), per-check detail, the vol × trend grid and the Sharpe-gap table moved to appendices A–C; every one of the 174 figures still in it (7 Oct).
+- [x] Home: `/writeup` renders `planning/write-up.md` itself (`?raw` import + a hand-written renderer for the subset it uses, React elements only), so the published page cannot drift from the file the script checks. Lazy chunk, 9.9 kB gz (7 Oct).
+- [x] Linked from README ("What it found"), the landing page, the logged-out nav ("The finding") and the footer (7 Oct).
 - [ ] Share card: the in-sample vs out-of-sample table as the og image for `/writeup`.
 
 **Exit:** a public URL, linked from README and landing; every number in it re-run after 28 Sep.

@@ -3,6 +3,33 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-10-07 — `/writeup` renders the Markdown file, not a copy of it
+
+The write-up is checked figure by figure by `reproduce_writeup.py` against
+`planning/write-up.md`. A JSX transcription would be a second copy that the
+script never reads, and the first edit to one would split them. So the page
+imports the `.md` with Vite's `?raw` and renders it with a ~100-line renderer
+covering exactly the subset the file uses (headings, paragraphs, pipe tables,
+lists, a rule, code/bold/italic/URLs). No Markdown library: the subset is
+small, and the renderer returns React elements, so no HTML string is ever
+injected. If the write-up starts using Markdown the renderer does not know,
+it degrades to plain paragraph text rather than vanishing.
+
+## 2026-10-07 — Publish the write-up without waiting for the Pitch Fest result
+
+The 15 Sep plan held publishing until the Builders Pitch Fest result, so that
+nothing public would change under a judge's eyes. Three weeks after the 6 Sep
+submission the result is still pending, and the write-up is the deliverable the
+15 Sep decision chose — unpublished, it is worth nothing as a portfolio piece.
+
+Publishing now changes nothing a judge sees: `/demo` and the app are untouched,
+and the write-up is a new route (`/writeup`), not an edit to the judged pages.
+Every figure in it was re-run on 7 Oct by `backend/scripts/reproduce_writeup.py`
+(PR #60), so it can go out without a second check.
+
+What would reverse it: none expected. If the result lands, it is an input to
+M10 phase 4 (portfolio vs product), not to this.
+
 ## 2026-09-24 — No vol-scaled cost model. The cost LEVEL ships instead
 
 The backlog item asked for costs that scale with volatility: real spreads
