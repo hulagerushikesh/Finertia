@@ -31,6 +31,13 @@ _(paste the script's output here)_
 
 ## Running a session
 
+0. **Warm the API, 2–5 minutes before.** Open
+   https://finertia.hulage.in/api/health and wait for it to answer, then run
+   one backtest on your own account. Cloud Run scales to zero when idle, and a
+   cold first run takes ~11 s (STATUS known risk 1): a tester reads that as
+   broken, which is a finding about the server, not the product. The instance
+   stays warm about 15 minutes after the last request; for an async tester,
+   say "the first run can take 10 seconds" in the message instead.
 1. Send the message for their type (below). Live is better than async: a call
    with their screen shared, or sitting beside them.
 2. **Don't help.** Say once, "think out loud; I'll stay quiet." When they get
