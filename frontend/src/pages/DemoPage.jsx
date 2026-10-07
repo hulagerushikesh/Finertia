@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import MetricsGrid from "../components/MetricsGrid";
@@ -11,9 +11,15 @@ import MonthlyHeatmap from "../components/MonthlyHeatmap";
 import RegimeTable from "../components/RegimeTable";
 import BenchmarkTest from "../components/BenchmarkTest";
 import CostSensitivity from "../components/CostSensitivity";
+import ValidationPanel from "../components/ValidationPanel";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import demo from "../demoData.json";
+import validation from "../demoValidation.json";
+
+const TAB =
+  "rounded-none border-b-2 border-transparent data-[state=active]:border-pencil data-[state=active]:shadow-none data-[state=active]:bg-transparent px-4 py-2 -mb-px text-sm";
 
 /**
  * A real result, no login required.
@@ -23,9 +29,18 @@ import demo from "../demoData.json";
  * momentum badly losing to buy-and-hold, which is the honest thing to lead
  * with for a product whose whole argument is that backtests flatter
  * themselves.
+ *
+ * The Validation tab is the same config's /api/validate response, frozen the
+ * same way (backend/scripts/freeze_demo_validation.py). Without it the checks
+ * the product is built around were invisible until after sign-up. The tab
+ * lives in the URL hash so /demo#validation can be linked to directly.
  */
 export default function DemoPage() {
   const { user } = useAuth();
+  const { hash } = useLocation();
+  const navigate = useNavigate();
+  const tab = hash === "#validation" ? "validation" : "results";
+  const setTab = (next) => navigate({ hash: next === "validation" ? "validation" : "" }, { replace: true });
   const start = user ? "/dashboard" : "/register";
   const strategyEnd = demo.equity_curve[demo.equity_curve.length - 1].strategy;
   const benchmarkEnd = demo.equity_curve[demo.equity_curve.length - 1].benchmark;
@@ -66,6 +81,27 @@ export default function DemoPage() {
         </div>
       </Rise>
 
+      <Tabs value={tab} onValueChange={setTab} className="mb-5">
+        <TabsList className="bg-transparent p-0 h-auto gap-1 rounded-none border-b border-border w-full justify-start">
+          <TabsTrigger value="results" className={TAB}>Results</TabsTrigger>
+          <TabsTrigger value="validation" className={TAB}>
+            Validation
+            <span className="ml-2 font-mono text-2xs text-loss">{validation.walk_forward.verdict.replace("_", " ")}</span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {tab === "validation" ? (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-graphite leading-relaxed max-w-3xl">
+            Was it skill or luck? The same rule, re-tuned on the first 70% of {demo.start.slice(0, 4)}–
+            {demo.end.slice(0, 4)} and scored on the last 30% it never saw, then checked against
+            hundreds of shuffled versions of itself. This is a real run of the checks, saved. On
+            the Pro plan they run on any stock and rule you choose.
+          </p>
+          <ValidationPanel data={validation} />
+        </div>
+      ) : (
       <Stagger className="flex flex-col gap-5">
         <StaggerItem><MetricsGrid metrics={demo.metrics} confidenceIntervals={demo.confidence_intervals} /></StaggerItem>
         {demo.benchmark_test && (
@@ -81,6 +117,7 @@ export default function DemoPage() {
         <StaggerItem><RollingSharpeChart data={demo.rolling_sharpe} /></StaggerItem>
         <StaggerItem><RegimeTable regimes={demo.regimes} /></StaggerItem>
       </Stagger>
+      )}
 
       <div className="mt-10 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-8 border-t border-border pt-8">
         <p className="margin-note">
@@ -89,8 +126,12 @@ export default function DemoPage() {
         <div>
           <p className="text-sm text-graphite leading-relaxed">
             The question that decides whether any of it means anything is whether the result
-            survives on data the parameters were never fitted to — that is what walk-forward
-            validation and the permutation test answer, and they need an account to run.
+            survives on data the parameters were never fitted to. The{" "}
+            <button type="button" onClick={() => { setTab("validation"); window.scrollTo({ top: 0 }); }} className="text-pencil underline underline-offset-2">
+              Validation tab
+            </button>{" "}
+            answers that for this run. A free account runs the backtest on any stock; the checks
+            are part of <Link to="/pricing" className="text-pencil underline underline-offset-2">Pro</Link>.
           </p>
           <div className="flex items-center gap-3 flex-wrap mt-5">
             <Button asChild>

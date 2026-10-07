@@ -51,8 +51,8 @@ Record which in DECISIONS.md when this phase starts.
 
 ### Phase 2 — Make the demo explain itself (week 1–2)
 
-- [ ] Demo GIF for the README: `/demo` → results → the cost and benchmark strips → validation tab. ≤ 4 MB, under 30 s.
-- [ ] Decide: does `/demo` get a frozen validation payload? Today it shows no validation at all, so the product's USP is invisible without an account. Log the decision either way; if yes, it is a frozen JSON like the existing demo payload, no API call.
+- [x] Demo GIF for the README: `/demo` → results → the cost and benchmark strips → validation tab. ≤ 4 MB, under 30 s. `docs/demo.gif`, 3.3 MB, 24 s.
+- [x] Decide: does `/demo` get a frozen validation payload? **Yes** (7 Oct, DECISIONS), and shipped: a Validation tab, deep-linkable as `/demo#validation`. Today it shows no validation at all, so the product's USP is invisible without an account. Log the decision either way; if yes, it is a frozen JSON like the existing demo payload, no API call.
 
 **Exit:** a logged-out visitor can see the verdict card, or DECISIONS.md says why not.
 

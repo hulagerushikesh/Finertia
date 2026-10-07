@@ -3,6 +3,27 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-10-07 — `/demo` shows a frozen validation result
+
+Until now `/demo` showed the backtest and nothing else, with a closing line
+that said validation "needs an account". The checks are what makes Finertia
+different from any other backtester, so a visitor without an account never
+saw them. `/demo` now has the dashboard's Results / Validation tabs. The
+Validation tab is the real `/api/validate` response for the same config
+(AAPL momentum 2019–2024, default parameters). It is frozen into
+`frontend/src/demoValidation.json` by `backend/scripts/freeze_demo_validation.py`
+and rendered by the same `ValidationPanel`. There is no API call, so it costs
+nothing to serve and can't be rate-limited.
+
+The result is "failed": in-sample Sharpe 0.75, out-of-sample −0.03, 2 of 6
+checks passed. That fits the page, which already leads with the strategy
+losing to holding. The copy says the checks are part of Pro, because that
+is true.
+
+This does edit a page judges may see, which the publish-the-write-up decision
+avoided. The author chose it anyway on 7 Oct, with the result still pending:
+the change adds evidence and changes no existing figure.
+
 ## 2026-10-07 — `/writeup` renders the Markdown file, not a copy of it
 
 The write-up is checked figure by figure by `reproduce_writeup.py` against
