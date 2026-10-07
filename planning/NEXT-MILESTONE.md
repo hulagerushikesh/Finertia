@@ -83,8 +83,8 @@ Not a task; a written decision, with phase 3 as its input.
 ## Definition of done for M10
 
 - [ ] STATUS "Blocked on user" is 0
-- [ ] Write-up public, linked, re-run after 28 Sep
-- [ ] README has the demo GIF; `/demo` validation decided
+- [x] Write-up public, linked, re-run after 28 Sep
+- [x] README has the demo GIF; `/demo` validation decided
 - [ ] `feedback.md` with 5 outside users and usage counts
 - [ ] Phase 4 decision recorded
 

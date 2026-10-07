@@ -38,8 +38,8 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 ## Portfolio / write-up (Phase 4 picked "portfolio", 15 Sep)
 
 - [x] 1,500-word write-up — drafted as `planning/write-up.md`: both windows, the per-check disagreement, bootstrap intervals on the OOS Sharpes
-- [ ] Put the write-up on hulage.in (or a `/writeup` route) and link it from the README and the landing page — after the Pitch Fest result
-- [ ] Short demo GIF of `/demo` → validation tab for the README
+- [x] Put the write-up on hulage.in (or a `/writeup` route) and link it from the README and the landing page — shipped 7 Oct at `/writeup` (#61), before the result (DECISIONS 7 Oct)
+- [x] Short demo GIF of `/demo` → validation tab for the README — `docs/demo.gif` (#63)
 
 ## Docs
 
