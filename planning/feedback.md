@@ -32,6 +32,8 @@ _(paste the script's output here)_
 
 ## Running a session
 
+Printable version, with space for notes: [session-sheet.md](session-sheet.md).
+
 0. **Warm the API, 2–5 minutes before.** Open
    https://finertia.hulage.in/api/health and wait for it to answer, then run
    one backtest on your own account. Cloud Run scales to zero when idle, and a
