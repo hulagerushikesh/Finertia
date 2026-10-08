@@ -116,4 +116,23 @@ Copy the block once per person. Use a first name or a role, not a full name.
 
 ## What the five said, together
 
-_(fill in after entry 5: patterns, not anecdotes. This is the input to phase 4.)_
+Score each tester against the definitions fixed on 8 Oct in
+[DECISIONS.md](DECISIONS.md) ("How phase 4 will read the five sessions"), not
+against impressions. **Returned** is read from the `runs` collection 7 days
+after the session (Firestore console → `runs` → filter `uid`).
+
+| # | Type | Finished unaided | Opened Validation | Engaged | Returned | Would pay |
+|---|---|---|---|---|---|---|
+| 1 | | | | | | |
+| 2 | | | | | | |
+| 3 | | | | | | |
+| 4 | | | | | | |
+| 5 | | | | | | |
+| **Total** | | /5 | /5 | /5 | /5 | /5 |
+
+**Rule result:** _product / education / portfolio_ — which line of the rule
+fired, and the numbers that fired it.
+
+_Patterns, not anecdotes (fill in after entry 5): where people got stuck in
+more than one session, what the Pro wall did, what the price answers had in
+common. This is the input to phase 4._
