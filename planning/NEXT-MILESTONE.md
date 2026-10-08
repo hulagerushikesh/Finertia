@@ -60,6 +60,9 @@ Record which in DECISIONS.md when this phase starts.
 
 The 15 Sep reversal condition, made concrete.
 
+Sessions run on weekends from 10 Oct (the author's schedule). Deadline for
+the round: 31 Oct.
+
 - [ ] Put Finertia in front of 5 people who are not the author: at least one trader, one finance student, one engineer. The field guide's pitches are the script.
 - [ ] For each, record in `planning/feedback.md`: did they finish a run unaided, did they open Validation, what confused them, would they pay $12 / ₹1,000 a month for it.
 - [ ] Count sign-ups and runs from Firestore (`users`, `runs`) at the start and end of the phase — the only usage number that exists. `scripts/usage_counts.py`; start taken 7 Oct: **0** outside sign-ups, 0 outside runs.
@@ -69,6 +72,9 @@ The 15 Sep reversal condition, made concrete.
 ### Phase 4 — The decision, revisited (end of milestone)
 
 Not a task; a written decision, with phase 3 as its input.
+
+The words in this table are defined, and the order the rows are applied in
+fixed, in DECISIONS.md (8 Oct), before the first session.
 
 | If phase 3 shows | Then |
 |---|---|
