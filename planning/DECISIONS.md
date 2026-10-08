@@ -3,6 +3,47 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-10-08 — How phase 4 will read the five sessions, fixed before any are run
+
+The M10 phase 4 table says "nobody would pay", "students engage", "two or more
+would pay". With five people and the author on the call, those words will be
+read whichever way the author hopes, so they are pinned down here, before the
+first session (planned for the weekends from 10 Oct).
+
+**Definitions, per tester:**
+
+- **Would pay** — a plain yes to "Would you pay ₹1,000 / $12 a month for
+  this?", or a yes at a lower price they name. "Maybe if…", "I'd try it",
+  "for a student price" without a number: **no**, with the condition written
+  down. People are polite to the person who built the thing; only a clear yes
+  counts. A comped Pro account is not paying.
+- **Engaged** — finished a run unaided **and** opened Validation (on `/demo`
+  or in the dashboard) **and** did one more thing nobody asked for: a second
+  ticker or rule in the session, or a return visit (below).
+- **Returned** — a saved run on a later calendar day than their session,
+  within 7 days of it, from the `runs` collection. Async testers with no call
+  count from their first run.
+
+**The rule, applied in order:**
+
+1. Two or more **would pay** → product path (Stripe live, support inbox, legal
+   check on SEBI positioning and the Yahoo data licence **before** charging).
+2. Otherwise, two or more students or educators **engaged** and at most one
+   trader did → education path. Stripe stays off.
+3. Otherwise → stay portfolio, maintenance only. One "would pay" on its own is
+   recorded, not acted on.
+
+**Process rules:**
+
+- A bug that stops a tester finishing a run is fixed before the next session,
+  and the entry says which version each tester saw. Anything else waits for
+  the end of the round, so the five see the same product.
+- If five sessions have not happened by 31 Oct, decide on the ones that have,
+  state n in the entry, and do not fill the gap with the author's friends
+  saying yes afterwards.
+- These definitions change only by a new dated entry here, written **before**
+  the session it would apply to.
+
 ## 2026-10-07 — `/demo` shows a frozen validation result
 
 Until now `/demo` showed the backtest and nothing else, with a closing line
