@@ -121,7 +121,7 @@ export default function DemoPage() {
 
       <div className="mt-10 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-8 border-t border-border pt-8">
         <p className="margin-note">
-          One strategy, one ticker, one period, with parameters nobody tuned.
+          One strategy, one ticker, one period, on its default parameters.
         </p>
         <div>
           <p className="text-sm text-graphite leading-relaxed">

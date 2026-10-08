@@ -36,7 +36,7 @@ const STEPS = [
     icon: Play,
     title: "Run",
     desc: "Finertia replays the rule on real prices, with real trading costs, and shows what it would have made.",
-    example: "+68% · just holding made +411%",
+    example: "+68% · just holding made +408%",
   },
   {
     n: "03",
@@ -65,7 +65,7 @@ const AUDIENCES = [
   {
     icon: BookOpen,
     title: "Learning quant?",
-    desc: "No black box. The engine is plain pandas and numpy, every check has its formula written out, and 603 tests keep it honest.",
+    desc: "No black box. The engine is plain pandas and numpy, every check has its formula written out, and over 700 tests keep it honest.",
     to: "/docs",
     cta: "Read how it works",
   },
@@ -237,7 +237,7 @@ export default function LandingPage() {
         <ul className="mt-10 grid sm:grid-cols-3 gap-px bg-border border-y border-border">
           {[
             ["Real prices", "Daily closes from Yahoo Finance, with a trading cost on every position change."],
-            ["Open maths", "No backtesting library. Plain pandas and numpy you can read, with 603 tests on the engine."],
+            ["Open maths", "No backtesting library. Plain pandas and numpy you can read, with over 700 tests on the engine."],
             ["Honest numbers", "Every metric carries a confidence interval, and results that beat holding are the exception, not the sales pitch."],
           ].map(([t, d]) => (
             <li key={t} className="bg-background py-5 sm:px-6 first:sm:pl-0 last:sm:pr-0">

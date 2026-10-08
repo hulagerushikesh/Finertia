@@ -84,7 +84,7 @@ people who will read 2,000 words.
 
 **Engineer**
 > Side project: a FastAPI and React backtester whose engine is plain
-> pandas/numpy with ~600 tests, and every figure in the write-up is checked
+> pandas/numpy with 700+ tests, and every figure in the write-up is checked
 > by a script. Would you try it for 15 minutes as a user, not a reviewer, and
 > tell me where it lost you? https://finertia.hulage.in/demo
 
