@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finertia — Tester Session Sheet</title>
+<style>
+  :root { --ink:#1f2937; --muted:#6b7280; --line:#d1d5db; --accent:#047857; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink); max-width: 760px; margin: 0 auto; padding: 28px 32px;
+  }
+  h1 { font-size: 20px; margin: 0 0 2px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent);
+       border-bottom: 1px solid var(--line); padding-bottom: 3px; margin: 18px 0 8px; }
+  .sub { color: var(--muted); margin: 0 0 14px; font-size: 12px; }
+  .row { display:flex; gap:24px; flex-wrap:wrap; margin: 6px 0; }
+  .fill { border-bottom: 1px solid var(--line); display:inline-block; min-width:140px; }
+  ul { margin: 6px 0; padding-left: 0; list-style: none; }
+  li { margin: 4px 0; }
+  .box::before { content:"\2610"; margin-right: 8px; color: var(--muted); }
+  ol { margin: 6px 0; padding-left: 20px; }
+  ol li { margin: 5px 0; }
+  .quote { border-left: 3px solid var(--accent); padding: 4px 12px; margin: 8px 0; color: var(--ink); background:#f0fdf4; }
+  table { width:100%; border-collapse: collapse; margin: 8px 0; }
+  th, td { border: 1px solid var(--line); padding: 7px 8px; text-align:left; vertical-align:top; font-size:12px; }
+  th { background:#f9fafb; font-weight:600; color: var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; }
+  .answer { border-bottom: 1px solid var(--line); height: 20px; margin: 6px 0; }
+  .note { color: var(--muted); font-size: 11px; font-style: italic; }
+  .q { font-weight:600; margin-top: 10px; }
+  .flow { background:#f9fafb; border:1px solid var(--line); border-radius:6px; padding:10px 14px; }
+  @media print {
+    body { padding: 0; max-width: 100%; font-size: 11.5px; }
+    h2 { margin-top: 12px; }
+    .quote { background: transparent; }
+    .flow { background: transparent; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Finertia — Tester Session Sheet</h1>
+<p class="sub">One per person. Copy what you write here into feedback.md afterwards (or paste it to Claude).</p>
+
+<div class="row">
+  <div><strong>Who</strong> (first name / role): <span class="fill">&nbsp;</span></div>
+  <div><strong>Type:</strong> trader · student · engineer · other</div>
+</div>
+<div class="row">
+  <div><strong>Date:</strong> <span class="fill">&nbsp;</span></div>
+  <div><strong>Live / async:</strong> <span class="fill">&nbsp;</span></div>
+  <div><strong>Version seen:</strong> <span class="fill">&nbsp;</span></div>
+</div>
+
+<h2>Before — 2 to 5 min ahead</h2>
+<ul>
+  <li class="box">Open <strong>finertia.hulage.in/api/health</strong> — wait for it to answer</li>
+  <li class="box">Run one backtest on your own account (warms the server — first cold run is ~11s and reads as broken)</li>
+  <li class="box">Open Admin → Users in another tab, in case they need Pro</li>
+  <li class="box">Send the message for their type (feedback.md → Messages)</li>
+</ul>
+
+<h2>The task — say it, then stay quiet</h2>
+<div class="quote">
+  "Think out loud; I'll stay quiet."<br>
+  "Test whether a simple rule would have made money on a stock you know."
+</div>
+<p class="note">Don't help. When they get stuck, write down <strong>where</strong> and wait 30 seconds before saying anything. Where they stick is the finding.</p>
+
+<h2>The flow they should reach (for your reference — don't read it to them)</h2>
+<div class="flow">
+  <ol>
+    <li>Sign up — free account</li>
+    <li>Land on the Dashboard (the workspace)</li>
+    <li>Type a ticker they know (AAPL, TSLA, RELIANCE…)</li>
+    <li>Pick a strategy: Momentum / MACD / Bollinger — leave the numbers at default</li>
+    <li>Click <strong>Run backtest</strong> (~10s first time)</li>
+    <li>Read the result — did $1 grow vs just holding?</li>
+    <li>Open the <strong>Validation</strong> tab → hits the <strong>Pro wall</strong> (intentional)</li>
+  </ol>
+</div>
+
+<h2>During</h2>
+<table>
+  <thead><tr><th style="width:90px">Time</th><th>Where they were</th><th>What they said / did</th></tr></thead>
+  <tbody>
+    <tr><td>&nbsp;</td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td></tr>
+  </tbody>
+</table>
+<p class="q">Pro wall — did they hit it? What did they do <em>before</em> you said anything?</p>
+<div class="answer"></div>
+<p class="note">If they want to validate their own idea: Admin → Users → Give Pro. Note it (it counts as comped, not paid).</p>
+
+<h2>After — ask in order, price question last, exactly as written</h2>
+
+<p class="q">1. Did you finish a run without help? &nbsp; yes / no — where did you stop?</p>
+<div class="answer"></div>
+
+<p class="q">2. Did you open Validation? What did you make of the verdict?</p>
+<div class="answer"></div>
+
+<p class="q">3. What confused you? (quote their words)</p>
+<div class="answer"></div>
+<div class="answer"></div>
+
+<p class="q">4. "Would you pay ₹1,000 / $12 a month for this?" — exact words, don't defend the price</p>
+<div class="answer"></div>
+
+<p class="q">Anything else:</p>
+<div class="answer"></div>
+<div class="answer"></div>
+
+<h2>After the session</h2>
+<ul>
+  <li class="box">Gave them Pro? → Remove Pro on Admin → Users when they're done</li>
+  <li class="box">Paste this sheet to Claude, or copy it into feedback.md entry #___</li>
+  <li class="box">Returned? — check the runs collection 7 days from now</li>
+</ul>
+
+</body>
+</html>
