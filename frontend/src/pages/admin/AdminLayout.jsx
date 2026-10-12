@@ -4,7 +4,7 @@ import { NavLink, Outlet } from "react-router-dom";
 const linkClass = ({ isActive }) =>
   `text-sm px-3 py-1.5 rounded-lg transition-colors ${
     isActive
-      ? "bg-accent/10 text-accent font-medium"
+      ? "bg-accent/10 text-pencil font-medium"
       : "text-text-muted hover:text-text-primary"
   }`;
 
@@ -12,7 +12,7 @@ export default function AdminLayout() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-2 mb-6">
-        <span className="text-xs bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded font-medium">
+        <span className="text-xs bg-accent/10 text-pencil border border-pencil/20 px-2 py-0.5 rounded font-medium">
           ADMIN
         </span>
         <h1 className="text-xl font-semibold text-text-primary">Admin Panel</h1>

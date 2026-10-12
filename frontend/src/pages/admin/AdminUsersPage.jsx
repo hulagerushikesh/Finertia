@@ -112,7 +112,7 @@ export default function AdminUsersPage() {
                   <tr key={u.uid} className="border-b border-border/50 hover:bg-border/20 transition-colors">
                     <td className="px-5 py-3 text-text-primary text-xs font-mono">{u.email}</td>
                     <td className="px-5 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.role === "admin" ? "bg-accent/10 text-accent" : "bg-border text-text-muted"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.role === "admin" ? "bg-accent/10 text-pencil" : "bg-border text-text-muted"}`}>
                         {u.role}
                       </span>
                     </td>
@@ -161,7 +161,7 @@ export default function AdminUsersPage() {
                               granting ? `${u.email} is now on Pro.` : `${u.email} is back on Free.`
                             );
                           }}
-                          className="text-xs text-accent hover:underline"
+                          className="text-xs text-pencil hover:underline"
                         >
                           {u.plan === "pro" ? "Remove Pro" : "Give Pro"}
                         </button>
@@ -175,7 +175,7 @@ export default function AdminUsersPage() {
                               `${u.email} is now ${nextRole}.`
                             );
                           }}
-                          className="text-xs text-accent hover:underline"
+                          className="text-xs text-pencil hover:underline"
                         >
                           Make {u.role === "admin" ? "User" : "Admin"}
                         </button>
