@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { reportError } from "../lib/monitoring";
 
 /**
  * Catches render-time errors anywhere below it and shows a recovery screen
@@ -18,6 +19,8 @@ export default class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     console.error("Uncaught render error:", error, info);
+    // React swallows errors caught here, so the global handler never sees them.
+    reportError(error, { componentStack: info?.componentStack });
   }
 
   handleReload = () => {
