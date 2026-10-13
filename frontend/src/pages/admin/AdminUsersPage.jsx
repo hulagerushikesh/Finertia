@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { getAdminUsers, updateUser } from "../../api";
 import { SkeletonRows } from "../../components/SkeletonRow";
 import { useToast } from "../../hooks/useToast";
@@ -62,19 +64,16 @@ export default function AdminUsersPage() {
     <div>
       {/* Search */}
       <div className="flex gap-3 mb-5">
-        <input
-          className="flex-1 max-w-xs field-input px-4 py-2"
+        <Input
+          className="flex-1 max-w-xs"
           placeholder="Email starts with…"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { setSearch(searchInput); setPage(0); } }}
         />
-        <button
-          onClick={() => { setSearch(searchInput); setPage(0); }}
-          className="btn-primary text-sm px-4 py-2"
-        >
+        <Button onClick={() => { setSearch(searchInput); setPage(0); }}>
           Search
-        </button>
+        </Button>
         {search && (
           <button
             onClick={() => { setSearch(""); setSearchInput(""); setPage(0); }}
@@ -92,7 +91,7 @@ export default function AdminUsersPage() {
               phone, and hiding them puts the data out of reach rather than one
               swipe away. The table scrolls inside its own box so the page
               itself never scrolls sideways. */}
-          <div className="panel overflow-x-auto">
+          <div className="sheet overflow-x-auto">
             <table className="w-full text-sm min-w-[52rem]">
               <thead>
                 <tr className="border-b border-border text-graphite text-xs uppercase tracking-wider">
@@ -206,12 +205,12 @@ export default function AdminUsersPage() {
       {/* Confirm modal */}
       {confirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setConfirmModal(null)}>
-          <div className="panel rounded-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet-lifted p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <h2 className="font-semibold text-foreground mb-2">Confirm Action</h2>
             <p className="text-sm text-graphite mb-5">{confirmModal.label}</p>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setConfirmModal(null)} className="text-sm text-graphite hover:text-foreground px-4 py-2">Cancel</button>
-              <button onClick={handleConfirm} className="btn-primary text-sm px-4 py-2">Confirm</button>
+              <Button onClick={handleConfirm}>Confirm</Button>
             </div>
           </div>
         </div>

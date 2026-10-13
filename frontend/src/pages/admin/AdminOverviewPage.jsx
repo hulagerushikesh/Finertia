@@ -13,7 +13,7 @@ import { CHART } from "../../chartTheme";
 
 function KpiCard({ label, value, sub }) {
   return (
-    <div className="panel p-5">
+    <div className="sheet p-5">
       <p className="text-xs text-graphite uppercase tracking-wider mb-1">{label}</p>
       <p className="text-3xl font-bold font-mono text-foreground">{value}</p>
       {sub && <p className="text-xs text-graphite mt-1">{sub}</p>}
@@ -59,7 +59,7 @@ export default function AdminOverviewPage() {
 
       {/* Top tickers bar chart */}
       {stats.top_tickers?.length > 0 && (
-        <div className="panel p-5">
+        <div className="sheet p-5">
           <h2 className="text-sm font-semibold text-foreground mb-4">
             Top 5 Tickers
             {stats.top_tickers_window ? (
@@ -72,7 +72,7 @@ export default function AdminOverviewPage() {
               layout="vertical"
               margin={{ top: 0, right: 16, bottom: 0, left: 0 }}
             >
-              <XAxis type="number" tick={{ fill: CHART.axisText, fontSize: 11 }} tickLine={false} axisLine={false} />
+              <XAxis type="number" allowDecimals={false} tick={{ fill: CHART.axisText, fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis
                 type="category"
                 dataKey="ticker"
@@ -82,8 +82,8 @@ export default function AdminOverviewPage() {
                 axisLine={false}
               />
               <Tooltip
-                contentStyle={{ background: CHART.surface, border: "1px solid #33405C", borderRadius: 8, fontSize: 12 }}
-                cursor={{ fill: "rgba(99,102,241,0.1)" }}
+                contentStyle={{ background: CHART.surface, border: `1px solid ${CHART.borderStrong}`, borderRadius: 8, fontSize: 12 }}
+                cursor={{ fill: CHART.cursor }}
               />
               <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                 {stats.top_tickers.map((_, i) => (
