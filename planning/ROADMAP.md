@@ -79,6 +79,8 @@ No new features. Make what exists trustworthy. Ordered by impact.
 
 ## H2 — M12 "Product readiness"
 
+**Sprint 1 (14–27 Oct) is on the board: [NEXT-MILESTONE.md](NEXT-MILESTONE.md).** It covers what testers cannot see while the round runs to 31 Oct; product changes come in sprint 2.
+
 Build what charging requires. **Stripe goes live only when the 8 Oct evidence
 rule says so** (two or more clear "would pay") — everything else here is worth
 doing anyway.
