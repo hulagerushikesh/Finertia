@@ -26,13 +26,24 @@ vi.mock("../components/MonthlyHeatmap", () => NoChart);
 vi.mock("../components/RollingSharpeChart", () => NoChart);
 vi.mock("../components/AnnualReturnsChart", () => NoChart);
 
-import DashboardPage from "./DashboardPage";
+// AuthContext imports the Firebase app, which needs an API key CI does not
+// have. Only the context object is used here, never the provider.
+vi.mock("../firebase", () => ({ auth: {}, db: {} }));
 
-function renderPage() {
+import DashboardPage from "./DashboardPage";
+import { AuthContext } from "../context/AuthContext";
+import { DEFAULTS } from "../components/ConfigPanel";
+import { clearWorkspace } from "../lib/workspaceStore";
+
+// `entry` is a router location: a path, or { pathname, state } for a re-run
+// arriving from History.
+function renderPage({ uid = "u1", entry = "/dashboard" } = {}) {
   return render(
-    <MemoryRouter initialEntries={["/dashboard"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <DashboardPage />
-    </MemoryRouter>
+    <AuthContext.Provider value={{ user: { uid } }}>
+      <MemoryRouter initialEntries={[entry]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <DashboardPage />
+      </MemoryRouter>
+    </AuthContext.Provider>
   );
 }
 
@@ -50,6 +61,7 @@ function payPlan() {
 beforeEach(() => {
   Object.values(api).forEach((f) => f.mockReset());
   showToast.mockReset();
+  clearWorkspace();
   api.runBacktest.mockResolvedValue({ ...demo, ticker: "AAPL" });
 });
 
@@ -98,5 +110,56 @@ describe("DashboardPage", () => {
     await userEvent.click(within(banner).getByRole("button", { name: "Try again" }));
     await screen.findByRole("heading", { name: "AAPL" });
     expect(api.runBacktest).toHaveBeenCalledTimes(2);
+  });
+
+  // Tester report, 13 Oct: going to History and back emptied the workspace,
+  // and getting the answer back cost another monthly run.
+  describe("leaving and coming back", () => {
+    it("shows the run and its validation again without asking the API", async () => {
+      api.validateStrategy.mockResolvedValue(demoValidation);
+      const first = renderPage();
+      await runAapl();
+      await userEvent.click(screen.getByRole("tab", { name: /Validation/ }));
+      await vi.waitFor(() => expect(showToast).toHaveBeenCalledWith(expect.stringMatching(/^Validation/), "error"));
+      first.unmount();
+
+      renderPage();
+      expect(screen.getByRole("heading", { name: "AAPL" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /Validation/ })).toHaveAttribute("aria-selected", "true");
+      expect(api.runBacktest).toHaveBeenCalledOnce();
+      expect(api.validateStrategy).toHaveBeenCalledOnce();
+    });
+
+    it("keeps a result that arrived after the user left", async () => {
+      let finish;
+      api.runBacktest.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+      const first = renderPage();
+      await userEvent.click(screen.getByRole("button", { name: "Run backtest on AAPL" }));
+      first.unmount();
+      finish({ ...demo, ticker: "AAPL" });
+      await Promise.resolve();
+
+      renderPage();
+      expect(await screen.findByRole("heading", { name: "AAPL" })).toBeInTheDocument();
+    });
+
+    it("never shows one account's run to another", async () => {
+      const first = renderPage({ uid: "u1" });
+      await runAapl();
+      first.unmount();
+
+      renderPage({ uid: "u2" });
+      expect(screen.queryByRole("heading", { name: "AAPL" })).toBeNull();
+    });
+
+    it("starts fresh on a re-run from History", async () => {
+      const first = renderPage();
+      await runAapl();
+      first.unmount();
+
+      renderPage({ entry: { pathname: "/dashboard", state: { params: { ...DEFAULTS, ticker: "MSFT" } } } });
+      expect(screen.queryByRole("heading", { name: "AAPL" })).toBeNull();
+      expect(screen.getByRole("button", { name: "Run backtest on MSFT" })).toBeInTheDocument();
+    });
   });
 });

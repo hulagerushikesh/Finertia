@@ -108,6 +108,7 @@ caught by us" — the PVT missed the logged-in dashboard paths.
 | 5 | Validation can't be run as a non-Pro member (the Pro wall) | Working as designed — this is the willingness-to-pay test |
 | 6 | Validation required the ticker to still be in the left box after a run; clearing it gave "ticker missing" although AAPL had already been run | **Fixed** — Validation now reads the frozen config of the run on screen, not the live box (DashboardPage.jsx) |
 | 7 | With the box cleared, the user hit "ticker missing" first, then "not a Pro user" only after re-typing — auth/Pro should be the first thing they hit | **Fixed** by #6 — a non-Pro user now goes straight to the Pro wall; the 402 gate already runs before data fetch (main.py:681), the problem was the empty request from the frontend |
+| 8 | Leaving the workspace (to History, anywhere) and coming back emptied it: the result, the validation and the config were gone, so getting the answer back meant re-running — a monthly run spent and a duplicate History row (author, 13 Oct) | **Fixed** — the workspace keeps its last run in memory per account (`lib/workspaceStore.js`): coming back shows it, with no API call. Memory only: a reload or closed tab starts fresh, and sign-out clears it. Treated as a defect under the 8 Oct rule (work lost, quota spent), not a feature |
 
 Also fixed this round (spotted by the author): admin **Actions** column was
 ragged — variable-width buttons (Block/Unblock, Give/Remove Pro, Make
