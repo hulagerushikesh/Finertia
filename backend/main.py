@@ -34,7 +34,7 @@ from plans import (
     plan_for,
     public_plans,
 )
-from ratelimit import RateLimiter
+from ratelimit import FirestoreCounterStore, RateLimiter, SharedRateLimiter
 from risk import apply_stops, size_positions
 from portfolio import (
     align_closes,
@@ -136,9 +136,31 @@ def _int_env(name: str, default: int) -> int:
         return default
 
 
+def _rate_store():
+    """Firestore for the per-user limits when there is a Firestore to use.
+
+    Same rule as the price cache: a service account or the emulator. Without
+    either (a dev machine, the unit tests) the limiters stay in-process.
+    RATE_LIMIT_STORE=memory forces that too.
+    """
+    if os.environ.get("RATE_LIMIT_STORE", "firestore").lower() == "memory":
+        return None
+    if os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON") or os.environ.get("FIRESTORE_EMULATOR_HOST"):
+        return FirestoreCounterStore(get_db)
+    return None
+
+
+# The per-IP limit runs on every request, so it stays in-process: a Firestore
+# round trip on each page load is not worth a ceiling that is already only a
+# flood guard. The per-user limits gate the expensive endpoints, where one
+# extra round trip is small next to the run, and they hold across instances.
 ip_limiter = RateLimiter(limit=_int_env("RATE_LIMIT_IP_PER_MIN", 120), window_seconds=60)
-backtest_limiter = RateLimiter(limit=_int_env("RATE_LIMIT_BACKTEST_PER_MIN", 20), window_seconds=60)
-validate_limiter = RateLimiter(limit=_int_env("RATE_LIMIT_VALIDATE_PER_MIN", 5), window_seconds=60)
+backtest_limiter = SharedRateLimiter(
+    "backtest", limit=_int_env("RATE_LIMIT_BACKTEST_PER_MIN", 20), window_seconds=60, store_factory=_rate_store
+)
+validate_limiter = SharedRateLimiter(
+    "validate", limit=_int_env("RATE_LIMIT_VALIDATE_PER_MIN", 5), window_seconds=60, store_factory=_rate_store
+)
 
 # Paths that only ever read tiny documents and are polled by the UI — holding
 # them to the same budget as a backtest would break normal navigation.

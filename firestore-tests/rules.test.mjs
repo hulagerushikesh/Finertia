@@ -148,6 +148,20 @@ await check(
   assertFails(setDoc(doc(alice, "runs/r2"), { uid: "mallory" }))
 );
 
+console.log("\nratelimits — server-only counters");
+await check(
+  "alice cannot read her rate-limit counter",
+  assertFails(getDoc(doc(alice, "ratelimits/backtest:alice:1")))
+);
+await check(
+  "alice cannot reset her own limit",
+  assertFails(setDoc(doc(alice, "ratelimits/backtest:alice:1"), { n: 0 }))
+);
+await check(
+  "alice cannot exhaust mallory's limit",
+  assertFails(setDoc(doc(alice, "ratelimits/backtest:mallory:1"), { n: 999 }))
+);
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 await env.cleanup();
 process.exit(fail ? 1 : 0);
