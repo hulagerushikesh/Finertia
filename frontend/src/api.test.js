@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const authState = vi.hoisted(() => ({ currentUser: null }));
 vi.mock("./firebase", () => ({ auth: authState }));
 
-import { runBacktest, getHistory, getAdminUsers } from "./api";
+import { runBacktest, getHistory, getAdminUsers, deleteMyAccount } from "./api";
 
 function reply(status, body, headers = {}) {
   return Promise.resolve(
@@ -91,5 +91,14 @@ describe("apiFetch requests", () => {
     fetchMock.mockReturnValue(reply(200, {}));
     await getAdminUsers(50, 0, "a+b@x.com");
     expect(fetchMock.mock.calls[0][0]).toContain("search=a%2Bb%40x.com");
+  });
+
+  it("sends the typed confirmation with an account deletion", async () => {
+    fetchMock.mockReturnValue(reply(200, { deleted: true }));
+    await deleteMyAccount("me@x.com");
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toMatch(/\/api\/me$/);
+    expect(init.method).toBe("DELETE");
+    expect(JSON.parse(init.body)).toEqual({ confirm: "me@x.com" });
   });
 });

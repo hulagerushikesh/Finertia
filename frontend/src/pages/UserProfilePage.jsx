@@ -9,6 +9,9 @@ import { doc, updateDoc } from "firebase/firestore/lite";
 import { auth, db } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import UsageMeter from "../components/UsageMeter";
+import ProfileSection from "../components/ProfileSection";
+import AccountData from "../components/AccountData";
+import { feature } from "../lib/features";
 import PasswordInput from "../components/PasswordInput";
 import { Rise } from "../components/motion";
 import { useToast } from "../hooks/useToast";
@@ -26,19 +29,6 @@ const PASSWORD_ERROR_MAP = {
   "auth/too-many-requests": "Too many attempts. Please try again later.",
   "auth/requires-recent-login": "Please sign out and back in, then try again.",
 };
-
-/** A titled sheet with the title set in the margin from lg up. */
-function Card({ title, description, children }) {
-  return (
-    <section className="sheet p-6 grid lg:grid-cols-[11rem_minmax(0,1fr)] gap-x-8 gap-y-4">
-      <div>
-        <h2 className="font-display text-lg font-semibold text-foreground leading-tight">{title}</h2>
-        {description && <p className="text-xs text-graphite mt-1.5 leading-relaxed">{description}</p>}
-      </div>
-      <div>{children}</div>
-    </section>
-  );
-}
 
 function Pill({ children, tone }) {
   return (
@@ -146,7 +136,7 @@ export default function UserProfilePage() {
       <Rise delay={0.05} className="flex flex-col gap-4">
         <UsageMeter />
 
-        <Card title="Account">
+        <ProfileSection title="Account">
           <dl className="grid grid-cols-[7rem_1fr] gap-y-3 text-sm items-baseline">
             <dt className="eyebrow">Email</dt>
             <dd className="text-xs break-all flex items-center gap-2 flex-wrap">
@@ -169,9 +159,9 @@ export default function UserProfilePage() {
             <dt className="eyebrow">Member since</dt>
             <dd className="font-mono text-xs text-foreground">{joined}</dd>
           </dl>
-        </Card>
+        </ProfileSection>
 
-        <Card title="Display name" description="Shown in the admin panel. Your email address is never changed here.">
+        <ProfileSection title="Display name" description="Shown in the admin panel. Your email address is never changed here.">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="profile-name" className="eyebrow">Display name</Label>
@@ -189,9 +179,9 @@ export default function UserProfilePage() {
               {savingName ? "Saving…" : "Save"}
             </Button>
           </div>
-        </Card>
+        </ProfileSection>
 
-        <Card title="Change password" description="You'll need your current password to set a new one.">
+        <ProfileSection title="Change password" description="You'll need your current password to set a new one.">
           {passwordError && (
             <Alert variant="destructive" className="mb-4">
               <AlertDescription>{passwordError}</AlertDescription>
@@ -234,7 +224,9 @@ export default function UserProfilePage() {
               {savingPassword ? "Updating…" : "Change password"}
             </Button>
           </div>
-        </Card>
+        </ProfileSection>
+
+        {feature("account-data") && <AccountData />}
       </Rise>
     </div>
   );
