@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
@@ -65,5 +65,33 @@ describe("UsageMeter", () => {
     getUsage.mockRejectedValue(new Error("Cannot reach the API"));
     renderMeter();
     expect(await screen.findByText(/Could not load usage — Cannot reach the API/)).toBeInTheDocument();
+  });
+});
+
+
+describe("UsageMeter — free validation (switch)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  const WITH_ALLOWANCE = { ...FREE, validations_used: 1, validations_limit: 1, validations_remaining: 0 };
+
+  it("keeps saying Pro only while the switch is off", async () => {
+    vi.stubEnv("VITE_FEATURES", "");
+    getUsage.mockResolvedValue(WITH_ALLOWANCE);
+    renderMeter();
+    expect(await screen.findByText("Pro only")).toBeInTheDocument();
+  });
+
+  it("counts the free validations when it is on", async () => {
+    vi.stubEnv("VITE_FEATURES", "free-validation");
+    getUsage.mockResolvedValue(WITH_ALLOWANCE);
+    renderMeter();
+    expect(await screen.findByText(/free left/)).toHaveTextContent("0 of 1 free left");
+    expect(screen.queryByText("Pro only")).toBeNull();
+  });
+
+  it("keeps Pro only when the API allowance is 0", async () => {
+    vi.stubEnv("VITE_FEATURES", "free-validation");
+    getUsage.mockResolvedValue({ ...FREE, validations_used: 0, validations_limit: 0, validations_remaining: 0 });
+    renderMeter();
+    expect(await screen.findByText("Pro only")).toBeInTheDocument();
   });
 });
