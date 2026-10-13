@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConfigPanel, { DEFAULTS } from "./ConfigPanel";
+import { todayISO, presetRange } from "../utils/dates";
 
 function Harness({ initial = DEFAULTS, onRun = () => {}, loading = false }) {
   const [params, setParams] = useState(initial);
@@ -57,5 +58,26 @@ describe("ConfigPanel", () => {
     render(<Harness initial={{ ...DEFAULTS, ticker: "MSFT", strategy: "bollinger" }} />);
     await userEvent.click(screen.getByRole("button", { name: "Reset" }));
     expect(state()).toEqual(DEFAULTS);
+  });
+
+  // Tester bug #2 (12 Oct): the pickers follow the browser's locale, so the
+  // range is repeated in words that cannot be misread.
+  it("spells the range out beside the pickers", () => {
+    render(<Harness initial={{ ...DEFAULTS, start: "2024-01-01", end: "2024-01-06" }} />);
+    expect(screen.getByTestId("range-words")).toHaveTextContent("1 Jan 2024 → 6 Jan 2024 · 5 days · ~3 trading days");
+  });
+
+  it("a preset sets the last N years ending today and shows as pressed", async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole("button", { name: "Last 5 years" }));
+    expect(state()).toMatchObject(presetRange(5, todayISO()));
+    expect(screen.getByRole("button", { name: "Last 5 years" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Last 1 year" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("blocks a backwards range before it reaches the server", () => {
+    render(<Harness initial={{ ...DEFAULTS, start: "2024-06-01", end: "2024-01-06" }} />);
+    expect(screen.getByRole("alert")).toHaveTextContent("Start date must be before the end date.");
+    expect(screen.getByRole("button", { name: /^Run backtest/ })).toBeDisabled();
   });
 });

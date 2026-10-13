@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { PRESETS, presetRange, matchingPreset, describeRange } from "../utils/dates";
 
 // A curated list rather than a symbol-search API: it needs no key, no network
 // call, and no rate limit, and these cover the overwhelming majority of what
@@ -491,7 +492,12 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
     params.weighting === "inverse_vol" &&
     params.max_weight * params.tickers.length < 1;
 
-  const blocked = macdInverted || targetTooTight || capTooSmall;
+  // The range spelled out in words beside the pickers, which show dates in the
+  // browser's locale (06/01 is January to some readers and June to others).
+  const range = describeRange(params.start, params.end);
+  const activePreset = matchingPreset(params.start, params.end);
+
+  const blocked = Boolean(range.problem) || macdInverted || targetTooTight || capTooSmall;
 
   // What a collapsed section reports about itself. Counted against DEFAULTS so
   // the badge means "you changed this", not "this field exists".
@@ -515,7 +521,9 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
   // The first error that blocks the run, in the order the fields appear.
   // Repeating it beside the button matters because the offending field can be
   // inside a section the user has since collapsed.
-  const blocker = macdInverted
+  const blocker = range.problem
+    ? range.problem
+    : macdInverted
     ? "Fast EMA must be shorter than the slow EMA."
     : targetTooTight
       ? "Take profit must be further from entry than the stop loss."
@@ -588,6 +596,34 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
               onChange={(e) => handleChange("end", e.target.value)}
             />
           </Field>
+        </div>
+
+        <div className="-mt-2 flex flex-col gap-2">
+          <div role="group" aria-label="Date range presets" className="flex gap-1">
+            {PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setParams((prev) => ({ ...prev, ...presetRange(p.years) }))}
+                aria-pressed={activePreset === p.id}
+                aria-label={`Last ${p.years} year${p.years === 1 ? "" : "s"}`}
+                className={cn(
+                  "flex-1 text-2xs font-mono py-1 rounded-sm border transition-colors",
+                  activePreset === p.id
+                    ? "bg-card text-foreground border-foreground/30 shadow-sm"
+                    : "border-border text-graphite hover:text-foreground",
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          {range.words && (
+            <p data-testid="range-words" className="text-xs text-graphite leading-relaxed">
+              <span className="text-foreground">{range.words}</span>
+              {range.span && <span className="text-faint"> · {range.span}</span>}
+            </p>
+          )}
         </div>
 
         <Section title="Advanced" badge={advancedBadge}>
