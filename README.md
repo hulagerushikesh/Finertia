@@ -491,7 +491,13 @@ Fields are also pinned at creation. Registration is a browser write, so without 
 cd firestore-tests && npm install && npm test
 ```
 
-20 tests against the Firestore emulator, covering both directions: that registration, profile reads, and display-name edits still work, and that privilege escalation, cross-account access, and run forgery do not. `emulators:exec` starts and stops the emulator itself, so the only prerequisite is Java.
+23 tests against the Firestore emulator, covering both directions: that registration, profile reads, and display-name edits still work, and that privilege escalation, cross-account access, run forgery, and tampering with rate-limit counters do not. `emulators:exec` starts and stops the emulator itself, so the only prerequisite is Java.
+
+### Indexes and admin queries
+
+`firestore.indexes.json` is the source of truth for indexes (`firebase deploy --only firestore:indexes`). It holds the composite indexes the run listings need — `runs` by `uid`, by `ticker`, and by both, each newest first — and turns indexing **off** for fields nothing queries: the price arrays (`dates`, `open` … `volume`; about 1,500 index entries per cached year otherwise) and the rate-limit counters.
+
+The admin panel's reads are in `backend/admin_queries.py` and are bounded: counts and averages are Firestore aggregation queries (`count()`, `avg()`) rather than streaming every user and run, lists page in the database, user search is an email prefix, and "top tickers" covers the last 500 runs. One trap pinned by a test: in a single aggregation request Firestore only considers documents that have every averaged field, so `count()` runs on its own or runs without metrics vanish from the total. `tests/test_admin_queries_firestore.py` runs these against the emulator in CI.
 
 ### CI and deploys
 
