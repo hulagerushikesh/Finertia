@@ -58,6 +58,7 @@ from validation import walk_forward, permutation_test
 from portfolio_validation import leg_positions, portfolio_walk_forward, portfolio_permutation_test
 from firebase_admin_init import verify_token, get_user_profile, get_db, emulator_mode
 from admin_queries import platform_stats, list_users, list_runs
+from monitoring import init_sentry, set_user as sentry_set_user, tag_request
 
 # ---------------------------------------------------------------------------
 # Startup configuration checks — fail loudly rather than at first request
@@ -91,6 +92,8 @@ if _missing:
 # ---------------------------------------------------------------------------
 
 log = configure_logging(os.environ.get("LOG_LEVEL", "INFO"))
+# Before the app exists, so the SDK's FastAPI integration sees it created.
+init_sentry(emulator=_EMULATOR)
 
 # Optional integrations, announced at startup so a misconfigured deployment is
 # visible in the first log line rather than discovered when something breaks.
@@ -248,6 +251,7 @@ async def observability_middleware(request: Request, call_next):
     """
     request_id = request.headers.get("x-request-id") or uuid.uuid4().hex[:12]
     request.state.request_id = request_id
+    tag_request(request_id)
     started = time.perf_counter()
     path = request.url.path
 
@@ -350,6 +354,7 @@ async def inject_user(authorization: Optional[str] = Header(None)) -> dict:
         )
 
     user["role"] = profile.get("role", "user")
+    sentry_set_user(user["uid"])
     # Carried through so quota and entitlement checks do not each re-read the
     # same document. inject_user is the only place that reads it.
     user["profile"] = profile
@@ -1321,3 +1326,18 @@ async def admin_runs(
     """Return paginated run list with optional filters — admin only."""
     await inject_admin(authorization)
     return list_runs(get_db(), limit, offset, uid, ticker)
+
+
+class SentryTestError(RuntimeError):
+    """Raised on purpose by /api/admin/sentry-test."""
+
+
+@app.post("/api/admin/sentry-test")
+async def admin_sentry_test(authorization: Optional[str] = Header(None)):
+    """Raise an error on purpose to prove reporting works end to end — admin only.
+
+    Comes back as an ordinary 500 with a request id; the matching issue should
+    appear in Sentry within a minute, tagged with the same id.
+    """
+    await inject_admin(authorization)
+    raise SentryTestError("Deliberate test error from /api/admin/sentry-test")

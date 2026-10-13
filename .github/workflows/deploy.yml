@@ -68,6 +68,11 @@ jobs:
       # unset repo variable would otherwise blank them.
       - name: Deploy
         working-directory: backend
+        env:
+          # Error reporting (backend/monitoring.py). A DSN can only send events
+          # to the project, not read them, so it is config rather than a secret.
+          # --update-env-vars changes this one variable and leaves the rest.
+          SENTRY_DSN: https://3e79d3553ba15e22d80c2b964eb2bc47@o4512247279976448.ingest.us.sentry.io/4512247309402112
         run: |
           gcloud run deploy finertia-api \
             --source . \
@@ -76,6 +81,7 @@ jobs:
             --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 \
             --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
             --set-secrets "FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest" \
+            --update-env-vars "SENTRY_DSN=$SENTRY_DSN" \
             --allow-unauthenticated \
             --quiet
 

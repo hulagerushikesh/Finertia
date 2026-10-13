@@ -199,6 +199,7 @@ gcloud run deploy finertia-api \
   --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 \
   --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
   --set-secrets FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest \
+  --update-env-vars SENTRY_DSN=https://3e79d3553ba15e22d80c2b964eb2bc47@o4512247279976448.ingest.us.sentry.io/4512247309402112 \
   --allow-unauthenticated
 ```
 
@@ -492,6 +493,17 @@ cd firestore-tests && npm install && npm test
 ```
 
 23 tests against the Firestore emulator, covering both directions: that registration, profile reads, and display-name edits still work, and that privilege escalation, cross-account access, run forgery, and tampering with rate-limit counters do not. `emulators:exec` starts and stops the emulator itself, so the only prerequisite is Java.
+
+### Error reporting (Sentry)
+
+Both halves report unhandled errors to Sentry: the API (`backend/monitoring.py`, project `python-fastapi`) and the browser (`frontend/src/lib/monitoring.js`, project `finertia-web`). Errors only — no tracing, profiling or session replay — and both are off in dev, in tests, and against the Firebase emulators.
+
+What leaves is deliberately small, and tests assert it against the real SDKs:
+
+- **API**: the exception and stack (code lines, **no local variables**), the route without its query string, the request id as a tag (the same id as the log line and the `X-Request-Id` the user sees), the Cloud Run revision as the release, and the Firebase uid. No request body, no Authorization header, no IP, no email — `send_default_pii=False` and a `before_send` that keeps four harmless headers. 4xx answers (402, 429, 403) are the product working and are not reported.
+- **Browser**: the error and stack, the page path without its query string (the dashboard URL carries the user's strategy settings), the browser, the Vercel deploy, and the uid. No console breadcrumbs, no referrer. The SDK is a 30 kB chunk loaded after first paint; errors before it arrives are queued.
+
+An admin can prove the pipe end to end with `POST /api/admin/sentry-test`, which raises on purpose and returns a 500 with a request id.
 
 ### Indexes and admin queries
 
