@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import { cn } from "@/lib/utils";
+import { SUPPORT_EMAIL } from "../lib/contact";
 
 export default function PricingPage() {
   const { user } = useAuth();
@@ -141,8 +142,8 @@ export default function PricingPage() {
                     <p className="text-xs text-graphite leading-relaxed">
                       Pro isn&rsquo;t on sale yet. Testing Finertia and need validation? Ask for
                       access at{" "}
-                      <a href="mailto:support@hulage.in" className="text-pencil underline underline-offset-2">
-                        support@hulage.in
+                      <a href={`mailto:${SUPPORT_EMAIL}`} className="text-pencil underline underline-offset-2">
+                        {SUPPORT_EMAIL}
                       </a>
                       .
                     </p>

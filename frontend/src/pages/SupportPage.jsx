@@ -2,10 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { DocSection as Section, Term as Question, DocHeader } from "../components/Prose";
 import { Rise } from "../components/motion";
+import { SUPPORT_EMAIL } from "../lib/contact";
 
-// Set VITE_SUPPORT_EMAIL at build time. The fallback is a placeholder on
-// purpose — a wrong address that looks plausible is worse than an obvious one.
-const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || "support@example.com";
 
 /** An API error, quoted verbatim, with what actually causes it. */
 function Problem({ message, children }) {
