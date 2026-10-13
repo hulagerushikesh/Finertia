@@ -3,6 +3,75 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-10-13 — Licensed price data: spike result (M12 sprint 1, item 3)
+
+**Status: recommendation, waiting on the author's budget ceiling.** No contract
+signed, no provider switched. Prices below are from vendors' public pages on
+13 Oct 2026 and are **list prices to be confirmed in writing**. Several pages
+contradicted themselves.
+
+**Why this matters:** yfinance is Yahoo's data, scraped. It is not licensed
+for commercial use. A paid Finertia that runs on it is a liability (ROADMAP,
+"What we are not doing").
+
+**Two facts that shape the choice:**
+
+1. **Usage is all US so far.** 42 saved runs in production, 0 on an NSE/BSE
+   symbol (AAPL 38, AMZN 3, MSFT 1; aggregate count of `runs.ticker`, 13 Oct).
+   The landing page and the ticker list advertise NSE, so that may change.
+   But nobody has paid for NSE yet.
+2. **Finertia never shows a raw price.** Users see derived series: strategy
+   equity, buy-and-hold equity, drawdowns and metrics. Exchanges and vendors
+   license "display" and "non-display / derived" use separately. Which bucket
+   a backtest result falls in is a question for each vendor, in writing, and
+   for counsel (item 4).
+
+**What the market looks like:**
+
+| | US EOD with display rights | NSE EOD with display rights | Notes |
+|---|---|---|---|
+| **Tiingo** | "EOD redistribution" listed at ~$250/mo (startup) / $500 (enterprise) | No | Cheapest display licence found. Commercial plans without redistribution ($50/mo) are internal use only |
+| **Twelve Data** | Venture $499/mo ("external display") | Enterprise $1,099/mo ("external distribution", "custom exchange licences"); India coverage only on higher tiers | Individual plans are non-commercial |
+| **Massive (ex-Polygon)** | Business, from ~$699/mo (ambiguous on the page) | No | Display needs a business plan |
+| **EODHD** | Internal use $399/mo (**no external display**); display = Custom (from $399) or Enterprise $2,499 | NSE India coverage **unconfirmed** | Says prices are aggregated from venues, not exchange feeds |
+| **NSE Data & Analytics** (direct) or an authorised DotEx vendor (Global Datafeeds, TrueData) | — | EOD tariff on NSE's sheet: ₹1,10,000 (CM + F&O segment). Fees are per display medium (website and app count separately). Vendors' terms: public display needs **written NSE consent** on top of the vendor contract | Any vendor's NSE data still needs NSE's own licence for client display |
+
+**Recommendation (PM + Backend):**
+
+- **Price the product for US first.** Get a written quote from Tiingo for EOD
+  redistribution covering derived display in a web app (target ≤ $250/mo).
+  Ask Twelve Data Venture as the second quote.
+- **NSE: quote, don't buy yet.** Ask NSE Data & Analytics (direct) and Global
+  Datafeeds for the all-in yearly cost of EOD display in one web app, plus
+  whether derived-only display counts as non-display. Decide after the round,
+  if Indian users show up.
+- **Break-even arithmetic, to carry into phase 4:**
+  - US data at ~$250/mo is about ₹21k/mo, which is **about 21 Pro users** at ₹1,000.
+  - NSE at ~₹1.1 lakh+/yr is ~₹9k/mo, about 10 more.
+  - So charging needs roughly **20–30 paying users before infra costs**.
+  - The round's "would pay" count should be read against that number.
+- Until a contract is signed, nothing changes: yfinance stays, Stripe stays off.
+
+**What shipped with the spike:** `backend/price_providers.py`. The price
+source is now a class chosen by `PRICE_PROVIDER` (default and only value
+today: `yfinance`). An unknown name fails loudly rather than falling back to
+Yahoo. Cached price docs record their provider. A switch refetches each
+ticker on first use instead of splicing two vendors' adjustments. When the new
+vendor is down, it never serves the old vendor's bars as "stale". Docs
+written before the field are treated as yfinance's, so the deploy does not
+refetch the cache. Adding a vendor is one class plus its symbol mapping
+(Yahoo-style `RELIANCE.NS` stays the user-facing symbol).
+
+Sources:
+- [Tiingo EOD](https://www.tiingo.com/products/end-of-day-stock-price-data)
+- [Twelve Data business pricing](https://twelvedata.com/pricing-business)
+- [Massive stocks](https://massive.com/stocks)
+- [EODHD commercial pricing](https://eodhd.com/commercial-pricing)
+- [NSE EOD subscription](https://www.nseindia.com/static/market-data/eod-historical-data-subscription)
+- [NSE domestic pricing, Mar 2026](https://nsearchives.nseindia.com/web/mediaattachment/2026-03/NSE_Pricing_file_-_Domestic_clients_20260309171343.pdf)
+- [NSE data usage policy](https://www.nseindia.com/static/market-data/nse-data-policy)
+- [TrueData APIs](https://truedata.in/market-data-apis)
+
 ## 2026-10-13 — Build Finertia as a product, not a portfolio piece
 
 **Decision (author):** stop treating Finertia as finished portfolio software.

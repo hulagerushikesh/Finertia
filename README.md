@@ -423,6 +423,14 @@ cd backend && .venv/bin/python scripts/prewarm_prices.py
 Set `PRICE_CACHE=off` to run without the Firestore tier (local dev without a
 service account already falls back automatically).
 
+The source itself is pluggable (`backend/price_providers.py`). `PRICE_PROVIDER`
+picks it; `yfinance` is the default and, today, the only one. Yahoo's data is
+not licensed for commercial use, which is why the seam exists (DECISIONS,
+13 Oct). Each cached doc records its provider. After a switch, every ticker
+is fetched again on first use rather than mixed with the old vendor's bars,
+and an unknown provider name stops the app instead of quietly falling back
+to Yahoo.
+
 ### Rate limiting
 
 Two layers, both sliding-window and both hand-written (`backend/ratelimit.py`) so they are unit-testable without a running server:

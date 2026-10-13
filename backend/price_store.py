@@ -33,12 +33,17 @@ def doc_id(ticker: str, year: int) -> str:
 
 
 def frame_to_doc(ticker: str, year: int, frame: pd.DataFrame, *, batch: str,
-                 complete: bool, fetched_at: str) -> dict:
-    """Serialise one year's bars. Dates as ISO strings, columns as plain lists."""
+                 complete: bool, fetched_at: str, provider: str = "yfinance") -> dict:
+    """Serialise one year's bars. Dates as ISO strings, columns as plain lists.
+
+    `provider` names the vendor the bars came from (price_providers.py). Docs
+    written before it existed have no field and are yfinance's.
+    """
     return {
         "ticker": ticker.upper(),
         "year": year,
         "batch": batch,
+        "provider": provider,
         "complete": complete,
         "fetched_at": fetched_at,
         "dates": [d.strftime("%Y-%m-%d") for d in frame.index],
