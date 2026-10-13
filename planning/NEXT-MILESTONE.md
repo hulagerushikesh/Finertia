@@ -59,7 +59,7 @@ cannot, because the 31 Oct decision needs the data costs.
 
 1. **Phase-4 decision** (carried from M10), written by 1 Nov with the round's numbers, by the 8 Oct rules. It decides how much of the rest happens.
 2. **One free validation per month** on the free plan (backend built 13 Oct behind `FREE_VALIDATIONS_PER_MONTH`, default 0, so the round is untouched; switching it on and the UI are what is left): the USP in front of free users, with conversion measured (validations run → upgrade clicks).
-3. **Onboarding** from what the testers got stuck on: a first-run hint, 3 sample strategies, empty states on History and Compare.
+3. **Onboarding** from what the testers got stuck on: a first-run hint, 3 sample strategies, empty states on History and Compare. (The 3 examples exist as data since 13 Oct, `frontend/src/data/sampleStrategies.json`, run through the API by a backend test; nothing shows them yet.)
 4. **Account deletion and export UI** in Profile, on the sprint 1 backend.
 5. ~~Licensed data integration~~ → its own sprint after the build work (DECISIONS 13 Oct).
 6. ~~Terms and Privacy published~~ → after the legal consult, which follows the build work.
