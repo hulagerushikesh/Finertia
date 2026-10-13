@@ -115,12 +115,13 @@ Admin/User) in a right-justified row — now fixed-width slots so the verbs line
 up; and admin green text was invisible on the light theme (`text-accent`, a
 background tint, → `text-pencil`), shipped in #83.
 
-**Decision on #1 (unverified email).** Today anyone can use the app before
-verifying; the only consequence is a password reset can't reach an unverified
-address. Enforcing verification before runs is a real wall — it would have
-stopped this very round, since none of the friends verified. Options: (a) leave
-it, keep the banner; (b) block *saving* runs until verified but allow trying;
-(c) hard-gate all runs. Not changed yet — the author's call.
+**Decision on #1 (unverified email) — resolved 13 Oct: leave it, keep the
+banner.** Anyone can use the app before verifying; the only consequence is a
+password reset can't reach an unverified address, which the banner states.
+Enforcing verification before runs would be a real wall — it would have stopped
+this very round, since none of the friends verified. Not worth the friction
+while the goal is getting people to try it. Revisit only if it becomes an abuse
+or deliverability problem.
 
 ## Entries
 
