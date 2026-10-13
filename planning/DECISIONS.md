@@ -3,6 +3,30 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-10-13 — Build Finertia as a product, not a portfolio piece
+
+**Decision (author):** stop treating Finertia as finished portfolio software.
+Work as a full-stack product team (PM, Scrum, Backend, Frontend, DB, Cloud,
+System hats) toward a product: [ROADMAP.md](ROADMAP.md).
+
+**Why:** the first tester weekend (12–13 Oct, 4 friends) found seven defects
+in the logged-in app within minutes — the code is strong, but it was built and
+checked like a project (no frontend or E2E tests, no error monitoring, admin
+stats that scan whole collections, the USP behind a paywall nobody crosses).
+
+**What this overrides and what it does not:**
+
+- It **reverses the 15 Sep "portfolio piece" direction** — this is a direction
+  choice by the author, made before the phase-4 numbers, and is recorded as
+  such rather than dressed up as evidence.
+- It does **not** override the 8 Oct reading rules for *charging*. Stripe goes
+  live only if two or more testers give a clear "would pay", and only after
+  the legal check (SEBI, DPDP Act) and a licensed data source. Quality,
+  monitoring, SEO and data-model work are worth doing either way, so they
+  start now.
+- The tester round continues to 31 Oct as planned; its result now decides
+  *when* to charge, not *whether* to keep building.
+
 ## 2026-10-08 — How phase 4 will read the five sessions, fixed before any are run
 
 The M10 phase 4 table says "nobody would pay", "students engage", "two or more
