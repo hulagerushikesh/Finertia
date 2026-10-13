@@ -25,7 +25,10 @@ service cloud.firestore {
                     // to the free tier, and the quota counters are server-owned.
                     && !("plan" in request.resource.data)
                     && !("runsThisPeriod" in request.resource.data)
-                    && !("quotaPeriod" in request.resource.data);
+                    && !("quotaPeriod" in request.resource.data)
+                    && !("validationsThisPeriod" in request.resource.data)
+                    && !("validationPeriod" in request.resource.data)
+                    && !("totalValidations" in request.resource.data);
 
       // displayName is the only thing a user may change about themselves.
       // role, plan, isActive, totalRuns, and the quota counters are all
