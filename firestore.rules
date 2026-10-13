@@ -55,5 +55,12 @@ service cloud.firestore {
     match /prices/{priceId} {
       allow read, write: if false;
     }
+
+    // Per-user rate-limit counters, server-only like everything above. A
+    // client that could write here could reset its own limit, or exhaust
+    // someone else's.
+    match /ratelimits/{counterId} {
+      allow read, write: if false;
+    }
   }
 }
