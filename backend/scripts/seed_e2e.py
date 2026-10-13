@@ -10,7 +10,7 @@ It does three things, all against the emulators only (it refuses otherwise):
    with a users/{uid} profile like the one RegisterPage writes. The admin's
    role is set here because the security rules forbid a client from setting
    its own role — the same reason prod's admin was set in the console.
-2. Writes synthetic AAPL prices into the `prices` collection, one complete
+2. Writes synthetic prices (AAPL, MSFT and the example tickers) into the `prices` collection, one complete
    document per year from one batch, so data.py serves them as cache and no
    run ever reaches Yahoo. Deterministic (seeded), so results are stable.
 3. Is idempotent: re-running against a live emulator reuses existing users.
@@ -33,7 +33,15 @@ from price_store import COLLECTION, doc_id, frame_to_doc  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 USERS = json.loads((ROOT / "e2e/fixtures/users.json").read_text())
-TICKERS = ["AAPL", "MSFT"]
+# AAPL and MSFT for the suite's own runs, plus every ticker the onboarding
+# examples use (frontend/src/data/sampleStrategies.json), so running an
+# example end to end never reaches Yahoo either.
+_SAMPLES = json.loads((ROOT / "frontend/src/data/sampleStrategies.json").read_text())["samples"]
+TICKERS = sorted(
+    {"AAPL", "MSFT"}
+    | {s["params"]["ticker"] for s in _SAMPLES if "ticker" in s["params"]}
+    | {t for s in _SAMPLES for t in s["params"].get("tickers", [])}
+)
 FIRST_YEAR = 2015
 
 

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { SAMPLES, sampleById } from "./samples";
+import { SAMPLES, sampleById, sampleFor } from "./samples";
+import { DEFAULTS } from "../components/ConfigPanel";
 import { STRATEGIES } from "../components/ConfigPanel";
 import { encodeParams, decodeParams } from "../utils/permalink";
 
@@ -46,5 +47,13 @@ describe("sample strategies", () => {
   it("finds one by id, and nothing for an unknown id", () => {
     expect(sampleById("basket-with-stop").params.tickers).toEqual(["AAPL", "MSFT", "GOOGL"]);
     expect(sampleById("nope")).toBeNull();
+  });
+
+  it("recognises an example only while it is unchanged", () => {
+    const s = SAMPLES[1];
+    expect(sampleFor(s.params)).toBe(s);
+    expect(sampleFor({ ...s.params, bb_std: 2.5 })).toBeNull();
+    expect(sampleFor(DEFAULTS)).toBeNull();
+    expect(sampleFor(null)).toBeNull();
   });
 });
