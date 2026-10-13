@@ -78,14 +78,14 @@ export default function AdminUsersPage() {
         {search && (
           <button
             onClick={() => { setSearch(""); setSearchInput(""); setPage(0); }}
-            className="text-sm text-text-muted hover:text-text-primary"
+            className="text-sm text-graphite hover:text-foreground"
           >
             Clear
           </button>
         )}
       </div>
 
-      {error && <div className="text-danger bg-danger/10 border border-danger/20 rounded-xl px-5 py-4 mb-4 text-sm">{error}</div>}
+      {error && <div className="text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-5 py-4 mb-4 text-sm">{error}</div>}
 
       <>
           {/* overflow-x-auto, not overflow-hidden: seven columns cannot fit a
@@ -95,7 +95,7 @@ export default function AdminUsersPage() {
           <div className="panel overflow-x-auto">
             <table className="w-full text-sm min-w-[52rem]">
               <thead>
-                <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">
+                <tr className="border-b border-border text-graphite text-xs uppercase tracking-wider">
                   <th className="text-left px-5 py-3">Email</th>
                   <th className="text-left px-5 py-3">Role</th>
                   <th className="text-left px-5 py-3">Plan</th>
@@ -110,24 +110,24 @@ export default function AdminUsersPage() {
                 {loading && <SkeletonRows rows={8} widths={SKELETON_WIDTHS} />}
                 {!loading && users.map((u) => (
                   <tr key={u.uid} className="border-b border-border/50 hover:bg-border/20 transition-colors">
-                    <td className="px-5 py-3 text-text-primary text-xs font-mono">{u.email}</td>
+                    <td className="px-5 py-3 text-foreground text-xs font-mono">{u.email}</td>
                     <td className="px-5 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.role === "admin" ? "bg-accent/10 text-pencil" : "bg-border text-text-muted"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.role === "admin" ? "bg-accent/10 text-pencil" : "bg-border text-graphite"}`}>
                         {u.role}
                       </span>
                     </td>
                     <td className="px-5 py-3">
                       {/* "comp" marks Pro granted here rather than paid for. */}
-                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.plan === "pro" ? "bg-success/10 text-success" : "bg-border text-text-muted"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.plan === "pro" ? "bg-accent/10 text-pencil" : "bg-border text-graphite"}`}>
                         {u.plan === "pro" ? "pro" : "free"}
                         {u.plan === "pro" && u.planSource === "admin" && <span className="ml-1 opacity-70">· comp</span>}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-text-muted text-xs">{fmtDate(u.createdAt)}</td>
-                    <td className="px-5 py-3 text-text-muted text-xs">{fmtDate(u.lastLoginAt)}</td>
+                    <td className="px-5 py-3 text-graphite text-xs">{fmtDate(u.createdAt)}</td>
+                    <td className="px-5 py-3 text-graphite text-xs">{fmtDate(u.lastLoginAt)}</td>
                     <td className="px-5 py-3 text-right font-mono text-xs">{u.totalRuns ?? 0}</td>
                     <td className="px-5 py-3 text-center">
-                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.isActive !== false ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${u.isActive !== false ? "bg-accent/10 text-pencil" : "bg-destructive/10 text-destructive"}`}>
                         {u.isActive !== false ? "Active" : "Blocked"}
                       </span>
                     </td>
@@ -149,7 +149,7 @@ export default function AdminUsersPage() {
                               blocking ? `${u.email} blocked.` : `${u.email} unblocked.`
                             );
                           }}
-                          className="w-16 text-right text-xs text-text-muted hover:text-danger transition-colors"
+                          className="w-16 text-right text-xs text-graphite hover:text-destructive transition-colors"
                         >
                           {u.isActive !== false ? "Block" : "Unblock"}
                         </button>
@@ -188,7 +188,7 @@ export default function AdminUsersPage() {
                   </tr>
                 ))}
                 {!loading && users.length === 0 && (
-                  <tr><td colSpan={8} className="text-center py-12 text-text-muted">No users found.</td></tr>
+                  <tr><td colSpan={8} className="text-center py-12 text-graphite">No users found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -196,9 +196,9 @@ export default function AdminUsersPage() {
 
           {!loading && totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="text-sm text-text-muted hover:text-text-primary disabled:opacity-30">← Previous</button>
-              <span className="text-xs text-text-muted">{page + 1} / {totalPages}</span>
-              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="text-sm text-text-muted hover:text-text-primary disabled:opacity-30">Next →</button>
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="text-sm text-graphite hover:text-foreground disabled:opacity-30">← Previous</button>
+              <span className="text-xs text-graphite">{page + 1} / {totalPages}</span>
+              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="text-sm text-graphite hover:text-foreground disabled:opacity-30">Next →</button>
             </div>
           )}
       </>
@@ -207,10 +207,10 @@ export default function AdminUsersPage() {
       {confirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setConfirmModal(null)}>
           <div className="panel rounded-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h2 className="font-semibold text-text-primary mb-2">Confirm Action</h2>
-            <p className="text-sm text-text-muted mb-5">{confirmModal.label}</p>
+            <h2 className="font-semibold text-foreground mb-2">Confirm Action</h2>
+            <p className="text-sm text-graphite mb-5">{confirmModal.label}</p>
             <div className="flex gap-3 justify-end">
-              <button onClick={() => setConfirmModal(null)} className="text-sm text-text-muted hover:text-text-primary px-4 py-2">Cancel</button>
+              <button onClick={() => setConfirmModal(null)} className="text-sm text-graphite hover:text-foreground px-4 py-2">Cancel</button>
               <button onClick={handleConfirm} className="btn-primary text-sm px-4 py-2">Confirm</button>
             </div>
           </div>
