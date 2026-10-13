@@ -121,7 +121,7 @@ jobs:
         # files without an emulator.
         run: >
           e2e/node_modules/.bin/firebase emulators:exec --only firestore --project demo-finertia
-          "cd backend && python -m pytest -q tests/test_shared_ratelimit_firestore.py tests/test_admin_queries_firestore.py tests/test_account_firestore.py"
+          "cd backend && python -m pytest -q tests/test_shared_ratelimit_firestore.py tests/test_admin_queries_firestore.py tests/test_account_firestore.py tests/test_validation_allowance_firestore.py"
 
       - name: Run end-to-end tests
         working-directory: e2e

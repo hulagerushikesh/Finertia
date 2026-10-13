@@ -28,13 +28,14 @@ import billing
 from logging_config import configure_logging, configure_sentry
 from plans import (
     check_quota,
+    check_validation_quota,
     current_period,
-    may_validate,
     max_portfolio_size,
     PLAN_NAMES,
     plan_for,
     public_plans,
 )
+import validation_allowance
 from ratelimit import FirestoreCounterStore, RateLimiter, SharedRateLimiter
 from risk import apply_stops, size_positions
 from portfolio import (
@@ -233,6 +234,78 @@ def _record_run(db, uid: str, profile: dict) -> None:
     db.collection("users").document(uid).update(updates)
 
 
+# The free plan's validations a month. A deployment setting, not a plan
+# constant: it stays 0 (the Pro wall, as before) while a tester round is
+# running, so every tester sees the same product, and is switched on with an
+# env var afterwards.
+FREE_VALIDATIONS_PER_MONTH = max(0, _int_env("FREE_VALIDATIONS_PER_MONTH", 0))
+
+_PRO_ONLY_DETAIL = (
+    "Walk-forward validation and the permutation test are Pro features. "
+    "Each run sweeps a parameter grid and then reshuffles the signals "
+    "hundreds of times, so they cost far more than a single backtest."
+)
+
+
+def _validation_used_up(limit: int) -> HTTPException:
+    noun = "validation" if limit == 1 else f"{limit} validations"
+    return HTTPException(
+        status_code=402,
+        detail=(
+            f"You have used your free {noun} for this month. Pro validates "
+            "without a limit, and the free allowance resets at the start of next month."
+        ),
+    )
+
+
+def _check_validation_allowed(user: dict) -> None:
+    """Refuse a validation the plan does not allow, before any other check
+    that might be worth telling the user about first. It takes no slot."""
+    quota = check_validation_quota(user["profile"], FREE_VALIDATIONS_PER_MONTH)
+    if quota["allowed"]:
+        return
+    if quota["limit"] == 0:
+        raise HTTPException(status_code=402, detail=_PRO_ONLY_DETAIL)
+    raise _validation_used_up(quota["limit"])
+
+
+def _take_validation_slot(user: dict) -> dict | None:
+    """Take one of the free plan's validations, atomically. None on Pro.
+
+    Called last, after every check that can refuse the request, so a refusal
+    never costs the user their validation. The profile read in
+    `_check_validation_allowed` can be stale under concurrent requests; the
+    transaction in `validation_allowance.reserve` is the real check.
+    """
+    quota = check_validation_quota(user["profile"], FREE_VALIDATIONS_PER_MONTH)
+    if quota["limit"] is None:
+        return None
+    taken = validation_allowance.reserve(get_db(), user["uid"], quota["limit"])
+    if taken is None:
+        raise _validation_used_up(quota["limit"])
+    log.info("free validation taken", extra={"uid": user["uid"], "period": taken["period"]})
+    return {**taken, "limit": quota["limit"]}
+
+
+def _give_back_validation_slot(user: dict, slot: dict | None) -> None:
+    """Hand back a free validation whose run produced no result. A failure
+    here is logged, not raised: the user should see the original error."""
+    if slot is None:
+        return
+    try:
+        validation_allowance.release(get_db(), user["uid"], slot["period"])
+    except Exception:  # noqa: BLE001
+        log.warning("could not give back a free validation", exc_info=True,
+                    extra={"uid": user["uid"], "period": slot["period"]})
+
+
+def _with_allowance(result: dict, slot: dict | None) -> dict:
+    """Tell a free user how many validations are left this month."""
+    if slot is not None:
+        result["free_validations_remaining"] = max(0, slot["limit"] - slot["used"])
+    return result
+
+
 def _enforce(limiter: RateLimiter, key: str, what: str) -> None:
     """Raise 429 with a Retry-After header if `key` is over budget."""
     verdict = limiter.check(key)
@@ -412,6 +485,7 @@ async def my_usage(authorization: Optional[str] = Header(None)):
     profile = user["profile"]
     plan = plan_for(profile)
     quota = check_quota(profile)
+    validations = check_validation_quota(profile, FREE_VALIDATIONS_PER_MONTH)
 
     return {
         "plan": plan["name"],
@@ -421,6 +495,11 @@ async def my_usage(authorization: Optional[str] = Header(None)):
         "remaining": quota["remaining"],
         "period": current_period(),
         "validation": plan["validation"],
+        # The free plan's monthly validations; limit and remaining are None
+        # on Pro, and limit is 0 while the free allowance is switched off.
+        "validations_used": validations["used"],
+        "validations_limit": validations["limit"],
+        "validations_remaining": validations["remaining"],
         "max_portfolio_size": plan["max_portfolio_size"],
         "billing_enabled": billing.is_configured(),
     }
@@ -762,17 +841,20 @@ async def validate_strategy(req: ValidateRequest, authorization: Optional[str] =
     # per grid combination and then again for every permutation trial, so one
     # call is worth hundreds of backtests in CPU terms.
     _enforce(validate_limiter, user["uid"], "validation runs")
-    if not may_validate(user["profile"]):
-        raise HTTPException(
-            status_code=402,
-            detail=(
-                "Walk-forward validation and the permutation test are Pro features. "
-                "Each run sweeps a parameter grid and then reshuffles the signals "
-                "hundreds of times, so they cost far more than a single backtest."
-            ),
-        )
+    _check_validation_allowed(user)
     _enforce_quota(user)
 
+    slot = _take_validation_slot(user)
+    try:
+        result = _validate_single(req)
+    except BaseException:
+        _give_back_validation_slot(user, slot)
+        raise
+    return _with_allowance(result, slot)
+
+
+def _validate_single(req) -> dict:
+    """Walk-forward and the permutation test for one ticker; the work behind `/api/validate`."""
     start_time = time.time()
 
     try:
@@ -837,6 +919,7 @@ async def validate_strategy(req: ValidateRequest, authorization: Optional[str] =
         "data_source": data_source,
         "duration_ms": int((time.time() - start_time) * 1000),
     }
+
 
 
 
@@ -905,15 +988,7 @@ async def validate_portfolio(req: PortfolioValidateRequest, authorization: Optio
     """
     user = await inject_user(authorization)
     _enforce(validate_limiter, user["uid"], "validation runs")
-    if not may_validate(user["profile"]):
-        raise HTTPException(
-            status_code=402,
-            detail=(
-                "Walk-forward validation and the permutation test are Pro features. "
-                "Each run sweeps a parameter grid and then reshuffles the signals "
-                "hundreds of times, so they cost far more than a single backtest."
-            ),
-        )
+    _check_validation_allowed(user)
     allowed_size = max_portfolio_size(user["profile"])
     if len(req.tickers) > allowed_size:
         raise HTTPException(
@@ -925,6 +1000,17 @@ async def validate_portfolio(req: PortfolioValidateRequest, authorization: Optio
         )
     _enforce_quota(user)
 
+    slot = _take_validation_slot(user)
+    try:
+        result = _validate_book(req)
+    except BaseException:
+        _give_back_validation_slot(user, slot)
+        raise
+    return _with_allowance(result, slot)
+
+
+def _validate_book(req) -> dict:
+    """The same checks for a basket; the work behind `/api/portfolio/validate`."""
     start_time = time.time()
     aligned, _, data_source = _fetch_aligned(req)
     weights = _portfolio_weights(req, aligned)
@@ -968,6 +1054,7 @@ async def validate_portfolio(req: PortfolioValidateRequest, authorization: Optio
         "data_source": data_source,
         "duration_ms": int((time.time() - start_time) * 1000),
     }
+
 
 
 @app.post("/api/portfolio")

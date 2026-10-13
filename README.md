@@ -468,10 +468,12 @@ Optional. With `SENTRY_DSN` set, unhandled exceptions are reported; without it t
 | | Free | Pro |
 |---|---|---|
 | Backtests / month | 50 | Unlimited |
-| Walk-forward + permutation tests | — | ✓ |
+| Walk-forward + permutation tests | `FREE_VALIDATIONS_PER_MONTH` (default 0) | ✓ |
 | Portfolio holdings | 3 | 10 |
 
 Quotas count per calendar month in UTC — not local time, or a user crossing a date line could reset their own. A counter stamped with a previous month reads as zero rather than being reset by a write, so nothing has to run at midnight on the first. Exceeding a quota returns **402**, distinct from the rate limiter's 429, so the client can tell "slow down" apart from "upgrade".
+
+The free plan's validations are a deployment setting, `FREE_VALIDATIONS_PER_MONTH`, so they can stay at 0 (the Pro wall) while a tester round runs and be switched on with an env var afterwards. A validation costs hundreds of backtests, so the slot is taken in a Firestore transaction before the work starts (`backend/validation_allowance.py`): of several requests racing for the last one, only one gets it. It is handed back if the run produces no result, a bad ticker or a crash, so a failure does not cost the user their month's validation. The counters (`validationsThisPeriod`, `validationPeriod`, `totalValidations`) are server-owned and pinned by the Firestore rules. `/api/me/usage` reports `validations_used`, `validations_limit` and `validations_remaining`; a free validation's response carries `free_validations_remaining`.
 
 Billing is entirely optional. With no `STRIPE_SECRET_KEY` the app runs unchanged: the pricing page renders, the upgrade button says billing is not enabled, and every account stays free.
 
