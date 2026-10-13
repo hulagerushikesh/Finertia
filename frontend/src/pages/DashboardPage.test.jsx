@@ -26,6 +26,10 @@ vi.mock("../components/MonthlyHeatmap", () => NoChart);
 vi.mock("../components/RollingSharpeChart", () => NoChart);
 vi.mock("../components/AnnualReturnsChart", () => NoChart);
 
+// AuthContext imports the Firebase app, which needs an API key CI does not
+// have. Only the context object is used here, never the provider.
+vi.mock("../firebase", () => ({ auth: {}, db: {} }));
+
 import DashboardPage from "./DashboardPage";
 import { AuthContext } from "../context/AuthContext";
 import { DEFAULTS } from "../components/ConfigPanel";
