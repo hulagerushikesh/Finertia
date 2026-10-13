@@ -1,0 +1,39 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "runs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "runs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ticker", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "runs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "ticker", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": [
+    { "collectionGroup": "prices", "fieldPath": "dates", "indexes": [] },
+    { "collectionGroup": "prices", "fieldPath": "open", "indexes": [] },
+    { "collectionGroup": "prices", "fieldPath": "high", "indexes": [] },
+    { "collectionGroup": "prices", "fieldPath": "low", "indexes": [] },
+    { "collectionGroup": "prices", "fieldPath": "close", "indexes": [] },
+    { "collectionGroup": "prices", "fieldPath": "volume", "indexes": [] },
+    { "collectionGroup": "ratelimits", "fieldPath": "n", "indexes": [] },
+    { "collectionGroup": "ratelimits", "fieldPath": "expires_at", "indexes": [] }
+  ]
+}
