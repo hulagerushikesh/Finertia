@@ -18,6 +18,8 @@ import CostSensitivity from "../components/CostSensitivity";
 import AnnualReturnsChart from "../components/AnnualReturnsChart";
 import PortfolioLegs from "../components/PortfolioLegs";
 import Spinner from "../components/Spinner";
+import SampleStrategies from "../components/SampleStrategies";
+import { sampleFor } from "../lib/samples";
 import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
 import { runBacktest, validateStrategy, runPortfolio, validatePortfolio, getUsage } from "../api";
@@ -207,6 +209,13 @@ export default function DashboardPage() {
     }
   }
 
+  // Fills the panel only; the user presses Run, so choosing an example never
+  // spends a run on its own.
+  function handlePickSample(sample) {
+    setParams(sample.params);
+    showToast(`Loaded "${sample.title}". Press Run when you're ready.`, "info");
+  }
+
   function handleTab(next) {
     if (next === "validation" && !validation && !validating) {
       handleValidate();
@@ -280,6 +289,12 @@ export default function DashboardPage() {
                     <Link to="/demo">Look at a finished one</Link>
                   </Button>
                 </div>
+                {feature("onboarding") && (
+                  <div className="w-full mt-4">
+                    <p className="eyebrow mb-3">Or start from an example</p>
+                    <SampleStrategies onPick={handlePickSample} />
+                  </div>
+                )}
               </m.div>
             )}
 
@@ -317,6 +332,12 @@ export default function DashboardPage() {
                 transition={{ duration: 0.22, ease: EASE_OUT }}
                 className="flex flex-col gap-5"
               >
+                {feature("onboarding") && sampleFor(ranParams) && (
+                  <p className="sheet border-l-2 border-l-pencil px-4 py-3 text-sm text-graphite leading-relaxed" data-testid="example-look-at">
+                    <span className="font-semibold text-foreground">What to look at: </span>
+                    {sampleFor(ranParams).look_at}
+                  </p>
+                )}
                 {/* Header row: the run, named the way a report names its subject. */}
                 <div className="flex items-end justify-between gap-4 flex-wrap">
                   <div className="min-w-0">

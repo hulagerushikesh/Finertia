@@ -5,6 +5,8 @@ import { getHistory, compareRuns } from "../api";
 import { SkeletonRows } from "../components/SkeletonRow";
 import { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
 import ComparisonPanel from "../components/ComparisonPanel";
+import SampleStrategies from "../components/SampleStrategies";
+import { feature } from "../lib/features";
 import Spinner from "../components/Spinner";
 import { Pager } from "../components/TradesTable";
 import { Rise, EASE_OUT } from "../components/motion";
@@ -69,6 +71,7 @@ export default function HistoryPage() {
   }, [page]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const emptyOnboarding = feature("onboarding") && !loading && !error && runs.length === 0;
 
   function togglePick(runId) {
     setPicked((prev) => {
@@ -131,6 +134,12 @@ export default function HistoryPage() {
         {!comparison && runs.length > 1 && (
           <p className="text-xs text-graphite">Tick two or more runs to overlay their equity curves</p>
         )}
+        {/* Compare needs two runs; with one, say how to get the second. */}
+        {feature("onboarding") && !comparison && total === 1 && (
+          <p className="text-xs text-graphite max-w-xs" data-testid="compare-hint">
+            Compare needs two runs. Try another strategy on the same ticker, then tick both here.
+          </p>
+        )}
       </Rise>
 
       {error && (
@@ -151,6 +160,18 @@ export default function HistoryPage() {
         </div>
       ) : (
         <>
+          {/* With onboarding on, an empty history is a page of its own rather
+              than a row in a 52rem table, which a phone cuts off (bug #11). */}
+          {emptyOnboarding ? (
+            <section className="sheet border-2 border-dashed border-border shadow-none p-6 sm:p-8">
+              <p className="font-display text-xl font-semibold text-foreground">No runs yet.</p>
+              <p className="text-sm text-graphite mt-1">
+                Run a backtest in the workspace and it will be kept here with its parameters.
+              </p>
+              <p className="eyebrow mt-6 mb-3">Not sure what to try? Start from an example</p>
+              <SampleStrategies />
+            </section>
+          ) : (
           <section className="sheet overflow-hidden">
             <div className="overflow-x-auto">
               <Table className="min-w-[52rem]">
@@ -243,6 +264,7 @@ export default function HistoryPage() {
               </Table>
             </div>
           </section>
+          )}
 
           {!loading && <Pager page={page} totalPages={totalPages} onPage={setPage} className="mt-4" />}
         </>

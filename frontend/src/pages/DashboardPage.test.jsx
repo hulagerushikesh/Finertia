@@ -234,3 +234,41 @@ describe("DashboardPage — free validation (switch)", () => {
     expect(screen.queryByTestId("free-validation-left")).toBeNull();
   });
 });
+
+
+// Sprint 2 item 3, behind the "onboarding" switch until the round closes.
+describe("DashboardPage — examples (switch)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("offers no examples while the switch is off", () => {
+    vi.stubEnv("VITE_FEATURES", "");
+    renderPage();
+    expect(screen.queryByText("Or start from an example")).toBeNull();
+  });
+
+  it("loads an example into the panel without running it", async () => {
+    vi.stubEnv("VITE_FEATURES", "onboarding");
+    renderPage();
+    const cards = screen.getAllByRole("button", { name: "Load this example" });
+    expect(cards).toHaveLength(3);
+    await userEvent.click(cards[1]);
+    expect(screen.getByRole("button", { name: "Run backtest on SPY" })).toBeInTheDocument();
+    expect(api.runBacktest).not.toHaveBeenCalled();
+  });
+
+  it("says what to look at after running an unchanged example, and not otherwise", async () => {
+    vi.stubEnv("VITE_FEATURES", "onboarding");
+    api.runBacktest.mockResolvedValue({ ...demo, ticker: "SPY" });
+    renderPage();
+    await userEvent.click(screen.getAllByRole("button", { name: "Load this example" })[1]);
+    await userEvent.click(screen.getByRole("button", { name: "Run backtest on SPY" }));
+    expect(await screen.findByTestId("example-look-at")).toHaveTextContent("Validation tab");
+  });
+
+  it("shows no note after an ordinary run", async () => {
+    vi.stubEnv("VITE_FEATURES", "onboarding");
+    renderPage();
+    await runAapl();
+    expect(screen.queryByTestId("example-look-at")).toBeNull();
+  });
+});
