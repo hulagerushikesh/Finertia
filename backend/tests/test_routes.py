@@ -780,3 +780,132 @@ def test_a_suspended_account_cannot_delete_through_the_api(account_calls):
     state["profile"] = dict(SUSPENDED)
     assert _delete(client, {"confirm": "u1@example.com"}).status_code == 403
     assert calls["delete"] == []
+
+
+# ---------------------------------------------------------------------------
+# The free plan's monthly validation (FREE_VALIDATIONS_PER_MONTH)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def allowance(api, monkeypatch):
+    """Switch the free validation on and record what the routes take and give
+    back. The transaction itself is tested against the emulator in
+    test_validation_allowance_firestore.py."""
+    client, state = api
+    calls = {"reserve": [], "release": [], "grant": True}
+
+    def reserve(db, uid, limit, now=None):
+        calls["reserve"].append((uid, limit))
+        return {"period": main.current_period(), "used": 1} if calls["grant"] else None
+
+    def release(db, uid, period):
+        calls["release"].append((uid, period))
+
+    monkeypatch.setattr(main, "FREE_VALIDATIONS_PER_MONTH", 1)
+    monkeypatch.setattr(main.validation_allowance, "reserve", reserve)
+    monkeypatch.setattr(main.validation_allowance, "release", release)
+    return client, state, calls
+
+
+def test_free_validation_is_off_by_default():
+    """Off unless the deployment switches it on: testers keep the Pro wall."""
+    assert main.FREE_VALIDATIONS_PER_MONTH == 0
+
+
+def test_a_free_user_gets_one_validation_when_switched_on(allowance):
+    client, _, calls = allowance
+    r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 200
+    assert r.json()["free_validations_remaining"] == 0
+    assert calls["reserve"] == [("u1", 1)]
+    assert calls["release"] == []
+
+
+def test_a_used_free_validation_is_refused_without_taking_another(allowance):
+    client, state, calls = allowance
+    state["profile"] = {**FREE, "validationsThisPeriod": 1,
+                        "validationPeriod": main.current_period()}
+    r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 402
+    assert "free validation" in r.json()["detail"]
+    assert calls["reserve"] == []
+
+
+def test_losing_the_race_for_the_last_slot_is_a_402(allowance):
+    """The profile read said yes; the transaction, which is the real check,
+    said no — a concurrent request took it first."""
+    client, _, calls = allowance
+    calls["grant"] = False
+    r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 402
+    assert "free validation" in r.json()["detail"]
+
+
+def test_a_validation_that_fails_gives_the_slot_back(allowance, monkeypatch):
+    client, _, calls = allowance
+
+    def bad_ticker(t, s, e):
+        raise ValueError("No data for ZZZZ")
+
+    monkeypatch.setattr(main, "fetch_ohlcv", bad_ticker)
+    r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 400
+    assert calls["release"] == [("u1", main.current_period())]
+
+
+def test_a_crash_mid_validation_gives_the_slot_back(allowance, monkeypatch):
+    client, _, calls = allowance
+
+    def boom(*a, **k):
+        raise RuntimeError("engine fell over")
+
+    monkeypatch.setattr(main, "walk_forward", boom)
+    r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 500
+    assert calls["release"] == [("u1", main.current_period())]
+
+
+def test_pro_validates_without_touching_the_allowance(allowance):
+    client, state, calls = allowance
+    state["profile"] = dict(PRO)
+    r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 200
+    assert "free_validations_remaining" not in r.json()
+    assert calls["reserve"] == []
+
+
+def test_a_refusal_after_the_plan_check_costs_nothing(allowance):
+    """Out of runs: refused with the run-quota 402, and the free validation
+    is still there for next month's first run."""
+    client, state, calls = allowance
+    state["profile"] = {**FREE, "runsThisPeriod": 10_000, "quotaPeriod": main.current_period()}
+    r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 402
+    assert calls["reserve"] == []
+
+
+def test_a_free_basket_validation_takes_the_slot(allowance, monkeypatch):
+    client, _, calls = allowance
+    monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices(days=260))
+    r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
+    assert r.status_code == 200
+    assert r.json()["free_validations_remaining"] == 0
+    assert calls["reserve"] == [("u1", 1)]
+
+
+def test_an_oversized_free_basket_is_refused_before_the_slot_is_taken(allowance, monkeypatch):
+    client, _, calls = allowance
+    monkeypatch.setattr(main, "max_portfolio_size", lambda profile: 1)
+    r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
+    assert r.status_code == 402
+    assert calls["reserve"] == []
+
+
+def test_usage_reports_the_free_validations(allowance):
+    client, state, _ = allowance
+    body = client.get("/api/me/usage", headers=AUTH).json()
+    assert (body["validations_used"], body["validations_limit"], body["validations_remaining"]) == (0, 1, 1)
+    state["profile"] = dict(PRO)
+    body = client.get("/api/me/usage", headers=AUTH).json()
+    assert (body["validations_limit"], body["validations_remaining"]) == (None, None)

@@ -14,6 +14,8 @@ from plans import (
     runs_used,
     check_quota,
     may_validate,
+    validations_used,
+    check_validation_quota,
     max_portfolio_size,
     public_plans,
 )
@@ -140,3 +142,33 @@ class TestPublicPlans:
     def test_free_is_free_and_pro_is_not(self):
         prices = {p["id"]: p["price_monthly"] for p in public_plans()}
         assert prices[FREE] == 0 and prices[PRO] > 0
+
+
+class TestFreeValidationAllowance:
+    def vp(self, plan=FREE, used=0, period="2026-08"):
+        return {"plan": plan, "validationsThisPeriod": used, "validationPeriod": period}
+
+    def test_switched_off_means_the_pro_wall(self):
+        q = check_validation_quota(self.vp(), 0, at(2026, 8))
+        assert (q["allowed"], q["limit"], q["remaining"]) == (False, 0, 0)
+
+    def test_one_a_month_then_refused(self):
+        assert check_validation_quota(self.vp(used=0), 1, at(2026, 8))["allowed"]
+        q = check_validation_quota(self.vp(used=1), 1, at(2026, 8))
+        assert (q["allowed"], q["used"], q["remaining"]) == (False, 1, 0)
+
+    def test_a_new_month_gives_it_back(self):
+        assert check_validation_quota(self.vp(used=1, period="2026-07"), 1, at(2026, 8))["allowed"]
+
+    def test_a_negative_counter_is_not_extra_allowance(self):
+        assert validations_used(self.vp(used=-100), at(2026, 8)) == 0
+        q = check_validation_quota(self.vp(used=-100), 1, at(2026, 8))
+        assert q["remaining"] == 1
+
+    def test_pro_is_uncapped_whatever_the_counter_says(self):
+        q = check_validation_quota(self.vp(plan=PRO, used=50), 0, at(2026, 8))
+        assert (q["allowed"], q["limit"], q["remaining"]) == (True, None, None)
+
+    def test_a_missing_profile_is_free(self):
+        q = check_validation_quota(None, 1, at(2026, 8))
+        assert (q["allowed"], q["plan"]) == (True, FREE)
