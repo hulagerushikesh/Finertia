@@ -163,7 +163,8 @@ class BacktestRequest(BaseModel):
                 else f"volatility targeting needs {self.vol_window} bars"
             )
             raise ValueError(
-                f"Date range is too short: ~{approx_trading_days} trading days available, "
+                f"Date range {self.start} → {self.end} is too short: "
+                f"~{approx_trading_days} trading days available, "
                 f"but {driver} to warm up. Widen the date range, reduce the "
                 "indicator windows, or shorten the volatility window."
             )
