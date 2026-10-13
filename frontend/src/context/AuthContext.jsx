@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { clearWorkspace } from "../lib/workspaceStore";
 import { doc, getDoc } from "firebase/firestore/lite";
 import { auth, db } from "../firebase";
 import { setMonitoringUser } from "../lib/monitoring";
@@ -17,6 +18,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      // The kept workspace belongs to the account that ran it.
+      if (!firebaseUser) clearWorkspace();
       setUser(firebaseUser);
       setMonitoringUser(firebaseUser?.uid ?? null);
       setEmailVerified(Boolean(firebaseUser?.emailVerified));
@@ -56,6 +59,7 @@ export function AuthProvider({ children }) {
 
   async function logout() {
     await signOut(auth);
+    clearWorkspace();
     setUser(null);
     setUserProfile(null);
     setEmailVerified(false);
