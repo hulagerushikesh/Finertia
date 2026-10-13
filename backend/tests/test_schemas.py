@@ -73,6 +73,13 @@ class TestDates:
             req(start="2022-01-01", end="2022-02-01", strategy="bollinger", bb_window=100)
         assert "bollinger" in message(e) and "100 bars" in message(e)
 
+    def test_error_echoes_the_parsed_range(self):
+        # A locale that reads 06/01/2024 as 6 Jan, not 1 June, is a common
+        # confusion; showing the ISO dates back makes the mistake visible.
+        with pytest.raises(ValidationError) as e:
+            req(start="2024-01-01", end="2024-01-06", strategy="macd")
+        assert "2024-01-01" in message(e) and "2024-01-06" in message(e)
+
 
 class TestStrategySelection:
     def test_defaults_to_momentum(self):
