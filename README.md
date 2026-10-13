@@ -493,7 +493,7 @@ cd firestore-tests && npm install && npm test
 
 ### CI and deploys
 
-`.github/workflows/ci.yml` runs on every push and PR: backend tests, frontend build, and a secret scan that fails if a `.env` or service-account key is ever tracked. None of them need credentials — a pipeline that requires secrets is one that silently stops running.
+`.github/workflows/ci.yml` runs on every push and PR: backend tests, frontend unit tests and build, the end-to-end suite, and a secret scan that fails if a `.env` or service-account key is ever tracked. None of them need credentials — a pipeline that requires secrets is one that silently stops running.
 
 `deploy.yml` is backend-only (Vercel deploys the frontend on its own) and manual (`workflow_dispatch`) rather than push-triggered, so shipping is always a decision. It runs the same `gcloud run deploy` as the Deploy section, flag for flag, after the tests pass. It authenticates to GCP by Workload Identity Federation rather than a long-lived key in a repo secret, and polls `/api/health` afterwards (a deploy that "succeeded" but serves 500s is not a successful deploy). The WIF secrets have been set since 28 Sep 2026 (`.github/scripts/setup-wif.sh`); the workflow is the normal way to deploy.
 
@@ -513,6 +513,15 @@ pytest tests/ -q
 Two distinctions it pins down, because getting either wrong puts the wrong message in front of a user: **402 means upgrade and 429 means wait**, and **role is read from the Firestore profile, never from the token** — a token claiming `role: admin` is refused.
 
 The suite includes an explicit lookahead-bias guard: a position must not be open on a price-spike bar.
+
+### Frontend unit
+
+```bash
+cd frontend
+npm test
+```
+
+53 Vitest + Testing Library tests in jsdom, about 2 s. They cover the logic that lives in the browser: how `api.js` turns FastAPI errors (including 422 arrays) into readable messages and carries status, request id and `Retry-After`; permalink encode/decode; CSV escaping; the write-up's markdown renderer, including that it never injects HTML; the validation verdict card; the usage meter; the config panel's blocking rules; and DashboardPage's run snapshot — Validation checks the run on screen, not the edited panel (tester bugs #6/#7), and a 402 points to pricing rather than "Try again". The API, the toast hook and the Recharts charts are mocked; `demoData.json` stands in for a backtest response. CI runs them in the "Frontend build" job, before the build.
 
 ### End-to-end
 

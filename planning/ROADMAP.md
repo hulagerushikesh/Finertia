@@ -70,7 +70,7 @@ No new features. Make what exists trustworthy. Ordered by impact.
 | # | Item | Hat | Evidence of done |
 |---|---|---|---|
 | 1 | ✅ **E2E suite (Playwright) against the Firebase Auth + Firestore emulators** — register, verify banner, run backtest, clear ticker → Validation (the #84 path), Pro wall, History re-run, Profile save, admin Give/Remove Pro | Frontend + System | **Done 13 Oct:** 15 tests, 34 s locally, CI job "E2E (Playwright)"; the Pro-wall test fails on the pre-#84 DashboardPage and passes after |
-| 2 | **Unit tests for the frontend** (Vitest + Testing Library) on DashboardPage state, ConfigPanel validation, permalink encode/decode | Frontend | Added to CI; covers the `ranParams` snapshot |
+| 2 | ✅ **Unit tests for the frontend** (Vitest + Testing Library) on DashboardPage state, ConfigPanel validation, permalink encode/decode | Frontend | **Done 13 Oct:** 53 tests in 10 files, ~2 s, run in CI's "Frontend build" job. Mutation-checked: reverting `ranParams` in DashboardPage, or the 422 parsing in `api.js`, fails them |
 | 3 | **Turn on Sentry**, backend and frontend, with release tags | System + Cloud | A forced test error shows up in Sentry from prod. Needs the author's Sentry DSN |
 | 4 | **Date input that can't be misread** — presets (1Y / 3Y / 5Y / Max) and the chosen range shown in words ("1 Jan 2024 → 6 Jan 2024") beside the native pickers | Frontend | The dd/mm vs mm/dd mix-up from 12 Oct is impossible to reach without seeing the words |
 | 5 | **Shared rate limit** — move per-user limits to Firestore counters (or halve per-instance limits and document) | Backend + DB | A limit holds across 2 instances in a test |
