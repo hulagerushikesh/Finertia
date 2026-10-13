@@ -3,6 +3,46 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-10-13 — Cold start: measured; the uptime check is the fix, no `min-instances`
+
+Sprint 1 item 6. Measured on a throwaway Cloud Run service
+(`finertia-coldstart-probe`, private, same CPU/memory/cpu-boost as
+`finertia-api`, deleted afterwards), six fresh revisions per variant, time
+from "Starting new instance" to the startup probe passing:
+
+| Variant | Range | Median |
+|---|---|---|
+| Prod image, gen1 (today) | 4.4–7.2 s | 5.6 s |
+| Prod image, gen2 | 4.4–8.6 s | 5.6 s |
+| Slimmer image (venv, no pip/setuptools, 130 vs 150 MB), gen2 | 3.8–5.4 s | 5.0 s |
+
+Python imports are about 1.7 s of that (pandas 0.9, numpy 0.5, fastapi 0.3;
+yfinance is already imported lazily). The rest is Cloud Run starting the
+container. In production a cold start was 7.1–7.8 s, and the first request
+after it paid only ~0.3 s more than a warm one, so lazy Firebase setup is
+not the problem.
+
+**What actually changed the picture:** the uptime check added in item 2
+calls `/api/health` every 5 minutes, which keeps one instance alive. On
+12 Oct production had six cold starts that a user waited through (each
+first call 7.1–9.9 s). From 07:30 UTC on 13 Oct, when the
+check started, to 11:00 UTC there were **none**. Since Cloud Run bills CPU
+only while serving, the idle instance costs nothing.
+
+**Decision:**
+- No `min-instances 1` (~₹1–2k a month). The uptime check gives the same
+  effect for ₹0, except right after a deploy or when a second instance
+  starts under load.
+- No gen2 switch: no measurable gain.
+- The slimmer image saves ~0.5 s, inside the noise between runs, and
+  changes the deploy build. Not now; revisit if cold starts come back.
+- The remaining slow first run is data, not startup: backtest p50 is 2.4 s,
+  p90 10.3 s, the tail being a price fetch from yfinance on a cache miss.
+  That belongs to the data sprint.
+
+The sprint target (first run < 5 s without `min-instances`) is met in the
+common case, because the first run is no longer a cold start.
+
 ## 2026-10-13 — Data budget ₹0 and legal after the build; both get their own sprint
 
 The author's call, after the spike above:
