@@ -1,10 +1,10 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
+import { getAuth, connectAuthEmulator, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
 // The lite SDK: REST calls, no realtime listeners, no offline cache. The
 // client only ever does getDoc/setDoc/updateDoc on its own profile — the
 // full SDK was ~250 kB minified on the landing page for a websocket nobody
 // opened. Security rules apply identically.
-import { getFirestore } from "firebase/firestore/lite";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore/lite";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -18,6 +18,14 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// End-to-end tests run the app against the local Firebase emulators, never a
+// real project. Only a dev build with VITE_FIREBASE_EMULATORS=1 does this;
+// production builds never set it, so the branch is dead code there.
+if (import.meta.env.VITE_FIREBASE_EMULATORS === "1") {
+  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+}
 
 // Firebase's hosted "email verified" / "reset password" pages are dead ends
 // unless the email carries a continue URL, in which case they show a

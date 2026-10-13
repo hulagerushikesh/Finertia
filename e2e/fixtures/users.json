@@ -1,0 +1,12 @@
+{
+  "admin": {
+    "email": "admin@e2e.test",
+    "password": "e2e-8ba94c829420",
+    "role": "admin"
+  },
+  "member": {
+    "email": "member@e2e.test",
+    "password": "e2e-06c47a1bcd85",
+    "role": "user"
+  }
+}

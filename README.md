@@ -506,10 +506,22 @@ cd backend
 pytest tests/ -q
 ```
 
-727 tests covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference, basket validation, the Sharpe-difference test), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
+732 tests covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference, basket validation, the Sharpe-difference test), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
 
 `test_routes.py` covers the part that decides who may call everything else: token handling, suspended accounts, admin gating, quota and entitlement enforcement, rate limiting, and how failures become status codes. `verify_token`, the profile lookup, the Firestore client, and the price fetch are all replaced, so no network or credentials are involved.
 
 Two distinctions it pins down, because getting either wrong puts the wrong message in front of a user: **402 means upgrade and 429 means wait**, and **role is read from the Firestore profile, never from the token** — a token claiming `role: admin` is refused.
 
 The suite includes an explicit lookahead-bias guard: a position must not be open on a price-spike bar.
+
+### End-to-end
+
+```bash
+cd e2e
+npm install && npx playwright install chromium
+npm test
+```
+
+15 Playwright tests drive the real app in Chromium against the real API and the real Firestore security rules, with Firebase's Auth and Firestore emulators standing in for the project. `npm test` starts all three (emulators, API on :8001, app on :5175), and `backend/scripts/seed_e2e.py` seeds two fixture accounts (`e2e/fixtures/users.json`) and deterministic synthetic prices so no run ever reaches Yahoo. Needs Java for the emulators.
+
+They cover the logged-in paths the unit tests cannot: register with the unverified-email banner, a backtest, Validation on the run on screen with the Pro wall for a free user, the too-short-range error, History re-run, Profile save, the admin Pro grant and what it unlocks, and that a member cannot open the admin panel; plus the public pages, `/demo`'s verdict, and phone-width overflow. CI runs them on every PR (the "E2E (Playwright)" job). Emulator mode is refused on Cloud Run (`firebase_admin_init.emulator_mode`).

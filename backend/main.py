@@ -56,7 +56,7 @@ from schemas import (
 from strategies import build_positions, longest_window, param_grid, STRATEGY_NAMES, STRATEGIES
 from validation import walk_forward, permutation_test
 from portfolio_validation import leg_positions, portfolio_walk_forward, portfolio_permutation_test
-from firebase_admin_init import verify_token, get_user_profile, get_db
+from firebase_admin_init import verify_token, get_user_profile, get_db, emulator_mode
 
 # ---------------------------------------------------------------------------
 # Startup configuration checks — fail loudly rather than at first request
@@ -64,9 +64,16 @@ from firebase_admin_init import verify_token, get_user_profile, get_db
 
 # Local dev convenience: in production (Cloud Run) the env vars are already set
 # and no .env file exists, so this is a no-op there.
-load_dotenv()
+#
+# The end-to-end suite runs against the Firebase emulators and must not read a
+# developer's .env: it would pull real keys into a test server, and it would
+# make a run on a laptop differ from the same run on a CI runner, which has no
+# .env. The emulators need no service account either.
+_EMULATOR = emulator_mode()
+if not _EMULATOR:
+    load_dotenv()
 
-REQUIRED_ENV_VARS = ("FIREBASE_SERVICE_ACCOUNT_JSON",)
+REQUIRED_ENV_VARS = () if _EMULATOR else ("FIREBASE_SERVICE_ACCOUNT_JSON",)
 
 _missing = [name for name in REQUIRED_ENV_VARS if not os.environ.get(name)]
 if _missing:
