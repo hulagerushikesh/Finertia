@@ -86,6 +86,23 @@ await check(
   "alice cannot reset her own quota counter",
   assertFails(updateDoc(doc(alice, "users/alice"), { runsThisPeriod: 0 }))
 );
+// A fresh uid each, so the create is refused for the counter and nothing else.
+for (const [field, value] of [
+  ["validationsThisPeriod", -100],
+  ["validationPeriod", "1999-01"],
+  ["totalValidations", 0],
+]) {
+  const uid = `fresh-${field}`;
+  const fresh = env.authenticatedContext(uid).firestore();
+  await check(
+    `a new account cannot seed its own ${field}`,
+    assertFails(setDoc(doc(fresh, `users/${uid}`), { ...profile(uid), [field]: value }))
+  );
+}
+await check(
+  "alice cannot reset her own free-validation counter",
+  assertFails(updateDoc(doc(alice, "users/alice"), { validationsThisPeriod: 0 }))
+);
 await check(
   "alice cannot inflate her own run total",
   assertFails(updateDoc(doc(alice, "users/alice"), { totalRuns: 9999 }))

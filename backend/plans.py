@@ -116,8 +116,46 @@ def check_quota(profile: dict | None, now: datetime | None = None) -> dict:
 
 
 def may_validate(profile: dict | None) -> bool:
-    """Whether this plan includes the overfitting checks."""
+    """Whether this plan includes the overfitting checks without a cap."""
     return bool(plan_for(profile)["validation"])
+
+
+def validations_used(profile: dict | None, now: datetime | None = None) -> int:
+    """Free validations already taken in the current period.
+
+    Same stale-period rule as `runs_used`. Clamped at zero: the counter is
+    server-owned, but a negative value must never read as extra allowance.
+    """
+    profile = profile or {}
+    if profile.get("validationPeriod") != current_period(now):
+        return 0
+    return max(0, int(profile.get("validationsThisPeriod", 0) or 0))
+
+
+def check_validation_quota(
+    profile: dict | None, free_allowance: int, now: datetime | None = None
+) -> dict:
+    """Whether the user may run a validation, and what is left of the free one.
+
+    Pro validates without a cap. The free plan gets `free_allowance` a month,
+    a deployment setting rather than a plan constant so it can stay at zero
+    while a tester round is running and be switched on without a code change.
+
+    Returns {allowed, used, limit, remaining, plan}; `limit` and `remaining`
+    are None when uncapped.
+    """
+    plan = plan_for(profile)
+    if plan["validation"]:
+        return {"allowed": True, "used": 0, "limit": None, "remaining": None, "plan": plan["name"]}
+    limit = max(0, int(free_allowance))
+    used = validations_used(profile, now)
+    return {
+        "allowed": used < limit,
+        "used": used,
+        "limit": limit,
+        "remaining": max(0, limit - used),
+        "plan": plan["name"],
+    }
 
 
 def max_portfolio_size(profile: dict | None) -> int:
