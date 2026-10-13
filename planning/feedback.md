@@ -93,6 +93,35 @@ people who will read 2,000 words.
 > worked, and whether that was luck. Could you try it for 10 minutes while I
 > watch and say what's confusing? https://finertia.hulage.in
 
+## Bugs found in testing (fix log)
+
+First weekend round (12–13 Oct), friends testing the live dashboard. These are
+product defects, logged apart from the per-person Q&A below. "This should be
+caught by us" — the PVT missed the logged-in dashboard paths.
+
+| # | Finding | Status |
+|---|---|---|
+| 1 | Unverified email can sign in and run backtests (indicators usable; the "Confirm your email" banner just persists) | **Decision needed** — gating runs on `emailVerified` would have blocked these testers; see note below |
+| 2 | Date-too-short error didn't show the parsed range, so a dd/mm vs mm/dd mix-up (06/01/2024 read as 6 Jan, not 1 June → ~3 trading days) looked like a tool bug | **Fixed** — error now echoes `start → end` in ISO (schemas.py) |
+| 3 | Trading-day count ignores that NSE occasionally trades a Saturday/Sunday (special sessions) | Noted, low priority — affects Indian tickers only; generic calendar |
+| 4 | (= #1) banner persists after registering without verifying, indicators still available | Decision needed |
+| 5 | Validation can't be run as a non-Pro member (the Pro wall) | Working as designed — this is the willingness-to-pay test |
+| 6 | Validation required the ticker to still be in the left box after a run; clearing it gave "ticker missing" although AAPL had already been run | **Fixed** — Validation now reads the frozen config of the run on screen, not the live box (DashboardPage.jsx) |
+| 7 | With the box cleared, the user hit "ticker missing" first, then "not a Pro user" only after re-typing — auth/Pro should be the first thing they hit | **Fixed** by #6 — a non-Pro user now goes straight to the Pro wall; the 402 gate already runs before data fetch (main.py:681), the problem was the empty request from the frontend |
+
+Also fixed this round (spotted by the author): admin **Actions** column was
+ragged — variable-width buttons (Block/Unblock, Give/Remove Pro, Make
+Admin/User) in a right-justified row — now fixed-width slots so the verbs line
+up; and admin green text was invisible on the light theme (`text-accent`, a
+background tint, → `text-pencil`), shipped in #83.
+
+**Decision on #1 (unverified email).** Today anyone can use the app before
+verifying; the only consequence is a password reset can't reach an unverified
+address. Enforcing verification before runs is a real wall — it would have
+stopped this very round, since none of the friends verified. Options: (a) leave
+it, keep the banner; (b) block *saving* runs until verified but allow trying;
+(c) hard-gate all runs. Not changed yet — the author's call.
+
 ## Entries
 
 Copy the block once per person. Use a first name or a role, not a full name.

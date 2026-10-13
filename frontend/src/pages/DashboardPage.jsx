@@ -57,6 +57,12 @@ export default function DashboardPage() {
     () => location.state?.params || decodeParams(location.search) || DEFAULTS,
   );
   const [result, setResult] = useState(null);
+  // The config that produced the result on screen, snapshotted at run time.
+  // Validation reads from this, not the live config panel: the Validation tab
+  // checks the run you are looking at, so clearing or editing the ticker box
+  // afterwards cannot send a mismatched (or empty) request. Re-run to validate
+  // a different set-up.
+  const [ranParams, setRanParams] = useState(null);
   const [loading, setLoading] = useState(false);
   // { message, status, action } — `action` ("run" | "validate") is what
   // failed, so the banner repeats that and not always the backtest.
@@ -102,6 +108,7 @@ export default function DashboardPage() {
   useEffect(() => {
     setResult(null);
     setValidation(null);
+    setRanParams(null);
   }, [params.mode]);
 
   async function handleRun() {
@@ -110,6 +117,8 @@ export default function DashboardPage() {
     try {
       const data = isPortfolio ? await runPortfolio(params) : await runBacktest(params);
       setResult(data);
+      // Freeze the config this result came from; validation will read it.
+      setRanParams(params);
       // Previous validation belongs to the previous config.
       setValidation(null);
       setTab("results");
@@ -129,8 +138,13 @@ export default function DashboardPage() {
     setError(null);
     setValidating(true);
     setTab("validation");
+    // Validate the run on screen, not the live config. Falls back to the
+    // current params only if somehow called before a run (the tab is not
+    // reachable in that state).
+    const cfg = ranParams || params;
+    const cfgIsPortfolio = cfg.mode === "portfolio";
     try {
-      const data = isPortfolio ? await validatePortfolio(params) : await validateStrategy(params);
+      const data = cfgIsPortfolio ? await validatePortfolio(cfg) : await validateStrategy(cfg);
       setValidation(data);
       const [msg, tone] = WF_TOAST[data.walk_forward.verdict] || WF_TOAST.inconclusive;
       showToast(msg, tone);
@@ -153,6 +167,9 @@ export default function DashboardPage() {
 
   const strategyLabel =
     STRATEGIES.find((s) => s.id === (result?.strategy || params.strategy))?.label || params.strategy;
+  // The result card names the run it is showing, from the frozen config, so
+  // editing the panel afterwards never rewrites the answer on screen.
+  const shown = ranParams || params;
   const stamp = validation ? WF_STAMP[validation.walk_forward.verdict] || WF_STAMP.inconclusive : null;
 
   return (
@@ -255,7 +272,7 @@ export default function DashboardPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
                       <h2 className="font-display text-display-sm font-semibold text-foreground tracking-tight">
-                        {resultIsPortfolio ? result.tickers.join(" · ") : params.ticker}
+                        {resultIsPortfolio ? result.tickers.join(" · ") : shown.ticker}
                       </h2>
                      <Badge variant="outline" className="font-mono text-2xs uppercase tracking-wider text-graphite">
                         {strategyLabel}
@@ -267,7 +284,7 @@ export default function DashboardPage() {
                       )}
                     </div>
                     <p className="text-xs font-mono text-graphite mt-1.5">
-                      {result.start || params.start} → {result.end || params.end}
+                      {result.start || shown.start} → {result.end || shown.end}
                       <span className="text-faint"> · </span>
                       {resultIsPortfolio
                         ? `${result.aligned_bars} bars shared by all ${result.tickers.length} holdings`
@@ -397,7 +414,7 @@ export default function DashboardPage() {
                         <li>
                           <strong className="text-foreground font-medium">Survivorship bias.</strong>{" "}
                           Price history only exists for companies that still trade. Testing on{" "}
-                          {resultIsPortfolio ? result.tickers.join(", ") : params.ticker} is testing on
+                          {resultIsPortfolio ? result.tickers.join(", ") : shown.ticker} is testing on
                           survivors — the delisted and bankrupt names that would have dragged the same
                           strategy down are simply not in the data.
                           {resultIsPortfolio &&
@@ -415,7 +432,7 @@ export default function DashboardPage() {
                         <li>
                           <strong className="text-foreground font-medium">Idealised fills.</strong>{" "}
                           Every trade executes at the close at a flat{" "}
-                          {(params.transaction_cost * 100).toFixed(2)}% cost. Real slippage widens when
+                          {(shown.transaction_cost * 100).toFixed(2)}% cost. Real slippage widens when
                           you are trading size or trading a fast market.
                         </li>
                       </ul>

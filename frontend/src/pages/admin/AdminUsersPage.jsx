@@ -132,7 +132,11 @@ export default function AdminUsersPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <div className="flex items-center justify-end gap-3">
+                      {/* Fixed-width slots so the three verbs line up as
+                          columns down the table — the labels vary per row
+                          (Block/Unblock, Give/Remove Pro, Make Admin/User) and
+                          a plain right-justified row would go ragged. */}
+                      <div className="flex items-center justify-end gap-4">
                         <button
                           onClick={() => {
                             const blocking = u.isActive !== false;
@@ -145,7 +149,7 @@ export default function AdminUsersPage() {
                               blocking ? `${u.email} blocked.` : `${u.email} unblocked.`
                             );
                           }}
-                          className="text-xs text-text-muted hover:text-danger transition-colors"
+                          className="w-16 text-right text-xs text-text-muted hover:text-danger transition-colors"
                         >
                           {u.isActive !== false ? "Block" : "Unblock"}
                         </button>
@@ -161,7 +165,7 @@ export default function AdminUsersPage() {
                               granting ? `${u.email} is now on Pro.` : `${u.email} is back on Free.`
                             );
                           }}
-                          className="text-xs text-pencil hover:underline"
+                          className="w-24 text-right text-xs text-pencil hover:underline"
                         >
                           {u.plan === "pro" ? "Remove Pro" : "Give Pro"}
                         </button>
@@ -175,7 +179,7 @@ export default function AdminUsersPage() {
                               `${u.email} is now ${nextRole}.`
                             );
                           }}
-                          className="text-xs text-pencil hover:underline"
+                          className="w-24 text-right text-xs text-pencil hover:underline"
                         >
                           Make {u.role === "admin" ? "User" : "Admin"}
                         </button>
