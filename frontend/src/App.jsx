@@ -12,6 +12,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { EASE_OUT } from "./components/motion";
+import { feature } from "./lib/features";
 
 // Eager: the pages a first-time visitor actually lands on.
 import LandingPage from "./pages/LandingPage";
@@ -26,6 +27,7 @@ import PricingPage from "./pages/PricingPage";
 const DemoPage = lazy(() => import("./pages/DemoPage"));
 const DocsPage = lazy(() => import("./pages/DocsPage"));
 const SupportPage = lazy(() => import("./pages/SupportPage"));
+const AccountDeletedPage = lazy(() => import("./pages/AccountDeletedPage"));
 const WriteupPage = lazy(() => import("./pages/WriteupPage"));
 
 // Lazy: everything behind a login. The charting library alone is ~536 kB, and
@@ -101,6 +103,9 @@ export default function App() {
                           <Route path="/docs" element={<DocsPage />} />
                           <Route path="/writeup" element={<WriteupPage />} />
                           <Route path="/support" element={<SupportPage />} />
+                          {feature("account-data") && (
+                            <Route path="/account-deleted" element={<AccountDeletedPage />} />
+                          )}
                           <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
                           <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
                           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

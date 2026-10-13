@@ -78,6 +78,12 @@ export const getPlans = () => apiFetch("/api/plans");
 
 export const getUsage = () => apiFetch("/api/me/usage");
 
+export const exportMyData = () => apiFetch("/api/me/export");
+
+// The server deletes only when `confirm` is the account's own email address.
+export const deleteMyAccount = (confirm) =>
+  apiFetch("/api/me", { method: "DELETE", body: JSON.stringify({ confirm }) });
+
 export const startCheckout = () =>
   apiFetch("/api/billing/checkout", { method: "POST" });
 
