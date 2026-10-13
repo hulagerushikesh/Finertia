@@ -14,9 +14,9 @@ import { CHART } from "../../chartTheme";
 function KpiCard({ label, value, sub }) {
   return (
     <div className="panel p-5">
-      <p className="text-xs text-text-muted uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-3xl font-bold font-mono text-text-primary">{value}</p>
-      {sub && <p className="text-xs text-text-muted mt-1">{sub}</p>}
+      <p className="text-xs text-graphite uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-3xl font-bold font-mono text-foreground">{value}</p>
+      {sub && <p className="text-xs text-graphite mt-1">{sub}</p>}
     </div>
   );
 }
@@ -39,7 +39,7 @@ export default function AdminOverviewPage() {
   }, []);
 
   if (loading) return <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>;
-  if (error) return <div className="text-danger bg-danger/10 border border-danger/20 rounded-xl px-5 py-4">{error}</div>;
+  if (error) return <div className="text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-5 py-4">{error}</div>;
 
   return (
     <div className="flex flex-col gap-6">
@@ -60,7 +60,7 @@ export default function AdminOverviewPage() {
       {/* Top tickers bar chart */}
       {stats.top_tickers?.length > 0 && (
         <div className="panel p-5">
-          <h2 className="text-sm font-semibold text-text-primary mb-4">
+          <h2 className="text-sm font-semibold text-foreground mb-4">
             Top 5 Tickers
             {stats.top_tickers_window ? (
               <span className="font-normal text-graphite"> · last {stats.top_tickers_window} runs</span>
