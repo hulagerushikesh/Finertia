@@ -89,14 +89,17 @@ export default function PricingPage() {
         <Stagger className="grid sm:grid-cols-2 gap-5 items-start">
           {plans.map((plan) => {
             const isPro = plan.id === "pro";
+            // Pro with no billing behind it is not for sale yet. Say so,
+            // rather than a Pro button that makes a free account.
+            const soon = isPro && !billingEnabled;
             return (
               <StaggerItem
                 key={plan.id}
                 className={cn("relative rounded-lg p-7 flex flex-col", isPro ? "sheet-lifted" : "sheet")}
               >
                 {isPro && (
-                  <Badge size="sm" className="absolute top-5 right-5">
-                    Recommended
+                  <Badge size="sm" variant={soon ? "faint" : undefined} className="absolute top-5 right-5">
+                    {soon ? "Coming soon" : "Recommended"}
                   </Badge>
                 )}
 
@@ -113,7 +116,7 @@ export default function PricingPage() {
                     ? "No card required"
                     : billingEnabled
                       ? "Cancel any time"
-                      : "Not yet available here"}
+                      : "Not on sale yet"}
                 </p>
 
                 <ul className="flex flex-col gap-3 mb-8 flex-1">
@@ -128,19 +131,31 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                {isPro ? (
+                {soon ? (
+                  <div className="flex flex-col gap-3">
+                    {!user && (
+                      <Button asChild variant="outline">
+                        <Link to="/register">Start free</Link>
+                      </Button>
+                    )}
+                    <p className="text-xs text-graphite leading-relaxed">
+                      Pro isn&rsquo;t on sale yet. Testing Finertia and need validation? Ask for
+                      access at{" "}
+                      <a href="mailto:support@hulage.in" className="text-pencil underline underline-offset-2">
+                        support@hulage.in
+                      </a>
+                      .
+                    </p>
+                  </div>
+                ) : isPro ? (
                   !user ? (
                     <Button asChild>
                       <Link to="/register">Create an account</Link>
                     </Button>
-                  ) : billingEnabled ? (
+                  ) : (
                     <Button onClick={handleUpgrade} disabled={redirecting}>
                       {redirecting ? "Redirecting…" : "Upgrade to Pro"}
                     </Button>
-                  ) : (
-                    <div className="border border-border rounded-md py-2.5 text-center">
-                      <p className="text-xs text-faint">Billing is not enabled on this deployment</p>
-                    </div>
                   )
                 ) : (
                   <Button asChild variant="outline">
@@ -157,8 +172,8 @@ export default function PricingPage() {
 
       <p className="text-xs text-faint mt-10 max-w-xl leading-relaxed">
         Quotas count backtests, validation runs, and portfolios, and reset at the start of each
-        calendar month (UTC). Cancelling keeps Pro until the end of the period you have already
-        paid for.
+        calendar month (UTC).
+        {billingEnabled && " Cancelling keeps Pro until the end of the period you have already paid for."}
       </p>
     </div>
   );
