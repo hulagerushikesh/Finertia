@@ -1,101 +1,85 @@
-# Next milestone — M10: "Publish the finding, then let a real user decide"
+# Next milestone — M12 "Product readiness", sprint 1
 
-_Drafted 7 Oct 2026. Target: ~2 weeks part-time. Previous milestone (M9, land
-the redesign + close the roadmap + make data survive) closed 15 Sep; its full
-text is [archive/M9.md](archive/M9.md)._
+_Planned 13 Oct 2026 (PM + Scrum). Sprint 1: **Wed 14 Oct → Tue 27 Oct**,
+review on the 27th with the author. Sprint 2 runs 28 Oct → 10 Nov. M11
+(quality foundation) closed 13 Oct, all seven items: see [ROADMAP.md](ROADMAP.md).
+M10's text is in [archive/M10.md](archive/M10.md); its two open phases are
+carried here unchanged._
 
-## Why this milestone
+## The constraint that shapes this sprint
 
-Three things are true today:
+The tester round runs until **31 Oct**, and the 8 Oct process rule (DECISIONS)
+says: *"A bug that stops a tester finishing a run is fixed before the next
+session … Anything else waits for the end of the round, so the five see the
+same product."*
 
-1. The engineering is done. Roadmap 5 of 5 plus seven post-roadmap research
-   items, 723 tests, prod == `main`, and since 28 Sep a backend deploy is one
-   command (`gh workflow run deploy.yml --ref main`, WIF, PR #57). Nothing
-   technical is blocking anything.
-2. The deliverable chosen on 15 Sep — the write-up — is drafted (3,300 words,
-   now covering whole-grid inference, the Sharpe-difference test, baskets and
-   costs) and **unpublished**. A finding nobody can read is worth nothing as a
-   portfolio piece.
-3. No one but the author has used the product. That is the input the 15 Sep
-   decision named for reversing it ("a Pitch Fest placement that brings users,
-   or a second person willing to own support") — and it has never been
-   collected.
+So sprint 1 builds what testers **cannot see**: legal groundwork, data
+licensing, backups, monitoring, the backend half of account deletion, cold
+start. Everything that changes the logged-in product goes into sprint 2,
+after the round closes and the phase-4 decision is written. That includes
+the free validation, onboarding and the deletion UI. Ordering it this way
+keeps the round's evidence clean, and lets sprint 2 build on what the
+testers actually said.
 
-So M10 ships the write-up and collects the one piece of evidence that decides
-what Finertia is next. It adds no features.
+Stripe stays off in both sprints unless phase 4 reads "two or more would pay"
+**and** the legal check and licensed data are in place (DECISIONS 13 Oct).
 
-## Phases, in order
+## Sprint goal
 
-### Phase 0 — Close what M9 left on the user (≈1 hour)
+> By 27 Oct we know what it would cost to charge legally, and production can
+> lose data, go down or be asked to delete a user without anyone finding out
+> from WhatsApp.
 
-- [x] ~~Narrow the `gh` token~~ — **skipped, user's call (7 Oct).** A fine-grained PAT was tried and returned 401; the user re-logged in through the browser instead, so `gh` keeps the OAuth `gho_` token (`repo`, `workflow`, `read:org`, `gist`). Acceptable for a solo repo; revisit if anyone else gets push access.
-- [x] Finish the production smoke test — portfolio results card done 28 Sep (it found the colour bug, PR #58). 7 Oct, via the user's Chrome: regime direction table, History, Profile displayName save all pass; portfolio-mode Validation hit the Pro wall (the account is Free) and found the dead-end 402 banner, PR #71. Later on 7 Oct, after the author's account was made admin: Give Pro on Admin → Users showed "pro · comp", AAPL+MSFT portfolio-mode Validation ran on Pro (0 of 5 checks, Not proven), Remove Pro put the account back on Free — all pass. Register walked the same evening with a `+fin1` throwaway: verified, role USER, 0 runs, kept off /admin. It found the verify page dead end (fixed, PR #74: the emails carry a Continue link) and the emails signed "momentbacktracking" (fixed 7 Oct via the Google Auth Platform app name; templates are locked on this project).
-- [x] One logged-in `/dashboard` AAPL run with the network panel open — taken 7 Oct, in STATUS known risk 1: cold 11.4 s, warm 2.4 s.
-- [x] Merge PR #58 (contribution colour by sign).
+## Sprint 1 board
 
-**Exit:** STATUS "Blocked on user" row reads 0.
+Ordered by priority. **You** = needs the author: a decision, an account, money
+or a production change. Everything else Claude builds and merges on green CI.
 
-### Phase 1 — Publish the write-up (week 1)
+| # | Item | Hat | Evidence of done | You |
+|---|---|---|---|---|
+| 0 | **Close M11 by hand**: RELEASE.md part 4 on live (signed-in run, History, admin ticker filter) + the Sentry test from both snippets | System | Both Sentry projects show the test issue: uid only, request_id tag, no email | 10 min, day 1 |
+| 1 | **Backups**: Firestore point-in-time recovery (7 days) + managed backup schedules (daily kept 7 days, weekly kept 14 weeks) | DB + Cloud | `gcloud firestore databases describe` shows PITR on, and the schedule is listed. **Restore drill**: today's backup restored into a scratch database, `users`/`runs` counts match prod, scratch deleted. Runbook in RELEASE.md part 5 | Yes to the cost (storage, single-digit ₹ at today's size) and to the prod change |
+| 2 | **Uptime alert**: Cloud Monitoring uptime check on `/api/health` every 5 min from 3 regions, emailing the author after 2 failures; plus an alert on Cloud Run 5xx rate | System + Cloud | A deliberately failing check (wrong path, in a test policy) sends the email, then is deleted | Yes to the prod change; confirm the alert address |
+| 3 | **Licensed data spike**: shortlist 3 EOD providers covering NSE + US. Compare price per month at our size, the licence (may a paid app *display* derived results?), history depth, corporate actions, API limits | PM + Backend | DECISIONS entry with a comparison table and a recommendation. `data.py` gets a provider interface, with yfinance as the one implementation and no behaviour change (tests green, demo payload identical), so the switch is one module | Pick one, and the budget ceiling |
+| 4 | **Legal brief for counsel**: a data map (what personal data, where: Firebase Auth, Firestore nam5, Cloud Run asia-south1, Sentry US, Vercel), the processors, retention, and the questions for a SEBI / DPDP consult (research-analyst lines, disclaimers, consent, grievance officer, cross-border transfer). Draft Terms and Privacy for counsel to mark up, **not published** | PM | `planning/legal-brief.md` plus the two drafts in `planning/legal/`. This is preparation for a lawyer, not legal advice | Book the consult; target before 10 Nov |
+| 5 | **Account deletion + export, backend only**: `GET /api/me/export` (the user's profile and runs as JSON), `DELETE /api/me` (runs, user doc, rate-limit counters, then the Firebase Auth user, in an order that can be retried after a partial failure) | Backend + DB | Route tests, plus an emulator test that a deleted user leaves zero documents behind; E2E for the API. **UI held for sprint 2** (round freeze) | — |
+| 6 | **Cold start, measured then cut**: break the 11.4 s down (container start, imports, Firebase init, first Firestore read nam5 ↔ asia-south1). Try the free fixes first: lazy imports, `--cpu-boost`, smaller image | Cloud + System | A before/after table in STATUS. Target: first run < 5 s without `min-instances`. If it can't get there, the cost of `min-instances 1` goes to the author as a decision | Only for the `min-instances` spend |
+| 7 | **Support inbox**: `support@hulage.in` forwarding to the author, linked from Support, Pricing and the footer. The status page stays a sentence on Support ("the API's health: /api/health") until there are users to warn | PM | An email from an outside address arrives. The support-page change is copy only, and allowed under the freeze rule because it changes no flow | Set up forwarding at the domain registrar |
+| 8 | **Carried from M10**: tester round (5 sessions, feedback.md entries, end usage count) | PM | As in archive/M10.md phase 3 | Runs the sessions |
 
-The 15 Sep plan said "not before the Pitch Fest result". Three weeks on, the
-result is either in or overdue; either way it no longer gates publishing.
-Record which in DECISIONS.md when this phase starts.
+**Capacity**: about 2 weeks part-time for the author. Claude's side is about
+7 PRs, items 1–3 and 5–6, each through the [release checklist](../RELEASE.md).
+Items 1, 2 and 6 touch production; each waits for an explicit yes.
 
-- [x] Fact-check pass — `backend/scripts/reproduce_writeup.py` re-runs every call through the production route handlers and checks all 174 quoted figures (7 Oct). Every deterministic figure reproduced to the digit; the 9 bootstrap figures had come from research runs with a different seed and were replaced with the product's seeded values, endpoints now to one decimal (they move up to 0.3 between seeds). No conclusion changed. Draft 3.
-- [x] Cut to a readable length — draft 4: main text ~2,050 words (from 3,400), per-check detail, the vol × trend grid and the Sharpe-gap table moved to appendices A–C; every one of the 174 figures still in it (7 Oct).
-- [x] Home: `/writeup` renders `planning/write-up.md` itself (`?raw` import + a hand-written renderer for the subset it uses, React elements only), so the published page cannot drift from the file the script checks. Lazy chunk, 9.9 kB gz (7 Oct).
-- [x] Linked from README ("What it found"), the landing page, the logged-out nav ("The finding") and the footer (7 Oct).
-- [x] Share card: the in-sample vs out-of-sample table as the og image for `/writeup`. `og-writeup.png`; the build emits `writeup.html` with its own meta so crawlers see it.
+**If time runs short, drop from the bottom of 1–7.** The support inbox and
+the cold start can slip to sprint 2. Backups, alerts and the data spike
+cannot, because the 31 Oct decision needs the data costs.
 
-**Exit:** a public URL, linked from README and landing; every number in it re-run after 28 Sep.
+## Sprint 2 (28 Oct → 10 Nov) — pencilled, re-planned on 27 Oct
 
-### Phase 2 — Make the demo explain itself (week 1–2)
+1. **Phase-4 decision** (carried from M10), written by 1 Nov with the round's numbers, by the 8 Oct rules. It decides how much of the rest happens.
+2. **One free validation per month** on the free plan: the USP in front of free users, with conversion measured (validations run → upgrade clicks).
+3. **Onboarding** from what the testers got stuck on: a first-run hint, 3 sample strategies, empty states on History and Compare.
+4. **Account deletion and export UI** in Profile, on the sprint 1 backend.
+5. **Licensed data integration**, if a provider and budget were chosen.
+6. **Terms and Privacy published** after counsel's markup. A consent line at sign-up.
+7. **Stripe live**: only on the product path, and only after 5 and 6.
 
-- [x] Demo GIF for the README: `/demo` → results → the cost and benchmark strips → validation tab. ≤ 4 MB, under 30 s. `docs/demo.gif`, 3.3 MB, 24 s.
-- [x] Decide: does `/demo` get a frozen validation payload? **Yes** (7 Oct, DECISIONS), and shipped: a Validation tab, deep-linkable as `/demo#validation`. Today it shows no validation at all, so the product's USP is invisible without an account. Log the decision either way; if yes, it is a frozen JSON like the existing demo payload, no API call.
+## Definition of done (unchanged from ROADMAP)
 
-**Exit:** a logged-out visitor can see the verdict card, or DECISIONS.md says why not.
+Code + unit tests + an E2E path for any user flow touched + the
+[release checklist](../RELEASE.md) + STATUS updated.
 
-### Phase 3 — One outside user (week 2)
+## Explicitly not in sprint 1
 
-The 15 Sep reversal condition, made concrete.
+Anything a tester would see in the logged-in app, apart from a bug that stops
+a run · Stripe · new strategies or indicators · SEO pre-rendering (M13) ·
+the free-validation change (sprint 2, after the round).
 
-Sessions run on weekends from 10 Oct (the author's schedule). Deadline for
-the round: 31 Oct.
+## Decisions needed from the author this sprint
 
-- [ ] Put Finertia in front of 5 people who are not the author: at least one trader, one finance student, one engineer. The field guide's pitches are the script.
-- [ ] For each, record in `planning/feedback.md`: did they finish a run unaided, did they open Validation, what confused them, would they pay $12 / ₹1,000 a month for it.
-- [ ] Count sign-ups and runs from Firestore (`users`, `runs`) at the start and end of the phase — the only usage number that exists. `scripts/usage_counts.py`; start taken 7 Oct: **0** outside sign-ups, 0 outside runs.
-
-**Exit:** `feedback.md` has 5 entries and the two counts.
-
-### Phase 4 — The decision, revisited (end of milestone)
-
-Not a task; a written decision, with phase 3 as its input.
-
-The words in this table are defined, and the order the rows are applied in
-fixed, in DECISIONS.md (8 Oct), before the first session.
-
-| If phase 3 shows | Then |
-|---|---|
-| Nobody returns, nobody would pay | Stay portfolio. Finertia is finished software; maintenance only. |
-| Students or educators engage, traders don't | Education path: class accounts, a course built on the write-up. Stripe still off. |
-| Two or more would pay | Product path: Stripe live (keys + `STRIPE_WEBHOOK_SECRET`, one real test payment), a support inbox, legal check on SEBI positioning and the Yahoo data licence before charging. |
-
-- [ ] DECISIONS.md entry with the phase 3 numbers and the path chosen.
-
-**Exit:** DECISIONS.md has the entry; BACKLOG reordered to match.
-
-## Definition of done for M10
-
-- [x] STATUS "Blocked on user" is 0 (7 Oct, #76)
-- [x] Write-up public, linked, re-run after 28 Sep
-- [x] README has the demo GIF; `/demo` validation decided
-- [ ] `feedback.md` with 5 outside users and usage counts
-- [ ] Phase 4 decision recorded
-
-## Explicitly not in M10
-
-New strategies · user-written strategies · intraday data · the inverse-vol
-weight-path null · Sentry · admin counters · Stripe go-live (unless phase 4
-picks the product path). All in BACKLOG.md.
+1. Backups and alerts in production: yes / no (items 1–2). Roughly ₹0–100 a month at today's data.
+2. Monthly budget ceiling for licensed data, before the spike recommends one (item 3).
+3. Book the legal consult (item 4).
+4. Registrar access for `support@` forwarding (item 7).
+5. After item 6: whether `min-instances 1` (~₹1–2k a month) is worth it, if the free fixes miss the target.
