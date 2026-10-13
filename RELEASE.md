@@ -134,6 +134,18 @@ Drill, 13 Oct 2026: cloned to 07:10 UTC in about 10 minutes. `users` 6,
 deleted. Repeat the drill once a quarter, or after any change to how data is
 stored.
 
+**Alerts.** Cloud Monitoring emails the author when:
+- `https://finertia.hulage.in/api/health` fails from 2 or more of 3 regions
+  for 10 minutes (uptime check `finertia-health`, every 5 minutes, through
+  Vercel, so the rewrite is covered too);
+- `finertia-api` returns more than 4 responses with a 5xx status in 5 minutes.
+
+Both close on their own 30 minutes after recovery. Sentry covers the
+individual errors. These two cover "the site is down" and "many requests are
+failing", which Sentry can miss when the process cannot start at all. The
+checks also keep one instance warm most of the time. That costs nothing extra,
+because CPU is billed only while a request is being served.
+
 ## Record
 
 - [ ] Comment on the PR(s) shipped with the ticked list and the `post` output.
