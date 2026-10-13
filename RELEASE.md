@@ -107,6 +107,45 @@ Then revert the PR on `main`, so the next push does not redeploy the bad build.
 **Rules or indexes.** Revert the file on `main` and deploy it again with the
 same `firebase deploy` command.
 
+
+**Data.** Firestore keeps 7 days of point-in-time versions (any whole
+minute), a daily backup kept 7 days, and a weekly backup (Sundays) kept 14
+weeks. The database also has delete protection on. Never restore over
+`(default)`. Restore into a new database, check it, then copy back what was
+lost:
+
+```bash
+# A minute in the last 7 days:
+gcloud firestore databases clone --project momentbacktracking \
+  --source-database="projects/momentbacktracking/databases/(default)" \
+  --snapshot-time=2026-10-13T07:10:00Z --destination-database=restore-YYYYMMDD
+
+# Or a scheduled backup, for anything older:
+gcloud firestore backups list --project momentbacktracking --location nam5
+gcloud firestore databases restore --project momentbacktracking \
+  --source-backup=<backup name from the list> --destination-database=restore-YYYYMMDD
+```
+
+Delete the scratch database when done
+(`gcloud firestore databases delete --database=restore-YYYYMMDD`).
+
+Drill, 13 Oct 2026: cloned to 07:10 UTC in about 10 minutes. `users` 6,
+`runs` 42 and `prices` 336 matched production, and the scratch database was
+deleted. Repeat the drill once a quarter, or after any change to how data is
+stored.
+
+**Alerts.** Cloud Monitoring emails the author when:
+- `https://finertia.hulage.in/api/health` fails from 2 or more of 3 regions
+  for 10 minutes (uptime check `finertia-health`, every 5 minutes, through
+  Vercel, so the rewrite is covered too);
+- `finertia-api` returns more than 4 responses with a 5xx status in 5 minutes.
+
+Both close on their own 30 minutes after recovery. Sentry covers the
+individual errors. These two cover "the site is down" and "many requests are
+failing", which Sentry can miss when the process cannot start at all. The
+checks also keep one instance warm most of the time. That costs nothing extra,
+because CPU is billed only while a request is being served.
+
 ## Record
 
 - [ ] Comment on the PR(s) shipped with the ticked list and the `post` output.
