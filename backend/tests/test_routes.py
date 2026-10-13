@@ -686,3 +686,97 @@ def test_usage_reports_the_plan_and_the_counter(api):
     body = client.get("/api/me/usage", headers=AUTH).json()
     assert body["plan"] == "free"
     assert "limit" in body and "used" in body
+
+
+# ---------------------------------------------------------------------------
+# Account export and deletion (account.py runs against the emulator in
+# test_account_firestore.py; these pin who may call it and how)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def account_calls(api, monkeypatch):
+    client, state = api
+    calls = {"export": [], "delete": []}
+
+    def fake_export(db, uid, email):
+        calls["export"].append((uid, email))
+        return {"exported_at": "2026-10-14T09:00:00+00:00", "account": {"uid": uid}, "runs": []}
+
+    def fake_delete(db, uid, delete_auth_user):
+        calls["delete"].append((uid, delete_auth_user))
+        return {"runs": 3, "rate_limit_counters": 1}
+
+    monkeypatch.setattr(main, "export_account", fake_export)
+    monkeypatch.setattr(main, "delete_account", fake_delete)
+    return client, state, calls
+
+
+def _delete(client, body, headers=AUTH):
+    return client.request("DELETE", "/api/me", json=body, headers=headers)
+
+
+def test_export_needs_a_token(account_calls):
+    client, _, calls = account_calls
+    assert client.get("/api/me/export").status_code == 401
+    assert calls["export"] == []
+
+
+def test_export_is_the_callers_own_data_as_a_download(account_calls):
+    client, _, calls = account_calls
+    r = client.get("/api/me/export", headers=AUTH)
+    assert r.status_code == 200
+    assert calls["export"] == [("u1", "u1@example.com")]
+    assert r.headers["content-disposition"] == 'attachment; filename="finertia-export-2026-10-14.json"'
+
+
+def test_delete_needs_a_token(account_calls):
+    client, _, calls = account_calls
+    assert _delete(client, {"confirm": "u1@example.com"}, headers={}).status_code == 401
+    assert calls["delete"] == []
+
+
+def test_delete_needs_the_email_typed_back(account_calls):
+    client, _, calls = account_calls
+    assert _delete(client, {"confirm": "someone-else@example.com"}).status_code == 400
+    assert _delete(client, {}).status_code == 422
+    assert calls["delete"] == []
+
+
+def test_delete_removes_the_callers_account_and_reports_counts(account_calls):
+    client, _, calls = account_calls
+    r = _delete(client, {"confirm": "  U1@Example.com "})
+    assert r.status_code == 200
+    assert r.json() == {"deleted": True, "runs": 3, "rate_limit_counters": 1}
+    uid, deleter = calls["delete"][0]
+    assert uid == "u1"
+    assert deleter is main.delete_auth_user  # the real Auth deletion, not a no-op
+
+
+def test_an_admin_cannot_delete_themselves(account_calls):
+    client, state, calls = account_calls
+    state["profile"] = dict(ADMIN)
+    assert _delete(client, {"confirm": "u1@example.com"}).status_code == 409
+    assert calls["delete"] == []
+
+
+def test_a_paying_subscriber_must_cancel_first(account_calls):
+    client, state, calls = account_calls
+    state["profile"] = {**PRO, "planSource": "stripe"}
+    assert _delete(client, {"confirm": "u1@example.com"}).status_code == 409
+    assert calls["delete"] == []
+
+
+def test_a_comped_pro_account_can_be_deleted(account_calls):
+    client, state, calls = account_calls
+    state["profile"] = {**PRO, "planSource": "admin"}
+    assert _delete(client, {"confirm": "u1@example.com"}).status_code == 200
+    assert len(calls["delete"]) == 1
+
+
+def test_a_suspended_account_cannot_delete_through_the_api(account_calls):
+    """Suspension is checked before anything else; support handles those."""
+    client, state, calls = account_calls
+    state["profile"] = dict(SUSPENDED)
+    assert _delete(client, {"confirm": "u1@example.com"}).status_code == 403
+    assert calls["delete"] == []
