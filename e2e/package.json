@@ -1,0 +1,15 @@
+{
+  "name": "finertia-e2e",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end tests: the real app, API and security rules against local Firebase emulators. Kept out of frontend/ so the bundle never sees these dependencies.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "firebase-tools": "^14.0.0"
+  }
+}
