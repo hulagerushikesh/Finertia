@@ -5,14 +5,18 @@ engine is: it stays readable, and it stays testable without a running server.
 Time is injected as an argument so the tests can advance the clock instead of
 sleeping.
 
-Scope: the counters live in this process. On Cloud Run with N instances the
-effective ceiling is N x limit, which is fine for the job this does — stopping
-one client from hammering an expensive endpoint. It is not a billing quota; the
-per-user run limits in S6 will be enforced in Firestore, which is shared state.
+Scope: `RateLimiter` keeps its counters in this process, so on Cloud Run with
+N instances its ceiling is N x limit. That is fine for the per-IP limit, which
+runs on every request and only stops one address hammering the API.
+`SharedRateLimiter` keeps per-user counts in Firestore so the backtest and
+validation limits hold across instances. Neither is a billing quota; the
+monthly run quota lives on the user's profile.
 """
 
+import logging
 import time
 from collections import deque
+from datetime import datetime, timedelta, timezone
 from threading import Lock
 
 
@@ -89,3 +93,136 @@ class RateLimiter:
         """How many keys currently hold history — exposed for the health check."""
         with self._lock:
             return len(self._hits)
+
+
+# ---------------------------------------------------------------------------
+# Shared across instances
+# ---------------------------------------------------------------------------
+
+log = logging.getLogger("finertia")
+
+
+class MemoryCounterStore:
+    """Counter store held in this process. Two limiters given the same store
+    behave like two Cloud Run instances sharing Firestore, which is what the
+    tests use it for."""
+
+    def __init__(self):
+        self._counts: dict[str, int] = {}
+        self._lock = Lock()
+
+    def hit(self, current: str, previous: str) -> tuple[int, int]:
+        with self._lock:
+            self._counts[current] = self._counts.get(current, 0) + 1
+            return self._counts[current], self._counts.get(previous, 0)
+
+    def undo(self, current: str) -> None:
+        with self._lock:
+            self._counts[current] = self._counts.get(current, 0) - 1
+
+
+class FirestoreCounterStore:
+    """Counters in the `ratelimits` collection, one document per key per window.
+
+    A check is ONE round trip, which matters because the database (nam5) is on
+    the other side of the world from the API (asia-south1): a transaction would
+    be begin + read + commit. Instead a single atomic batch increments this
+    window's counter by 1 and the previous window's by 0, and Firestore returns
+    the value each transform produced — both counts, with no read.
+
+    `expires_at` is there for a Firestore TTL policy to sweep old windows.
+    Without one the documents simply stay; each is a few bytes.
+    """
+
+    COLLECTION = "ratelimits"
+
+    def __init__(self, db_factory):
+        self._db_factory = db_factory
+
+    def _ref(self, doc_id: str):
+        return self._db_factory().collection(self.COLLECTION).document(doc_id)
+
+    def hit(self, current: str, previous: str) -> tuple[int, int]:
+        from firebase_admin import firestore  # noqa: PLC0415
+
+        expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+        batch = self._db_factory().batch()
+        batch.set(self._ref(current), {"n": firestore.Increment(1), "expires_at": expires}, merge=True)
+        batch.set(self._ref(previous), {"n": firestore.Increment(0), "expires_at": expires}, merge=True)
+        cur, prev = batch.commit()
+        return int(cur.transform_results[0].integer_value), int(prev.transform_results[0].integer_value)
+
+    def undo(self, current: str) -> None:
+        from firebase_admin import firestore  # noqa: PLC0415
+
+        self._ref(current).set({"n": firestore.Increment(-1)}, merge=True)
+
+
+class SharedRateLimiter(RateLimiter):
+    """`limit` events per `window_seconds` per key, counted across every instance.
+
+    The in-process limiter above caps a user at N x limit on N instances. This
+    one keeps its counts in a shared store, using the sliding-window-counter
+    estimate: the previous window's count, weighted by how much of it still
+    overlaps the sliding window, plus the current window's count. That keeps the
+    property the in-process one was written for — no double burst at a window
+    boundary — at the cost of two integers per key instead of a list of hits.
+
+    If the store fails, the check falls back to the in-process limiter it
+    inherits from: a rate limiter that takes the API down with the database
+    would be worse than one that is temporarily per-instance.
+    """
+
+    def __init__(self, name: str, limit: int, window_seconds: float, store_factory):
+        super().__init__(limit, window_seconds)
+        self.name = name
+        self._store_factory = store_factory
+        self._store = None
+        self._store_resolved = False
+
+    def _get_store(self):
+        if not self._store_resolved:
+            self._store = self._store_factory()
+            self._store_resolved = True
+        return self._store
+
+    def check(self, key: str, now: float | None = None) -> dict:
+        now = time.time() if now is None else now
+        store = self._get_store()
+        if store is None:
+            return super().check(key, now)
+
+        bucket = int(now // self.window)
+        into = (now - bucket * self.window) / self.window
+        safe_key = key.replace("/", "_")
+        current = f"{self.name}:{safe_key}:{bucket}"
+        previous = f"{self.name}:{safe_key}:{bucket - 1}"
+
+        try:
+            cur, prev = store.hit(current, previous)
+        except Exception:  # noqa: BLE001 — any store failure means fall back
+            log.warning("shared rate limit unavailable, using in-process", exc_info=True,
+                        extra={"limiter": self.name})
+            return super().check(key, now)
+
+        estimate = prev * (1 - into) + cur
+        if estimate <= self.limit:
+            return {"allowed": True, "remaining": max(0, int(self.limit - estimate)), "retry_after": 0.0}
+
+        # Rejected attempts are not counted, as in the in-process limiter: a
+        # client that keeps retrying must not keep pushing its own window out.
+        try:
+            store.undo(current)
+        except Exception:  # noqa: BLE001
+            log.warning("could not undo a rejected rate-limit hit", exc_info=True,
+                        extra={"limiter": self.name})
+        held = cur - 1
+        if held < self.limit and prev > 0:
+            # Wait for the previous window to slide far enough out.
+            need = 1 - (self.limit - 1 - held) / prev
+            retry = (need - into) * self.window
+        else:
+            # This window alone is full; it becomes the previous one next.
+            need = 1 - (self.limit - 1) / held if held > 0 else 0
+            retry = (1 - into) * self.window + max(0.0, need) * self.window
+        return {"allowed": False, "remaining": 0, "retry_after": max(0.0, retry)}
