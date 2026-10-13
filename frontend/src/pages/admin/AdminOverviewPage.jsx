@@ -60,7 +60,16 @@ export default function AdminOverviewPage() {
       {/* Top tickers bar chart */}
       {stats.top_tickers?.length > 0 && (
         <div className="panel p-5">
+<<<<<<< HEAD
           <h2 className="text-sm font-semibold text-foreground mb-4">Top 5 Tickers</h2>
+=======
+          <h2 className="text-sm font-semibold text-text-primary mb-4">
+            Top 5 Tickers
+            {stats.top_tickers_window ? (
+              <span className="font-normal text-graphite"> · last {stats.top_tickers_window} runs</span>
+            ) : null}
+          </h2>
+>>>>>>> e8f8465ba95cbce99c33187f4c7d2c3412060073
           <ResponsiveContainer width="100%" height={200}>
             <BarChart
               data={stats.top_tickers}
