@@ -1,0 +1,54 @@
+{
+  "_comment": "Onboarding examples (M12 sprint 2, item 3). Each `params` is laid over ConfigPanel's DEFAULTS. Examples of how the tool works, not recommendations: the copy says what to look at, never what to buy. Checked by frontend/src/lib/samples.test.js and backend/tests/test_sample_strategies.py, which runs each one through the API.",
+  "samples": [
+    {
+      "id": "trend-large-cap",
+      "title": "Trend following on one stock",
+      "idea": "Momentum on Reliance: hold while the price is rising above its 50-day average, sit in cash otherwise.",
+      "look_at": "Compare the strategy line with buy-and-hold on the equity chart, then check the drawdown: following a trend often gives up return to avoid the worst falls.",
+      "params": {
+        "mode": "single",
+        "ticker": "RELIANCE.NS",
+        "start": "2016-01-01",
+        "end": "2024-01-01",
+        "strategy": "momentum",
+        "momentum_lookback": 20,
+        "ma_window": 50,
+        "momentum_threshold": 0.02
+      }
+    },
+    {
+      "id": "mean-reversion-index",
+      "title": "Mean reversion on an index fund",
+      "idea": "Bollinger bands on SPY: buy when the price drops well below its 20-day average, sell when it stretches above.",
+      "look_at": "Open the Validation tab. A strategy that looks good on one run can fail walk-forward, which is what the tab is for.",
+      "params": {
+        "mode": "single",
+        "ticker": "SPY",
+        "start": "2015-01-01",
+        "end": "2024-01-01",
+        "strategy": "bollinger",
+        "bb_window": 20,
+        "bb_std": 2.0
+      }
+    },
+    {
+      "id": "basket-with-stop",
+      "title": "A small basket with a stop-loss",
+      "idea": "MACD on three large US stocks, equal weight, with an 8% stop-loss on each position.",
+      "look_at": "The legs table shows which stock carried the result. Turn the stop off and run again to see what it changed.",
+      "params": {
+        "mode": "portfolio",
+        "tickers": ["AAPL", "MSFT", "GOOGL"],
+        "weighting": "equal",
+        "start": "2018-01-01",
+        "end": "2024-01-01",
+        "strategy": "macd",
+        "macd_fast": 12,
+        "macd_slow": 26,
+        "macd_signal": 9,
+        "stop_loss": 0.08
+      }
+    }
+  ]
+}
