@@ -225,9 +225,12 @@ def test_admin_routes_reject_a_normal_user(api):
     assert "admin" in r.json()["detail"].lower()
 
 
-def test_admin_routes_accept_an_admin(api):
+def test_admin_routes_accept_an_admin(api, monkeypatch):
+    # The queries themselves need real Firestore aggregations; they are tested
+    # against the emulator in test_admin_queries_firestore.py. This is the gate.
     client, state = api
     state["profile"] = dict(ADMIN)
+    monkeypatch.setattr(main, "platform_stats", lambda db: {"total_users": 0})
     assert client.get("/api/admin/stats", headers=AUTH).status_code == 200
 
 

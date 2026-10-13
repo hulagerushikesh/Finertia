@@ -64,7 +64,7 @@ export default function AdminUsersPage() {
       <div className="flex gap-3 mb-5">
         <input
           className="flex-1 max-w-xs field-input px-4 py-2"
-          placeholder="Search by email…"
+          placeholder="Email starts with…"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { setSearch(searchInput); setPage(0); } }}
