@@ -6,14 +6,48 @@ import os
 import firebase_admin
 from firebase_admin import auth, credentials, firestore
 from fastapi import HTTPException
+from google.auth.credentials import AnonymousCredentials
 
 _app = None
+
+
+def emulator_mode() -> bool:
+    """True when both Firebase emulators are configured (end-to-end tests).
+
+    Refused outright on Cloud Run (`K_SERVICE` is set there): an emulator host
+    left in a production service's env would make token checks accept tokens
+    the emulator minted, which anyone can mint.
+    """
+    on = bool(os.environ.get("FIREBASE_AUTH_EMULATOR_HOST") and os.environ.get("FIRESTORE_EMULATOR_HOST"))
+    if on and os.environ.get("K_SERVICE"):
+        raise RuntimeError("Firebase emulator settings are not allowed on Cloud Run")
+    return on
+
+
+class _EmulatorCredential(credentials.Base):
+    """Anonymous credential for the emulators.
+
+    Without an explicit credential the SDK falls back to Application Default
+    Credentials, which exist on a developer's machine (gcloud) but not on a CI
+    runner, and the emulators ignore them anyway.
+    """
+
+    def get_credential(self):
+        return AnonymousCredentials()
 
 
 def _get_app() -> firebase_admin.App:
     """Lazily initialise Firebase Admin from env-var service account JSON."""
     global _app
     if _app is not None:
+        return _app
+
+    if emulator_mode():
+        # Local end-to-end tests: the Admin SDK talks to the Auth and
+        # Firestore emulators, which need a project id but no credentials.
+        _app = firebase_admin.initialize_app(
+            _EmulatorCredential(), options={"projectId": os.environ["GCLOUD_PROJECT"]}
+        )
         return _app
 
     sa_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")

@@ -57,9 +57,12 @@ def _get_store() -> PriceStore:
         # Firestore only when credentials exist and the cache is not switched
         # off. A dev machine without a service account keeps working; it just
         # loses the second tier and behaves exactly as it did before.
-        if os.environ.get("PRICE_CACHE", "on").lower() != "off" and os.environ.get(
-            "FIREBASE_SERVICE_ACCOUNT_JSON"
-        ):
+        # The emulator counts as credentials: end-to-end tests seed prices
+        # there so a run never reaches Yahoo.
+        has_firestore = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON") or os.environ.get(
+            "FIRESTORE_EMULATOR_HOST"
+        )
+        if os.environ.get("PRICE_CACHE", "on").lower() != "off" and has_firestore:
             from price_store import FirestorePriceStore  # noqa: PLC0415
 
             _store = FirestorePriceStore()
