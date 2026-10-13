@@ -57,6 +57,7 @@ from strategies import build_positions, longest_window, param_grid, STRATEGY_NAM
 from validation import walk_forward, permutation_test
 from portfolio_validation import leg_positions, portfolio_walk_forward, portfolio_permutation_test
 from firebase_admin_init import verify_token, get_user_profile, get_db, emulator_mode
+from admin_queries import platform_stats, list_users, list_runs
 
 # ---------------------------------------------------------------------------
 # Startup configuration checks — fail loudly rather than at first request
@@ -1256,58 +1257,7 @@ async def get_run(run_id: str, authorization: Optional[str] = Header(None)):
 async def admin_stats(authorization: Optional[str] = Header(None)):
     """Return platform-wide statistics — admin only."""
     await inject_admin(authorization)
-
-    db = get_db()
-    users_docs = list(db.collection("users").stream())
-    runs_docs = list(db.collection("runs").stream())
-
-    total_users = len(users_docs)
-    total_runs = len(runs_docs)
-
-    now = datetime.now(timezone.utc)
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    week_start = today_start - timedelta(days=now.weekday())
-
-    runs_today = 0
-    runs_this_week = 0
-    ticker_counts: dict = {}
-    sharpe_sum = 0.0
-    return_sum = 0.0
-
-    for doc in runs_docs:
-        d = doc.to_dict()
-        created = d.get("createdAt")
-        if created:
-            # Firestore timestamps are datetime-like objects
-            if hasattr(created, "timestamp"):
-                ts = datetime.fromtimestamp(created.timestamp(), tz=timezone.utc)
-            else:
-                ts = created
-            if ts >= today_start:
-                runs_today += 1
-            if ts >= week_start:
-                runs_this_week += 1
-
-        ticker = d.get("ticker", "")
-        ticker_counts[ticker] = ticker_counts.get(ticker, 0) + 1
-
-        m = d.get("metrics", {})
-        sharpe_sum += m.get("sharpe_ratio", 0) or 0
-        return_sum += m.get("total_return", 0) or 0
-
-    top_tickers = sorted(ticker_counts.items(), key=lambda x: x[1], reverse=True)[:5]
-    avg_sharpe = round(sharpe_sum / total_runs, 4) if total_runs else 0.0
-    avg_total_return = round(return_sum / total_runs, 4) if total_runs else 0.0
-
-    return {
-        "total_users": total_users,
-        "total_runs": total_runs,
-        "runs_today": runs_today,
-        "runs_this_week": runs_this_week,
-        "top_tickers": [{"ticker": t, "count": c} for t, c in top_tickers],
-        "avg_sharpe": avg_sharpe,
-        "avg_total_return": avg_total_return,
-    }
+    return platform_stats(get_db())
 
 
 @app.get("/api/admin/users")
@@ -1319,22 +1269,7 @@ async def admin_users(
 ):
     """Return paginated user list — admin only."""
     await inject_admin(authorization)
-
-    db = get_db()
-    all_docs = list(
-        db.collection("users")
-        .order_by("createdAt", direction=firestore.Query.DESCENDING)
-        .stream()
-    )
-
-    if search:
-        all_docs = [d for d in all_docs if search.lower() in (d.to_dict().get("email", "").lower())]
-
-    total = len(all_docs)
-    page = all_docs[offset: offset + limit]
-    users = [d.to_dict() for d in page]
-
-    return {"users": users, "total": total}
+    return list_users(get_db(), limit, offset, search)
 
 
 @app.patch("/api/admin/users/{target_uid}")
@@ -1385,17 +1320,4 @@ async def admin_runs(
 ):
     """Return paginated run list with optional filters — admin only."""
     await inject_admin(authorization)
-
-    db = get_db()
-    query = db.collection("runs").order_by("createdAt", direction=firestore.Query.DESCENDING)
-    if uid:
-        query = query.where("uid", "==", uid)
-    if ticker:
-        query = query.where("ticker", "==", ticker.upper())
-
-    all_docs = list(query.stream())
-    total = len(all_docs)
-    page = all_docs[offset: offset + limit]
-    runs = [d.to_dict() for d in page]
-
-    return {"runs": runs, "total": total}
+    return list_runs(get_db(), limit, offset, uid, ticker)

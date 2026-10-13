@@ -115,12 +115,13 @@ jobs:
         working-directory: e2e
         run: npx playwright install --with-deps chromium
 
-      - name: Shared rate limit against the Firestore emulator
-        # Proves the per-user limit holds across two clients (two Cloud Run
-        # instances); the backend job skips this file without an emulator.
+      - name: Backend tests against the Firestore emulator
+        # The shared rate limit across two clients (two Cloud Run instances)
+        # and the admin aggregation queries. The backend job skips these
+        # files without an emulator.
         run: >
           e2e/node_modules/.bin/firebase emulators:exec --only firestore --project demo-finertia
-          "cd backend && python -m pytest -q tests/test_shared_ratelimit_firestore.py"
+          "cd backend && python -m pytest -q tests/test_shared_ratelimit_firestore.py tests/test_admin_queries_firestore.py"
 
       - name: Run end-to-end tests
         working-directory: e2e
