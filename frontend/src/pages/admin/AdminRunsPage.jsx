@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Input } from "../../components/ui/input";
 import { getAdminRuns } from "../../api";
 
 const PAGE_SIZE = 50;
@@ -40,14 +41,14 @@ export default function AdminRunsPage() {
     <div>
       {/* Filters */}
       <div className="flex gap-3 mb-5 flex-wrap">
-        <input
-          className="field-input px-4 py-2 w-36"
+        <Input
+          className="w-36"
           placeholder="Ticker filter…"
           value={tickerFilter}
           onChange={(e) => { setTickerFilter(e.target.value.toUpperCase()); setPage(0); }}
         />
-        <input
-          className="field-input px-4 py-2 w-72"
+        <Input
+          className="w-72"
           placeholder="User UID filter…"
           value={uidFilter}
           onChange={(e) => { setUidFilter(e.target.value); setPage(0); }}
@@ -68,7 +69,7 @@ export default function AdminRunsPage() {
         <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>
       ) : (
         <>
-          <div className="panel overflow-x-auto">
+          <div className="sheet overflow-x-auto">
             <table className="w-full text-sm min-w-[48rem]">
               <thead>
                 <tr className="border-b border-border text-graphite text-xs uppercase tracking-wider">
