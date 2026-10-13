@@ -491,6 +491,18 @@ A failed send does not fail registration — the account and its profile documen
 
 Set `VITE_SUPPORT_EMAIL` at build time. Unset, it shows an obviously fake placeholder rather than a plausible wrong address.
 
+### Account export and deletion
+
+`GET /api/me/export` returns everything stored about the caller (profile and
+every saved run) as a JSON download. `DELETE /api/me` with
+`{"confirm": "<the account's email>"}` deletes, in order, the user's runs,
+their rate-limit counters, the profile, and then the Firebase Auth account.
+The account goes last, so a failure part way leaves a user who can still sign
+in and retry. Admins cannot delete themselves, and neither can an account with
+a live Stripe subscription (409 for both). The Profile buttons come in M12
+sprint 2. `backend/account.py` explains what is kept and why: request logs
+and Sentry events carry the uid only, and age out.
+
 ### Firestore security rules
 
 The API is not the only door into the database. A signed-in browser holds a real Firebase token and can talk to Firestore directly, so any check that exists only in FastAPI is advisory — the rules are what actually enforce it.
