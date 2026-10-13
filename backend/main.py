@@ -376,8 +376,19 @@ async def inject_admin(authorization: Optional[str] = Header(None)) -> dict:
 
 @app.get("/api/health")
 async def health():
-    """Health check endpoint — no auth required."""
-    return {"status": "ok"}
+    """Health check endpoint — no auth required.
+
+    Also says what is serving: `commit` is the git SHA the Deploy workflow
+    passes in as GIT_SHA, `revision` the Cloud Run revision. The release
+    checklist compares `commit` with the `backend-deployed` tag, so "the tag
+    says X" and "production runs X" cannot drift apart unnoticed. Both are
+    null locally. The repository is public, so neither tells anyone anything.
+    """
+    return {
+        "status": "ok",
+        "commit": os.environ.get("GIT_SHA") or None,
+        "revision": os.environ.get("K_REVISION") or None,
+    }
 
 
 @app.get("/api/plans")

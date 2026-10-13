@@ -159,7 +159,17 @@ BACKTEST = {"ticker": "AAPL", "start": "2020-01-01", "end": "2022-01-01",
 
 def test_health_needs_no_auth(api):
     client, _ = api
-    assert client.get("/api/health").json() == {"status": "ok"}
+    assert client.get("/api/health").json() == {"status": "ok", "commit": None, "revision": None}
+
+
+def test_health_names_the_deployed_commit_and_revision(api, monkeypatch):
+    """The release checklist reads these to prove what production is serving."""
+    client, _ = api
+    monkeypatch.setenv("GIT_SHA", "b1fc3ff0123456789abcdef0123456789abcdef0")
+    monkeypatch.setenv("K_REVISION", "finertia-api-00021-abc")
+    body = client.get("/api/health").json()
+    assert body["commit"] == "b1fc3ff0123456789abcdef0123456789abcdef0"
+    assert body["revision"] == "finertia-api-00021-abc"
 
 
 def test_plans_and_strategies_are_public(api):

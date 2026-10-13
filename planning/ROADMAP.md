@@ -42,7 +42,7 @@ in the plan has an owner hat so nothing falls between roles.
 - Sprint = 2 weeks. Plan at the start (PM + Scrum), review at the end with the
   author, who signs off on scope and on anything touching production.
 - **Definition of Done** (new): code + unit tests + an E2E path for any user
-  flow it touches + passes the [release checklist](#release-checklist-pvt) +
+  flow it touches + passes the [release checklist](../RELEASE.md) +
   STATUS updated. "It builds" is no longer done — that is how #84's bugs
   shipped.
 - Claude merges its own PRs on green CI (standing rule); backend deploys and
@@ -75,7 +75,7 @@ No new features. Make what exists trustworthy. Ordered by impact.
 | 4 | ✅ **Date input that can't be misread** — presets (1Y / 3Y / 5Y / Max) and the chosen range shown in words ("1 Jan 2024 → 6 Jan 2024") beside the native pickers | Frontend | **Done 13 Oct:** presets 1Y/3Y/5Y/10Y ending today (Max dropped: listing dates differ per ticker, so it would need a data call); the range in words with its length and ~trading days; a backwards range or future end blocks Run before any request. 16 new unit tests; E2E green |
 | 5 | ✅ **Shared rate limit** — move per-user limits to Firestore counters (or halve per-instance limits and document) | Backend + DB | **Done 13 Oct:** backtest and validate limits in Firestore (`ratelimits`), one round trip per check, fail-open to in-process. Holds across 2 instances in unit tests and against the Firestore emulator in CI. Optional: a TTL policy on `ratelimits.expires_at` (prod config, ask first) |
 | 6 | ✅ **Admin stats via Firestore `count()` aggregation**, not full scans; commit `firestore.indexes.json` | DB | **Done 13 Oct:** `admin_queries.py` — aggregations for counts/averages, DB-side paging, email-prefix search, top tickers over the last 500 runs; `firestore.indexes.json` with the run indexes and index exemptions for price arrays and rate-limit counters. 5 emulator tests in CI. Index deploy is a prod change (ask first) |
-| 7 | **Release checklist (PVT)** as a doc, run before every production deploy | Scrum | Checked off in the PR of each deploy |
+| 7 | ✅ **Release checklist (PVT)** as a doc, run before every production deploy | Scrum | **Done 13 Oct:** [RELEASE.md](../RELEASE.md) (before merge / before deploy / deploy / after / rollback), a PR template with part 1, and `scripts/release-check.sh pre\|post` (read-only: CI + Vercel state, what backend/ would ship, new env vars, live rules vs repo, indexes READY, health serving the tagged commit, 401 on admin without a token, CORS, public pages, error logs). `/api/health` now names its commit and revision; the Deploy workflow waits for its own commit. First run found the live Firestore rules behind the repo (#91's `ratelimits` block never deployed) |
 
 ## H2 — M12 "Product readiness"
 
@@ -108,17 +108,7 @@ doing anyway.
 
 ## Release checklist (PVT)
 
-Run before every production deploy and tick it in the PR. Items marked (E2E)
-are covered by the Playwright suite on every PR; check the rest by hand.
-
-- [ ] Logged out: `/`, `/demo` (Results + Validation tabs), `/pricing`, `/writeup` load, no console errors, 375 px no horizontal scroll (E2E)
-- [ ] Register a new account (emulator or test project) → banner shows → can run (E2E)
-- [ ] Run a backtest; clear the ticker box; open Validation → Pro wall (free) / verdict (Pro) (E2E)
-- [ ] Too-short date range → error names the ISO range (E2E)
-- [ ] History: re-run opens the config; Profile: display name saves (E2E)
-- [ ] Admin: Give Pro → "pro · comp"; Remove Pro → free; columns aligned, text readable in both themes
-- [ ] Light **and** dark theme on the pages touched
-- [ ] `/api/health` 200; `backend-deployed` tag == deployed commit
+Moved to [RELEASE.md](../RELEASE.md), next to the code it checks.
 
 ## What we are not doing (and why)
 

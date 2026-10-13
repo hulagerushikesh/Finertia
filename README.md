@@ -199,9 +199,13 @@ gcloud run deploy finertia-api \
   --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 \
   --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
   --set-secrets FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest \
-  --update-env-vars SENTRY_DSN=https://3e79d3553ba15e22d80c2b964eb2bc47@o4512247279976448.ingest.us.sentry.io/4512247309402112 \
+  --update-env-vars SENTRY_DSN=https://3e79d3553ba15e22d80c2b964eb2bc47@o4512247279976448.ingest.us.sentry.io/4512247309402112,GIT_SHA=$(git rev-parse HEAD) \
   --allow-unauthenticated
 ```
+
+Deploy from a clean checkout of the commit you mean: `GIT_SHA` is what
+`/api/health` reports as `commit`, and the release check compares it with the
+`backend-deployed` tag.
 
 The service-account JSON lives in Secret Manager, never in an env var or the
 repo. The service runs as `finertia-api-runtime`, a service account with no
@@ -215,7 +219,8 @@ deploys. `backend/.gcloudignore` keeps `.env`
 and `tests/` out of the source upload. The caps (`min-instances 0`, max 2,
 512Mi) are the cost ceiling — idle costs nothing; do not raise them casually.
 
-Afterwards, check the new revision is serving:
+Afterwards, check the new revision is serving (`commit` should be the SHA you
+deployed), or run the full post-deploy check from [RELEASE.md](RELEASE.md):
 
 ```bash
 curl -s https://finertia.hulage.in/api/health
