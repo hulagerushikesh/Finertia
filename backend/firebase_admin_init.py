@@ -100,3 +100,13 @@ def get_user_role(uid: str) -> str:
     """Read users/{uid}.role from Firestore and return it (defaults to 'user')."""
     profile = get_user_profile(uid)
     return (profile or {}).get("role", "user")
+
+
+def delete_auth_user(uid: str) -> None:
+    """Delete the Firebase Auth account. An account that is already gone is
+    not an error: a retried deletion must be able to finish."""
+    _get_app()
+    try:
+        auth.delete_user(uid)
+    except auth.UserNotFoundError:
+        pass

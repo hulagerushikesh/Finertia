@@ -10,6 +10,7 @@ from typing import Optional
 import pandas as pd
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Query, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from firebase_admin import firestore
@@ -51,13 +52,15 @@ from schemas import (
     PortfolioRequest,
     PortfolioValidateRequest,
     UserPatch,
+    DeleteAccountRequest,
     RISK_KEYS,
 )
 from strategies import build_positions, longest_window, param_grid, STRATEGY_NAMES, STRATEGIES
 from validation import walk_forward, permutation_test
 from portfolio_validation import leg_positions, portfolio_walk_forward, portfolio_permutation_test
-from firebase_admin_init import verify_token, get_user_profile, get_db, emulator_mode
+from firebase_admin_init import verify_token, get_user_profile, get_db, emulator_mode, delete_auth_user
 from admin_queries import platform_stats, list_users, list_runs
+from account import delete_account, export_account
 from monitoring import init_sentry, set_user as sentry_set_user, tag_request
 
 # ---------------------------------------------------------------------------
@@ -421,6 +424,41 @@ async def my_usage(authorization: Optional[str] = Header(None)):
         "max_portfolio_size": plan["max_portfolio_size"],
         "billing_enabled": billing.is_configured(),
     }
+
+
+@app.get("/api/me/export")
+async def export_my_data(authorization: Optional[str] = Header(None)):
+    """Everything stored about the caller, as a JSON download (DPDP: access)."""
+    user = await inject_user(authorization)
+    body = export_account(get_db(), user["uid"], user["email"])
+    stamp = body["exported_at"][:10]
+    log.info("account exported", extra={"uid": user["uid"], "runs": len(body["runs"])})
+    return JSONResponse(
+        jsonable_encoder(body),
+        headers={"Content-Disposition": f'attachment; filename="finertia-export-{stamp}.json"'},
+    )
+
+
+@app.delete("/api/me")
+async def delete_my_account(body: DeleteAccountRequest, authorization: Optional[str] = Header(None)):
+    """Delete the caller's account and every document that belongs to it
+    (DPDP: erasure). See account.py for what is removed and in what order."""
+    user = await inject_user(authorization)
+    profile = user["profile"]
+
+    if (body.confirm or "").strip().lower() != (user["email"] or "").strip().lower():
+        raise HTTPException(status_code=400, detail="Type your account's email address to confirm.")
+    # An admin deleting themselves could leave nobody able to open the admin
+    # panel; the role has to be removed by another admin first.
+    if user["role"] == "admin":
+        raise HTTPException(status_code=409, detail="Admin accounts cannot delete themselves. Ask another admin to remove the role first.")
+    # Deleting the account would not stop Stripe charging the card.
+    if profile.get("planSource") == "stripe" and plan_for(profile)["name"] != "free":
+        raise HTTPException(status_code=409, detail="Cancel your subscription before deleting the account.")
+
+    counts = delete_account(get_db(), user["uid"], delete_auth_user)
+    log.info("account deleted", extra={"uid": user["uid"], **counts})
+    return {"deleted": True, **counts}
 
 
 @app.post("/api/billing/checkout")
