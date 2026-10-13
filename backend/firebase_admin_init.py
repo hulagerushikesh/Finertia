@@ -6,6 +6,7 @@ import os
 import firebase_admin
 from firebase_admin import auth, credentials, firestore
 from fastapi import HTTPException
+from google.auth.credentials import AnonymousCredentials
 
 _app = None
 
@@ -23,6 +24,18 @@ def emulator_mode() -> bool:
     return on
 
 
+class _EmulatorCredential(credentials.Base):
+    """Anonymous credential for the emulators.
+
+    Without an explicit credential the SDK falls back to Application Default
+    Credentials, which exist on a developer's machine (gcloud) but not on a CI
+    runner, and the emulators ignore them anyway.
+    """
+
+    def get_credential(self):
+        return AnonymousCredentials()
+
+
 def _get_app() -> firebase_admin.App:
     """Lazily initialise Firebase Admin from env-var service account JSON."""
     global _app
@@ -32,7 +45,9 @@ def _get_app() -> firebase_admin.App:
     if emulator_mode():
         # Local end-to-end tests: the Admin SDK talks to the Auth and
         # Firestore emulators, which need a project id but no credentials.
-        _app = firebase_admin.initialize_app(options={"projectId": os.environ["GCLOUD_PROJECT"]})
+        _app = firebase_admin.initialize_app(
+            _EmulatorCredential(), options={"projectId": os.environ["GCLOUD_PROJECT"]}
+        )
         return _app
 
     sa_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
