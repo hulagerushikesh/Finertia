@@ -3,6 +3,24 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-10-13 — Data budget ₹0 and legal after the build; both get their own sprint
+
+The author's call, after the spike above:
+
+- **Licensed data: ₹0 a month for now.** Finertia keeps running on free
+  data (yfinance) through the build work. The provider choice and budget are
+  made once the build work is done, in a **dedicated data sprint** that does
+  the switch end to end: pick and contract the provider, implement it behind
+  the `PRICE_PROVIDER` seam (#98), backfill and compare against yfinance,
+  then cut over. The spike's numbers (Tiingo ~$250/mo, US first) are the
+  starting point.
+- **Legal consult: after the build work**, not in sprint 1. It is booked once
+  the product is close to final, so counsel reviews what actually ships.
+
+Both still gate charging: Stripe does not go live before licensed data and the
+legal review (DECISIONS 13 Oct, "Build Finertia as a product"). Free testing
+on yfinance continues meanwhile.
+
 ## 2026-10-13 — Licensed price data: spike result (M12 sprint 1, item 3)
 
 **Status: recommendation, waiting on the author's budget ceiling.** No contract

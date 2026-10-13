@@ -87,8 +87,8 @@ doing anyway.
 
 | Item | Hat | Notes |
 |---|---|---|
-| Legal review: SEBI positioning, DPDP Act, Terms + Privacy pages | PM | Before any charge; probably a one-off paid consult |
-| **Licensed market data** replacing yfinance for paid users (EOD provider for NSE + US) | Backend + Cloud | The single biggest product risk; cost per month decides pricing |
+| Legal review: SEBI positioning, DPDP Act, Terms + Privacy pages | PM | Before any charge; a one-off paid consult, **booked after the build work** (13 Oct) |
+| **Licensed market data** replacing yfinance for paid users (EOD provider for NSE + US) | Backend + Cloud | The single biggest product risk; ₹0 until the build work is done, then **a dedicated data sprint** (13 Oct) |
 | **One free validation per month** on the free plan | PM + Backend | Lets free users see the USP; Pro = unlimited. Measure conversion |
 | Account deletion + data export (DPDP) | Backend + DB | Self-serve from Profile |
 | Firestore point-in-time recovery + a scheduled export | DB + Cloud | Restore drill done once |
