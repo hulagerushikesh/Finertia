@@ -71,7 +71,8 @@ jobs:
         env:
           # Error reporting (backend/monitoring.py). A DSN can only send events
           # to the project, not read them, so it is config rather than a secret.
-          # --update-env-vars changes this one variable and leaves the rest.
+          # --update-env-vars changes these variables and leaves the rest.
+          # GIT_SHA is what /api/health reports as `commit`.
           SENTRY_DSN: https://3e79d3553ba15e22d80c2b964eb2bc47@o4512247279976448.ingest.us.sentry.io/4512247309402112
         run: |
           gcloud run deploy finertia-api \
@@ -81,7 +82,7 @@ jobs:
             --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 \
             --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
             --set-secrets "FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest" \
-            --update-env-vars "SENTRY_DSN=$SENTRY_DSN" \
+            --update-env-vars "SENTRY_DSN=$SENTRY_DSN,GIT_SHA=$GITHUB_SHA" \
             --allow-unauthenticated \
             --quiet
 
@@ -91,12 +92,18 @@ jobs:
             --region asia-south1 --project momentbacktracking \
             --format 'value(status.url)')
           echo "Deployed to $URL"
-          # A deploy that "succeeded" but serves 500s is not a successful deploy.
+          # A deploy that "succeeded" but serves 500s is not a successful deploy,
+          # and neither is one where the old revision still answers.
           for i in 1 2 3 4 5; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/api/health") && [ "$code" = "200" ] && exit 0
-            echo "health check returned $code, retrying ($i/5)"; sleep 6
+            body=$(curl -s -w '\n%{http_code}' "$URL/api/health") || body=""
+            code=$(echo "$body" | tail -n1)
+            commit=$(echo "$body" | head -n1 | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit") or "")' 2>/dev/null || true)
+            if [ "$code" = "200" ] && [ "$commit" = "$GITHUB_SHA" ]; then
+              echo "healthy, serving $commit"; exit 0
+            fi
+            echo "health returned $code serving '${commit:-?}', want $GITHUB_SHA; retrying ($i/5)"; sleep 6
           done
-          echo "::error::New revision never returned a healthy /api/health"
+          echo "::error::New revision never returned a healthy /api/health for $GITHUB_SHA"
           exit 1
 
       # backend-drift.yml diffs backend/ against this tag on every push to
