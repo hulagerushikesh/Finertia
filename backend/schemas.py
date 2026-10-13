@@ -282,3 +282,13 @@ class UserPatch(BaseModel):
     # Granted by hand, for testers and comps while Stripe is not live. The
     # route checks it against plans.PLAN_NAMES.
     plan: Optional[str] = None
+
+
+class DeleteAccountRequest(BaseModel):
+    """The account's email address, typed by the user, as the confirmation.
+
+    An API-level guard, not only a UI one: a stray DELETE (a script, a
+    replayed request) cannot erase an account without naming it.
+    """
+
+    confirm: str = Field(..., max_length=320)
