@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { Link2, Check, Download } from "lucide-react";
@@ -24,6 +24,8 @@ import { runBacktest, validateStrategy, runPortfolio, validatePortfolio } from "
 import { exportEquityCurve, exportTrades, exportMetrics } from "../utils/csv";
 import { encodeParams, decodeParams, permalinkFor } from "../utils/permalink";
 import { useToast } from "../hooks/useToast";
+import { useAuth } from "../hooks/useAuth";
+import { loadWorkspace, saveWorkspace } from "../lib/workspaceStore";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -51,26 +53,33 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const off = useReducedMotion();
+  const uid = useAuth()?.user?.uid ?? null;
+  // What this account left on screen last time it was here (memory only, see
+  // workspaceStore). A re-run from History is a fresh start, so it ignores it.
+  const fromHistory = Boolean(location.state?.params);
+  const [kept] = useState(() => (fromHistory ? null : loadWorkspace(uid)));
   // Precedence: a re-run from History carries explicit state, which beats the
-  // URL; then a shared permalink; then the defaults.
+  // URL; then a shared permalink; then the config left here last; then the
+  // defaults. The navbar's Workspace link has no query, so it lands on the
+  // kept config rather than resetting it.
   const [params, setParams] = useState(
-    () => location.state?.params || decodeParams(location.search) || DEFAULTS,
+    () => location.state?.params || decodeParams(location.search) || kept?.params || DEFAULTS,
   );
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(kept?.result ?? null);
   // The config that produced the result on screen, snapshotted at run time.
   // Validation reads from this, not the live config panel: the Validation tab
   // checks the run you are looking at, so clearing or editing the ticker box
   // afterwards cannot send a mismatched (or empty) request. Re-run to validate
   // a different set-up.
-  const [ranParams, setRanParams] = useState(null);
+  const [ranParams, setRanParams] = useState(kept?.ranParams ?? null);
   const [loading, setLoading] = useState(false);
   // { message, status, action } — `action` ("run" | "validate") is what
   // failed, so the banner repeats that and not always the backtest.
   const [error, setError] = useState(null);
 
-  const [tab, setTab] = useState("results");
+  const [tab, setTab] = useState(kept?.tab ?? "results");
   const [showDetail, , toggleDetail] = useDisclosure("finertia-results-detail");
-  const [validation, setValidation] = useState(null);
+  const [validation, setValidation] = useState(kept?.validation ?? null);
   const [validating, setValidating] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -105,17 +114,31 @@ export default function DashboardPage() {
   // Switching mode invalidates the result outright — a basket is not the same
   // run as one ticker. Clearing it is what the empty state is for; leaving it
   // up would show a stale answer under a config that can no longer produce it.
+  // Only on a change: on mount the mode is whatever the kept run had, and
+  // clearing then would throw the restored result away.
+  const mode = useRef(params.mode);
   useEffect(() => {
+    if (mode.current === params.mode) return;
+    mode.current = params.mode;
     setResult(null);
     setValidation(null);
     setRanParams(null);
   }, [params.mode]);
+
+  // Keep what is on screen for the next visit. Results that arrive after the
+  // user has left are saved by the handlers below, which still run unmounted.
+  useEffect(() => {
+    saveWorkspace(uid, { params, result, ranParams, validation, tab });
+  }, [uid, params, result, ranParams, validation, tab]);
 
   async function handleRun() {
     setError(null);
     setLoading(true);
     try {
       const data = isPortfolio ? await runPortfolio(params) : await runBacktest(params);
+      // Saved first: if the user left mid-run, the state setters below land
+      // on an unmounted page and only this survives to the next visit.
+      saveWorkspace(uid, { result: data, ranParams: params, validation: null, tab: "results" });
       setResult(data);
       // Freeze the config this result came from; validation will read it.
       setRanParams(params);
@@ -145,6 +168,9 @@ export default function DashboardPage() {
     const cfgIsPortfolio = cfg.mode === "portfolio";
     try {
       const data = cfgIsPortfolio ? await validatePortfolio(cfg) : await validateStrategy(cfg);
+      // Only onto the run it validated: if the user left, came back and ran
+      // something else meanwhile, this answer is for a run no longer shown.
+      if (loadWorkspace(uid)?.ranParams === cfg) saveWorkspace(uid, { validation: data, tab: "validation" });
       setValidation(data);
       const [msg, tone] = WF_TOAST[data.walk_forward.verdict] || WF_TOAST.inconclusive;
       showToast(msg, tone);

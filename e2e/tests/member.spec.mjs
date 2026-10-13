@@ -53,6 +53,28 @@ test("a run appears in History and re-opens in the workspace", async ({ page }) 
   await expect(page.getByLabel("Ticker")).toHaveValue("AAPL");
 });
 
+// Tester report, 13 Oct: leaving the workspace for History and coming back
+// emptied it, and getting the answer back cost another monthly run. Moves
+// through the navbar, not page.goto: a reload is a fresh start by design.
+test("the workspace keeps its run across a trip to History", async ({ page }) => {
+  await register(page, freshEmail("keep"));
+  await runBacktest(page);
+  let backtests = 0;
+  page.on("request", (r) => r.url().includes("/api/backtest") && r.method() === "POST" && backtests++);
+
+  await page.getByRole("link", { name: "History" }).first().click();
+  await expect(page.getByRole("heading", { name: "History" })).toBeVisible();
+  await page.getByRole("link", { name: "Workspace" }).first().click();
+
+  // In #main: the "AAPL complete" toast also says "total return". Exact: the
+  // empty state's heading is "Run AAPL and see what comes back".
+  const main = page.locator("#main");
+  await expect(main.getByRole("heading", { name: "AAPL", exact: true })).toBeVisible();
+  await expect(main.getByText("Total return").first()).toBeVisible();
+  await expect(main.getByText("Nothing run yet", { exact: false })).toHaveCount(0);
+  expect(backtests).toBe(0);
+});
+
 test("Profile saves a display name", async ({ page }) => {
   await register(page, freshEmail("profile"));
   await page.goto("/profile");
