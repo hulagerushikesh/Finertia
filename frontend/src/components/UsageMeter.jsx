@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getUsage } from "../api";
+import { feature } from "../lib/features";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,8 @@ export default function UsageMeter() {
   const pctUsed = uncapped ? 0 : Math.min(100, (usage.used / usage.limit) * 100);
   // Amber before the wall, not at it — a bar that only changes colour once
   // the account is already blocked has told the user nothing useful.
+  // The free plan's monthly validations, once switched on (see features.js).
+  const freeValidations = feature("free-validation") && !usage.validation && usage.validations_limit > 0;
   const tone = uncapped ? "bg-pencil" : pctUsed >= 100 ? "bg-loss" : pctUsed >= 80 ? "bg-warn" : "bg-foreground";
 
   return (
@@ -59,9 +62,16 @@ export default function UsageMeter() {
       <div className="flex flex-wrap gap-x-5 gap-y-1 mt-4 text-xs text-graphite">
         <span>
           Validation:{" "}
-          <span className={usage.validation ? "text-gain" : "text-faint"}>
-            {usage.validation ? "included" : "Pro only"}
-          </span>
+          {freeValidations ? (
+            <span className="text-foreground">
+              <span className="font-mono">{usage.validations_remaining}</span> of{" "}
+              <span className="font-mono">{usage.validations_limit}</span> free left
+            </span>
+          ) : (
+            <span className={usage.validation ? "text-gain" : "text-faint"}>
+              {usage.validation ? "included" : "Pro only"}
+            </span>
+          )}
         </span>
         <span>
           Portfolios: up to <span className="font-mono text-foreground">{usage.max_portfolio_size}</span> holdings
