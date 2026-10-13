@@ -89,6 +89,14 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    // Unit tests (Vitest). jsdom for components; src/test/setup.js adds the
+    // jest-dom matchers and unmounts between tests.
+    test: {
+      environment: "jsdom",
+      setupFiles: ["./src/test/setup.js"],
+      include: ["src/**/*.test.{js,jsx}"],
+      css: false,
+    },
     server: {
       // /writeup imports planning/write-up.md, which sits outside the Vite root.
       fs: { allow: [".", "../planning"] },

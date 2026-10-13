@@ -57,6 +57,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Unit tests
+        # Vitest + Testing Library, in jsdom: API error handling, permalinks,
+        # CSV export, the markdown renderer and the components with logic.
+        run: npm test
+
       - name: Build
         run: npm run build
 
