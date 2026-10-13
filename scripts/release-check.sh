@@ -114,10 +114,11 @@ pre() {
       git diff "$deployed" "$head" -- backend/requirements.txt | grep '^[-+][^-+]' | sed 's/^/         /'
     fi
     # New environment variables the code reads. Each one must already be set
-    # on the service (or have a safe default) before the deploy.
+    # on the service (or have a safe default) before the deploy. Matches
+    # os.environ reads and helpers named *_env("NAME", …), such as _int_env.
     local envs
     envs=$(git diff "$deployed" "$head" -- 'backend/*.py' ':!backend/tests' |
-      grep '^+' | grep -oE 'environ(\.get)?[[(]"[A-Z0-9_]+"' | grep -oE '"[A-Z0-9_]+"' | tr -d '"' | sort -u)
+      grep '^+' | grep -oE '(environ(\.get)?[[(]|_env\()"[A-Z0-9_]+"' | grep -oE '"[A-Z0-9_]+"' | tr -d '"' | sort -u)
     if [ -n "$envs" ]; then
       warn "code now reads: $(echo $envs | tr ' ' ',') — set on the service, or safe when unset?"
     else
