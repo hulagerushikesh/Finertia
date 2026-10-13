@@ -64,7 +64,7 @@ describe("AccountData — delete", () => {
   it("only enables deletion once the account's email is typed", () => {
     renderIt();
     openConfirm();
-    expect(screen.getByText(/your saved runs \(3\)/)).toBeInTheDocument();
+    expect(screen.getByText(/every saved run and your sign-in/)).toBeInTheDocument();
     expect(deleteButton()).toBeDisabled();
     fireEvent.change(confirmBox(), { target: { value: "someone@else.com" } });
     expect(deleteButton()).toBeDisabled();

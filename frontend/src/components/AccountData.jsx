@@ -118,8 +118,7 @@ export default function AccountData() {
           <div className="flex flex-col gap-4">
             <Alert variant="destructive">
               <AlertDescription>
-                This deletes your account, your saved runs ({userProfile?.totalRuns ?? 0}) and your
-                sign-in straight away. There is no undo, and support can't bring it back.
+                This deletes your account, every saved run and your sign-in straight away. There is no undo, and support can't bring it back.
               </AlertDescription>
             </Alert>
             {deleteError && (
