@@ -50,6 +50,8 @@ test("the Actions column lines up across rows", async ({ page }) => {
   await login(page, USERS.admin);
   await page.goto("/admin/users");
   await expect(page.getByRole("row").nth(2)).toBeVisible();
+  // Skeleton rows count as rows too; wait for real ones, with their buttons.
+  await expect(page.getByRole("button", { name: /^(Block|Unblock)$/ }).nth(1)).toBeVisible();
   // Each verb sits in the same horizontal slot on every row (#84).
   for (const name of [/^(Block|Unblock)$/, /^(Give|Remove) Pro$/, /^Make (Admin|User)$/]) {
     const lefts = await page
