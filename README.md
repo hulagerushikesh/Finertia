@@ -429,7 +429,9 @@ Two layers, both sliding-window and both hand-written (`backend/ratelimit.py`) s
 
 Compute limits are per **account**, not per address — otherwise an office behind one NAT would share a single budget. A rejected request is not recorded against the window, so a client that keeps retrying does not lock itself out indefinitely.
 
-Counters live in the process. On Cloud Run with N instances the effective ceiling is N × limit, which is right for abuse protection but is not a billing quota; per-user run quotas belong in Firestore.
+The two per-user limits hold **across instances**: their counts live in Firestore (`ratelimits` collection), so a second Cloud Run instance does not double a user's budget. Each check is one round trip — the database (nam5) is far from the API (asia-south1), so there is no transaction: one atomic batch increments this minute's counter by 1 and the previous minute's by 0, and Firestore returns both values. The estimate is the sliding-window counter: the previous minute weighted by how much of it is still inside the window, plus this minute. If Firestore fails the check falls back to the in-process limiter rather than failing the request. Without credentials or the emulator (dev, unit tests) they are in-process; `RATE_LIMIT_STORE=memory` forces that.
+
+The per-IP limit stays in-process — it runs on every request, and a round trip on each page load is not worth it for a flood guard, so its ceiling is N × limit. None of these is a billing quota; the monthly run quota lives on the user's profile.
 
 ### Logging
 
