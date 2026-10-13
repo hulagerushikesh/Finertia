@@ -24,6 +24,14 @@
         { "fieldPath": "ticker", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "runs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "metrics.sharpe_ratio", "order": "ASCENDING" },
+        { "fieldPath": "metrics.total_return", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [
