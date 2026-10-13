@@ -20,12 +20,13 @@ import PortfolioLegs from "../components/PortfolioLegs";
 import Spinner from "../components/Spinner";
 import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
-import { runBacktest, validateStrategy, runPortfolio, validatePortfolio } from "../api";
+import { runBacktest, validateStrategy, runPortfolio, validatePortfolio, getUsage } from "../api";
 import { exportEquityCurve, exportTrades, exportMetrics } from "../utils/csv";
 import { encodeParams, decodeParams, permalinkFor } from "../utils/permalink";
 import { useToast } from "../hooks/useToast";
 import { useAuth } from "../hooks/useAuth";
 import { loadWorkspace, saveWorkspace } from "../lib/workspaceStore";
+import { feature } from "../lib/features";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -82,6 +83,26 @@ export default function DashboardPage() {
   const [validation, setValidation] = useState(kept?.validation ?? null);
   const [validating, setValidating] = useState(false);
   const [copied, setCopied] = useState(false);
+  // The free plan's monthly validations, { limit, remaining }, or null when
+  // the account has no cap (Pro) or the allowance is off. Behind a switch
+  // until the tester round closes; the API enforces it either way.
+  const [allowance, setAllowance] = useState(null);
+
+  useEffect(() => {
+    if (!uid || !feature("free-validation")) return;
+    let live = true;
+    getUsage()
+      .then((u) => {
+        if (live && u.validations_limit > 0) {
+          setAllowance({ limit: u.validations_limit, remaining: u.validations_remaining });
+        }
+      })
+      // The counter is a hint; the API still answers the run itself.
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [uid]);
 
   // Keep the address bar in step with the config so a reload or a bookmark
   // preserves it. `replace` rather than `push` — every keystroke would
@@ -172,6 +193,9 @@ export default function DashboardPage() {
       // something else meanwhile, this answer is for a run no longer shown.
       if (loadWorkspace(uid)?.ranParams === cfg) saveWorkspace(uid, { validation: data, tab: "validation" });
       setValidation(data);
+      if (typeof data.free_validations_remaining === "number") {
+        setAllowance((a) => a && { ...a, remaining: data.free_validations_remaining });
+      }
       const [msg, tone] = WF_TOAST[data.walk_forward.verdict] || WF_TOAST.inconclusive;
       showToast(msg, tone);
     } catch (err) {
@@ -493,7 +517,16 @@ export default function DashboardPage() {
                       </p>
                     </div>
                   ) : validation ? (
-                    <ValidationPanel data={validation} />
+                    <>
+                      {allowance && typeof validation.free_validations_remaining === "number" && (
+                        <p className="text-xs text-graphite mb-3" data-testid="free-validation-used">
+                          That was a free validation: {allowance.remaining} of {allowance.limit} left this
+                          month. Pro validates without a limit.{" "}
+                          <Link to="/pricing" className="text-pencil hover:underline">See Pro</Link>
+                        </p>
+                      )}
+                      <ValidationPanel data={validation} />
+                    </>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-72 border-2 border-dashed border-border rounded-lg text-graphite px-6 text-center">
                       <p className="font-display text-xl font-semibold text-foreground">Check for overfitting</p>
@@ -504,12 +537,24 @@ export default function DashboardPage() {
                       </p>
                       {error?.action === "validate" && error.status === 402 ? (
                         <Button asChild className="mt-4">
-                          <Link to="/pricing">Validation is on Pro — see plans</Link>
+                          <Link to="/pricing">
+                            {allowance
+                              ? "This month's free validation is used — see Pro"
+                              : "Validation is on Pro — see plans"}
+                          </Link>
                         </Button>
                       ) : (
-                        <Button onClick={handleValidate} className="mt-4">
-                          Run validation
-                        </Button>
+                        <>
+                          <Button onClick={handleValidate} className="mt-4">
+                            Run validation
+                          </Button>
+                          {allowance && (
+                            <p className="text-xs text-faint mt-2" data-testid="free-validation-left">
+                              {allowance.remaining} of {allowance.limit} free{" "}
+                              {allowance.limit === 1 ? "validation" : "validations"} left this month
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                   ))}

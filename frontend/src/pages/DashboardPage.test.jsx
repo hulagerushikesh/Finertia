@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -10,6 +10,7 @@ const api = vi.hoisted(() => ({
   validateStrategy: vi.fn(),
   runPortfolio: vi.fn(),
   validatePortfolio: vi.fn(),
+  getUsage: vi.fn(),
 }));
 vi.mock("../api", () => api);
 
@@ -161,5 +162,75 @@ describe("DashboardPage", () => {
       expect(screen.queryByRole("heading", { name: "AAPL" })).toBeNull();
       expect(screen.getByRole("button", { name: "Run backtest on MSFT" })).toBeInTheDocument();
     });
+  });
+});
+
+
+// Sprint 2 item 2, behind the "free-validation" switch until the round closes.
+describe("DashboardPage — free validation (switch)", () => {
+  const FREE_USAGE = { plan: "free", validation: false, validations_used: 0,
+    validations_limit: 1, validations_remaining: 1 };
+
+  afterEach(() => vi.unstubAllEnvs());
+
+  async function openValidation() {
+    await runAapl();
+    await userEvent.click(screen.getByRole("tab", { name: /Validation/ }));
+  }
+
+  it("changes nothing while the switch is off", async () => {
+    vi.stubEnv("VITE_FEATURES", "");
+    api.validateStrategy.mockRejectedValue(payPlan());
+    renderPage();
+    await openValidation();
+    expect(await screen.findByRole("link", { name: "Validation is on Pro — see plans" })).toBeInTheDocument();
+    expect(api.getUsage).not.toHaveBeenCalled();
+  });
+
+  it("says after a free validation how many are left", async () => {
+    vi.stubEnv("VITE_FEATURES", "free-validation");
+    api.getUsage.mockResolvedValue(FREE_USAGE);
+    api.validateStrategy.mockResolvedValue({ ...demoValidation, free_validations_remaining: 0 });
+    renderPage();
+    await openValidation();
+    expect(await screen.findByTestId("free-validation-used")).toHaveTextContent(
+      "That was a free validation: 0 of 1 left this month"
+    );
+  });
+
+  it("shows the counter beside Run validation", async () => {
+    vi.stubEnv("VITE_FEATURES", "free-validation");
+    api.getUsage.mockResolvedValue(FREE_USAGE);
+    const outage = new Error("Market data unavailable");
+    outage.status = 503;
+    api.validateStrategy.mockRejectedValue(outage);
+    renderPage();
+    await openValidation();
+    expect(await screen.findByTestId("free-validation-left")).toHaveTextContent(
+      "1 of 1 free validation left this month"
+    );
+  });
+
+  it("names the used-up free validation on a 402", async () => {
+    vi.stubEnv("VITE_FEATURES", "free-validation");
+    api.getUsage.mockResolvedValue({ ...FREE_USAGE, validations_used: 1, validations_remaining: 0 });
+    api.validateStrategy.mockRejectedValue(payPlan());
+    renderPage();
+    await openValidation();
+    expect(
+      await screen.findByRole("link", { name: "This month's free validation is used — see Pro" })
+    ).toHaveAttribute("href", "/pricing");
+  });
+
+  it("shows nothing extra to Pro", async () => {
+    vi.stubEnv("VITE_FEATURES", "free-validation");
+    api.getUsage.mockResolvedValue({ plan: "pro", validation: true, validations_used: 0,
+      validations_limit: null, validations_remaining: null });
+    api.validateStrategy.mockResolvedValue(demoValidation);
+    renderPage();
+    await openValidation();
+    await screen.findByRole("button", { name: "Re-run checks" });
+    expect(screen.queryByTestId("free-validation-used")).toBeNull();
+    expect(screen.queryByTestId("free-validation-left")).toBeNull();
   });
 });

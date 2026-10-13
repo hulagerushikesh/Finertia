@@ -10,6 +10,18 @@ import { defineConfig, devices } from "@playwright/test";
 
 const APP = "http://127.0.0.1:5175";
 const API = "http://127.0.0.1:8001";
+// A second app and API with the hidden switches on (frontend/src/lib/features.js
+// and FREE_VALIDATIONS_PER_MONTH), for work built ahead of the tester round's
+// end. The default project keeps testing the product as it is live.
+const APP_ON = "http://127.0.0.1:5176";
+const API_ON = "http://127.0.0.1:8002";
+const FIREBASE_ENV = {
+  VITE_FIREBASE_EMULATORS: "1",
+  VITE_FIREBASE_API_KEY: "demo-key",
+  VITE_FIREBASE_AUTH_DOMAIN: "demo-finertia.firebaseapp.com",
+  VITE_FIREBASE_PROJECT_ID: "demo-finertia",
+  VITE_FIREBASE_APP_ID: "demo-app",
+};
 
 export default defineConfig({
   testDir: "./tests",
@@ -26,7 +38,14 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", testIgnore: /switched-on\//, use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "switched-on",
+      testMatch: /switched-on\/.*\.spec\.mjs/,
+      use: { ...devices["Desktop Chrome"], baseURL: APP_ON },
+    },
+  ],
   webServer: [
     {
       command: "e2e/node_modules/.bin/firebase emulators:start --only auth,firestore --project demo-finertia",
@@ -51,13 +70,24 @@ export default defineConfig({
       url: APP,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
+      env: { ...FIREBASE_ENV, VITE_API_BASE_URL: API },
+    },
+    {
+      command: "./scripts/start-backend.sh",
+      url: `${API_ON}/api/health`,
+      timeout: 120_000,
+      reuseExistingServer: !process.env.CI,
+      env: { API_PORT: "8002", SKIP_SEED: "1", FREE_VALIDATIONS_PER_MONTH: "1" },
+    },
+    {
+      command: "npm --prefix ../frontend run dev -- --host 127.0.0.1 --port 5176 --strictPort",
+      url: APP_ON,
+      timeout: 120_000,
+      reuseExistingServer: !process.env.CI,
       env: {
-        VITE_FIREBASE_EMULATORS: "1",
-        VITE_FIREBASE_API_KEY: "demo-key",
-        VITE_FIREBASE_AUTH_DOMAIN: "demo-finertia.firebaseapp.com",
-        VITE_FIREBASE_PROJECT_ID: "demo-finertia",
-        VITE_FIREBASE_APP_ID: "demo-app",
-        VITE_API_BASE_URL: API,
+        ...FIREBASE_ENV,
+        VITE_API_BASE_URL: API_ON,
+        VITE_FEATURES: "free-validation,onboarding,account-data",
       },
     },
   ],
