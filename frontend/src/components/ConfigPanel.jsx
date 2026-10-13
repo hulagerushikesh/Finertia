@@ -82,7 +82,7 @@ function matchTickers(query) {
  * through onChange, while the portfolio chip list needs picking a suggestion to
  * mean "add this holding" rather than "replace the field".
  */
-function TickerInput({ value, onChange, onCommit, placeholder = "e.g. AAPL" }) {
+function TickerInput({ id, value, onChange, onCommit, placeholder = "e.g. AAPL" }) {
   const [open, setOpen] = useState(false);
   const [cursor, setCursor] = useState(0);
   const wrapRef = useRef(null);
@@ -132,6 +132,7 @@ function TickerInput({ value, onChange, onCommit, placeholder = "e.g. AAPL" }) {
   return (
     <div className="relative" ref={wrapRef}>
       <Input
+        id={id}
         className="font-mono uppercase"
         value={value}
         onChange={(e) => {
@@ -256,11 +257,14 @@ const FIELDS = {
   ],
 };
 
-function Field({ label, hint, tip, range, children }) {
+// `htmlFor` ties the label to its input, so screen readers announce it and
+// clicking the label focuses the field. Pass it whenever the field wraps a
+// single input.
+function Field({ label, htmlFor, hint, tip, range, children }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="flex items-center gap-1.5">
-        <Label className="eyebrow">{label}</Label>
+        <Label htmlFor={htmlFor} className="eyebrow">{label}</Label>
         {tip && <Tooltip label={tip} align="start" />}
         {range && (
           <span className="ml-auto text-2xs font-mono text-faint whitespace-nowrap">{range}</span>
@@ -546,8 +550,9 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
         </div>
 
         {mode === "single" ? (
-          <Field label="Ticker" tip="Any symbol yfinance accepts — the suggestion list is only a shortcut, not a limit.">
+          <Field label="Ticker" htmlFor="cfg-ticker" tip="Any symbol yfinance accepts — the suggestion list is only a shortcut, not a limit.">
             <TickerInput
+              id="cfg-ticker"
               value={params.ticker}
               onChange={(v) => handleChange("ticker", v)}
             />
@@ -565,16 +570,18 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Start">
+          <Field label="Start" htmlFor="cfg-start">
             <Input
+              id="cfg-start"
               type="date"
               className={inputClass}
               value={params.start}
               onChange={(e) => handleChange("start", e.target.value)}
             />
           </Field>
-          <Field label="End">
+          <Field label="End" htmlFor="cfg-end">
             <Input
+              id="cfg-end"
               type="date"
               className={inputClass}
               value={params.end}
