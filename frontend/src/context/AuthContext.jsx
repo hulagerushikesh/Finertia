@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore/lite";
 import { auth, db } from "../firebase";
+import { setMonitoringUser } from "../lib/monitoring";
 
 export const AuthContext = createContext(null);
 
@@ -17,6 +18,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      setMonitoringUser(firebaseUser?.uid ?? null);
       setEmailVerified(Boolean(firebaseUser?.emailVerified));
       if (firebaseUser) {
         try {
