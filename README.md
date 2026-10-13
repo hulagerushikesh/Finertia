@@ -489,7 +489,7 @@ A failed send does not fail registration — the account and its profile documen
 
 `/support` is public and lists the errors the API actually returns alongside what causes each one — a bad ticker suffix, a date range shorter than the indicator warm-up, a 402 quota vs a 429 burst limit. Quoted messages use `N` rather than real numbers so the page cannot drift out of step with `plans.py`; the pricing page reads the live allowance from `/api/plans`.
 
-Set `VITE_SUPPORT_EMAIL` at build time. Unset, it shows an obviously fake placeholder rather than a plausible wrong address.
+The contact address is `support@hulage.in` (`frontend/src/lib/contact.js`), which Cloudflare Email Routing forwards to the author, so no personal inbox is published. `VITE_SUPPORT_EMAIL` overrides it for a self-hosted deployment; leave it unset on Vercel.
 
 ### Account export and deletion
 
