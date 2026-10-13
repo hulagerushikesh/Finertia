@@ -1,8 +1,12 @@
-"""OHLCV data: yfinance behind two cache tiers.
+"""OHLCV data: a price provider behind two cache tiers.
 
     L1  module dict, keyed (ticker, start, end)     — this process only
     L2  one Firestore doc per (ticker, year)         — survives cold starts
-    L3  yfinance                                     — the flaky one
+    L3  the provider (price_providers.py; yfinance today) — the flaky one
+
+L2 docs record which provider wrote them, and a read is served from L2 only
+when they are all the current provider's: switching vendors refetches each
+ticker on first use instead of splicing two vendors' adjustments together.
 
 The L2 rule that matters: **every cached year of a ticker comes from the same
 download.** yfinance returns *adjusted* prices, and the adjustment is as of
@@ -28,7 +32,8 @@ from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 
-from price_store import COLUMNS, MemoryPriceStore, PriceStore, doc_to_frame, frame_to_doc
+from price_providers import get_provider
+from price_store import MemoryPriceStore, PriceStore, doc_to_frame, frame_to_doc
 
 log = logging.getLogger("finertia.data")
 
@@ -42,7 +47,7 @@ _store: PriceStore | None = None
 
 
 class DataUnavailableError(Exception):
-    """yfinance failed and there is nothing cached to fall back on."""
+    """The provider failed and there is nothing cached to fall back on."""
 
 
 def configure_store(store: PriceStore | None) -> None:
@@ -76,18 +81,9 @@ def _now() -> datetime:
 
 
 def _download(ticker: str, start: str, end: str) -> pd.DataFrame:
-    """One yfinance call, normalised. Raises on transport errors, returns an
-    empty frame when Yahoo has nothing for the symbol."""
-    import yfinance as yf  # noqa: PLC0415 — keep import cost off the test path
-
-    df = yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)
-    if df.empty:
-        return df
-    # Flatten MultiIndex columns if present (yfinance >=0.2 returns MultiIndex)
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-    df.index = pd.to_datetime(df.index).tz_localize(None)
-    return df[COLUMNS].dropna()
+    """One provider call. Raises on transport errors, returns an empty frame
+    when the provider has nothing for the symbol."""
+    return get_provider().download(ticker, start, end)
 
 
 def _years_in(start: str, end: str) -> list[int]:
@@ -102,6 +98,9 @@ def _uniform(docs: dict[int, dict], years: list[int], *, now: datetime, fresh: b
     """True when every year is present, from one batch, and (if `fresh`) any
     partial year is inside its TTL."""
     if any(y not in docs for y in years):
+        return False
+    provider = get_provider().name
+    if any(docs[y].get("provider", "yfinance") != provider for y in years):
         return False
     batches = {docs[y]["batch"] for y in years}
     if len(batches) != 1:
@@ -151,6 +150,7 @@ def _refresh(store: PriceStore, ticker: str, years: list[int], *, now: datetime)
                 batch=batch,
                 complete=year < now.year,
                 fetched_at=batch,
+                provider=get_provider().name,
             )
         )
     store.put_many(docs)
@@ -159,7 +159,8 @@ def _refresh(store: PriceStore, ticker: str, years: list[int], *, now: datetime)
 
 def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
     """OHLCV for ticker in [start, end). The frame's `.attrs["data_source"]`
-    says where it came from: "memory", "cache", "yfinance" or "cache-stale"."""
+    says where it came from: "memory", "cache", "cache-stale", or the
+    provider's name ("yfinance") for a fresh download."""
     ticker = ticker.upper()
     key = (ticker, start, end)
     if key in _cache:
@@ -182,7 +183,7 @@ def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
             raise
         except Exception as exc:  # noqa: BLE001 — anything transport-shaped
             if _uniform(docs, years, now=now, fresh=False):
-                log.warning("yfinance failed for %s (%s); serving cached span", ticker, exc)
+                log.warning("%s failed for %s (%s); serving cached span", get_provider().name, ticker, exc)
                 df = _assemble(docs, years, start, end)
                 source = "cache-stale"
             else:
@@ -191,7 +192,7 @@ def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
                 ) from exc
         else:
             df = _assemble(docs, years, start, end)
-            source = "yfinance"
+            source = get_provider().name
 
     if df.empty:
         raise ValueError(f"No data found for {ticker}")
