@@ -55,14 +55,14 @@ export default function AdminRunsPage() {
         {(tickerFilter || uidFilter) && (
           <button
             onClick={() => { setTickerFilter(""); setUidFilter(""); setPage(0); }}
-            className="text-sm text-text-muted hover:text-text-primary"
+            className="text-sm text-graphite hover:text-foreground"
           >
             Clear filters
           </button>
         )}
       </div>
 
-      {error && <div className="text-danger bg-danger/10 border border-danger/20 rounded-xl px-5 py-4 mb-4 text-sm">{error}</div>}
+      {error && <div className="text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-5 py-4 mb-4 text-sm">{error}</div>}
 
       {loading ? (
         <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>
@@ -71,7 +71,7 @@ export default function AdminRunsPage() {
           <div className="panel overflow-x-auto">
             <table className="w-full text-sm min-w-[48rem]">
               <thead>
-                <tr className="border-b border-border text-text-muted text-xs uppercase tracking-wider">
+                <tr className="border-b border-border text-graphite text-xs uppercase tracking-wider">
                   <th className="text-left px-5 py-3">User</th>
                   <th className="text-left px-5 py-3">Ticker</th>
                   <th className="text-left px-5 py-3">Period</th>
@@ -85,22 +85,22 @@ export default function AdminRunsPage() {
               <tbody>
                 {runs.map((run) => (
                   <tr key={run.runId} className="border-b border-border/50 hover:bg-border/20 transition-colors">
-                    <td className="px-5 py-3 text-text-muted text-xs font-mono truncate max-w-[160px]">{run.email}</td>
-                    <td className="px-5 py-3 font-semibold text-text-primary font-mono text-xs">{run.ticker}</td>
-                    <td className="px-5 py-3 text-text-muted text-xs font-mono">{run.start} → {run.end}</td>
-                    <td className={`px-5 py-3 text-right font-mono text-xs ${run.metrics?.total_return >= 0 ? "text-success" : "text-danger"}`}>
+                    <td className="px-5 py-3 text-graphite text-xs font-mono truncate max-w-[160px]">{run.email}</td>
+                    <td className="px-5 py-3 font-semibold text-foreground font-mono text-xs">{run.ticker}</td>
+                    <td className="px-5 py-3 text-graphite text-xs font-mono">{run.start} → {run.end}</td>
+                    <td className={`px-5 py-3 text-right font-mono text-xs ${run.metrics?.total_return >= 0 ? "text-gain" : "text-loss"}`}>
                       {fmtPct(run.metrics?.total_return)}
                     </td>
                     <td className="px-5 py-3 text-right font-mono text-xs">{run.metrics?.sharpe_ratio?.toFixed(2) ?? "—"}</td>
-                    <td className="px-5 py-3 text-right font-mono text-xs text-danger">{fmtPct(run.metrics?.max_drawdown)}</td>
-                    <td className="px-5 py-3 text-right text-xs text-text-muted">{fmtDate(run.createdAt)}</td>
-                    <td className="px-5 py-3 text-right font-mono text-xs text-text-muted">
+                    <td className="px-5 py-3 text-right font-mono text-xs text-loss">{fmtPct(run.metrics?.max_drawdown)}</td>
+                    <td className="px-5 py-3 text-right text-xs text-graphite">{fmtDate(run.createdAt)}</td>
+                    <td className="px-5 py-3 text-right font-mono text-xs text-graphite">
                       {run.durationMs ? `${(run.durationMs / 1000).toFixed(1)}s` : "—"}
                     </td>
                   </tr>
                 ))}
                 {runs.length === 0 && (
-                  <tr><td colSpan={8} className="text-center py-12 text-text-muted">No runs found.</td></tr>
+                  <tr><td colSpan={8} className="text-center py-12 text-graphite">No runs found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -108,9 +108,9 @@ export default function AdminRunsPage() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="text-sm text-text-muted hover:text-text-primary disabled:opacity-30">← Previous</button>
-              <span className="text-xs text-text-muted">{page + 1} / {totalPages}</span>
-              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="text-sm text-text-muted hover:text-text-primary disabled:opacity-30">Next →</button>
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="text-sm text-graphite hover:text-foreground disabled:opacity-30">← Previous</button>
+              <span className="text-xs text-graphite">{page + 1} / {totalPages}</span>
+              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="text-sm text-graphite hover:text-foreground disabled:opacity-30">Next →</button>
             </div>
           )}
         </>
