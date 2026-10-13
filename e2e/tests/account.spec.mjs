@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { freshEmail, register, runBacktest } from "./helpers.mjs";
 
-// Account export and deletion (backend/account.py). The Profile buttons come
-// in M12 sprint 2; until then this drives the API with the signed-in user's
-// own token, read from where the Firebase SDK keeps it.
+// Account export and deletion (backend/account.py), through the API with the
+// signed-in user's own token, read from where the Firebase SDK keeps it. The
+// Profile buttons are behind the "account-data" switch (switched-on/
+// account-data.spec.mjs); the last test checks they stay hidden here.
 const API = "http://127.0.0.1:8001";
 const AUTH_EMULATOR = "http://127.0.0.1:9099";
 
@@ -57,4 +58,12 @@ test("export holds the user's run; delete removes the account and its data", asy
   const after = await (await request.get(`${API}/api/me/export`, { headers })).json();
   expect(after.profile).toBeNull();
   expect(after.runs).toEqual([]);
+});
+
+test("Profile shows no export or delete buttons while the switch is off", async ({ page }) => {
+  await register(page, freshEmail("noswitch"));
+  await page.goto("/profile");
+  await expect(page.getByRole("heading", { name: "Change password" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Download my data" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Delete my account/ })).toHaveCount(0);
 });
