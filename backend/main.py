@@ -296,8 +296,17 @@ def _take_validation_slot(user: dict) -> dict | None:
     quota = check_validation_quota(user["profile"], FREE_VALIDATIONS_PER_MONTH)
     if quota["limit"] is None:
         return None
-    with step("allowance"):
-        taken = validation_allowance.reserve(get_db(), user["uid"], quota["limit"])
+    try:
+        with step("allowance"):
+            taken = validation_allowance.reserve(get_db(), user["uid"], quota["limit"])
+    except validation_allowance.Contended:
+        # Several validations from one account at once; one of them wins the
+        # slot. The others are told to retry, not shown a 500.
+        raise HTTPException(
+            status_code=409,
+            detail="Another validation on your account is starting. Try again in a moment.",
+            headers={"Retry-After": "2"},
+        )
     if taken is None:
         raise _validation_used_up(quota["limit"])
     log.info("free validation taken", extra={"uid": user["uid"], "period": taken["period"]})

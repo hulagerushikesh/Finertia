@@ -51,14 +51,26 @@ def test_the_first_validation_of_the_month_is_taken_and_counted():
 
 def test_eight_racing_requests_get_one_slot():
     """Eight instances, each with its own client, all read "0 used" at once.
-    The transaction must let exactly one through."""
-    from validation_allowance import reserve
+    The transaction must never let more than one through. A request that
+    loses on lock contention is told to retry (Contended), not crashed."""
+    from validation_allowance import Contended, reserve
+
+    def attempt(_):
+        try:
+            return reserve(client(), uid, 1, NOW)
+        except Contended:
+            return "contended"
 
     uid = new_user(client())
     with ThreadPoolExecutor(max_workers=8) as pool:
-        results = list(pool.map(lambda _: reserve(client(), uid, 1, NOW), range(8)))
-    assert sum(r is not None for r in results) == 1
-    assert profile(client(), uid)["validationsThisPeriod"] == 1
+        results = list(pool.map(attempt, range(8)))
+    taken = sum(isinstance(r, dict) for r in results)
+    assert taken <= 1
+    assert profile(client(), uid).get("validationsThisPeriod", 0) == taken
+    # Whatever the race did, once it is over the allowance reads correctly.
+    if taken == 0:
+        assert reserve(client(), uid, 1, NOW) is not None
+    assert reserve(client(), uid, 1, NOW) is None
 
 
 def test_last_month_s_counter_does_not_count():
