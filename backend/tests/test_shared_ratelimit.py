@@ -92,10 +92,10 @@ def test_full_current_window_waits_into_the_next():
 
 
 class Broken:
-    def hit(self, current, previous):
+    def hit(self, current, previous, n=1):
         raise RuntimeError("firestore down")
 
-    def undo(self, current):
+    def undo(self, current, n=1):
         raise RuntimeError("firestore down")
 
 
@@ -124,10 +124,25 @@ def test_slashes_in_keys_cannot_become_document_paths(key):
     seen = []
 
     class Spy(MemoryCounterStore):
-        def hit(self, current, previous):
+        def hit(self, current, previous, n=1):
             seen.append(current)
             return super().hit(current, previous)
 
     lim = SharedRateLimiter("bt", 5, 60, store_factory=lambda: Spy())
     lim.check(key, now=T0)
     assert "/" not in seen[0]
+
+
+def test_shared_cost_is_all_or_nothing_across_instances():
+    from ratelimit import MemoryCounterStore
+
+    store = MemoryCounterStore()
+    a = SharedRateLimiter("pf", 5, 60, store_factory=lambda: store)
+    b = SharedRateLimiter("pf", 5, 60, store_factory=lambda: store)
+    assert a.check("u1", now=T0, cost=3)["allowed"]
+    denied = b.check("u1", now=T0 + 1, cost=3)
+    assert not denied["allowed"] and denied["retry_after"] > 0
+    # The refused 3 were handed back, so 2 singles still fit.
+    assert b.check("u1", now=T0 + 2)["allowed"]
+    assert a.check("u1", now=T0 + 3)["allowed"]
+    assert not a.check("u1", now=T0 + 4)["allowed"]
