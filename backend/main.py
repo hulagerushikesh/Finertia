@@ -13,6 +13,7 @@ from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 from firebase_admin import firestore
 
 from data import DataUnavailableError, fetch_ohlcv
@@ -422,7 +423,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # ---------------------------------------------------------------------------
 
 
-async def inject_user(authorization: Optional[str] = Header(None)) -> dict:
+def inject_user(authorization: Optional[str] = Header(None)) -> dict:
     """Verify the Bearer token and return {uid, email, role}.
 
     Blocked accounts (isActive == False) are rejected with 403 here, so every
@@ -452,9 +453,9 @@ async def inject_user(authorization: Optional[str] = Header(None)) -> dict:
     return user
 
 
-async def inject_admin(authorization: Optional[str] = Header(None)) -> dict:
+def inject_admin(authorization: Optional[str] = Header(None)) -> dict:
     """Like inject_user but also asserts the caller has admin role."""
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     if user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
@@ -463,6 +464,14 @@ async def inject_admin(authorization: Optional[str] = Header(None)) -> dict:
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+# Routes that touch Firestore, the price provider or the engine are plain
+# `def`, not `async def`. Every one of those calls blocks, and in an
+# `async def` it blocks the event loop: the instance then serves one request
+# at a time, health checks included, while it waits on a database a quarter
+# of a second away. FastAPI runs a plain `def` route in a worker thread, so
+# one request's wait no longer holds up the rest. Only routes that never block
+# stay `async` (tests/test_routes.py checks the list).
 
 
 @app.get("/api/health")
@@ -494,9 +503,9 @@ async def list_plans():
 
 
 @app.get("/api/me/usage")
-async def my_usage(authorization: Optional[str] = Header(None)):
+def my_usage(authorization: Optional[str] = Header(None)):
     """Current plan, quota consumption, and entitlements for the caller."""
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     profile = user["profile"]
     plan = plan_for(profile)
     quota = check_quota(profile)
@@ -521,9 +530,9 @@ async def my_usage(authorization: Optional[str] = Header(None)):
 
 
 @app.get("/api/me/export")
-async def export_my_data(authorization: Optional[str] = Header(None)):
+def export_my_data(authorization: Optional[str] = Header(None)):
     """Everything stored about the caller, as a JSON download (DPDP: access)."""
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     with step("export_read"):
         body = export_account(get_db(), user["uid"], user["email"])
     stamp = body["exported_at"][:10]
@@ -535,10 +544,10 @@ async def export_my_data(authorization: Optional[str] = Header(None)):
 
 
 @app.delete("/api/me")
-async def delete_my_account(body: DeleteAccountRequest, authorization: Optional[str] = Header(None)):
+def delete_my_account(body: DeleteAccountRequest, authorization: Optional[str] = Header(None)):
     """Delete the caller's account and every document that belongs to it
     (DPDP: erasure). See account.py for what is removed and in what order."""
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     profile = user["profile"]
 
     if (body.confirm or "").strip().lower() != (user["email"] or "").strip().lower():
@@ -558,9 +567,9 @@ async def delete_my_account(body: DeleteAccountRequest, authorization: Optional[
 
 
 @app.post("/api/billing/checkout")
-async def create_checkout(authorization: Optional[str] = Header(None)):
+def create_checkout(authorization: Optional[str] = Header(None)):
     """Start a Stripe Checkout session and return the URL to redirect to."""
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
 
     if not billing.is_configured():
         raise HTTPException(
@@ -616,18 +625,25 @@ async def stripe_webhook(request: Request):
         # the same event indefinitely.
         return {"received": True, "applied": False}
 
+    # Async only to read the raw body for the signature; the Firestore calls
+    # block, so they go to a worker thread like every other route's.
+    applied = await run_in_threadpool(_apply_plan, uid, new_plan, event.get("type"))
+    return {"received": True, "applied": applied}
+
+
+def _apply_plan(uid: str, new_plan: str, event_type: str | None) -> bool:
     db = get_db()
     ref = db.collection("users").document(uid)
     if not ref.get().exists:
         log.warning("webhook referenced an unknown user", extra={"uid": uid})
-        return {"received": True, "applied": False}
+        return False
 
     ref.update({"plan": new_plan, "planSource": "stripe"})
     log.info(
         "plan updated from stripe",
-        extra={"uid": uid, "plan": new_plan, "event": event.get("type")},
+        extra={"uid": uid, "plan": new_plan, "event": event_type},
     )
-    return {"received": True, "applied": True}
+    return True
 
 
 @app.get("/api/strategies")
@@ -645,9 +661,9 @@ async def list_strategies():
 
 
 @app.post("/api/backtest")
-async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(None)):
+def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(None)):
     """Run a backtest for the selected strategy and persist results to Firestore."""
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     uid = user["uid"]
     email = user["email"]
     _enforce(backtest_limiter, uid, "backtests")
@@ -847,14 +863,14 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
 
 
 @app.post("/api/validate")
-async def validate_strategy(req: ValidateRequest, authorization: Optional[str] = Header(None)):
+def validate_strategy(req: ValidateRequest, authorization: Optional[str] = Header(None)):
     """Run the two overfitting checks a single backtest cannot answer.
 
     Walk-forward asks whether parameters survive on data they were not chosen on.
     The permutation test asks whether signal timing beats random timing at the
     same market exposure. Results are diagnostic and not persisted.
     """
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     # Tighter than the backtest budget: a validation run rebuilds positions once
     # per grid combination and then again for every permutation trial, so one
     # call is worth hundreds of backtests in CPU terms.
@@ -995,7 +1011,7 @@ def _portfolio_weights(req: PortfolioRequest, aligned: pd.DataFrame) -> pd.DataF
 
 
 @app.post("/api/portfolio/validate")
-async def validate_portfolio(req: PortfolioValidateRequest, authorization: Optional[str] = Header(None)):
+def validate_portfolio(req: PortfolioValidateRequest, authorization: Optional[str] = Header(None)):
     """The overfitting checks, asked of the whole book.
 
     One parameter set is optimised on the basket's in-sample Sharpe and scored
@@ -1004,7 +1020,7 @@ async def validate_portfolio(req: PortfolioValidateRequest, authorization: Optio
     the null). Same plan gate and rate budget as `/api/validate`, plus the
     plan's portfolio-size cap. Diagnostic; not persisted.
     """
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     _enforce(validate_limiter, user["uid"], "validation runs")
     _check_validation_allowed(user)
     allowed_size = max_portfolio_size(user["profile"])
@@ -1076,14 +1092,14 @@ def _validate_book(req) -> dict:
 
 
 @app.post("/api/portfolio")
-async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(None)):
+def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(None)):
     """Run one strategy across several tickers and combine the legs.
 
     Each leg is a complete backtest — its own signals, stops, sizing, and
     transaction costs — so the portfolio is an aggregation of honest single
     results rather than a separate model with its own assumptions.
     """
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     uid = user["uid"]
     # One request is N data fetches and N full backtests, so it costs a slot
     # per leg rather than a single one.
@@ -1235,7 +1251,7 @@ async def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = He
 
 
 @app.post("/api/compare")
-async def compare_runs(req: CompareRequest, authorization: Optional[str] = Header(None)):
+def compare_runs(req: CompareRequest, authorization: Optional[str] = Header(None)):
     """Recompute several stored runs so their equity curves can be overlaid.
 
     Equity curves are deliberately not persisted — they are a few thousand floats
@@ -1243,7 +1259,7 @@ async def compare_runs(req: CompareRequest, authorization: Optional[str] = Heade
     rebuild the curve here. That keeps documents small and means a fix to the
     engine retroactively corrects every historical chart.
     """
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     uid = user["uid"]
     # Each id costs a data fetch plus a full recompute, so this shares the
     # backtest budget rather than getting a free pass.
@@ -1347,13 +1363,13 @@ async def compare_runs(req: CompareRequest, authorization: Optional[str] = Heade
 
 
 @app.get("/api/history")
-async def get_history(
+def get_history(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     authorization: Optional[str] = Header(None),
 ):
     """Return paginated backtest history for the authenticated user."""
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     uid = user["uid"]
 
     db = get_db()
@@ -1392,9 +1408,9 @@ async def get_history(
 
 
 @app.get("/api/history/{run_id}")
-async def get_run(run_id: str, authorization: Optional[str] = Header(None)):
+def get_run(run_id: str, authorization: Optional[str] = Header(None)):
     """Fetch a single run by ID — only the owner or an admin may access it."""
-    user = await inject_user(authorization)
+    user = inject_user(authorization)
     uid = user["uid"]
 
     db = get_db()
@@ -1416,28 +1432,28 @@ async def get_run(run_id: str, authorization: Optional[str] = Header(None)):
 
 
 @app.get("/api/admin/stats")
-async def admin_stats(authorization: Optional[str] = Header(None)):
+def admin_stats(authorization: Optional[str] = Header(None)):
     """Return platform-wide statistics — admin only."""
-    await inject_admin(authorization)
+    inject_admin(authorization)
     with step("admin_query"):
         return platform_stats(get_db())
 
 
 @app.get("/api/admin/users")
-async def admin_users(
+def admin_users(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     search: Optional[str] = Query(None),
     authorization: Optional[str] = Header(None),
 ):
     """Return paginated user list — admin only."""
-    await inject_admin(authorization)
+    inject_admin(authorization)
     with step("admin_query"):
         return list_users(get_db(), limit, offset, search)
 
 
 @app.patch("/api/admin/users/{target_uid}")
-async def admin_patch_user(
+def admin_patch_user(
     target_uid: str,
     patch: UserPatch,
     authorization: Optional[str] = Header(None),
@@ -1447,7 +1463,7 @@ async def admin_patch_user(
     A plan set here is stamped `planSource: "admin"` so a comped Pro account is
     never counted as a paying one; the Stripe webhook stamps "stripe".
     """
-    await inject_admin(authorization)
+    inject_admin(authorization)
 
     db = get_db()
     ref = db.collection("users").document(target_uid)
@@ -1475,7 +1491,7 @@ async def admin_patch_user(
 
 
 @app.get("/api/admin/runs")
-async def admin_runs(
+def admin_runs(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     uid: Optional[str] = Query(None),
@@ -1483,7 +1499,7 @@ async def admin_runs(
     authorization: Optional[str] = Header(None),
 ):
     """Return paginated run list with optional filters — admin only."""
-    await inject_admin(authorization)
+    inject_admin(authorization)
     with step("admin_query"):
         return list_runs(get_db(), limit, offset, uid, ticker)
 
@@ -1493,11 +1509,11 @@ class SentryTestError(RuntimeError):
 
 
 @app.post("/api/admin/sentry-test")
-async def admin_sentry_test(authorization: Optional[str] = Header(None)):
+def admin_sentry_test(authorization: Optional[str] = Header(None)):
     """Raise an error on purpose to prove reporting works end to end — admin only.
 
     Comes back as an ordinary 500 with a request id; the matching issue should
     appear in Sentry within a minute, tagged with the same id.
     """
-    await inject_admin(authorization)
+    inject_admin(authorization)
     raise SentryTestError("Deliberate test error from /api/admin/sentry-test")
