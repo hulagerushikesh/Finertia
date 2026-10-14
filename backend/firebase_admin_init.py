@@ -2,6 +2,7 @@
 
 import json
 import os
+import threading
 
 import firebase_admin
 from firebase_admin import auth, credentials, firestore
@@ -9,6 +10,9 @@ from fastapi import HTTPException
 from google.auth.credentials import AnonymousCredentials
 
 _app = None
+# Routes run in worker threads, so two first requests can race to initialise
+# the SDK; the second `initialize_app` would raise "already exists".
+_app_lock = threading.Lock()
 
 
 def emulator_mode() -> bool:
@@ -41,14 +45,19 @@ def _get_app() -> firebase_admin.App:
     global _app
     if _app is not None:
         return _app
+    with _app_lock:
+        if _app is None:
+            _app = _init_app()
+    return _app
 
+
+def _init_app() -> firebase_admin.App:
     if emulator_mode():
         # Local end-to-end tests: the Admin SDK talks to the Auth and
         # Firestore emulators, which need a project id but no credentials.
-        _app = firebase_admin.initialize_app(
+        return firebase_admin.initialize_app(
             _EmulatorCredential(), options={"projectId": os.environ["GCLOUD_PROJECT"]}
         )
-        return _app
 
     sa_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
     if not sa_json:
@@ -56,8 +65,7 @@ def _get_app() -> firebase_admin.App:
 
     sa_dict = json.loads(sa_json)
     cred = credentials.Certificate(sa_dict)
-    _app = firebase_admin.initialize_app(cred)
-    return _app
+    return firebase_admin.initialize_app(cred)
 
 
 def get_db():

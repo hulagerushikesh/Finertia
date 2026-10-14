@@ -225,6 +225,63 @@ def test_public_routes_still_get_a_total(api):
     assert "total" in _server_timing(client.get("/api/health"))
 
 
+# Routes allowed to stay `async def`: they never block. Anything else that is
+# async runs its Firestore and engine calls on the event loop and stalls every
+# other request on the instance while it waits.
+_ASYNC_ROUTES = {"health", "list_plans", "list_strategies", "stripe_webhook"}
+
+
+def test_blocking_routes_run_in_worker_threads():
+    import inspect
+    from fastapi.routing import APIRoute
+
+    async_routes = {
+        r.endpoint.__name__
+        for r in main.app.routes
+        if isinstance(r, APIRoute) and inspect.iscoroutinefunction(r.endpoint)
+    }
+    assert async_routes <= _ASYNC_ROUTES, async_routes - _ASYNC_ROUTES
+
+
+def test_a_slow_backtest_does_not_hold_up_other_requests(api, monkeypatch):
+    """Two backtests that each wait 1 s on "the database", then a health
+    check sent while they wait. Served one at a time, the health check waits
+    for both and the pair takes over 2 s. In worker threads the waits overlap."""
+    import asyncio
+    import time as _time
+
+    import httpx
+
+    def slow_prices(t, s, e):
+        _time.sleep(1.0)  # a blocking wait, like a Firestore round trip
+        return _prices()
+
+    monkeypatch.setattr(main, "fetch_ohlcv", slow_prices)
+
+    async def scenario():
+        transport = httpx.ASGITransport(app=main.app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://t") as c:
+            started = _time.perf_counter()
+
+            async def backtest():
+                r = await c.post("/api/backtest", json=BACKTEST, headers=AUTH)
+                return r, _time.perf_counter() - started
+
+            async def health():
+                await asyncio.sleep(0.3)  # both backtests are now waiting
+                r = await c.get("/api/health")
+                return r, _time.perf_counter() - started
+
+            return await asyncio.gather(backtest(), backtest(), health())
+
+    (b1, t1), (b2, t2), (h, th) = asyncio.run(scenario())
+    assert b1.status_code == b2.status_code == h.status_code == 200
+    # Sent at 0.3 s; measured from the start, since a blocked event loop would
+    # not even get to send it until the backtests finished.
+    assert th < 0.8, f"health answered at {th:.2f}s, behind the backtests"
+    assert max(t1, t2) < 1.8, f"backtests took {max(t1, t2):.2f}s; they ran one after the other"
+
+
 # ---------------------------------------------------------------------------
 # Authentication
 # ---------------------------------------------------------------------------
