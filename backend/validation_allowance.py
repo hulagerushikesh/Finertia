@@ -21,14 +21,25 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from google.api_core.exceptions import Aborted
 from google.cloud import firestore
 
 from plans import current_period, validations_used
 
 
+class Contended(Exception):
+    """Other requests for the same account held the document through every
+    retry. Nothing was taken; the caller can simply try again."""
+
+
 def reserve(db, uid: str, allowance: int, now: datetime | None = None) -> dict | None:
     """Take one free validation for `uid`. Returns {period, used}, `used`
-    counting this one, or None if this period's allowance is used up."""
+    counting this one, or None if this period's allowance is used up.
+
+    Raises Contended when the transaction could not commit because other
+    requests for the same account kept the document locked (one person
+    firing several validations at once). That is not a server fault.
+    """
     period = current_period(now)
     ref = db.collection("users").document(uid)
 
@@ -51,7 +62,15 @@ def reserve(db, uid: str, allowance: int, now: datetime | None = None) -> dict |
         )
         return {"period": period, "used": used + 1}
 
-    return take(db.transaction())
+    try:
+        return take(db.transaction())
+    except Aborted as exc:
+        raise Contended(uid) from exc
+    except ValueError as exc:
+        # What the client raises once its retries are spent.
+        if "Failed to commit transaction" in str(exc):
+            raise Contended(uid) from exc
+        raise
 
 
 def release(db, uid: str, period: str) -> None:

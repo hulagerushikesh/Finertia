@@ -1155,3 +1155,18 @@ def test_compare_a_missing_run_is_404(api):
     run_id = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()["runId"]
     r = client.post("/api/compare", json={"run_ids": [run_id, "nope"]}, headers=AUTH)
     assert r.status_code == 404
+
+
+def test_lock_contention_on_the_free_validation_is_a_409_not_a_500(allowance, monkeypatch):
+    """Several validations from one account at once: the transaction can run
+    out of retries. The losers are told to try again; nothing was taken."""
+    client, _, calls = allowance
+
+    def contended(db, uid, limit, now=None):
+        raise main.validation_allowance.Contended(uid)
+
+    monkeypatch.setattr(main.validation_allowance, "reserve", contended)
+    r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 409
+    assert r.headers["Retry-After"] == "2"
+    assert calls["release"] == []
