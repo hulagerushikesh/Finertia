@@ -46,3 +46,15 @@ def test_a_rejection_is_undone_on_firestore():
     # 50 s into the next window the previous one weighs 1/6: 2 real hits leave
     # room for one more; 7 (had the rejections counted) would not.
     assert a.check(key, now=now + 110)["allowed"]
+
+
+def test_a_cost_is_taken_and_handed_back_whole_on_firestore():
+    a, b = instance(5), instance(5)
+    key = uuid.uuid4().hex
+    now = 2_000_040.0
+    assert a.check(key, now=now, cost=3)["allowed"]
+    assert not b.check(key, now=now, cost=3)["allowed"]
+    # The refused 3 were undone: exactly 2 singles still fit.
+    assert b.check(key, now=now)["allowed"]
+    assert a.check(key, now=now)["allowed"]
+    assert not a.check(key, now=now)["allowed"]

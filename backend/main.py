@@ -1,9 +1,11 @@
 """FastAPI application — all routes, middleware, and backtest orchestration."""
 
+import contextvars
 import json
 import os
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
@@ -216,12 +218,18 @@ def _enforce_quota(user: dict) -> dict:
     return quota
 
 
-def _record_run(db, uid: str, profile: dict) -> None:
+def _record_run(db, uid: str, profile: dict, batch=None) -> None:
     """Increment the usage counters for a completed run.
 
     The period stamp is rewritten every time so a counter left over from an
     earlier month is replaced rather than added to — `runs_used` already reads a
     stale period as zero, and this is what makes the stored value agree.
+
+    A merge, not an update: an update fails on a user with no profile document,
+    which turned a run that had already been saved into a 500 (feedback #12).
+
+    Given a `batch`, the write joins it instead of going out on its own, so a
+    backtest saves its run and its counters in one round trip.
     """
     period = current_period()
     updates = {
@@ -234,8 +242,12 @@ def _record_run(db, uid: str, profile: dict) -> None:
     else:
         updates["runsThisPeriod"] = 1
 
+    ref = db.collection("users").document(uid)
+    if batch is not None:
+        batch.set(ref, updates, merge=True)
+        return
     with step("user_write"):
-        db.collection("users").document(uid).update(updates)
+        ref.set(updates, merge=True)
 
 
 # The free plan's validations a month. A deployment setting, not a plan
@@ -311,10 +323,13 @@ def _with_allowance(result: dict, slot: dict | None) -> dict:
     return result
 
 
-def _enforce(limiter: RateLimiter, key: str, what: str) -> None:
-    """Raise 429 with a Retry-After header if `key` is over budget."""
+def _check_limit(limiter: RateLimiter, key: str, cost: int = 1) -> dict:
     with step("ratelimit"):
-        verdict = limiter.check(key)
+        return limiter.check(key, cost=cost)
+
+
+def _refuse_if_limited(verdict: dict, what: str) -> None:
+    """Raise 429 with a Retry-After header if the check said no."""
     if not verdict["allowed"]:
         retry = max(1, int(round(verdict["retry_after"])))
         raise HTTPException(
@@ -423,30 +438,66 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # ---------------------------------------------------------------------------
 
 
-def inject_user(authorization: Optional[str] = Header(None)) -> dict:
+# For a request's independent database round trips. Each trip is mostly
+# waiting on the network, so a few threads go a long way.
+_io_pool = ThreadPoolExecutor(max_workers=16, thread_name_prefix="io")
+
+
+def _in_parallel(*calls):
+    """Run blocking calls at the same time and return their results in order.
+
+    Each call runs in a copy of the caller's context, so its timing steps land
+    in the same request's collector. An exception from any call is re-raised.
+    """
+    futures = [_io_pool.submit(contextvars.copy_context().run, call) for call in calls]
+    return [f.result() for f in futures]
+
+
+def inject_user(
+    authorization: Optional[str] = Header(None),
+    *,
+    limit: tuple[RateLimiter, str, int] | None = None,
+) -> dict:
     """Verify the Bearer token and return {uid, email, role}.
 
     Blocked accounts (isActive == False) are rejected with 403 here, so every
     authenticated route is closed to them without needing its own check.
+
+    `limit` is (limiter, what, cost) for the routes behind a per-user rate
+    limit. The limiter and the profile read are each a database round trip and
+    need nothing from each other, so they run at the same time. The 403 for a
+    blocked account still wins over a 429.
     """
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
     token = authorization.split(" ", 1)[1]
     with step("auth"):
         user = verify_token(token)
+    uid = user["uid"]
 
     # A missing profile means the account was just created and the client has
     # not written users/{uid} yet — treat it as a normal active user.
-    with step("profile"):
-        profile = get_user_profile(user["uid"]) or {}
+    def read_profile() -> dict:
+        with step("profile"):
+            return get_user_profile(uid) or {}
+
+    verdict = None
+    if limit is None:
+        profile = read_profile()
+    else:
+        limiter, what, cost = limit
+        profile, verdict = _in_parallel(read_profile, lambda: _check_limit(limiter, uid, cost))
     if profile.get("isActive") is False:
         raise HTTPException(
             status_code=403,
             detail="Your account has been suspended. Contact support if you believe this is an error.",
         )
 
+    if verdict is not None:
+        _refuse_if_limited(verdict, limit[1])
+
     user["role"] = profile.get("role", "user")
-    sentry_set_user(user["uid"])
+    sentry_set_user(uid)
     # Carried through so quota and entitlement checks do not each re-read the
     # same document. inject_user is the only place that reads it.
     user["profile"] = profile
@@ -663,10 +714,9 @@ async def list_strategies():
 @app.post("/api/backtest")
 def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(None)):
     """Run a backtest for the selected strategy and persist results to Firestore."""
-    user = inject_user(authorization)
+    user = inject_user(authorization, limit=(backtest_limiter, "backtests", 1))
     uid = user["uid"]
     email = user["email"]
-    _enforce(backtest_limiter, uid, "backtests")
     _enforce_quota(user)
 
     start_time = time.time()
@@ -837,9 +887,11 @@ def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(Non
         "createdAt": firestore.SERVER_TIMESTAMP,
         "durationMs": duration_ms,
     }
+    batch = db.batch()
+    batch.set(db.collection("runs").document(run_id), run_doc)
+    _record_run(db, uid, user["profile"], batch=batch)
     with step("run_write"):
-        db.collection("runs").document(run_id).set(run_doc)
-    _record_run(db, uid, user["profile"])
+        batch.commit()
 
     return {
         "runId": run_id,
@@ -870,11 +922,10 @@ def validate_strategy(req: ValidateRequest, authorization: Optional[str] = Heade
     The permutation test asks whether signal timing beats random timing at the
     same market exposure. Results are diagnostic and not persisted.
     """
-    user = inject_user(authorization)
     # Tighter than the backtest budget: a validation run rebuilds positions once
     # per grid combination and then again for every permutation trial, so one
     # call is worth hundreds of backtests in CPU terms.
-    _enforce(validate_limiter, user["uid"], "validation runs")
+    user = inject_user(authorization, limit=(validate_limiter, "validation runs", 1))
     _check_validation_allowed(user)
     _enforce_quota(user)
 
@@ -964,15 +1015,22 @@ def _fetch_aligned(req: PortfolioRequest) -> tuple[pd.DataFrame, dict, str]:
     fail the request outright rather than silently yielding a smaller
     portfolio than the user asked for.
     """
+    def fetch(symbol):
+        try:
+            return fetch_ohlcv(symbol, req.start, req.end)
+        except (ValueError, DataUnavailableError) as exc:
+            return exc
+
+    # The legs' price reads are independent round trips, so they go out
+    # together. Errors are reported in the order the user listed the tickers.
+    frames = _in_parallel(*[lambda s=symbol: fetch(s) for symbol in req.tickers])
     closes = {}
     sources = set()
-    for symbol in req.tickers:
-        try:
-            df = fetch_ohlcv(symbol, req.start, req.end)
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=f"{symbol}: {exc}") from exc
-        except DataUnavailableError as exc:
-            raise HTTPException(status_code=503, detail=f"{symbol}: {exc}") from exc
+    for symbol, df in zip(req.tickers, frames):
+        if isinstance(df, ValueError):
+            raise HTTPException(status_code=400, detail=f"{symbol}: {df}") from df
+        if isinstance(df, DataUnavailableError):
+            raise HTTPException(status_code=503, detail=f"{symbol}: {df}") from df
         closes[symbol] = df["Close"]
         sources.add(df.attrs.get("data_source", "yfinance"))
     # One stale leg makes the whole portfolio stale — that is the flag that matters.
@@ -1020,8 +1078,7 @@ def validate_portfolio(req: PortfolioValidateRequest, authorization: Optional[st
     the null). Same plan gate and rate budget as `/api/validate`, plus the
     plan's portfolio-size cap. Diagnostic; not persisted.
     """
-    user = inject_user(authorization)
-    _enforce(validate_limiter, user["uid"], "validation runs")
+    user = inject_user(authorization, limit=(validate_limiter, "validation runs", 1))
     _check_validation_allowed(user)
     allowed_size = max_portfolio_size(user["profile"])
     if len(req.tickers) > allowed_size:
@@ -1099,12 +1156,10 @@ def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(N
     transaction costs — so the portfolio is an aggregation of honest single
     results rather than a separate model with its own assumptions.
     """
-    user = inject_user(authorization)
-    uid = user["uid"]
     # One request is N data fetches and N full backtests, so it costs a slot
-    # per leg rather than a single one.
-    for _ in req.tickers:
-        _enforce(backtest_limiter, uid, "portfolio legs")
+    # per leg rather than a single one, taken all at once or not at all.
+    user = inject_user(authorization, limit=(backtest_limiter, "portfolio legs", len(req.tickers)))
+    uid = user["uid"]
     _enforce_quota(user)
 
     allowed_size = max_portfolio_size(user["profile"])
@@ -1259,20 +1314,25 @@ def compare_runs(req: CompareRequest, authorization: Optional[str] = Header(None
     rebuild the curve here. That keeps documents small and means a fix to the
     engine retroactively corrects every historical chart.
     """
-    user = inject_user(authorization)
-    uid = user["uid"]
     # Each id costs a data fetch plus a full recompute, so this shares the
     # backtest budget rather than getting a free pass.
-    _enforce(backtest_limiter, uid, "comparisons")
+    user = inject_user(authorization, limit=(backtest_limiter, "comparisons", 1))
+    uid = user["uid"]
 
     start_time = time.time()
     db = get_db()
 
+    # Every run in one round trip rather than one each.
+    with step("run_read"):
+        fetched = {
+            doc.id: doc
+            for doc in db.get_all([db.collection("runs").document(r) for r in req.run_ids])
+        }
+
     series = []
     for run_id in req.run_ids:
-        with step("run_read"):
-            doc = db.collection("runs").document(run_id).get()
-        if not doc.exists:
+        doc = fetched.get(run_id)
+        if doc is None or not doc.exists:
             raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
         d = doc.to_dict()
