@@ -140,7 +140,7 @@ your yes). Users see no change except speed.
 | # | Change | Expected effect |
 |---|---|---|
 | A1 | ✅ (built, not yet deployed) **Measure.** Log per-step timings (auth, each database call, compute) on every request, plus a `Server-Timing` header | Confirms or kills finding 2 with production numbers before anything bigger is decided |
-| A2 | **Stop blocking.** Run the engine and the blocking database/yfinance calls in worker threads; lower Cloud Run concurrency from 40 to about 8 | Health and History stay fast during a backtest; the CPU computes while other requests wait on the database |
+| A2 | ✅ (built, not yet deployed) **Stop blocking.** Run the engine and the blocking database/yfinance calls in worker threads. Concurrency stays at 40 for now: with the 2-instance cap, a lower value turns bursts into 429s instead of short waits; revisit with A1's numbers and when max-instances is raised | Health and History stay fast during a backtest; the CPU computes while other requests wait on the database |
 | A3 | **Fewer round trips.** Save the run and update the counters in one batch; read the profile and hit the rate limiter at the same time | About 5 sequential trips → about 3, roughly 0.5 s off every backtest |
 | A4 | **History by page.** Query only the page (`limit`), and get the total from a `count()` aggregation | Reads per visit go from "all runs" to 20 + 1 |
 | A5 | **gzip** on JSON responses over 1 KB | Backtest 447 KB → ~80 KB on the wire |
