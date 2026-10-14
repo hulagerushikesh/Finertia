@@ -1276,3 +1276,25 @@ def test_history_reads_the_page_not_every_run(api, monkeypatch):
     monkeypatch.setattr(FakeQuery, "stream", counting_stream)
     client.get("/api/history?limit=20", headers=AUTH)
     assert streamed == [20]
+
+
+# ---------------------------------------------------------------------------
+# Compression (system design A5)
+# ---------------------------------------------------------------------------
+
+
+def test_a_backtest_is_sent_gzipped(api):
+    client, _ = api
+    r = client.post("/api/backtest", json=BACKTEST, headers={**AUTH, "Accept-Encoding": "gzip"})
+    assert r.status_code == 200
+    assert r.headers["content-encoding"] == "gzip"
+    assert int(r.headers["content-length"]) < len(r.content) / 3
+    # The middleware headers survive compression.
+    assert "total" in _server_timing(r) and r.headers["X-Request-Id"]
+
+
+def test_small_responses_and_clients_without_gzip_are_left_alone(api):
+    client, _ = api
+    assert "content-encoding" not in client.get("/api/health", headers={"Accept-Encoding": "gzip"}).headers
+    r = client.post("/api/backtest", json=BACKTEST, headers={**AUTH, "Accept-Encoding": "identity"})
+    assert "content-encoding" not in r.headers
