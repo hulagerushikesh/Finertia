@@ -63,6 +63,8 @@ from firebase_admin_init import verify_token, get_user_profile, get_db, emulator
 from admin_queries import platform_stats, list_users, list_runs
 from account import delete_account, export_account
 from monitoring import init_sentry, set_user as sentry_set_user, tag_request
+import timing
+from timing import step
 
 # ---------------------------------------------------------------------------
 # Startup configuration checks — fail loudly rather than at first request
@@ -231,7 +233,8 @@ def _record_run(db, uid: str, profile: dict) -> None:
     else:
         updates["runsThisPeriod"] = 1
 
-    db.collection("users").document(uid).update(updates)
+    with step("user_write"):
+        db.collection("users").document(uid).update(updates)
 
 
 # The free plan's validations a month. A deployment setting, not a plan
@@ -280,7 +283,8 @@ def _take_validation_slot(user: dict) -> dict | None:
     quota = check_validation_quota(user["profile"], FREE_VALIDATIONS_PER_MONTH)
     if quota["limit"] is None:
         return None
-    taken = validation_allowance.reserve(get_db(), user["uid"], quota["limit"])
+    with step("allowance"):
+        taken = validation_allowance.reserve(get_db(), user["uid"], quota["limit"])
     if taken is None:
         raise _validation_used_up(quota["limit"])
     log.info("free validation taken", extra={"uid": user["uid"], "period": taken["period"]})
@@ -308,7 +312,8 @@ def _with_allowance(result: dict, slot: dict | None) -> dict:
 
 def _enforce(limiter: RateLimiter, key: str, what: str) -> None:
     """Raise 429 with a Retry-After header if `key` is over budget."""
-    verdict = limiter.check(key)
+    with step("ratelimit"):
+        verdict = limiter.check(key)
     if not verdict["allowed"]:
         retry = max(1, int(round(verdict["retry_after"])))
         raise HTTPException(
@@ -328,11 +333,13 @@ async def observability_middleware(request: Request, call_next):
     request_id = request.headers.get("x-request-id") or uuid.uuid4().hex[:12]
     request.state.request_id = request_id
     tag_request(request_id)
+    steps = timing.begin()
     started = time.perf_counter()
     path = request.url.path
 
     global _requests_seen
     _requests_seen += 1
+    seen = _requests_seen
     if _requests_seen % _PRUNE_EVERY == 0:
         # Expired keys are only dropped when they are next looked up, so a
         # one-time visitor would otherwise sit in the dict forever. Sweeping on
@@ -368,12 +375,15 @@ async def observability_middleware(request: Request, call_next):
                 "method": request.method,
                 "path": path,
                 "duration_ms": duration_ms,
+                **timing.as_log_fields(steps),
             },
         )
         raise
 
-    duration_ms = int((time.perf_counter() - started) * 1000)
+    total_ms = (time.perf_counter() - started) * 1000
+    duration_ms = int(total_ms)
     response.headers["X-Request-Id"] = request_id
+    response.headers["Server-Timing"] = timing.server_timing(steps, total_ms)
     log.info(
         "request",
         extra={
@@ -382,6 +392,9 @@ async def observability_middleware(request: Request, call_next):
             "path": path,
             "status": response.status_code,
             "duration_ms": duration_ms,
+            # 1 on a fresh instance: separates cold starts from slow requests.
+            "instance_request": seen,
+            **timing.as_log_fields(steps),
         },
     )
     return response
@@ -418,11 +431,13 @@ async def inject_user(authorization: Optional[str] = Header(None)) -> dict:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
     token = authorization.split(" ", 1)[1]
-    user = verify_token(token)
+    with step("auth"):
+        user = verify_token(token)
 
     # A missing profile means the account was just created and the client has
     # not written users/{uid} yet — treat it as a normal active user.
-    profile = get_user_profile(user["uid"]) or {}
+    with step("profile"):
+        profile = get_user_profile(user["uid"]) or {}
     if profile.get("isActive") is False:
         raise HTTPException(
             status_code=403,
@@ -509,7 +524,8 @@ async def my_usage(authorization: Optional[str] = Header(None)):
 async def export_my_data(authorization: Optional[str] = Header(None)):
     """Everything stored about the caller, as a JSON download (DPDP: access)."""
     user = await inject_user(authorization)
-    body = export_account(get_db(), user["uid"], user["email"])
+    with step("export_read"):
+        body = export_account(get_db(), user["uid"], user["email"])
     stamp = body["exported_at"][:10]
     log.info("account exported", extra={"uid": user["uid"], "runs": len(body["runs"])})
     return JSONResponse(
@@ -535,7 +551,8 @@ async def delete_my_account(body: DeleteAccountRequest, authorization: Optional[
     if profile.get("planSource") == "stripe" and plan_for(profile)["name"] != "free":
         raise HTTPException(status_code=409, detail="Cancel your subscription before deleting the account.")
 
-    counts = delete_account(get_db(), user["uid"], delete_auth_user)
+    with step("delete"):
+        counts = delete_account(get_db(), user["uid"], delete_auth_user)
     log.info("account deleted", extra={"uid": user["uid"], **counts})
     return {"deleted": True, **counts}
 
@@ -804,7 +821,8 @@ async def run_backtest(req: BacktestRequest, authorization: Optional[str] = Head
         "createdAt": firestore.SERVER_TIMESTAMP,
         "durationMs": duration_ms,
     }
-    db.collection("runs").document(run_id).set(run_doc)
+    with step("run_write"):
+        db.collection("runs").document(run_id).set(run_doc)
     _record_run(db, uid, user["profile"])
 
     return {
@@ -1236,7 +1254,8 @@ async def compare_runs(req: CompareRequest, authorization: Optional[str] = Heade
 
     series = []
     for run_id in req.run_ids:
-        doc = db.collection("runs").document(run_id).get()
+        with step("run_read"):
+            doc = db.collection("runs").document(run_id).get()
         if not doc.exists:
             raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
@@ -1343,7 +1362,8 @@ async def get_history(
         .where("uid", "==", uid)
         .order_by("createdAt", direction=firestore.Query.DESCENDING)
     )
-    all_docs = list(query.stream())
+    with step("history_read"):
+        all_docs = list(query.stream())
     total = len(all_docs)
     page = all_docs[offset: offset + limit]
 
@@ -1378,7 +1398,8 @@ async def get_run(run_id: str, authorization: Optional[str] = Header(None)):
     uid = user["uid"]
 
     db = get_db()
-    doc = db.collection("runs").document(run_id).get()
+    with step("run_read"):
+        doc = db.collection("runs").document(run_id).get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Run not found")
 
@@ -1398,7 +1419,8 @@ async def get_run(run_id: str, authorization: Optional[str] = Header(None)):
 async def admin_stats(authorization: Optional[str] = Header(None)):
     """Return platform-wide statistics — admin only."""
     await inject_admin(authorization)
-    return platform_stats(get_db())
+    with step("admin_query"):
+        return platform_stats(get_db())
 
 
 @app.get("/api/admin/users")
@@ -1410,7 +1432,8 @@ async def admin_users(
 ):
     """Return paginated user list — admin only."""
     await inject_admin(authorization)
-    return list_users(get_db(), limit, offset, search)
+    with step("admin_query"):
+        return list_users(get_db(), limit, offset, search)
 
 
 @app.patch("/api/admin/users/{target_uid}")
@@ -1461,7 +1484,8 @@ async def admin_runs(
 ):
     """Return paginated run list with optional filters — admin only."""
     await inject_admin(authorization)
-    return list_runs(get_db(), limit, offset, uid, ticker)
+    with step("admin_query"):
+        return list_runs(get_db(), limit, offset, uid, ticker)
 
 
 class SentryTestError(RuntimeError):
