@@ -121,3 +121,31 @@ class TestRealClock:
         assert rl.check("a")["allowed"] is True
         assert rl.check("a")["allowed"] is True
         assert rl.check("a")["allowed"] is False
+
+
+# ── cost: several slots at once ─────────────────────────────────────────────
+
+def test_a_cost_takes_that_many_slots_or_none():
+    lim = RateLimiter(limit=5, window_seconds=60)
+    assert lim.check("u", now=0, cost=3)["remaining"] == 2
+    denied = lim.check("u", now=1, cost=3)
+    assert not denied["allowed"]
+    # Nothing was taken by the refusal: two single slots still fit.
+    assert lim.check("u", now=2)["allowed"]
+    assert lim.check("u", now=3)["allowed"]
+    assert not lim.check("u", now=4)["allowed"]
+
+
+def test_retry_after_waits_for_enough_slots_to_free():
+    lim = RateLimiter(limit=4, window_seconds=60)
+    lim.check("u", now=0)
+    lim.check("u", now=10)
+    lim.check("u", now=20)
+    # Needs 3 free: the hits at 0 and 10 must age out, so 70 - 30 = 40 s.
+    denied = lim.check("u", now=30, cost=3)
+    assert denied["retry_after"] == 40
+
+
+def test_a_cost_above_the_limit_never_fits():
+    lim = RateLimiter(limit=2, window_seconds=60)
+    assert not lim.check("u", now=0, cost=3)["allowed"]
