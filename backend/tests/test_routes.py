@@ -51,6 +51,7 @@ class FakeDoc:
 
         class Snap:
             exists = doc._path in doc._store
+            id = doc._path.split("/", 1)[1]
 
             @staticmethod
             def to_dict():
@@ -64,9 +65,12 @@ class FakeDoc:
             self._store[self._path] = dict(data)
 
     def update(self, data):
+        # Firestore refuses an update to a document that does not exist.
+        if self._path not in self._store:
+            raise RuntimeError(f"404 No document to update: {self._path}")
         # Increment sentinels are objects, not numbers. Recording the call is
         # enough — what matters to these tests is that a write was attempted.
-        self._store.setdefault(self._path, {}).update(
+        self._store[self._path].update(
             {k: v for k, v in data.items() if not hasattr(v, "value")}
         )
 
@@ -101,12 +105,36 @@ class FakeCollection:
         return iter(())
 
 
+class FakeBatch:
+    """Writes applied on commit, which is counted: one commit is one trip."""
+
+    def __init__(self, db):
+        self._db, self._ops = db, []
+
+    def set(self, ref, data, merge=False):
+        self._ops.append((ref, data, merge))
+
+    def commit(self):
+        self._db.commits += 1
+        for ref, data, merge in self._ops:
+            ref.set({k: v for k, v in data.items() if not hasattr(v, "value")}, merge=merge)
+
+
 class FakeDb:
     def __init__(self):
         self.store = {}
+        self.commits = 0
+        self.get_all_calls = 0
 
     def collection(self, name):
         return FakeCollection(self.store, name)
+
+    def batch(self):
+        return FakeBatch(self)
+
+    def get_all(self, refs):
+        self.get_all_calls += 1
+        return [ref.get() for ref in refs]
 
 
 FREE = {"role": "user", "isActive": True, "totalRuns": 0}
@@ -129,7 +157,10 @@ def api(monkeypatch):
         lambda token: {"uid": state["uid"], "email": f"{state['uid']}@example.com"},
     )
     monkeypatch.setattr(main, "get_user_profile", lambda uid: state["profile"])
-    monkeypatch.setattr(main, "get_db", lambda: FakeDb())
+    # One database per test, so a test can look at what a route wrote.
+    db = FakeDb()
+    state["db"] = db
+    monkeypatch.setattr(main, "get_db", lambda: db)
     monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices())
 
     # Module-level singletons persist across tests in the same process, so one
@@ -206,7 +237,7 @@ def test_a_backtest_says_where_its_time_went(api):
     r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
     assert r.status_code == 200
     steps = _server_timing(r)
-    for name in ("auth", "profile", "ratelimit", "run_write", "user_write", "other", "total"):
+    for name in ("auth", "profile", "ratelimit", "run_write", "other", "total"):
         assert name in steps, name
     assert steps["total"] >= sum(v for k, v in steps.items() if k != "total") - 1
 
@@ -1001,3 +1032,126 @@ def test_usage_reports_the_free_validations(allowance):
     state["profile"] = dict(PRO)
     body = client.get("/api/me/usage", headers=AUTH).json()
     assert (body["validations_limit"], body["validations_remaining"]) == (None, None)
+
+
+# ---------------------------------------------------------------------------
+# Database round trips (system design A3)
+# ---------------------------------------------------------------------------
+
+
+def test_a_backtest_saves_the_run_and_its_counters_in_one_commit(api):
+    client, state = api
+    r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 200
+    db = state["db"]
+    assert db.commits == 1
+    assert f"runs/{r.json()['runId']}" in db.store
+    assert db.store["users/u1"]["quotaPeriod"] == main.current_period()
+
+
+def test_a_run_without_a_profile_document_still_succeeds(api):
+    """Feedback #12: an update() on a missing users/{uid} failed after the run
+    was saved. The counters are merged in, creating the document."""
+    client, state = api
+    state["profile"] = {}
+    assert "users/u1" not in state["db"].store
+    r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 200
+    assert state["db"].store["users/u1"]["runsThisPeriod"] == 1
+
+
+def test_a_portfolio_records_its_run_without_a_profile_document(api):
+    client, state = api
+    state["profile"] = {}
+    assert client.post("/api/portfolio", json=PORTFOLIO, headers=AUTH).status_code == 200
+    assert "users/u1" in state["db"].store
+
+
+def test_a_portfolio_takes_its_rate_slots_all_at_once(api, monkeypatch):
+    """Refused as a whole, it takes nothing: a single backtest still fits."""
+    client, state = api
+    state["profile"] = dict(PRO)
+    monkeypatch.setattr(main.backtest_limiter, "limit", 3)
+    four = {**PORTFOLIO, "tickers": ["AAPL", "MSFT", "GOOG", "AMZN"]}
+    r = client.post("/api/portfolio", json=four, headers=AUTH)
+    assert r.status_code == 429 and "portfolio legs" in r.json()["detail"]
+    assert client.post("/api/backtest", json=BACKTEST, headers=AUTH).status_code == 200
+
+
+def test_a_suspended_account_gets_403_even_when_rate_limited(api, monkeypatch):
+    client, state = api
+    monkeypatch.setattr(main.backtest_limiter, "limit", 1)
+    client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    state["profile"] = dict(SUSPENDED)
+    assert client.post("/api/backtest", json=BACKTEST, headers=AUTH).status_code == 403
+
+
+def test_the_profile_and_rate_limit_are_read_at_the_same_time(api, monkeypatch):
+    import time as _time
+
+    client, state = api
+
+    def slow_profile(uid):
+        _time.sleep(0.5)
+        return state["profile"]
+
+    def slow_check(key, now=None, cost=1):
+        _time.sleep(0.5)
+        return {"allowed": True, "remaining": 1, "retry_after": 0.0}
+
+    monkeypatch.setattr(main, "get_user_profile", slow_profile)
+    monkeypatch.setattr(main.backtest_limiter, "check", slow_check)
+    started = _time.perf_counter()
+    r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 200
+    steps = _server_timing(r)
+    assert steps["profile"] >= 490 and steps["ratelimit"] >= 490
+    # One after the other would be 1.0 s before any work.
+    assert _time.perf_counter() - started < 0.85
+
+
+def test_portfolio_legs_fetch_their_prices_together(api, monkeypatch):
+    import time as _time
+
+    client, state = api
+    state["profile"] = dict(PRO)
+
+    def slow_prices(t, s, e):
+        _time.sleep(0.5)
+        return _prices()
+
+    monkeypatch.setattr(main, "fetch_ohlcv", slow_prices)
+    three = {**PORTFOLIO, "tickers": ["AAPL", "MSFT", "GOOG"]}
+    started = _time.perf_counter()
+    assert client.post("/api/portfolio", json=three, headers=AUTH).status_code == 200
+    assert _time.perf_counter() - started < 1.2  # serial: 1.5 s of waiting
+
+
+def test_a_portfolio_reports_the_first_bad_ticker_in_the_users_order(api, monkeypatch):
+    client, state = api
+    state["profile"] = dict(PRO)
+
+    def prices(t, s, e):
+        if t in ("MSFT", "GOOG"):
+            raise ValueError(f"No data found for {t}")
+        return _prices()
+
+    monkeypatch.setattr(main, "fetch_ohlcv", prices)
+    three = {**PORTFOLIO, "tickers": ["AAPL", "MSFT", "GOOG"]}
+    r = client.post("/api/portfolio", json=three, headers=AUTH)
+    assert r.status_code == 400 and r.json()["detail"].startswith("MSFT:")
+
+
+def test_compare_reads_every_run_in_one_trip(api):
+    client, state = api
+    ids = [client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()["runId"] for _ in range(2)]
+    r = client.post("/api/compare", json={"run_ids": ids}, headers=AUTH)
+    assert r.status_code == 200
+    assert state["db"].get_all_calls == 1
+
+
+def test_compare_a_missing_run_is_404(api):
+    client, state = api
+    run_id = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()["runId"]
+    r = client.post("/api/compare", json={"run_ids": [run_id, "nope"]}, headers=AUTH)
+    assert r.status_code == 404

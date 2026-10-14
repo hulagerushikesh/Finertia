@@ -38,8 +38,11 @@ class RateLimiter:
         self._hits: dict[str, deque] = {}
         self._lock = Lock()
 
-    def check(self, key: str, now: float | None = None) -> dict:
+    def check(self, key: str, now: float | None = None, cost: int = 1) -> dict:
         """Record an attempt and report whether it is allowed.
+
+        `cost` takes several slots at once, all or none (a portfolio costs one
+        per leg).
 
         Returns {allowed, remaining, retry_after}. A rejected attempt is NOT
         recorded — otherwise a client that keeps retrying would keep pushing its
@@ -53,16 +56,20 @@ class RateLimiter:
             while hits and hits[0] <= cutoff:
                 hits.popleft()
 
-            if len(hits) >= self.limit:
-                # The window frees a slot when the oldest hit ages out.
-                retry_after = max(0.0, hits[0] + self.window - now)
+            if len(hits) + cost > self.limit:
+                # The window frees enough slots when the hit that many places
+                # from the front ages out.
+                frees = len(hits) + cost - self.limit - 1
+                retry_after = (
+                    max(0.0, hits[frees] + self.window - now) if frees < len(hits) else self.window
+                )
                 return {
                     "allowed": False,
                     "remaining": 0,
                     "retry_after": retry_after,
                 }
 
-            hits.append(now)
+            hits.extend([now] * cost)
             return {
                 "allowed": True,
                 "remaining": self.limit - len(hits),
@@ -111,14 +118,14 @@ class MemoryCounterStore:
         self._counts: dict[str, int] = {}
         self._lock = Lock()
 
-    def hit(self, current: str, previous: str) -> tuple[int, int]:
+    def hit(self, current: str, previous: str, n: int = 1) -> tuple[int, int]:
         with self._lock:
-            self._counts[current] = self._counts.get(current, 0) + 1
+            self._counts[current] = self._counts.get(current, 0) + n
             return self._counts[current], self._counts.get(previous, 0)
 
-    def undo(self, current: str) -> None:
+    def undo(self, current: str, n: int = 1) -> None:
         with self._lock:
-            self._counts[current] = self._counts.get(current, 0) - 1
+            self._counts[current] = self._counts.get(current, 0) - n
 
 
 class FirestoreCounterStore:
@@ -142,20 +149,20 @@ class FirestoreCounterStore:
     def _ref(self, doc_id: str):
         return self._db_factory().collection(self.COLLECTION).document(doc_id)
 
-    def hit(self, current: str, previous: str) -> tuple[int, int]:
+    def hit(self, current: str, previous: str, n: int = 1) -> tuple[int, int]:
         from firebase_admin import firestore  # noqa: PLC0415
 
         expires = datetime.now(timezone.utc) + timedelta(minutes=10)
         batch = self._db_factory().batch()
-        batch.set(self._ref(current), {"n": firestore.Increment(1), "expires_at": expires}, merge=True)
+        batch.set(self._ref(current), {"n": firestore.Increment(n), "expires_at": expires}, merge=True)
         batch.set(self._ref(previous), {"n": firestore.Increment(0), "expires_at": expires}, merge=True)
         cur, prev = batch.commit()
         return int(cur.transform_results[0].integer_value), int(prev.transform_results[0].integer_value)
 
-    def undo(self, current: str) -> None:
+    def undo(self, current: str, n: int = 1) -> None:
         from firebase_admin import firestore  # noqa: PLC0415
 
-        self._ref(current).set({"n": firestore.Increment(-1)}, merge=True)
+        self._ref(current).set({"n": firestore.Increment(-n)}, merge=True)
 
 
 class SharedRateLimiter(RateLimiter):
@@ -186,11 +193,11 @@ class SharedRateLimiter(RateLimiter):
             self._store_resolved = True
         return self._store
 
-    def check(self, key: str, now: float | None = None) -> dict:
+    def check(self, key: str, now: float | None = None, cost: int = 1) -> dict:
         now = time.time() if now is None else now
         store = self._get_store()
         if store is None:
-            return super().check(key, now)
+            return super().check(key, now, cost)
 
         bucket = int(now // self.window)
         into = (now - bucket * self.window) / self.window
@@ -199,11 +206,11 @@ class SharedRateLimiter(RateLimiter):
         previous = f"{self.name}:{safe_key}:{bucket - 1}"
 
         try:
-            cur, prev = store.hit(current, previous)
+            cur, prev = store.hit(current, previous, cost)
         except Exception:  # noqa: BLE001 — any store failure means fall back
             log.warning("shared rate limit unavailable, using in-process", exc_info=True,
                         extra={"limiter": self.name})
-            return super().check(key, now)
+            return super().check(key, now, cost)
 
         estimate = prev * (1 - into) + cur
         if estimate <= self.limit:
@@ -212,17 +219,17 @@ class SharedRateLimiter(RateLimiter):
         # Rejected attempts are not counted, as in the in-process limiter: a
         # client that keeps retrying must not keep pushing its own window out.
         try:
-            store.undo(current)
+            store.undo(current, cost)
         except Exception:  # noqa: BLE001
             log.warning("could not undo a rejected rate-limit hit", exc_info=True,
                         extra={"limiter": self.name})
-        held = cur - 1
-        if held < self.limit and prev > 0:
+        held = cur - cost
+        if held + cost <= self.limit and prev > 0:
             # Wait for the previous window to slide far enough out.
-            need = 1 - (self.limit - 1 - held) / prev
+            need = 1 - (self.limit - cost - held) / prev
             retry = (need - into) * self.window
         else:
             # This window alone is full; it becomes the previous one next.
-            need = 1 - (self.limit - 1) / held if held > 0 else 0
+            need = 1 - (self.limit - cost) / held if held > 0 else 0
             retry = (1 - into) * self.window + max(0.0, need) * self.window
         return {"allowed": False, "remaining": 0, "retry_after": max(0.0, retry)}
