@@ -247,3 +247,80 @@ def test_store_can_be_switched_off(monkeypatch):
     data.configure_store(None)
     assert isinstance(data._get_store(), MemoryPriceStore)
     data.configure_store(None)
+
+
+# ── L1 bounds and single-flight (system design A6) ──────────────────────────
+
+def test_l1_drops_the_least_recently_used_beyond_its_size():
+    cache = data._MemoryCache(max_entries=2, ttl_seconds=60)
+    cache.put("a", 1)
+    cache.put("b", 2)
+    assert cache.get("a") == 1  # a is now the most recent
+    cache.put("c", 3)
+    assert cache.get("b") is None and cache.get("a") == 1 and cache.get("c") == 3
+    assert len(cache) == 2
+
+
+def test_l1_entries_expire():
+    now = [0.0]
+    cache = data._MemoryCache(max_entries=10, ttl_seconds=60, clock=lambda: now[0])
+    cache.put("a", 1)
+    now[0] = 59
+    assert cache.get("a") == 1
+    now[0] = 121  # 62 s after the read; age counts from the write
+    assert cache.get("a") is None and len(cache) == 0
+
+
+def test_an_expired_l1_entry_goes_back_to_the_store(yahoo, monkeypatch):
+    fake, _ = yahoo
+    now = [0.0]
+    monkeypatch.setattr(data._cache, "clock", lambda: now[0])
+    fetch_ohlcv("AAPL", "2019-01-01", "2020-01-01")
+    now[0] = data.L1_TTL.total_seconds() + 1
+    assert fetch_ohlcv("AAPL", "2019-01-01", "2020-01-01").attrs["data_source"] == "cache"
+    assert len(fake.calls) == 1
+
+
+def test_a_memory_hit_does_not_relabel_the_frame_another_request_holds(yahoo):
+    first = fetch_ohlcv("AAPL", "2019-01-01", "2020-01-01")
+    assert first.attrs["data_source"] == "yfinance"
+    again = fetch_ohlcv("AAPL", "2019-01-01", "2020-01-01")
+    assert again.attrs["data_source"] == "memory"
+    assert first.attrs["data_source"] == "yfinance"
+
+
+def test_racing_requests_for_one_new_ticker_download_it_once(yahoo, monkeypatch):
+    import time as _time
+    from concurrent.futures import ThreadPoolExecutor
+
+    fake, _ = yahoo
+    real = fake.__call__
+
+    def slow(ticker, start, end):
+        _time.sleep(0.2)
+        return real(ticker, start, end)
+
+    monkeypatch.setattr(data, "_download", slow)
+    ranges = [("2019-01-01", "2020-01-01"), ("2019-03-01", "2019-09-01")] * 4
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        frames = list(pool.map(lambda r: fetch_ohlcv("AAPL", *r), ranges))
+    assert len(fake.calls) == 1
+    assert all(not f.empty for f in frames)
+
+
+def test_different_tickers_do_not_wait_for_each_other(yahoo, monkeypatch):
+    import time as _time
+    from concurrent.futures import ThreadPoolExecutor
+
+    fake, _ = yahoo
+    real = fake.__call__
+
+    def slow(ticker, start, end):
+        _time.sleep(0.3)
+        return real(ticker, start, end)
+
+    monkeypatch.setattr(data, "_download", slow)
+    started = _time.perf_counter()
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(lambda t: fetch_ohlcv(t, "2019-01-01", "2020-01-01"), ["A", "B", "C", "D"]))
+    assert _time.perf_counter() - started < 0.9  # one after another: 1.2 s
