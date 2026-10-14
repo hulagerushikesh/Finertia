@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from firebase_admin import firestore
@@ -128,6 +129,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# A backtest is ~450 KB of JSON and ~80 KB gzipped; nothing between here
+# and the browser compressed it. Below 1 KB compression is not worth the CPU.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ---------------------------------------------------------------------------
 # Rate limits

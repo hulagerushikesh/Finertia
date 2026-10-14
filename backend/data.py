@@ -1,6 +1,6 @@
 """OHLCV data: a price provider behind two cache tiers.
 
-    L1  module dict, keyed (ticker, start, end)     — this process only
+    L1  bounded in-process LRU, keyed (ticker, start, end) — this process only
     L2  one Firestore doc per (ticker, year)         — survives cold starts
     L3  the provider (price_providers.py; yfinance today) — the flaky one
 
@@ -18,6 +18,16 @@ stale, the whole cached history of that ticker is re-downloaded in one call
 and rewritten under a new batch id; a read is served from L2 only when every
 year it needs shares that id.
 
+L1 holds at most L1_MAX_ENTRIES frames and drops each after L1_TTL. It used
+to be a plain dict that only grew: every new date range was a new entry for
+the life of a 512 MiB instance, and an entry never noticed the six-hour rule
+that L2 keeps for the current year.
+
+One fetch per ticker at a time: requests run in worker threads, so ten users
+opening the same uncached ticker would otherwise make ten provider downloads
+and ten rewrites of its L2 docs. The first takes the ticker's lock and fills
+the caches; the rest wait, then find it there.
+
 Stale-on-error: if yfinance raises and L2 holds a uniform-batch copy of the
 span, that copy is served with `data_source = "cache-stale"`. Bad tickers
 still surface as a ValueError the way they always have — yfinance returns an
@@ -28,6 +38,9 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
+import time
+from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
 
 import pandas as pd
@@ -43,8 +56,63 @@ log = logging.getLogger("finertia.data")
 # the close by the evening without hammering Yahoo on every request.
 PARTIAL_YEAR_TTL = timedelta(hours=6)
 
-_cache: dict = {}
+# A backtest frame is ~10 years of daily bars, roughly 100-200 KB, so 200 of
+# them stay well inside the instance's memory next to the requests in flight.
+L1_MAX_ENTRIES = 200
+L1_TTL = PARTIAL_YEAR_TTL
+
+
+class _MemoryCache:
+    """A thread-safe LRU with a time to live. `clock` is swappable for tests."""
+
+    def __init__(self, max_entries: int, ttl_seconds: float, clock=time.monotonic):
+        self.max_entries, self.ttl, self.clock = max_entries, ttl_seconds, clock
+        self._items: OrderedDict = OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, key):
+        with self._lock:
+            item = self._items.get(key)
+            if item is None:
+                return None
+            df, stored = item
+            if self.clock() - stored > self.ttl:
+                del self._items[key]
+                return None
+            self._items.move_to_end(key)
+            return df
+
+    def put(self, key, df) -> None:
+        with self._lock:
+            self._items[key] = (df, self.clock())
+            self._items.move_to_end(key)
+            while len(self._items) > self.max_entries:
+                self._items.popitem(last=False)
+
+    def clear(self) -> None:
+        with self._lock:
+            self._items.clear()
+
+    def __contains__(self, key) -> bool:
+        return self.get(key) is not None
+
+    def __len__(self) -> int:
+        with self._lock:
+            return len(self._items)
+
+
+_cache = _MemoryCache(L1_MAX_ENTRIES, L1_TTL.total_seconds())
 _store: PriceStore | None = None
+
+# One lock per ticker, for single-flight fetches. One small object per
+# distinct ticker ever requested on this instance; not worth evicting.
+_ticker_locks: dict[str, threading.Lock] = {}
+_ticker_locks_guard = threading.Lock()
+
+
+def _ticker_lock(ticker: str) -> threading.Lock:
+    with _ticker_locks_guard:
+        return _ticker_locks.setdefault(ticker, threading.Lock())
 
 
 class DataUnavailableError(Exception):
@@ -167,11 +235,36 @@ def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
     provider's name ("yfinance") for a fresh download."""
     ticker = ticker.upper()
     key = (ticker, start, end)
-    if key in _cache:
-        df = _cache[key]
-        df.attrs["data_source"] = "memory"
-        return df
+    hit = _from_memory(key)
+    if hit is not None:
+        return hit
 
+    lock = _ticker_lock(ticker)
+    # Normally ~0; long when another request is downloading this ticker.
+    with step("prices_wait"):
+        lock.acquire()
+    try:
+        # Whoever held the lock may have just fetched this exact range.
+        hit = _from_memory(key)
+        if hit is not None:
+            return hit
+        return _fetch_through_store(ticker, start, end, key)
+    finally:
+        lock.release()
+
+
+def _from_memory(key) -> pd.DataFrame | None:
+    """The cached frame, as a shallow copy labelled "memory". A copy, so that
+    labelling it cannot change the source another request is reading."""
+    df = _cache.get(key)
+    if df is None:
+        return None
+    out = df.copy(deep=False)
+    out.attrs = {**df.attrs, "data_source": "memory"}
+    return out
+
+
+def _fetch_through_store(ticker: str, start: str, end: str, key) -> pd.DataFrame:
     store = _get_store()
     years = _years_in(start, end)
     now = _now()
@@ -203,5 +296,5 @@ def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
         raise ValueError(f"No data found for {ticker}")
 
     df.attrs["data_source"] = source
-    _cache[key] = df
+    _cache.put(key, df)
     return df
