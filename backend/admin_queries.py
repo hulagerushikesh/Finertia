@@ -42,7 +42,8 @@ def _aggregate(query, **aggs) -> dict:
     return {r.alias: r.value for r in results[0]}
 
 
-def _count(query) -> int:
+def count(query) -> int:
+    """How many documents match `query`, as one aggregation round trip."""
     return int(_aggregate(query, n=("count",))["n"] or 0)
 
 
@@ -65,7 +66,7 @@ def platform_stats(db, now: datetime | None = None) -> dict:
         sharpe=("avg", "metrics.sharpe_ratio"),
         ret=("avg", "metrics.total_return"),
     )
-    total_runs = _count(runs)
+    total_runs = count(runs)
 
     recent = (
         runs.order_by("createdAt", direction=DESC).limit(TOP_TICKER_WINDOW).select(["ticker"]).stream()
@@ -80,10 +81,10 @@ def platform_stats(db, now: datetime | None = None) -> dict:
     top = sorted(ticker_counts.items(), key=lambda kv: (-kv[1], kv[0]))[:5]
 
     return {
-        "total_users": _count(users),
+        "total_users": count(users),
         "total_runs": total_runs,
-        "runs_today": _count(runs.where(filter=FieldFilter("createdAt", ">=", today_start))),
-        "runs_this_week": _count(runs.where(filter=FieldFilter("createdAt", ">=", week_start))),
+        "runs_today": count(runs.where(filter=FieldFilter("createdAt", ">=", today_start))),
+        "runs_this_week": count(runs.where(filter=FieldFilter("createdAt", ">=", week_start))),
         "top_tickers": [{"ticker": t, "count": c} for t, c in top],
         "top_tickers_window": window,
         "avg_sharpe": round(totals["sharpe"], 4) if totals["sharpe"] is not None else 0.0,
@@ -109,7 +110,7 @@ def list_users(db, limit: int, offset: int, search: str | None = None) -> dict:
     else:
         query = users.order_by("createdAt", direction=DESC)
 
-    total = _count(query)
+    total = count(query)
     page = [d.to_dict() for d in query.offset(offset).limit(limit).stream()]
     return {"users": page, "total": total}
 
@@ -127,7 +128,7 @@ def list_runs(db, limit: int, offset: int, uid: str | None = None, ticker: str |
 
     # Counted without the ordering: equality filters alone are served by the
     # automatic single-field indexes.
-    total = _count(query)
+    total = count(query)
     ordered = query.order_by("createdAt", direction=DESC)
     page = [d.to_dict() for d in ordered.offset(offset).limit(limit).stream()]
     return {"runs": page, "total": total}
