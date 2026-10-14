@@ -87,22 +87,77 @@ class FakeCollection:
         self._store[key] = dict(data)
         return (None, FakeDoc(self._store, key))
 
-    # History and admin listing chain these; returning self keeps the chain
-    # valid and `stream()` yields nothing, which the routes handle.
+    # The query surface the routes use, on the documents in this collection:
+    # equality filters, one ordering, offset, limit, projection, count().
+    def _query(self):
+        return FakeQuery(self._store, self._name)
+
     def where(self, *a, **k):
-        return self
+        return self._query().where(*a, **k)
 
     def order_by(self, *a, **k):
-        return self
-
-    def limit(self, *a, **k):
-        return self
-
-    def offset(self, *a, **k):
-        return self
+        return self._query().order_by(*a, **k)
 
     def stream(self):
-        return iter(())
+        return self._query().stream()
+
+
+class FakeQuery:
+    def __init__(self, store, name, filters=(), order=None, skip=0, take=None):
+        self._store, self._name = store, name
+        self._filters, self._order, self._skip, self._take = filters, order, skip, take
+
+    def _with(self, **changes):
+        q = FakeQuery(self._store, self._name, self._filters, self._order, self._skip, self._take)
+        for key, value in changes.items():
+            setattr(q, key, value)
+        return q
+
+    def where(self, field=None, op=None, value=None, *, filter=None):
+        if filter is not None:
+            field, op, value = filter.field_path, filter.op_string, filter.value
+        assert op == "==", "only equality filters are faked"
+        return self._with(_filters=self._filters + ((field, value),))
+
+    def order_by(self, field, direction="ASCENDING"):
+        return self._with(_order=(field, direction))
+
+    def offset(self, n):
+        return self._with(_skip=n)
+
+    def limit(self, n):
+        return self._with(_take=n)
+
+    def select(self, fields):
+        return self
+
+    def _matching(self):
+        prefix = f"{self._name}/"
+        rows = [(k, v) for k, v in self._store.items() if k.startswith(prefix)]
+        rows = [(k, v) for k, v in rows if all(v.get(f) == val for f, val in self._filters)]
+        if self._order:
+            field, direction = self._order
+            rows.sort(key=lambda kv: kv[1].get(field) or 0, reverse=direction == "DESCENDING")
+        return rows
+
+    def stream(self):
+        rows = self._matching()[self._skip:]
+        if self._take is not None:
+            rows = rows[: self._take]
+        return iter([FakeDoc(self._store, k).get() for k, _ in rows])
+
+    def count(self, alias=None):
+        n = len(self._matching())
+
+        class Agg:
+            @staticmethod
+            def get():
+                class R:
+                    pass
+                r = R()
+                r.alias, r.value = alias, n
+                return [[r]]
+        return Agg()
 
 
 class FakeBatch:
@@ -1170,3 +1225,54 @@ def test_lock_contention_on_the_free_validation_is_a_409_not_a_500(allowance, mo
     assert r.status_code == 409
     assert r.headers["Retry-After"] == "2"
     assert calls["release"] == []
+
+
+# ---------------------------------------------------------------------------
+# History by page (system design A4)
+# ---------------------------------------------------------------------------
+
+
+def _seed_runs(db, uid, n, start=0):
+    for i in range(start, start + n):
+        db.store[f"runs/{uid}-{i}"] = {
+            "runId": f"{uid}-{i}", "uid": uid, "ticker": "AAPL", "createdAt": i,
+            "metrics": {"total_return": 0.1, "sharpe_ratio": 1.0, "max_drawdown": -0.1, "cagr": 0.05},
+        }
+
+
+def test_history_returns_one_page_newest_first_and_the_full_total(api):
+    client, state = api
+    _seed_runs(state["db"], "u1", 25)
+    _seed_runs(state["db"], "someone-else", 5)
+    body = client.get("/api/history?limit=10&offset=10", headers=AUTH).json()
+    assert body["total"] == 25
+    assert [r["runId"] for r in body["runs"]] == [f"u1-{i}" for i in range(14, 4, -1)]
+    # Only what the list shows.
+    assert set(body["runs"][0]["metrics"]) == {"total_return", "sharpe_ratio", "max_drawdown"}
+
+
+def test_history_past_the_end_is_an_empty_page(api):
+    client, state = api
+    _seed_runs(state["db"], "u1", 3)
+    body = client.get("/api/history?limit=20&offset=20", headers=AUTH).json()
+    assert body == {"runs": [], "total": 3}
+
+
+def test_history_reads_the_page_not_every_run(api, monkeypatch):
+    """The page and the count are two queries; nothing streams the whole
+    collection any more."""
+    import history
+
+    client, state = api
+    _seed_runs(state["db"], "u1", 50)
+    streamed = []
+    real_stream = FakeQuery.stream
+
+    def counting_stream(self):
+        docs = list(real_stream(self))
+        streamed.append(len(docs))
+        return iter(docs)
+
+    monkeypatch.setattr(FakeQuery, "stream", counting_stream)
+    client.get("/api/history?limit=20", headers=AUTH)
+    assert streamed == [20]

@@ -64,6 +64,7 @@ from validation import walk_forward, permutation_test
 from portfolio_validation import leg_positions, portfolio_walk_forward, portfolio_permutation_test
 from firebase_admin_init import verify_token, get_user_profile, get_db, emulator_mode, delete_auth_user
 from admin_queries import platform_stats, list_users, list_runs
+from history import history_page
 from account import delete_account, export_account
 from monitoring import init_sentry, set_user as sentry_set_user, tag_request
 import timing
@@ -1441,39 +1442,8 @@ def get_history(
     user = inject_user(authorization)
     uid = user["uid"]
 
-    db = get_db()
-    query = (
-        db.collection("runs")
-        .where("uid", "==", uid)
-        .order_by("createdAt", direction=firestore.Query.DESCENDING)
-    )
     with step("history_read"):
-        all_docs = list(query.stream())
-    total = len(all_docs)
-    page = all_docs[offset: offset + limit]
-
-    runs = []
-    for doc in page:
-        d = doc.to_dict()
-        m = d.get("metrics", {})
-        runs.append({
-            "runId": d.get("runId"),
-            "ticker": d.get("ticker"),
-            "start": d.get("start"),
-            "end": d.get("end"),
-            # Runs created before the strategy selector existed have no field.
-            "strategy": d.get("strategy", "momentum"),
-            "params": d.get("params"),
-            "metrics": {
-                "total_return": m.get("total_return"),
-                "sharpe_ratio": m.get("sharpe_ratio"),
-                "max_drawdown": m.get("max_drawdown"),
-            },
-            "createdAt": d.get("createdAt"),
-            "durationMs": d.get("durationMs"),
-        })
-
-    return {"runs": runs, "total": total}
+        return history_page(get_db(), uid, limit, offset, run=_in_parallel)
 
 
 @app.get("/api/history/{run_id}")
