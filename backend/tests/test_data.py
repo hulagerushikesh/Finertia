@@ -98,6 +98,18 @@ def test_miss_downloads_and_writes_every_year(yahoo):
     assert df.index.max() < pd.Timestamp("2021-06-01")
 
 
+def test_price_steps_are_timed_by_tier(yahoo):
+    """A miss reads the store, downloads and writes; a memory hit does none."""
+    import timing
+    steps = timing.begin()
+    fetch_ohlcv("AAPL", "2019-03-01", "2021-06-01")
+    assert {"prices_read", "prices_fetch", "prices_write"} <= set(steps)
+    steps = timing.begin()
+    fetch_ohlcv("AAPL", "2019-03-01", "2021-06-01")
+    assert steps == {}
+    timing._current.set(None)
+
+
 def test_same_key_is_served_from_memory(yahoo):
     fake, _ = yahoo
     fetch_ohlcv("AAPL", "2019-01-01", "2020-01-01")

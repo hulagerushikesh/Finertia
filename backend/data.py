@@ -34,6 +34,7 @@ import pandas as pd
 
 from price_providers import get_provider
 from price_store import MemoryPriceStore, PriceStore, doc_to_frame, frame_to_doc
+from timing import step
 
 log = logging.getLogger("finertia.data")
 
@@ -124,12 +125,14 @@ def _assemble(docs: dict[int, dict], years: list[int], start: str, end: str) -> 
 def _refresh(store: PriceStore, ticker: str, years: list[int], *, now: datetime) -> dict[int, dict]:
     """Re-download the union of the requested span and everything already
     cached for this ticker, and rewrite it all under one batch id."""
-    known = store.years_for(ticker)
+    with step("prices_read"):
+        known = store.years_for(ticker)
     span = sorted(set(years) | set(known))
     lo, hi = span[0], span[-1]
     # A span with a gap in the middle is still one download — Yahoo returns
     # whatever it has and the missing years simply produce no doc.
-    df = _download(ticker, f"{lo}-01-01", f"{hi + 1}-01-01")
+    with step("prices_fetch"):
+        df = _download(ticker, f"{lo}-01-01", f"{hi + 1}-01-01")
     if df.empty:
         raise ValueError(f"No data found for {ticker}")
 
@@ -153,7 +156,8 @@ def _refresh(store: PriceStore, ticker: str, years: list[int], *, now: datetime)
                 provider=get_provider().name,
             )
         )
-    store.put_many(docs)
+    with step("prices_write"):
+        store.put_many(docs)
     return {d["year"]: d for d in docs}
 
 
@@ -171,7 +175,8 @@ def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
     store = _get_store()
     years = _years_in(start, end)
     now = _now()
-    docs = store.get_many(ticker, years)
+    with step("prices_read"):
+        docs = store.get_many(ticker, years)
 
     if _uniform(docs, years, now=now, fresh=True):
         df = _assemble(docs, years, start, end)
