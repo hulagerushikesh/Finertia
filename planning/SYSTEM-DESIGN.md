@@ -139,13 +139,27 @@ your yes). Users see no change except speed.
 
 | # | Change | Expected effect |
 |---|---|---|
-| A1 | **Measure.** Log per-step timings (auth, each database call, compute) on every request, plus a `Server-Timing` header | Confirms or kills finding 2 with production numbers before anything bigger is decided |
+| A1 | ✅ (built, not yet deployed) **Measure.** Log per-step timings (auth, each database call, compute) on every request, plus a `Server-Timing` header | Confirms or kills finding 2 with production numbers before anything bigger is decided |
 | A2 | **Stop blocking.** Run the engine and the blocking database/yfinance calls in worker threads; lower Cloud Run concurrency from 40 to about 8 | Health and History stay fast during a backtest; the CPU computes while other requests wait on the database |
 | A3 | **Fewer round trips.** Save the run and update the counters in one batch; read the profile and hit the rate limiter at the same time | About 5 sequential trips → about 3, roughly 0.5 s off every backtest |
 | A4 | **History by page.** Query only the page (`limit`), and get the total from a `count()` aggregation | Reads per visit go from "all runs" to 20 + 1 |
 | A5 | **gzip** on JSON responses over 1 KB | Backtest 447 KB → ~80 KB on the wire |
 | A6 | **Bounded price cache** (LRU, e.g. 200 entries, six-hour TTL) and one Yahoo fetch per ticker at a time | Memory stays flat; no duplicate downloads |
 | A7 | `_record_run` with `set(merge=True)` | Removes the 500 in finding 7 |
+
+**Reading A1's numbers.** Every request log line carries `timings_ms` (one
+entry per step: `auth`, `profile`, `ratelimit`, `prices_read`,
+`prices_fetch`, `prices_write`, `run_write`, `user_write`, `allowance`,
+`history_read`, `run_read`, `export_read`, `delete`, `admin_query`),
+`timing_counts` for steps that ran more than once, and `instance_request`
+(1 = the instance's first request, so a cold start). The same steps come back
+to the browser as a `Server-Timing` header, plus `other` (everything outside
+a named step, mostly the computation) and `total`. Backtests after a day of
+use:
+
+```bash
+gcloud logging read 'resource.labels.service_name="finertia-api" AND jsonPayload.message="request" AND jsonPayload.path="/api/backtest"' --freshness=1d --format='value(jsonPayload.duration_ms,jsonPayload.timings_ms)' --project=momentbacktracking
+```
 
 ### Phase B: put the API and the database in the same place (decision for you, after A1)
 

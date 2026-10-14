@@ -190,6 +190,41 @@ def test_a_supplied_request_id_is_preserved(api):
     assert r.headers["X-Request-Id"] == "trace-me"
 
 
+def _server_timing(response) -> dict:
+    """`Server-Timing` as {name: duration}."""
+    out = {}
+    for part in response.headers["Server-Timing"].split(", "):
+        name, dur = part.split(";")[:2]
+        out[name] = float(dur.removeprefix("dur="))
+    return out
+
+
+def test_a_backtest_says_where_its_time_went(api):
+    """Every wait on the token check and the database is named, so a slow
+    production request can be read rather than guessed at."""
+    client, _ = api
+    r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 200
+    steps = _server_timing(r)
+    for name in ("auth", "profile", "ratelimit", "run_write", "user_write", "other", "total"):
+        assert name in steps, name
+    assert steps["total"] >= sum(v for k, v in steps.items() if k != "total") - 1
+
+
+def test_the_request_log_carries_the_step_timings(api, caplog):
+    client, _ = api
+    with caplog.at_level("INFO", logger="finertia"):
+        client.get("/api/history", headers=AUTH)
+    line = next(r for r in caplog.records if r.getMessage() == "request")
+    assert set(line.timings_ms) >= {"auth", "profile", "history_read"}
+    assert line.instance_request >= 1
+
+
+def test_public_routes_still_get_a_total(api):
+    client, _ = api
+    assert "total" in _server_timing(client.get("/api/health"))
+
+
 # ---------------------------------------------------------------------------
 # Authentication
 # ---------------------------------------------------------------------------
