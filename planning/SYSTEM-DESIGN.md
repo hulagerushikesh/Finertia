@@ -124,8 +124,9 @@ with a paid provider, which bills per call.
 - **Hard ceiling of 2 instances.** Deliberate, as a cost cap. Rough capacity:
   about 1–2 backtests a second in total today. That is plenty for the next
   few hundred users, but it is a wall, not a slope.
-- **Vercel plan.** If the account is on Hobby, its terms are non-commercial;
-  check before charging anyone.
+- **Vercel plan.** Checked 17 Oct: the account is on **Hobby** (legacy
+  plan), whose terms are non-commercial. Move to Pro before charging anyone;
+  the product path in phase 4 would need it.
 
 ## What to do
 
