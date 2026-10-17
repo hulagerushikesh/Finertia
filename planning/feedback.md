@@ -26,6 +26,18 @@ cd backend && .venv/bin/python scripts/usage_counts.py --since 2026-10-07 \
 Including the author: 1 sign-up, 21 saved runs, 24 counted runs. Every
 recorded use so far is the author's.
 
+**Mid-round, 17 Oct 2026** (same command):
+
+| | All time | Since 2026-10-07 |
+|---|---|---|
+| Sign-ups | 5 | 5 |
+| Saved backtest runs | 15 | 15 |
+| Users with a saved run | 4 | 4 |
+| Backtest + portfolio runs (`totalRuns` sum) | 15 | — |
+| Pro accounts (paid / comped by admin) | 0 / 0 | — |
+
+One sign-up since 13 Oct, with no run yet. No new runs since 13 Oct.
+
 **End, _date_:**
 
 _(paste the script's output here)_
