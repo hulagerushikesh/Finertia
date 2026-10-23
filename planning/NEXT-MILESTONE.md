@@ -55,9 +55,25 @@ Items 1, 2 and 6 touch production; each waits for an explicit yes.
 the cold start can slip to sprint 2. Backups, alerts and the data spike
 cannot, because the 31 Oct decision needs the data costs.
 
+## Sprint 1 review (27 Oct) — prepared 24 Oct
+
+- **Goal met for the production half**: backups with a restore drill, uptime
+  and 5xx alerts, deletion and export on the API. **Open for the cost half**:
+  licensed data is priced at ₹0 until a data sprint, and the legal brief is
+  deferred, so "what it would cost to charge legally" is not yet known.
+- **Done**: items 0–3, 5–7. **Deferred**: 4 (legal brief). **Running**: 8
+  (round closes 31 Oct).
+- **Built ahead for sprint 2, all off on production**: items 2–4 below, plus
+  the four 23 Oct findings (calm Pro wall #130, cost in bps #131, Sharpe note
+  #132, portfolio runs in History #133). Switching them on is step 7 of
+  [B1-REGION-MOVE.md](B1-REGION-MOVE.md), after the move on 1 Nov.
+- **For the author on the 27th**: confirm 1 Nov for B1 and the switch-on; the
+  free allowance (`FREE_VALIDATIONS_PER_MONTH`, a pricing call); when the
+  data sprint and the legal consult start, which phase 4 may reorder.
+
 ## Sprint 2 (28 Oct → 10 Nov) — pencilled, re-planned on 27 Oct
 
-1. **Phase-4 decision** (carried from M10), written by 1 Nov with the round's numbers, by the 8 Oct rules. It decides how much of the rest happens.
+1. **Phase-4 decision** (carried from M10), written by 1 Nov with the round's numbers, by the 8 Oct rules. It decides how much of the rest happens. `backend/scripts/round_score.py` fills the Returned column.
 2. **One free validation per month** on the free plan (backend built 13 Oct behind `FREE_VALIDATIONS_PER_MONTH`, default 0, so the round is untouched; switching it on and the UI are what is left): the USP in front of free users, with conversion measured (validations run → upgrade clicks).
 3. **Onboarding** from what the testers got stuck on: a first-run hint, 3 sample strategies, empty states on History and Compare. (Built 13 Oct behind the `onboarding` switch: the examples in the workspace and History empty states, a "what to look at" note after running one, the Compare hint; also the free-validation counter behind `free-validation`. Off on production until the round closes.)
 4. **Account deletion and export UI** in Profile, on the sprint 1 backend. (Built 13 Oct behind the `account-data` switch: "Download my data", and deletion that needs the account's email typed, then a goodbye page that signs the browser out. Off on production until the round closes.)
