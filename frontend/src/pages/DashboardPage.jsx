@@ -224,11 +224,11 @@ export default function DashboardPage() {
     setTab(next);
   }
 
-  const strategyLabel =
-    STRATEGIES.find((s) => s.id === (result?.strategy || params.strategy))?.label || params.strategy;
   // The result card names the run it is showing, from the frozen config, so
   // editing the panel afterwards never rewrites the answer on screen.
   const shown = ranParams || params;
+  const strategyLabel =
+    STRATEGIES.find((s) => s.id === (result?.strategy || shown.strategy))?.label || shown.strategy;
   const stamp = validation ? WF_STAMP[validation.walk_forward.verdict] || WF_STAMP.inconclusive : null;
 
   return (

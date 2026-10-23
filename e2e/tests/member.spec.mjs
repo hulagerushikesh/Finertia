@@ -29,6 +29,13 @@ test("Validation checks the run on screen, and a free user goes straight to the 
   await expect(page.locator("#main").getByText(/ticker/i).filter({ hasText: /required|missing|field/i })).toHaveCount(0);
   // The result header still names the run, not the emptied box.
   await expect(page.getByRole("heading", { name: "AAPL" })).toBeVisible();
+
+  // Nor the strategy picked since (by-hand check, 23 Oct): choosing MACD
+  // without running it relabelled the Momentum result "MACD".
+  await page.getByRole("button", { name: "MACD", exact: true }).click();
+  const header = page.getByRole("heading", { name: "AAPL" }).locator("..");
+  await expect(header.getByText("Momentum", { exact: true })).toBeVisible();
+  await expect(header.getByText("MACD", { exact: true })).toHaveCount(0);
 });
 
 // Tester bug #2, 12 Oct (fixed in #84): a dd/mm reading of the date turned a
