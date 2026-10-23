@@ -93,6 +93,20 @@ A1's numbers", with `resource.labels.location="us-central1"`. Expect
 milliseconds, and a whole-request backtest well under the 3.6 s baseline
 (the Vercel → Iowa trip is added once).
 
+**7. Turn on the work built during the round** (prod, after step 6 looks
+right, each on the author's yes). Separate from the move, so a problem in
+either can be told apart:
+
+- API: `gcloud run services update finertia-api --region us-central1 --project momentbacktracking --update-env-vars SAVE_PORTFOLIO_RUNS=1`
+  (portfolio runs kept in History, #133). `FREE_VALIDATIONS_PER_MONTH` is a
+  pricing decision, not a switch to flip here.
+- Frontend: `VITE_FEATURES` on Vercel Production, then a redeploy. The full
+  list is `FEATURES` in `frontend/src/lib/features.js` (as of 23 Oct:
+  `free-validation,onboarding,account-data,calm-pro-wall,cost-in-bps,sharpe-note`).
+  `free-validation` only means something once the API's allowance is above 0.
+- Check signed in: a portfolio run appears in History; the cost field reads
+  bps; the Pro wall is said once.
+
 ## Rollback
 
 Revert the switch PR. Mumbai keeps running with min-instances 0, so it costs
