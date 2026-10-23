@@ -53,3 +53,20 @@ def test_no_runs_is_an_empty_page(db):
     from history import history_page
 
     assert history_page(db, "nobody", limit=20, offset=0) == {"runs": [], "total": 0}
+
+
+def test_a_portfolio_run_reads_back_with_its_kind_and_tickers(db):
+    from history import history_page
+
+    add_run(db, "p", 0)
+    db.collection("runs").document("p-basket").set({
+        "runId": "p-basket", "uid": "p", "kind": "portfolio", "tickers": ["AAPL", "MSFT"],
+        "start": "2020-01-01", "end": "2021-01-01", "strategy": "momentum",
+        "params": {"weighting": "equal"}, "createdAt": T0 + timedelta(minutes=5), "durationMs": 200,
+        "metrics": {"total_return": 0.2, "sharpe_ratio": 0.9, "max_drawdown": -0.2},
+    })
+    basket, single = history_page(db, "p", limit=20, offset=0)["runs"]
+    assert basket["kind"] == "portfolio" and basket["tickers"] == ["AAPL", "MSFT"]
+    assert basket["ticker"] is None
+    # Older documents have no `kind`: they read as single-ticker runs.
+    assert single["kind"] == "single" and single["ticker"] == "AAPL" and single["tickers"] is None

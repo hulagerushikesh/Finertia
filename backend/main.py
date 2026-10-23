@@ -261,6 +261,11 @@ def _record_run(db, uid: str, profile: dict, batch=None) -> None:
 # env var afterwards.
 FREE_VALIDATIONS_PER_MONTH = max(0, _int_env("FREE_VALIDATIONS_PER_MONTH", 0))
 
+# Whether a portfolio run is kept in History like a single-ticker one. Off
+# until the tester round closes, so the live product does not change under
+# the testers; History and the admin views read either kind of document.
+SAVE_PORTFOLIO_RUNS = os.environ.get("SAVE_PORTFOLIO_RUNS", "").lower() in ("1", "true")
+
 _PRO_ONLY_DETAIL = (
     "Walk-forward validation and the permutation test are Pro features. "
     "Each run sweeps a parameter grid and then reshuffles the signals "
@@ -1251,10 +1256,6 @@ def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(N
 
     contributions = contribution_summary(portfolio["contributions"])
 
-    # A portfolio is not persisted as a run document — its legs are not a single
-    # backtest — but it consumed the same compute, so it counts against quota.
-    _record_run(get_db(), uid, user["profile"])
-
     dates_out = [d.strftime("%Y-%m-%d") for d in legs_frame.index]
 
     # An equal-weight buy-and-hold of the same names — the honest benchmark for
@@ -1277,7 +1278,47 @@ def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(N
         leg_positions, leg_asset_returns, weights, req.transaction_cost
     )
 
+    duration_ms = int((time.time() - start_time) * 1000)
+
+    # It consumed the compute of N backtests, so it counts against quota
+    # either way. With the switch on it is also kept as a run: `kind` and
+    # `tickers` instead of `ticker`, so the admin top-tickers list (which
+    # skips runs without one) is not handed "AAPL · MSFT" as a symbol, and
+    # compare can tell it apart. Requested dates, as a single run stores.
+    db = get_db()
+    run_id = None
+    if SAVE_PORTFOLIO_RUNS:
+        run_id = str(uuid.uuid4())
+        batch = db.batch()
+        batch.set(db.collection("runs").document(run_id), {
+            "runId": run_id,
+            "uid": uid,
+            "email": user["email"],
+            "kind": "portfolio",
+            "tickers": req.tickers,
+            "start": req.start,
+            "end": req.end,
+            "strategy": req.strategy,
+            "params": {
+                **req.strategy_params(),
+                **req.risk_params(),
+                "transaction_cost": req.transaction_cost,
+                "weighting": req.weighting,
+                "weight_window": req.weight_window,
+                "max_weight": req.max_weight,
+            },
+            "metrics": metrics,
+            "createdAt": firestore.SERVER_TIMESTAMP,
+            "durationMs": duration_ms,
+        })
+        _record_run(db, uid, user["profile"], batch=batch)
+        with step("run_write"):
+            batch.commit()
+    else:
+        _record_run(db, uid, user["profile"])
+
     return {
+        "runId": run_id,
         "tickers": req.tickers,
         "strategy": req.strategy,
         "weighting": req.weighting,
@@ -1315,7 +1356,7 @@ def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(N
         "annual_returns": annual_returns(net_return, bench_daily),
         "rolling_sharpe": rolling_sharpe(net_return, window=60),
         "data_source": data_source,
-        "duration_ms": int((time.time() - start_time) * 1000),
+        "duration_ms": duration_ms,
     }
 
 
@@ -1352,6 +1393,15 @@ def compare_runs(req: CompareRequest, authorization: Optional[str] = Header(None
         d = doc.to_dict()
         if d.get("uid") != uid and user["role"] != "admin":
             raise HTTPException(status_code=403, detail="Access denied")
+
+        # The overlay recomputes one ticker's curve; a basket would need the
+        # whole portfolio path, so it is refused by name rather than failing
+        # on the missing `ticker`.
+        if d.get("kind") == "portfolio":
+            raise HTTPException(
+                status_code=400,
+                detail="Compare works on single-ticker runs; a portfolio run cannot be overlaid yet.",
+            )
 
         strategy = d.get("strategy", "momentum")
         stored = d.get("params", {}) or {}

@@ -26,6 +26,10 @@ const SKELETON_WIDTHS = ["70%", "45%", "85%", "55%", "40%", "50%", "40%", "45%"]
 
 const strategyLabel = (id) => STRATEGIES.find((s) => s.id === id)?.label || "Momentum";
 
+// A portfolio run stores its basket in `tickers` and has no `ticker`.
+const isBasket = (run) => run.kind === "portfolio";
+const runName = (run) => (isBasket(run) ? (run.tickers || []).join(" · ") : run.ticker);
+
 function fmtPct(v) {
   if (v === null || v === undefined) return "—";
   return `${(v * 100).toFixed(2)}%`;
@@ -110,13 +114,17 @@ export default function HistoryPage() {
   function handleReRun(run) {
     // Start from DEFAULTS so every strategy's parameters exist, then layer the
     // run's own values on top. Older runs have no `strategy`; those are momentum.
+    // A basket's weighting settings are in its params already.
+    const where = isBasket(run)
+      ? { mode: "portfolio", tickers: run.tickers, ticker: run.tickers?.[0] || DEFAULTS.ticker }
+      : { ticker: run.ticker };
     navigate("/dashboard", {
       state: {
         params: {
           ...DEFAULTS,
           ...run.params,
           strategy: run.strategy || "momentum",
-          ticker: run.ticker,
+          ...where,
           start: run.start,
           end: run.end,
         },
@@ -198,10 +206,14 @@ export default function HistoryPage() {
                         onClick={() => setSelected(run)}
                       >
                         <TableCell className="w-10 pl-4" onClick={(e) => e.stopPropagation()}>
+                          {/* Compare overlays single-ticker curves only;
+                              the API refuses a basket by name. */}
                           <Checkbox
                             checked={picked.includes(run.runId)}
                             onCheckedChange={() => togglePick(run.runId)}
-                            aria-label={`Select ${run.ticker} run for comparison`}
+                            disabled={isBasket(run)}
+                            title={isBasket(run) ? "Compare works on single-ticker runs" : undefined}
+                            aria-label={`Select ${runName(run)} run for comparison`}
                           />
                         </TableCell>
                         <TableCell className="text-graphite font-mono text-xs whitespace-nowrap">
@@ -209,7 +221,7 @@ export default function HistoryPage() {
                         </TableCell>
                         <TableCell className="font-mono text-sm font-medium text-foreground">
                           <span className="flex items-center gap-2">
-                            {run.ticker}
+                            {runName(run)}
                             <Badge variant="outline" className="font-mono text-tick uppercase tracking-wider text-graphite font-normal px-1.5 py-0">
                               {strategyLabel(run.strategy)}
                             </Badge>
@@ -308,7 +320,7 @@ export default function HistoryPage() {
           {selected && (
             <>
               <SheetHeader className="text-left">
-                <SheetTitle className="font-display text-2xl font-semibold">{selected.ticker}</SheetTitle>
+                <SheetTitle className="font-display text-2xl font-semibold">{runName(selected)}</SheetTitle>
                 <SheetDescription className="font-mono text-xs">
                   {selected.start} → {selected.end}
                   <span className="ml-2 text-pencil">{strategyLabel(selected.strategy)}</span>

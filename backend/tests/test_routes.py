@@ -1212,6 +1212,46 @@ def test_compare_a_missing_run_is_404(api):
     assert r.status_code == 404
 
 
+def _runs(db):
+    return {k: v for k, v in db.store.items() if k.startswith("runs/")}
+
+
+def test_a_portfolio_is_not_kept_while_the_switch_is_off(api, monkeypatch):
+    client, state = api
+    monkeypatch.setattr(main, "SAVE_PORTFOLIO_RUNS", False)
+    body = client.post("/api/portfolio", json=PORTFOLIO, headers=AUTH).json()
+    assert body["runId"] is None
+    assert _runs(state["db"]) == {}
+    # Still counted against quota.
+    assert state["db"].store["users/u1"]["runsThisPeriod"] == 1
+
+
+def test_a_portfolio_is_kept_as_a_run_with_the_switch_on(api, monkeypatch):
+    client, state = api
+    monkeypatch.setattr(main, "SAVE_PORTFOLIO_RUNS", True)
+    body = client.post("/api/portfolio", json=PORTFOLIO, headers=AUTH).json()
+    doc = state["db"].store[f"runs/{body['runId']}"]
+    assert doc["kind"] == "portfolio"
+    assert doc["tickers"] == ["AAPL", "MSFT"]
+    # No `ticker`: the admin top-tickers list skips runs without one.
+    assert "ticker" not in doc
+    assert doc["params"]["weighting"] == "equal"
+    assert doc["metrics"] == body["metrics"]
+    # The run and the usage counter go out in one trip, as a backtest's do.
+    assert state["db"].commits == 1
+    assert state["db"].store["users/u1"]["runsThisPeriod"] == 1
+
+
+def test_compare_refuses_a_portfolio_run_by_name(api, monkeypatch):
+    client, state = api
+    monkeypatch.setattr(main, "SAVE_PORTFOLIO_RUNS", True)
+    single = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()["runId"]
+    basket = client.post("/api/portfolio", json=PORTFOLIO, headers=AUTH).json()["runId"]
+    r = client.post("/api/compare", json={"run_ids": [single, basket]}, headers=AUTH)
+    assert r.status_code == 400
+    assert "single-ticker" in r.json()["detail"]
+
+
 def test_lock_contention_on_the_free_validation_is_a_409_not_a_500(allowance, monkeypatch):
     """Several validations from one account at once: the transaction can run
     out of retries. The losers are told to try again; nothing was taken."""
