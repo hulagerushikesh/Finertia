@@ -87,7 +87,7 @@ export default defineConfig({
       env: {
         ...FIREBASE_ENV,
         VITE_API_BASE_URL: API_ON,
-        VITE_FEATURES: "free-validation,onboarding,account-data,calm-pro-wall,cost-in-bps",
+        VITE_FEATURES: "free-validation,onboarding,account-data,calm-pro-wall,cost-in-bps,sharpe-note",
       },
     },
   ],
