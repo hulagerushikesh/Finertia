@@ -13,7 +13,7 @@
 set -uo pipefail
 
 PROJECT=momentbacktracking
-REGION=asia-south1
+REGION=${REGION:-asia-south1}   # REGION=us-central1 to check the B1 service
 SERVICE=finertia-api
 SITE=https://finertia.hulage.in
 REPO=hulagerushikesh/Finertia
