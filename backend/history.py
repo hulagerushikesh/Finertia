@@ -24,7 +24,7 @@ from admin_queries import count
 # What the History list shows. The full document (every metric, the
 # confidence intervals) is fetched by run id when a run is opened.
 FIELDS = [
-    "runId", "ticker", "start", "end", "strategy", "params", "createdAt", "durationMs",
+    "runId", "kind", "ticker", "tickers", "start", "end", "strategy", "params", "createdAt", "durationMs",
     "metrics.total_return", "metrics.sharpe_ratio", "metrics.max_drawdown",
 ]
 
@@ -43,7 +43,10 @@ def history_page(db, uid: str, limit: int, offset: int, run=lambda *calls: [c() 
         m = d.get("metrics", {}) or {}
         runs.append({
             "runId": d.get("runId"),
+            # Single-ticker runs predate `kind` and carry no field.
+            "kind": d.get("kind", "single"),
             "ticker": d.get("ticker"),
+            "tickers": d.get("tickers"),
             "start": d.get("start"),
             "end": d.get("end"),
             # Runs created before the strategy selector existed have no field.
