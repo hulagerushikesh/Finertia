@@ -10,9 +10,24 @@ name: Deploy
 # deploy is always a decision. Uncomment the push trigger once you trust it.
 on:
   workflow_dispatch:
+    inputs:
+      region:
+        # asia-south1 serves the site today. us-central1 is the system design's
+        # B1 target, next to Firestore nam5 (planning/B1-REGION-MOVE.md):
+        # deploying there does not change what users hit until the vercel.json
+        # rewrite points at it.
+        description: Cloud Run region
+        type: choice
+        options: [asia-south1, us-central1]
+        default: asia-south1
   # push:
   #   branches: [main]
   #   paths: [backend/**]
+
+env:
+  # The region users reach through the vercel.json rewrite. Only a deploy
+  # there moves the backend-deployed tag; a deploy elsewhere is a staging step.
+  SERVING_REGION: asia-south1
 
 concurrency:
   # Two overlapping deploys race for the same revision name.
@@ -45,6 +60,8 @@ jobs:
     name: Backend → Cloud Run
     needs: test
     runs-on: ubuntu-24.04
+    env:
+      REGION: ${{ inputs.region || 'asia-south1' }}
     permissions:
       contents: write   # moves the backend-deployed tag after a healthy deploy
       id-token: write
@@ -77,9 +94,9 @@ jobs:
         run: |
           gcloud run deploy finertia-api \
             --source . \
-            --region asia-south1 \
+            --region "$REGION" \
             --project momentbacktracking \
-            --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 \
+            --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 --cpu-boost \
             --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
             --set-secrets "FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest" \
             --update-env-vars "SENTRY_DSN=$SENTRY_DSN,GIT_SHA=$GITHUB_SHA" \
@@ -89,7 +106,7 @@ jobs:
       - name: Verify the new revision is actually serving
         run: |
           URL=$(gcloud run services describe finertia-api \
-            --region asia-south1 --project momentbacktracking \
+            --region "$REGION" --project momentbacktracking \
             --format 'value(status.url)')
           echo "Deployed to $URL"
           # A deploy that "succeeded" but serves 500s is not a successful deploy,
@@ -109,6 +126,7 @@ jobs:
       # backend-drift.yml diffs backend/ against this tag on every push to
       # main and comments on the merged PR when production is behind.
       - name: Mark this commit as deployed
+        if: env.REGION == env.SERVING_REGION
         run: |
           git tag -f backend-deployed "$GITHUB_SHA"
           git push -f origin backend-deployed
