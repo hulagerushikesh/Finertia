@@ -168,7 +168,14 @@ Copy the block once per person. Use a first name or a role, not a full name.
 Score each tester against the definitions fixed on 8 Oct in
 [DECISIONS.md](DECISIONS.md) ("How phase 4 will read the five sessions"), not
 against impressions. **Returned** is read from the `runs` collection 7 days
-after the session (Firestore console → `runs` → filter `uid`).
+after the session, and so is the "one more thing" part of **Engaged** (a
+second ticker or rule on the first day). `backend/scripts/round_score.py`
+prints both per tester, read-only and without emails:
+
+```bash
+cd backend && .venv/bin/python scripts/round_score.py --since 2026-10-07 \
+    --exclude you@example.com
+```
 
 | # | Type | Finished unaided | Opened Validation | Engaged | Returned | Would pay |
 |---|---|---|---|---|---|---|
