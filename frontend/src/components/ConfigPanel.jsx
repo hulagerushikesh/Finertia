@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { PRESETS, presetRange, matchingPreset, describeRange } from "../utils/dates";
+import { feature } from "../lib/features";
 
 // A curated list rather than a symbol-search API: it needs no key, no network
 // call, and no rate limit, and these cover the overwhelming majority of what
@@ -650,19 +651,39 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
               <FieldError>Fast EMA must be shorter than the slow EMA.</FieldError>
             )}
 
-            <Field
-              label="Transaction cost"
-              tip="Charged on turnover each time the position changes. A fraction, not a percent: 0.001 is 0.1% per trade. Set it to zero and a strategy that trades every day will look far better than it is."
-            >
-              <Input
-                type="number"
-                className={inputClass}
-                value={params.transaction_cost}
-                step={0.0005}
-                min={0}
-                onChange={(e) => handleChange("transaction_cost", Number(e.target.value))}
-              />
-            </Field>
+            {feature("cost-in-bps") ? (
+              // Entered in basis points, the unit the results report it in; the
+              // API still takes a fraction, so 10 bps is sent as 0.001.
+              <Field
+                label="Transaction cost (bps)"
+                htmlFor="transaction-cost"
+                tip="Charged on turnover each time the position changes, in basis points: 10 bps is 0.1% per trade. Set it to zero and a strategy that trades every day will look far better than it is."
+              >
+                <Input
+                  id="transaction-cost"
+                  type="number"
+                  className={inputClass}
+                  value={Number((params.transaction_cost * 10000).toFixed(2))}
+                  step={5}
+                  min={0}
+                  onChange={(e) => handleChange("transaction_cost", Number(e.target.value) / 10000)}
+                />
+              </Field>
+            ) : (
+              <Field
+                label="Transaction cost"
+                tip="Charged on turnover each time the position changes. A fraction, not a percent: 0.001 is 0.1% per trade. Set it to zero and a strategy that trades every day will look far better than it is."
+              >
+                <Input
+                  type="number"
+                  className={inputClass}
+                  value={params.transaction_cost}
+                  step={0.0005}
+                  min={0}
+                  onChange={(e) => handleChange("transaction_cost", Number(e.target.value))}
+                />
+              </Field>
+            )}
           </Group>
 
           <Group title="Universe">
