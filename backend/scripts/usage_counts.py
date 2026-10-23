@@ -68,6 +68,11 @@ def main():
     pro = [u for u in users if u.get("plan") == "pro"]
     comp = sum(1 for u in pro if u.get("planSource") == "admin")
     print(f"| Pro accounts (paid / comped by admin) | {len(pro) - comp} / {comp} | — |")
+    # The free-validation allowance (sprint 2): validations run → upgrades is
+    # its conversion. Zero until FREE_VALIDATIONS_PER_MONTH is above 0.
+    from plans import validations_used
+
+    print(f"| Free validations used this month | {sum(validations_used(u) for u in users)} | — |")
 
 
 if __name__ == "__main__":
