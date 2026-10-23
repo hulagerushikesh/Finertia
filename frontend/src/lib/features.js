@@ -13,7 +13,7 @@
  * by the API (the free validation is `FREE_VALIDATIONS_PER_MONTH` there).
  */
 
-export const FEATURES = ["free-validation", "onboarding", "account-data"];
+export const FEATURES = ["free-validation", "onboarding", "account-data", "calm-pro-wall"];
 
 export function feature(name) {
   const raw = import.meta.env.VITE_FEATURES || "";
