@@ -52,3 +52,19 @@ describe("HistoryPage — empty states (switch)", () => {
     expect(await screen.findByTestId("compare-hint")).toHaveTextContent("Compare needs two runs");
   });
 });
+
+describe("HistoryPage — portfolio runs", () => {
+  const BASKET = {
+    runId: "p1", kind: "portfolio", ticker: null, tickers: ["AAPL", "MSFT"], strategy: "momentum",
+    start: "2020-01-01", end: "2024-01-01", createdAt: "2026-10-14T10:00:00Z",
+    params: { weighting: "equal" }, metrics: { total_return: 0.2, sharpe_ratio: 0.9, max_drawdown: -0.1 },
+  };
+
+  it("names the basket and cannot be picked for compare", async () => {
+    api.getHistory.mockResolvedValue({ runs: [BASKET, { ...RUN, runId: "r1" }], total: 2 });
+    renderPage();
+    expect(await screen.findByText("AAPL · MSFT")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /AAPL · MSFT/ })).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: "Select AAPL run for comparison" })).not.toBeDisabled();
+  });
+});
