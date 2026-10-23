@@ -175,6 +175,10 @@ after A3, pick B1 for speed now, or B2 if data residency in India matters for
 the legal side. That second question needs counsel, so B1 is the safer
 first move.
 
+**Decided 23 Oct: B1, after the round closes on 31 Oct.** The first
+production timings (STATUS, 23 Oct) put nearly all of a backtest's 3.7 s in
+Firestore round trips. Runbook: [B1-REGION-MOVE.md](B1-REGION-MOVE.md).
+
 ### Phase C: when there is real traffic (not now)
 
 - **Cache results by parameters.** A backtest is deterministic: the same
