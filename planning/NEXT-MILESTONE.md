@@ -81,6 +81,25 @@ cannot, because the 31 Oct decision needs the data costs.
 6. ~~Terms and Privacy published~~ → after the legal consult, which follows the build work.
 7. **Stripe live**: only on the product path, and only after the data sprint and the legal review.
 
+## Sprint 2 by phase-4 outcome — drafted 24 Oct, chosen on 1 Nov
+
+The 1 Nov decision picks one column; the shared rows happen whatever it says.
+Written now so the re-plan is a choice, not a fresh plan.
+
+**Whatever the outcome** (1–4 Nov): B1 and the switch-on (runbook steps
+1–7); fill feedback.md's "What the five said, together" from the entries and
+`round_score.py`; fix whatever the round's patterns show was hard.
+
+| | Product (2+ would pay) | Education (2+ students engaged) | Portfolio (otherwise) |
+|---|---|---|---|
+| Money | Stripe stays off until the data sprint and the legal review; book both first | Off | Off |
+| Next build | Data sprint: the provider behind `data.py`'s seam, licence fit for a paid app | Class accounts: an educator invites a group; a short course built on `/writeup` | None new; maintenance only |
+| Legal | Brief for counsel (item 4) un-deferred, consult before 10 Nov | Brief, scoped to a free product (DPDP consent, no SEBI advice lines) | Brief stays deferred |
+| Free validation | Allowance above 0, conversion read from `usage_counts.py` | Allowance above 0 for class accounts | Allowance above 0, the demo's strongest point |
+| Measure | Validations used → upgrades (needs the live button) | Returned students per class | Visits to `/writeup` and `/demo` |
+
+One "would pay" alone is recorded, not acted on (DECISIONS 8 Oct).
+
 ## Definition of done (unchanged from ROADMAP)
 
 Code + unit tests + an E2E path for any user flow touched + the
