@@ -512,7 +512,10 @@ export default function DashboardPage() {
                         <li>
                           <strong className="text-foreground font-medium">Idealised fills.</strong>{" "}
                           Every trade executes at the close at a flat{" "}
-                          {(shown.transaction_cost * 100).toFixed(2)}% cost. Real slippage widens when
+                          {feature("cost-in-bps")
+                            ? `${Number((shown.transaction_cost * 10000).toFixed(2))} bps`
+                            : `${(shown.transaction_cost * 100).toFixed(2)}%`}{" "}
+                          cost. Real slippage widens when
                           you are trading size or trading a fast market.
                         </li>
                       </ul>
