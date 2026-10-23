@@ -203,7 +203,9 @@ export default function DashboardPage() {
     } catch (err) {
       const message = err.message || "Validation failed.";
       setError({ message, status: err.status, action: "validate" });
-      showToast(message, "error");
+      // Behind `calm-pro-wall`, the plan boundary on an unvalidated run is
+      // said once, in the Validation panel, not also as a toast.
+      if (!(feature("calm-pro-wall") && err.status === 402 && !validation)) showToast(message, "error");
     } finally {
       setValidating(false);
     }
@@ -230,6 +232,13 @@ export default function DashboardPage() {
   const strategyLabel =
     STRATEGIES.find((s) => s.id === (result?.strategy || shown.strategy))?.label || shown.strategy;
   const stamp = validation ? WF_STAMP[validation.walk_forward.verdict] || WF_STAMP.inconclusive : null;
+  // A free user opening Validation meets the plan boundary, which is not an
+  // error: with `calm-pro-wall` on, the empty panel carries the reason and
+  // the way forward, instead of a red banner, a toast and the panel at once
+  // (by-hand check, 23 Oct). With a validation already on screen the panel
+  // is not shown, so the banner stays.
+  const wallInPanel =
+    feature("calm-pro-wall") && error?.action === "validate" && error.status === 402 && !validation;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -245,7 +254,7 @@ export default function DashboardPage() {
               boundary (Pro-only validation, the monthly run cap, basket
               size), where repeating can never succeed and the way forward is
               the pricing page. */}
-          {error && (
+          {error && !wallInPanel && (
             <Alert variant="destructive" className="mb-5">
               <AlertDescription className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <span className="flex-1 min-w-[14rem]">{error.message}</span>
@@ -556,6 +565,11 @@ export default function DashboardPage() {
                           ? "Tests whether these parameters survive for the whole basket on data they were not tuned on, and whether any name's timing beats random entries."
                           : "Tests whether these parameters survive on data they were not tuned on, and whether the signal timing beats random entries."}
                       </p>
+                      {wallInPanel && (
+                        <p className="text-sm mt-3 max-w-md leading-relaxed text-foreground" data-testid="pro-wall-reason">
+                          {error.message}
+                        </p>
+                      )}
                       {error?.action === "validate" && error.status === 402 ? (
                         <Button asChild className="mt-4">
                           <Link to="/pricing">
