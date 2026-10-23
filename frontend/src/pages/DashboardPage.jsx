@@ -434,6 +434,7 @@ export default function DashboardPage() {
                         <BenchmarkTest
                           test={result.benchmark_test}
                           benchmarkLabel={resultIsPortfolio ? "holding the basket" : "holding it"}
+                          headlineSharpe={result.metrics?.sharpe_ratio}
                         />
                       </StaggerItem>
                     )}

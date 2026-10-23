@@ -2,8 +2,15 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import Tooltip from "./Tooltip";
 import { cn } from "@/lib/utils";
+import { feature } from "../lib/features";
 
 const num = (v) => (v === null || v === undefined ? "—" : v.toFixed(2));
+
+/** Whether two Sharpes would print differently at two decimals. */
+function shownDiffers(a, b) {
+  if (a === null || a === undefined || b === null || b === undefined) return false;
+  return num(a) !== num(b);
+}
 
 /** A p-value is not a percentage and should never be rounded to one. */
 function fmtP(p) {
@@ -36,7 +43,7 @@ function fmtP(p) {
  *   - Not significant is written out, never left to the absence of colour.
  *     Colour only ever marks a difference the test actually called.
  */
-export default function BenchmarkTest({ test, benchmarkLabel = "holding it" }) {
+export default function BenchmarkTest({ test, benchmarkLabel = "holding it", headlineSharpe }) {
   if (!test) return null;
 
   if (!test.computable) {
@@ -97,6 +104,17 @@ export default function BenchmarkTest({ test, benchmarkLabel = "holding it" }) {
       </div>
 
       <p className="text-2xs text-graphite leading-relaxed max-w-prose">{test.verdict}</p>
+
+      {/* The tooltip explains the two Sharpes, but a reader who sees 0.71 on
+          the card and 0.80 here has no reason to open it (by-hand check,
+          23 Oct). Said in the open, and only when the figures differ. */}
+      {feature("sharpe-note") && shownDiffers(test.strategy_sharpe, headlineSharpe) && (
+        <p className="text-2xs text-graphite leading-relaxed max-w-prose" data-testid="sharpe-note">
+          Why {num(test.strategy_sharpe)} here and {num(headlineSharpe)} on the card: this test uses
+          average daily return over its standard deviation; the card uses the compounded annual return
+          over volatility. Same run, two definitions.
+        </p>
+      )}
     </div>
   );
 }
