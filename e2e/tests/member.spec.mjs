@@ -85,6 +85,9 @@ test("the workspace keeps its run across a trip to History", async ({ page }) =>
 test("Profile saves a display name", async ({ page }) => {
   await register(page, freshEmail("profile"));
   await page.goto("/profile");
+  // Registration finishes writing the profile before it leaves the form, so
+  // the new account's profile is there to read (it once raced the redirect).
+  await expect(page.locator("dt", { hasText: "Member since" }).locator("+ dd")).not.toHaveText("—");
   await page.getByLabel("Display name").fill("E2E Tester");
   await page.getByRole("button", { name: "Save" }).first().click();
   await expect(page.getByText("Display name updated.")).toBeVisible();
