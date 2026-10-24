@@ -17,6 +17,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import demo from "../demoData.json";
 import validation from "../demoValidation.json";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const TAB =
   "rounded-none border-b-2 border-transparent data-[state=active]:border-pencil data-[state=active]:shadow-none data-[state=active]:bg-transparent px-4 py-2 -mb-px text-sm";
@@ -36,6 +37,7 @@ const TAB =
  * lives in the URL hash so /demo#validation can be linked to directly.
  */
 export default function DemoPage() {
+  usePageTitle("demo");
   const { user } = useAuth();
   const { hash } = useLocation();
   const navigate = useNavigate();
