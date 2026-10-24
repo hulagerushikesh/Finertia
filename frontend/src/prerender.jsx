@@ -3,9 +3,9 @@
  *
  * scripts/prerender.mjs loads this through Vite after `vite build` and writes
  * each page's markup into its HTML shell. It is the app's own Layout, rendered
- * as a signed-out reader with no API: anything that waits on the network
- * (Pricing's plans) is in its loading state, and charts that measure their
- * width draw nothing. main.jsx then replaces the copy with the live page.
+ * as a signed-out reader with no API: anything that waits on the network is
+ * in its loading state (Pricing starts from the build's copy of its plans, so
+ * it has none), and charts that measure their width draw nothing. main.jsx then replaces the copy with the live page.
  */
 import React from "react";
 import { renderToString } from "react-dom/server";
