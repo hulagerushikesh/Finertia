@@ -9,6 +9,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import { STRATEGY_PAGES, strategyPage } from "../lib/strategyPages";
 import { encodeParams } from "../utils/permalink";
 import { authPath } from "../utils/returnTo";
+import { STOCKS } from "../lib/stockMeta";
 import NotFoundPage from "./NotFoundPage";
 
 const LINK = "text-pencil underline underline-offset-2";
@@ -172,6 +173,7 @@ function Strategy({ s }) {
             </Button>
           </div>
           <p className="text-sm">
+            The same rule on other stocks: <Link to="/stocks" className={LINK}>{STOCKS.length} US and Indian stocks</Link>.
             The other strategies:{" "}
             {others.map((o, i) => (
               <React.Fragment key={o.id}>

@@ -20,53 +20,13 @@ EXPECTED too.
 """
 
 import json
-import os
 import sys
 import time
 from pathlib import Path
 
-os.environ["PRICE_CACHE"] = "off"
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from fastapi.testclient import TestClient  # noqa: E402
-
-import main  # noqa: E402
-
-PRO = {"role": "user", "isActive": True, "plan": "pro", "totalRuns": 0}
-
-
-class _Doc:
-    def get(self):
-        return self
-
-    exists = False
-
-    def to_dict(self):
-        return {}
-
-    def set(self, *a, **k):
-        pass
-
-    def update(self, *a, **k):
-        pass
-
-
-class _Collection:
-    def document(self, *a, **k):
-        return _Doc()
-
-    def add(self, *a, **k):
-        return (None, _Doc())
-
-
-class _Db:
-    def collection(self, *a, **k):
-        return _Collection()
-
-
-main.verify_token = lambda token: {"uid": "reproduce", "email": "reproduce@example.com"}
-main.get_user_profile = lambda uid: PRO
-main.get_db = lambda: _Db()
+from offline_api import offline_client, post  # noqa: E402
 
 A, B = "2018-01-01", "2024-01-01"
 STRATS = ("momentum", "macd", "bollinger")
@@ -320,13 +280,11 @@ def main_():
         results = json.loads(Path(sys.argv[2]).read_text())["results"]
         sys.exit(1 if check(results) else 0)
     out_path = Path(sys.argv[1] if len(sys.argv) > 1 else "writeup_runs.json")
-    client = TestClient(main.app, raise_server_exceptions=True)
+    client = offline_client()
     results = {}
     for label, route, body in CALLS:
-        for limiter in (main.ip_limiter, main.backtest_limiter, main.validate_limiter):
-            limiter._hits.clear()
         t0 = time.time()
-        r = client.post(route, json=body, headers={"Authorization": "Bearer x"})
+        r = post(client, route, body)
         print(f"{r.status_code}  {time.time() - t0:5.1f}s  {label}", flush=True)
         results[label] = r.json() if r.status_code == 200 else {"_status": r.status_code, "_body": r.text[:500]}
     for strategy in ("momentum", "bollinger"):
