@@ -10,6 +10,10 @@
     { "source": "/docs", "destination": "/docs.html" },
     { "source": "/support", "destination": "/support.html" },
     { "source": "/writeup", "destination": "/writeup.html" },
+    { "source": "/strategies", "destination": "/strategies.html" },
+    { "source": "/strategies/momentum", "destination": "/strategy-momentum.html" },
+    { "source": "/strategies/macd", "destination": "/strategy-macd.html" },
+    { "source": "/strategies/bollinger", "destination": "/strategy-bollinger.html" },
     { "source": "/((?!assets/|api/).*)", "destination": "/app.html" }
   ],
   "headers": [

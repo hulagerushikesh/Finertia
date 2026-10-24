@@ -97,6 +97,13 @@ export default function DocsPage() {
             momentum on the same data is the fastest way to see how much the
             answer depends on the question.
           </Term>
+          <p>
+            Each has its own page with the rule written out, its parameters and how it did on data
+            it was never tuned on:{" "}
+            <Link to="/strategies/momentum" className="text-pencil underline underline-offset-2">Momentum</Link>,{" "}
+            <Link to="/strategies/macd" className="text-pencil underline underline-offset-2">MACD</Link>,{" "}
+            <Link to="/strategies/bollinger" className="text-pencil underline underline-offset-2">Bollinger</Link>.
+          </p>
         </Section>
 
         <Section id="risk" title="Stops and position sizing">

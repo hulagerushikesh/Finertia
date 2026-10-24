@@ -7,6 +7,8 @@ Allow: /demo
 Allow: /docs
 Allow: /pricing
 Allow: /support
+Allow: /strategies
+Allow: /writeup
 Disallow: /dashboard
 Disallow: /history
 Disallow: /profile
