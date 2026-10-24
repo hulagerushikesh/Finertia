@@ -30,6 +30,11 @@ const vite = await createServer({
   appType: "custom",
   logLevel: "warn",
   server: { middlewareMode: true, hmr: false, watch: null },
+  // react-router 7 lists its ESM build under the "module-sync" condition and
+  // its CommonJS build as the Node default, whose named exports ESM cannot
+  // see. Which one Node picks depends on its version, so Vite bundles the
+  // package itself and is told to take the ESM build.
+  ssr: { noExternal: ["react-router", "react-router-dom"], resolve: { conditions: ["module-sync"] } },
   plugins: [
     {
       // The CI build has no Firebase config, and getAuth() throws without an
