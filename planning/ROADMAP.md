@@ -55,7 +55,7 @@ is what has happened to each gap since; the first two are left as written.
 
 | Hat | Strong | Missing / risk | 24 Oct |
 |---|---|---|---|
-| Backend | 728 tests, mutation-checked; validation suite (walk-forward, permutation, DSR, PBO, whole-grid, Sharpe-difference) | Rate limiter is **in-memory per instance** (`ratelimit.py`) — with `max-instances 2` the real limit is double and not shared | Closed: shared limits in Firestore (M11 #5); 847 backend tests |
+| Backend | 728 tests, mutation-checked; validation suite (walk-forward, permutation, DSR, PBO, whole-grid, Sharpe-difference) | Rate limiter is **in-memory per instance** (`ratelimit.py`) — with `max-instances 2` the real limit is double and not shared | Closed: shared limits in Firestore (M11 #5); 840 backend tests |
 | Frontend | Theme and design system solid; accessible contrast | **Zero frontend tests, zero E2E.** Every logged-in bug this month (#58, #71, #74, #84) was found by a human | Closed: 140 vitest, 26 E2E against the emulators (M11 #1–2) |
 | DB | Rules tested (20 emulator tests); price cache | No `firestore.indexes.json` in the repo; admin stats **stream whole collections** (`main.py` ~1232) — fine at 6 users, breaks at a few thousand; no backup / point-in-time recovery; no account deletion path | Closed: `firestore.indexes.json`, `count()` aggregations (M11 #6), PITR + backups with a restore drill, deletion on the API (M12 #1, #5) |
 | Cloud | One-command deploy (WIF), drift detector, ₹0 idle | Cold start **11.4 s** on the first run (`min-instances 0`) — testers read it as broken | Closed for ₹0: the uptime check keeps an instance warm (M12 #6). B1 (API to us-central1, next to Firestore) on 1 Nov |
