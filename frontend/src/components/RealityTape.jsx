@@ -1,7 +1,7 @@
 import React from "react";
-import { m, useReducedMotion } from "motion/react";
+import { m } from "motion/react";
 import { Badge } from "@/components/ui/badge";
-import { EASE_OUT } from "./motion";
+import { EASE_OUT, useMotionOff } from "./motion";
 
 /**
  * The landing page's one bold element: five years of a real result, marked
@@ -35,7 +35,7 @@ function pct(v) {
 }
 
 function Bar({ value, tone, delay }) {
-  const off = useReducedMotion();
+  const off = useMotionOff();
   const width = (Math.abs(value) / MAX) * SPAN;
   const positive = value >= 0;
   return (

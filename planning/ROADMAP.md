@@ -60,7 +60,7 @@ What is strong, and what a product would be missing, by hat.
 | Cloud | One-command deploy (WIF), drift detector, ₹0 idle | Cold start **11.4 s** on the first run (`min-instances 0`) — testers read it as broken |
 | System | JSON logs; Sentry wired but **unset** (env-gated) | No error visibility in prod: we learn about crashes from WhatsApp |
 | Product | USP proven; /demo shows it logged out | **USP is behind the paywall:** 4 of 4 testers hit the Pro wall, 0 went Pro. A free user never sees the one thing that makes Finertia different |
-| SEO | robots.txt, sitemap (6 URLs), og cards, pre-rendered `/writeup` | Every other route is a client-rendered SPA — crawlers see an empty shell for `/`, `/demo`, `/pricing` |
+| SEO | robots.txt, sitemap (6 URLs), og cards and titles per page, the six public pages pre-rendered at build time (`scripts/prerender.mjs`) | Pricing's plan cards load from the API, so crawlers see the page without them; logged-in routes stay client-rendered (nothing there to index) |
 | Legal | — | Not cleared to charge: **SEBI** positioning (research-analyst / investment-advice lines), **Yahoo data licence** (yfinance is not licensed for commercial use), **DPDP Act 2023** (India: consent, deletion, grievance contact), no Terms / Privacy pages checked |
 
 ## H1 — M11 "Quality foundation" (next sprint)
@@ -101,7 +101,7 @@ doing anyway.
 
 | Item | Hat | Notes |
 |---|---|---|
-| **Pre-render public routes** (`/`, `/demo`, `/pricing`, `/docs`) the way `/writeup` already is; per-route titles and meta | Frontend | Crawlers see real content. Titles, descriptions and share cards per route done 24 Oct (`src/lib/pageMeta.js`, one HTML shell each); the page body itself is still rendered by JavaScript |
+| **Pre-render public routes** (`/`, `/demo`, `/pricing`, `/docs`) the way `/writeup` already is; per-route titles and meta | Frontend | Crawlers see real content. ✅ Done 24 Oct: titles, descriptions and share cards per route (`src/lib/pageMeta.js`, one HTML shell each), then the page content itself, rendered at build time into each shell (`scripts/prerender.mjs`) and replaced by the live page on load |
 | Content SEO: one page per strategy × well-known ticker ("Does momentum work on Reliance?") generated from real, re-checked runs | PM + Backend | Long-tail search traffic; every number reproducible like the write-up |
 | Shareable result cards (og image per run permalink) | Frontend + Cloud | Every shared run is an ad |
 | Education path: class accounts, a course built on the write-up | PM | Only if students engage (8 Oct rule) |

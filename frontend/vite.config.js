@@ -6,8 +6,10 @@ import { PAGE_META, shellFor } from "./src/lib/pageMeta.js";
 
 /**
  * One copy of index.html per public page, with that page's title, description
- * and share card (src/lib/pageMeta.js says why). vercel.json routes each path
- * to its copy.
+ * and share card (src/lib/pageMeta.js says why), plus app.html, the plain
+ * shell for every other route. vercel.json routes each path to its copy;
+ * scripts/prerender.mjs then fills in the public pages' content, index.html
+ * taking the landing page's.
  */
 function routeShells() {
   return {
@@ -26,6 +28,7 @@ function routeShells() {
         }
         this.emitFile({ type: "asset", fileName: `${name}.html`, source });
       }
+      this.emitFile({ type: "asset", fileName: "app.html", source: html });
     },
   };
 }
