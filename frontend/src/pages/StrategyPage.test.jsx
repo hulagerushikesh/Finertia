@@ -45,6 +45,16 @@ describe("strategy pages", () => {
     expect([q.get("ticker"), q.get("strategy"), q.get("start")]).toEqual(["AAPL", "bollinger", "2018-01-01"]);
   });
 
+  // Signing up on the way must not lose the set-up (utils/returnTo.js).
+  it("carries the same set-up through registration for a visitor", () => {
+    renderAt("/strategies/macd");
+    const href = screen.getByRole("link", { name: "Create a free account" }).getAttribute("href");
+    expect(href).toMatch(/^\/register\?next=/);
+    const next = new URLSearchParams(href.split("?")[1]).get("next");
+    expect(next).toMatch(/^\/dashboard\?/);
+    expect(new URLSearchParams(next.split("?")[1]).get("strategy")).toBe("macd");
+  });
+
   it("is the 404 for a strategy that does not exist", () => {
     renderAt("/strategies/rsi");
     expect(screen.getByText(/Nothing at this address/)).toBeInTheDocument();

@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import RealityTape from "../components/RealityTape";
+import { STRATEGY_PAGES } from "../lib/strategyPages";
 import { Rise, Stagger, StaggerItem, EASE_OUT, useMotionOff } from "../components/motion";
 
 /**
@@ -186,6 +187,41 @@ export default function LandingPage() {
         <p className="mt-2 text-sm">
           <Link to="/writeup" className="inline-flex items-center gap-1.5 text-pencil hover:underline underline-offset-4">
             Read the write-up: the best-looking strategy was the worst on new data <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </p>
+      </section>
+
+      {/* ── 3b. The strategies ─────────────────────────────────────── */}
+      {/* Each has its own page with the exact rule and its results; linking
+          them from here is also how search engines find them. */}
+      <section className="mt-24" aria-labelledby="strategies-heading">
+        <SectionHead
+          eyebrow="The strategies"
+          title={<span id="strategies-heading">Three ordinary rules, written out exactly.</span>}
+          lede="Trend following and mean reversion, with every parameter you can change and how each did on data it was never tuned on, including when it failed."
+        />
+        <Stagger className="mt-8 grid sm:grid-cols-3 gap-4">
+          {STRATEGY_PAGES.map((s) => (
+            <StaggerItem key={s.id} className="sheet p-6 flex flex-col gap-3">
+              <p className="eyebrow">{s.kind}</p>
+              <h3 className="font-display text-lg font-semibold text-foreground">{s.label}</h3>
+              <p className="text-sm text-graphite leading-relaxed">{s.summary}</p>
+              <p className="font-mono text-2xs text-graphite">
+                On AAPL: {s.writeup.first.verdict}, then {s.writeup.moved.verdict}
+              </p>
+              <Link
+                to={s.path}
+                className="mt-auto pt-2 inline-flex items-center gap-1.5 text-sm font-medium text-pencil hover:underline underline-offset-4"
+              >
+                The rule and its results<span className="sr-only">: {s.label}</span>{" "}
+                <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </StaggerItem>
+          ))}
+        </Stagger>
+        <p className="mt-4 text-sm">
+          <Link to="/strategies" className="inline-flex items-center gap-1.5 text-pencil hover:underline underline-offset-4">
+            All three side by side <ArrowRight className="size-3.5" aria-hidden="true" />
           </Link>
         </p>
       </section>

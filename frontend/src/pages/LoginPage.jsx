@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { useToast } from "../hooks/useToast";
 import AuthShell, { AuthField } from "../components/AuthShell";
 import PasswordInput from "../components/PasswordInput";
 import Spinner from "../components/Spinner";
+import { authPath, nextPath } from "../utils/returnTo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,6 +21,7 @@ const ERROR_MAP = {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const next = nextPath(useLocation().search);
   const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +33,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/dashboard");
+      navigate(next, { replace: true });
     } catch (err) {
       const message = ERROR_MAP[err.code] || err.message;
       setError(message);
@@ -114,7 +116,7 @@ export default function LoginPage() {
 
       <p className="text-xs text-graphite text-center mt-6">
         No account yet?{" "}
-        <Link to="/register" className="text-pencil hover:underline rounded-sm">
+        <Link to={authPath("/register", next)} className="text-pencil hover:underline rounded-sm">
           Create one
         </Link>
       </p>

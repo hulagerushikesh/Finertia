@@ -8,6 +8,7 @@ import { useAuth } from "../hooks/useAuth";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { STRATEGY_PAGES, strategyPage } from "../lib/strategyPages";
 import { encodeParams } from "../utils/permalink";
+import { authPath } from "../utils/returnTo";
 import NotFoundPage from "./NotFoundPage";
 
 const LINK = "text-pencil underline underline-offset-2";
@@ -66,6 +67,7 @@ function Strategy({ s }) {
   usePageTitle(`strategy-${s.id}`);
   const { user } = useAuth();
   const others = STRATEGY_PAGES.filter((o) => o.id !== s.id);
+  const workspace = `/dashboard?${encodeParams({ ...DEFAULTS, ...s.run })}`;
   const { writeup } = s;
 
   return (
@@ -149,14 +151,15 @@ function Strategy({ s }) {
         <Section id="try" title="Run it yourself">
           <p>
             The same set-up, AAPL from 2018 to 2024, opens in the workspace with this strategy's
-            defaults. Change the ticker or the dates and the Validate tab runs the same checks.
+            defaults, straight after sign-up if you are new. Change the ticker or the dates and
+            the Validate tab runs the same checks.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild>
               {user ? (
-                <Link to={`/dashboard?${encodeParams({ ...DEFAULTS, ...s.run })}`}>Open in the workspace</Link>
+                <Link to={workspace}>Open in the workspace</Link>
               ) : (
-                <Link to="/register">Create a free account</Link>
+                <Link to={authPath("/register", workspace)}>Create a free account</Link>
               )}
             </Button>
             <Button asChild variant="outline">
