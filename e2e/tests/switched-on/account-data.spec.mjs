@@ -31,9 +31,10 @@ test("a member downloads their data, then deletes the account for good", async (
 
   await page.waitForURL("**/account-deleted");
   await expect(page.getByRole("heading", { name: "Your account is deleted." })).toBeVisible();
-  // Signed out: the navbar offers sign-in again, and /profile sends to login.
+  // Signed out: the navbar offers sign-in again, and /profile sends to login,
+  // which will return there afterwards.
   await page.goto("/profile");
-  await page.waitForURL("**/login");
+  await page.waitForURL("**/login?next=%2Fprofile");
 
   // The password no longer signs in.
   const signIn = await request.post(
