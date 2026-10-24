@@ -43,6 +43,7 @@ export default function Navbar() {
       ]
     : [
         ["/demo", "A real result"],
+        ["/strategies", "Strategies"],
         ["/writeup", "The finding"],
         ["/docs", "How it works"],
         ["/pricing", "Pricing"],
@@ -66,7 +67,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop */}
-        <nav className="hidden md:flex items-center gap-6 ml-6 self-stretch" aria-label="Primary">
+        <nav className="hidden md:flex items-center gap-4 lg:gap-6 ml-2 lg:ml-6 self-stretch" aria-label="Primary">
           {links.map(([to, label]) => (
             <NavLink key={to} to={to} className={linkClass}>
               {label}
