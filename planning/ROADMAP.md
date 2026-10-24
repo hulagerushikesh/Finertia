@@ -61,7 +61,7 @@ is what has happened to each gap since; the first two are left as written.
 | Cloud | One-command deploy (WIF), drift detector, ₹0 idle | Cold start **11.4 s** on the first run (`min-instances 0`) — testers read it as broken | Closed for ₹0: the uptime check keeps an instance warm (M12 #6). B1 (API to us-central1, next to Firestore) on 1 Nov |
 | System | JSON logs; Sentry wired but **unset** (env-gated) | No error visibility in prod: we learn about crashes from WhatsApp | Closed: Sentry on both sides, uptime and 5xx alerts to the author (M11 #3, M12 #2) |
 | Product | USP proven; /demo shows it logged out | **USP is behind the paywall:** 4 of 4 testers hit the Pro wall, 0 went Pro. A free user never sees the one thing that makes Finertia different | Built, off until the round closes: one free validation a month (`FREE_VALIDATIONS_PER_MONTH`, `free-validation`); switched on 1 Nov with B1 |
-| SEO | robots.txt, sitemap (6 URLs), og cards, pre-rendered `/writeup` | Every other route is a client-rendered SPA — crawlers see an empty shell for `/`, `/demo`, `/pricing` | Closed 24 Oct: own title and card per page (#138), the six public pages' content rendered at build time (#139, `scripts/prerender.mjs`). Pricing's plan cards still load from the API |
+| SEO | robots.txt, sitemap (6 URLs), og cards, pre-rendered `/writeup` | Every other route is a client-rendered SPA — crawlers see an empty shell for `/`, `/demo`, `/pricing` | Closed 24 Oct: own title and card per page (#138), the six public pages' content rendered at build time (#139, `scripts/prerender.mjs`). Pricing's plan cards are in the pre-render too (#145) |
 | Legal | — | Not cleared to charge: **SEBI** positioning (research-analyst / investment-advice lines), **Yahoo data licence** (yfinance is not licensed for commercial use), **DPDP Act 2023** (India: consent, deletion, grievance contact), no Terms / Privacy pages checked | Open: brief deferred until after the build work (DECISIONS 13 Oct); data on ₹0 until the data sprint |
 
 ## H1 — M11 "Quality foundation" (next sprint)
@@ -95,7 +95,7 @@ doing anyway.
 | Firestore point-in-time recovery + a scheduled export | DB + Cloud | Restore drill done once |
 | Cold start: `min-instances 1` (≈ ₹1–2k/month) or a lighter startup | Cloud | First run < 3 s |
 | Support inbox a human reads; status page | PM | `support@` answered within a day |
-| Stripe live (keys + webhook secret + one real test payment) | Backend + Cloud | Gated on evidence |
+| Payments live (provider, keys, one real payment and refund) | Backend + Cloud | Gated on evidence. Researched 24 Oct: [PAYMENTS-PLAN.md](PAYMENTS-PLAN.md) recommends a merchant of record (Dodo Payments, then Paddle), since new Stripe India accounts are invite-only |
 | Onboarding: first-run tour, sample strategies, empty states | Frontend | A tester finishes unaided, measured |
 
 ## H3 — M13+ "Growth"
