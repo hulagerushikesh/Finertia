@@ -265,6 +265,11 @@ export default function LandingPage() {
                 Every check, with its formula <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </p>
+            <p className="mt-2 text-sm">
+              <Link to="/learn/backtest-overfitting" className="inline-flex items-center gap-1.5 text-pencil hover:underline underline-offset-4">
+                How to tell if a backtest is overfit <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </p>
           </div>
           <div className="sheet px-6 py-6">
             <SplitDiagram />
