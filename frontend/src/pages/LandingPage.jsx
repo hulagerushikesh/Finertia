@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { m, useReducedMotion } from "motion/react";
+import { m } from "motion/react";
 import {
   ArrowRight,
   BookOpen,
@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import RealityTape from "../components/RealityTape";
-import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
+import { Rise, Stagger, StaggerItem, EASE_OUT, useMotionOff } from "../components/motion";
 
 /**
  * The page is written for someone who has never heard the word "backtest".
@@ -76,7 +76,7 @@ const AUDIENCES = [
  * out-of-sample stretch in the accent — the only bars that count.
  */
 function SplitDiagram() {
-  const off = useReducedMotion();
+  const off = useMotionOff();
   return (
     <svg viewBox="0 0 600 64" className="w-full h-16" aria-hidden="true">
       <line x1="0" y1="40" x2="600" y2="40" stroke="hsl(var(--border-strong))" strokeWidth="1" />

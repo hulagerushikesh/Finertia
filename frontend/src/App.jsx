@@ -1,7 +1,7 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
+import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
@@ -11,7 +11,8 @@ import AdminRoute from "./components/AdminRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { EASE_OUT } from "./components/motion";
+import { EASE_OUT, StillMotion, useMotionOff } from "./components/motion";
+import { lazyPage } from "./lib/lazyPage";
 import { feature } from "./lib/features";
 
 // Eager: the pages a first-time visitor actually lands on.
@@ -24,11 +25,25 @@ import PricingPage from "./pages/PricingPage";
 
 // Public marketing pages, lazy because none is on the critical path to the
 // landing page and each pulls in charts or long copy.
-const DemoPage = lazy(() => import("./pages/DemoPage"));
-const DocsPage = lazy(() => import("./pages/DocsPage"));
-const SupportPage = lazy(() => import("./pages/SupportPage"));
+const DemoPage = lazyPage(() => import("./pages/DemoPage"));
+const DocsPage = lazyPage(() => import("./pages/DocsPage"));
+const SupportPage = lazyPage(() => import("./pages/SupportPage"));
 const AccountDeletedPage = lazy(() => import("./pages/AccountDeletedPage"));
-const WriteupPage = lazy(() => import("./pages/WriteupPage"));
+const WriteupPage = lazyPage(() => import("./pages/WriteupPage"));
+
+/**
+ * What to load before the first render of each page the build pre-renders
+ * (scripts/prerender.mjs), keyed as in src/lib/pageMeta.js. The landing and
+ * pricing pages are in the entry bundle already.
+ */
+export const PRELOAD = {
+  landing: () => Promise.resolve(),
+  pricing: () => Promise.resolve(),
+  demo: DemoPage.preload,
+  docs: DocsPage.preload,
+  support: SupportPage.preload,
+  writeup: WriteupPage.preload,
+};
 
 // Lazy: everything behind a login. The charting library alone is ~536 kB, and
 // nobody reading the landing page needs it.
@@ -56,7 +71,7 @@ function RouteFallback() {
  */
 function Page({ render }) {
   const location = useLocation();
-  const off = useReducedMotion();
+  const off = useMotionOff();
   return (
     <AnimatePresence mode="wait" initial={false}>
       <m.div
@@ -76,7 +91,91 @@ function Page({ render }) {
   );
 }
 
-export default function App() {
+/** Everything inside the providers: the page, its bar and its footer. */
+export function Layout() {
+  return (
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <Navbar />
+      {/* One landmark for every route. */}
+      <main id="main" className="flex-1">
+        <ErrorBoundary>
+          <Suspense fallback={<RouteFallback />}>
+            <Page
+              render={(location) => (
+              <Routes location={location}>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/demo" element={<DemoPage />} />
+                <Route path="/docs" element={<DocsPage />} />
+                <Route path="/writeup" element={<WriteupPage />} />
+                <Route path="/support" element={<SupportPage />} />
+                {feature("account-data") && (
+                  <Route path="/account-deleted" element={<AccountDeletedPage />} />
+                )}
+                <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
+                <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/history"
+                  element={
+                    <ProtectedRoute>
+                      <HistoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <UserProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminLayout />
+                    </AdminRoute>
+                  }
+                >
+                  <Route index element={<Navigate to="/admin/overview" replace />} />
+                  <Route path="overview" element={<AdminOverviewPage />} />
+                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="runs" element={<AdminRunsPage />} />
+                </Route>
+
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+              )}
+            />
+          </Suspense>
+        </ErrorBoundary>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+/**
+ * `still` is set when the HTML already holds this page, rendered at build
+ * time: the first render then replaces it without the entrance motion, so
+ * nothing fades out and back in. Later pages animate as usual.
+ */
+export default function App({ still: initiallyStill = false }) {
+  const [still, setStill] = useState(initiallyStill);
+  useEffect(() => setStill(false), []);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="finertia-theme">
       {/* `m` + domAnimation instead of `motion`: this interface only ever
@@ -84,84 +183,17 @@ export default function App() {
           ~40 kB gz of layout/drag/gesture code onto the landing page. `strict`
           throws if a `motion.*` element sneaks back in. */}
       <LazyMotion features={domAnimation} strict>
+      <StillMotion.Provider value={still}>
       <BrowserRouter>
         <AuthProvider>
           <ToastProvider>
             <TooltipProvider delayDuration={200}>
-              <div className="min-h-screen flex flex-col bg-background text-foreground">
-                <Navbar />
-                {/* One landmark for every route. */}
-                <main id="main" className="flex-1">
-                  <ErrorBoundary>
-                    <Suspense fallback={<RouteFallback />}>
-                      <Page
-                        render={(location) => (
-                        <Routes location={location}>
-                          <Route path="/" element={<LandingPage />} />
-                          <Route path="/pricing" element={<PricingPage />} />
-                          <Route path="/demo" element={<DemoPage />} />
-                          <Route path="/docs" element={<DocsPage />} />
-                          <Route path="/writeup" element={<WriteupPage />} />
-                          <Route path="/support" element={<SupportPage />} />
-                          {feature("account-data") && (
-                            <Route path="/account-deleted" element={<AccountDeletedPage />} />
-                          )}
-                          <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
-                          <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
-                          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-
-                          <Route
-                            path="/dashboard"
-                            element={
-                              <ProtectedRoute>
-                                <DashboardPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/history"
-                            element={
-                              <ProtectedRoute>
-                                <HistoryPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/profile"
-                            element={
-                              <ProtectedRoute>
-                                <UserProfilePage />
-                              </ProtectedRoute>
-                            }
-                          />
-
-                          <Route
-                            path="/admin"
-                            element={
-                              <AdminRoute>
-                                <AdminLayout />
-                              </AdminRoute>
-                            }
-                          >
-                            <Route index element={<Navigate to="/admin/overview" replace />} />
-                            <Route path="overview" element={<AdminOverviewPage />} />
-                            <Route path="users" element={<AdminUsersPage />} />
-                            <Route path="runs" element={<AdminRunsPage />} />
-                          </Route>
-
-                          <Route path="*" element={<NotFoundPage />} />
-                        </Routes>
-                        )}
-                      />
-                    </Suspense>
-                  </ErrorBoundary>
-                </main>
-                <Footer />
-              </div>
+              <Layout />
             </TooltipProvider>
           </ToastProvider>
         </AuthProvider>
       </BrowserRouter>
+      </StillMotion.Provider>
       </LazyMotion>
     </ThemeProvider>
   );
