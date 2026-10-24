@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TITLE, PAGE_META, shellFor } from "./pageMeta";
+import { DEFAULT_TITLE, PAGE_META, shellFor, structuredData } from "./pageMeta";
 
 const index = readFileSync(path.resolve(__dirname, "../../index.html"), "utf8");
 const vercel = JSON.parse(readFileSync(path.resolve(__dirname, "../../vercel.json"), "utf8"));
@@ -19,6 +19,25 @@ describe("page shells", () => {
       expect(vercel.rewrites).toContainEqual({ source: meta.path, destination: `/${name}.html` });
     });
   }
+
+  it("every page carries its breadcrumb trail, and articles an Article, as JSON-LD", () => {
+    for (const meta of Object.values(PAGE_META)) {
+      const html = shellFor(index, meta);
+      const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+      const own = blocks.find(Array.isArray);
+      const crumbs = own.find((d) => d["@type"] === "BreadcrumbList").itemListElement;
+      expect(crumbs.at(-1)).toMatchObject({ name: meta.name, item: `https://finertia.hulage.in${meta.path}` });
+      expect(crumbs.every((c) => c.name)).toBe(true);
+      const article = own.find((d) => d["@type"] === "Article");
+      if (meta.type === "article") expect(article.datePublished).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      else expect(article).toBeUndefined();
+    }
+  });
+
+  it("an article under a section has three crumbs, the middle one the section", () => {
+    const crumbs = structuredData(PAGE_META["learn-lookahead-bias"])[0].itemListElement.map((c) => c.name);
+    expect(crumbs).toEqual(["Finertia", "Learn", "Lookahead bias"]);
+  });
 
   it("DEFAULT_TITLE is index.html's title", () => {
     expect(index.match(/<title>([^<]*)<\/title>/)[1]).toBe(DEFAULT_TITLE);
