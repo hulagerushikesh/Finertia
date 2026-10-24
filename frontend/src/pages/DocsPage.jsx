@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { DocSection as Section, Term, DocHeader } from "../components/Prose";
 import { Rise } from "../components/motion";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const CONTENTS = [
   ["how-it-works", "How a backtest runs"],
@@ -15,6 +16,7 @@ const CONTENTS = [
 ];
 
 export default function DocsPage() {
+  usePageTitle("docs");
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Rise>

@@ -101,7 +101,7 @@ doing anyway.
 
 | Item | Hat | Notes |
 |---|---|---|
-| **Pre-render public routes** (`/`, `/demo`, `/pricing`, `/docs`) the way `/writeup` already is; per-route titles and meta | Frontend | Crawlers see real content |
+| **Pre-render public routes** (`/`, `/demo`, `/pricing`, `/docs`) the way `/writeup` already is; per-route titles and meta | Frontend | Crawlers see real content. Titles, descriptions and share cards per route done 24 Oct (`src/lib/pageMeta.js`, one HTML shell each); the page body itself is still rendered by JavaScript |
 | Content SEO: one page per strategy × well-known ticker ("Does momentum work on Reliance?") generated from real, re-checked runs | PM + Backend | Long-tail search traffic; every number reproducible like the write-up |
 | Shareable result cards (og image per run permalink) | Frontend + Cloud | Every shared run is an ad |
 | Education path: class accounts, a course built on the write-up | PM | Only if students engage (8 Oct rule) |
