@@ -57,7 +57,8 @@ function StrategyIndex() {
       </ul>
       <p className="text-sm text-graphite leading-relaxed mt-12 max-w-prose">
         How the engine turns any of them into returns, and where that can mislead, is on{" "}
-        <Link to="/docs" className={LINK}>How it works</Link>.
+        <Link to="/docs" className={LINK}>How it works</Link>. The questions behind the checks
+        are on <Link to="/learn" className={LINK}>Learn</Link>.
       </p>
     </div>
   );
@@ -146,6 +147,10 @@ function Strategy({ s }) {
 
         <Section id="misleads" title="Where it misleads">
           <p>{s.misleads}</p>
+          <p>
+            More on reading a result like this:{" "}
+            <Link to="/learn/backtest-overfitting" className={LINK}>how to tell if a backtest is overfit</Link>.
+          </p>
         </Section>
 
         <Section id="try" title="Run it yourself">

@@ -148,6 +148,12 @@ export default function DocsPage() {
             Any strategy can be tuned until its backtest looks good. Two checks
             here are designed to find out whether that has happened.
           </p>
+          <p>
+            Longer explanations, with examples:{" "}
+            <Link to="/learn/walk-forward-validation" className="text-pencil hover:underline">walk-forward validation</Link>,{" "}
+            <Link to="/learn/backtest-overfitting" className="text-pencil hover:underline">overfitting</Link> and{" "}
+            <Link to="/learn/permutation-test" className="text-pencil hover:underline">the permutation test</Link>.
+          </p>
           <Term name="Walk-forward">
             Parameters are optimised on the first 70% of the period, then scored
             — untouched — on the remaining 30%. Only that second number is

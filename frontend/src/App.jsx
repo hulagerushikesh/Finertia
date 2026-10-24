@@ -31,6 +31,7 @@ const SupportPage = lazyPage(() => import("./pages/SupportPage"));
 const AccountDeletedPage = lazy(() => import("./pages/AccountDeletedPage"));
 const WriteupPage = lazyPage(() => import("./pages/WriteupPage"));
 const StrategyPage = lazyPage(() => import("./pages/StrategyPage"));
+const LearnPage = lazyPage(() => import("./pages/LearnPage"));
 
 /**
  * What to load before the first render of each page the build pre-renders
@@ -48,6 +49,12 @@ export const PRELOAD = {
   "strategy-momentum": StrategyPage.preload,
   "strategy-macd": StrategyPage.preload,
   "strategy-bollinger": StrategyPage.preload,
+  learn: LearnPage.preload,
+  "learn-walk-forward-validation": LearnPage.preload,
+  "learn-backtest-overfitting": LearnPage.preload,
+  "learn-lookahead-bias": LearnPage.preload,
+  "learn-sharpe-ratio": LearnPage.preload,
+  "learn-permutation-test": LearnPage.preload,
 };
 
 // Lazy: everything behind a login. The charting library alone is ~536 kB, and
@@ -116,6 +123,8 @@ export function Layout() {
                 <Route path="/support" element={<SupportPage />} />
                 <Route path="/strategies" element={<StrategyPage />} />
                 <Route path="/strategies/:id" element={<StrategyPage />} />
+                <Route path="/learn" element={<LearnPage />} />
+                <Route path="/learn/:id" element={<LearnPage />} />
                 {feature("account-data") && (
                   <Route path="/account-deleted" element={<AccountDeletedPage />} />
                 )}

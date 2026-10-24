@@ -8,6 +8,7 @@ Allow: /docs
 Allow: /pricing
 Allow: /support
 Allow: /strategies
+Allow: /learn
 Allow: /writeup
 Disallow: /dashboard
 Disallow: /history

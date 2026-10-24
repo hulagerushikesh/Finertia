@@ -20,6 +20,7 @@ const CARD = { image: `${SITE}/og.png`, imageAlt: "Finertia — Test a trading i
 
 export const PAGE_META = {
   demo: {
+    name: "A real result",
     path: "/demo",
     title: "Momentum on Apple, 2019–2024: a real result · Finertia",
     ogTitle: "A real backtest, and whether it holds up.",
@@ -28,6 +29,7 @@ export const PAGE_META = {
     ...CARD,
   },
   pricing: {
+    name: "Pricing",
     path: "/pricing",
     title: "Pricing · Finertia",
     ogTitle: "Start free. Pay when you want the checks.",
@@ -36,6 +38,7 @@ export const PAGE_META = {
     ...CARD,
   },
   docs: {
+    name: "How it works",
     path: "/docs",
     title: "How it works · Finertia",
     ogTitle: "How Finertia computes every number, and where it can mislead you.",
@@ -44,6 +47,7 @@ export const PAGE_META = {
     ...CARD,
   },
   support: {
+    name: "Support",
     path: "/support",
     title: "Support · Finertia",
     ogTitle: "When something goes wrong.",
@@ -52,8 +56,11 @@ export const PAGE_META = {
     ...CARD,
   },
   writeup: {
+    name: "The write-up",
     path: "/writeup",
     type: "article",
+    published: "2026-09-15",
+    modified: "2026-10-07",
     title: "The best-looking strategy was the worst on new data · Finertia",
     ogTitle: "The best-looking strategy was the worst on new data.",
     description:
@@ -63,6 +70,7 @@ export const PAGE_META = {
       "Sharpe ratios on AAPL 2018–2024. Momentum 0.95 tuned, −0.30 on new data; MACD 0.51, −0.30; Bollinger 0.56, 1.17.",
   },
   strategies: {
+    name: "Strategies",
     path: "/strategies",
     title: "Three trading strategies, backtested honestly · Finertia",
     ogTitle: "Three ordinary strategies, and what validation said about them.",
@@ -71,7 +79,10 @@ export const PAGE_META = {
     ...CARD,
   },
   "strategy-momentum": {
+    name: "Momentum",
     path: "/strategies/momentum",
+    type: "article",
+    published: "2026-10-24",
     title: "Momentum strategy: the exact rule and an honest backtest · Finertia",
     ogTitle: "Momentum: the best-looking rule, until new data.",
     description:
@@ -79,7 +90,10 @@ export const PAGE_META = {
     ...CARD,
   },
   "strategy-macd": {
+    name: "MACD",
     path: "/strategies/macd",
+    type: "article",
+    published: "2026-10-24",
     title: "MACD crossover strategy: the exact rule and an honest backtest · Finertia",
     ogTitle: "MACD crossover: the rule, and what validation said.",
     description:
@@ -87,11 +101,78 @@ export const PAGE_META = {
     ...CARD,
   },
   "strategy-bollinger": {
+    name: "Bollinger bands",
     path: "/strategies/bollinger",
+    type: "article",
+    published: "2026-10-24",
     title: "Bollinger band strategy: the exact rule and an honest backtest · Finertia",
     ogTitle: "Bollinger bands: fading extremes, tested out of sample.",
     description:
       "The Bollinger-band mean-reversion rule written out exactly: its window and band width, the grid validation sweeps, and how it did on AAPL on years it never saw.",
+    ...CARD,
+  },
+  learn: {
+    name: "Learn",
+    path: "/learn",
+    title: "Learn backtesting: overfitting, lookahead bias, walk-forward · Finertia",
+    ogTitle: "Before you trust a backtest.",
+    description:
+      "Short answers to the questions that decide whether a backtest is worth anything: overfitting, lookahead bias, walk-forward validation, the Sharpe ratio and the permutation test.",
+    ...CARD,
+  },
+  "learn-walk-forward-validation": {
+    name: "Walk-forward validation",
+    path: "/learn/walk-forward-validation",
+    type: "article",
+    published: "2026-10-24",
+    title: "Walk-forward validation for trading strategies, explained · Finertia",
+    ogTitle: "Walk-forward validation, and why one split can lie.",
+    description:
+      "Choose parameters on the past, score them on what came after. How walk-forward validation works, the purge gap at the split, and why one split is not enough.",
+    ...CARD,
+  },
+  "learn-backtest-overfitting": {
+    name: "Backtest overfitting",
+    path: "/learn/backtest-overfitting",
+    type: "article",
+    published: "2026-10-24",
+    title: "How to tell if a backtest is overfit · Finertia",
+    ogTitle: "How to tell if a backtest is overfit.",
+    description:
+      "Four checks for an overfit trading strategy: walk-forward, the deflated Sharpe ratio, the probability of backtest overfitting and a permutation test, with a real example.",
+    ...CARD,
+  },
+  "learn-lookahead-bias": {
+    name: "Lookahead bias",
+    path: "/learn/lookahead-bias",
+    type: "article",
+    published: "2026-10-24",
+    title: "Lookahead bias in backtesting: the one-day shift · Finertia",
+    ogTitle: "Lookahead bias: the one-day shift that invents returns.",
+    description:
+      "Lookahead bias is a backtest trading on information it could not have had. The one-line bug behind most of it, its quieter forms, and how to check your own results.",
+    ...CARD,
+  },
+  "learn-sharpe-ratio": {
+    name: "Sharpe ratio",
+    path: "/learn/sharpe-ratio",
+    type: "article",
+    published: "2026-10-24",
+    title: "Sharpe ratio for backtests: what it measures, when it misleads · Finertia",
+    ogTitle: "The Sharpe ratio: what it measures and when it misleads.",
+    description:
+      "What the Sharpe ratio measures, what a good one looks like on daily data, and four ways it flatters a backtest: short periods, parameter sweeps, fat tails and in-sample numbers.",
+    ...CARD,
+  },
+  "learn-permutation-test": {
+    name: "Permutation test",
+    path: "/learn/permutation-test",
+    type: "article",
+    published: "2026-10-24",
+    title: "Permutation test for trading strategies: skill or exposure? · Finertia",
+    ogTitle: "The permutation test: skill, or just time in the market?",
+    description:
+      "Shuffle a strategy's positions 500 times and see whether its real timing beats random timing. How the permutation test works, how to read its p-value, and its limits.",
     ...CARD,
   },
 };
@@ -118,6 +199,49 @@ function swaps(m) {
   ];
 }
 
+const ORG = { "@type": "Organization", name: "Finertia", url: SITE };
+
+/**
+ * schema.org data for one page: its breadcrumb trail (Finertia, then any
+ * section the path sits under, then the page), and for articles an Article.
+ * The site-wide SoftwareApplication stays in index.html.
+ */
+export function structuredData(m) {
+  const sections = m.path.split("/").slice(1, -1).map((seg) => `/${seg}`);
+  const trail = [
+    { name: "Finertia", path: "/" },
+    ...sections.map((path) => ({ name: Object.values(PAGE_META).find((p) => p.path === path).name, path })),
+    { name: m.name, path: m.path },
+  ];
+  const data = [
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: trail.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.name, item: `${SITE}${c.path}` })),
+    },
+  ];
+  if (m.type === "article") {
+    data.push({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: m.ogTitle,
+      description: m.description,
+      url: `${SITE}${m.path}`,
+      mainEntityOfPage: `${SITE}${m.path}`,
+      image: m.image,
+      datePublished: m.published,
+      dateModified: m.modified || m.published,
+      author: ORG,
+      publisher: ORG,
+    });
+  }
+  return data;
+}
+
+/** A JSON-LD script tag; `<` escaped so no string in it can close the tag. */
+const ldScript = (data) =>
+  `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>\n  </head>`;
+
 /**
  * index.html with one page's tags swapped in. Throws when a tag no longer
  * matches: that would silently ship the landing card on this page.
@@ -127,5 +251,6 @@ export function shellFor(html, m) {
     if (!re.test(html)) throw new Error(`no match for ${re} in index.html (${m.path})`);
     html = html.replace(re, to);
   }
-  return html;
+  if (!html.includes("</head>")) throw new Error(`no </head> in index.html (${m.path})`);
+  return html.replace("</head>", () => ldScript(structuredData(m)));
 }
