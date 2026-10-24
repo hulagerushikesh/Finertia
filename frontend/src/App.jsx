@@ -14,6 +14,7 @@ import Footer from "./components/Footer";
 import { EASE_OUT, StillMotion, useMotionOff } from "./components/motion";
 import { lazyPage } from "./lib/lazyPage";
 import { feature } from "./lib/features";
+import { STOCKS } from "./lib/stockMeta";
 
 // Eager: the pages a first-time visitor actually lands on.
 import LandingPage from "./pages/LandingPage";
@@ -32,6 +33,7 @@ const AccountDeletedPage = lazy(() => import("./pages/AccountDeletedPage"));
 const WriteupPage = lazyPage(() => import("./pages/WriteupPage"));
 const StrategyPage = lazyPage(() => import("./pages/StrategyPage"));
 const LearnPage = lazyPage(() => import("./pages/LearnPage"));
+const StockPage = lazyPage(() => import("./pages/StockPage"));
 
 /**
  * What to load before the first render of each page the build pre-renders
@@ -55,6 +57,8 @@ export const PRELOAD = {
   "learn-lookahead-bias": LearnPage.preload,
   "learn-sharpe-ratio": LearnPage.preload,
   "learn-permutation-test": LearnPage.preload,
+  stocks: StockPage.preload,
+  ...Object.fromEntries(STOCKS.map((s) => [`stock-${s.slug}`, StockPage.preload])),
 };
 
 // Lazy: everything behind a login. The charting library alone is ~536 kB, and
@@ -125,6 +129,8 @@ export function Layout() {
                 <Route path="/strategies/:id" element={<StrategyPage />} />
                 <Route path="/learn" element={<LearnPage />} />
                 <Route path="/learn/:id" element={<LearnPage />} />
+                <Route path="/stocks" element={<StockPage />} />
+                <Route path="/stocks/:slug" element={<StockPage />} />
                 {feature("account-data") && (
                   <Route path="/account-deleted" element={<AccountDeletedPage />} />
                 )}

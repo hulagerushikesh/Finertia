@@ -9,6 +9,7 @@ Allow: /pricing
 Allow: /support
 Allow: /strategies
 Allow: /learn
+Allow: /stocks
 Allow: /writeup
 Disallow: /dashboard
 Disallow: /history
