@@ -6,6 +6,7 @@ import { auth, db, sendVerificationEmail } from "../firebase";
 import AuthShell, { AuthField } from "../components/AuthShell";
 import PasswordInput from "../components/PasswordInput";
 import Spinner from "../components/Spinner";
+import { useAuth } from "../hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -18,6 +19,7 @@ const ERROR_MAP = {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { setRegistering, refreshProfile } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,6 +29,7 @@ export default function RegisterPage() {
   async function handleRegister() {
     setError("");
     setLoading(true);
+    setRegistering(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       const uid = cred.user.uid;
@@ -40,6 +43,8 @@ export default function RegisterPage() {
         totalRuns: 0,
         isActive: true,
       });
+      // The sign-in above read the profile before this wrote it.
+      await refreshProfile();
 
       // A failed send must not read as a failed registration — the account and
       // its profile document both exist by this point. The workspace banner
@@ -55,6 +60,7 @@ export default function RegisterPage() {
       setError(ERROR_MAP[err.code] || err.message);
     } finally {
       setLoading(false);
+      setRegistering(false);
     }
   }
 
