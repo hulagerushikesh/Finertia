@@ -30,6 +30,12 @@ describe("page shells", () => {
     for (const meta of Object.values(PAGE_META)) expect(sources.indexOf(meta.path)).toBeLessThan(catchAll);
   });
 
+  it("every other route gets app.html, the shell without pre-rendered content", () => {
+    // index.html carries the landing page's content (scripts/prerender.mjs),
+    // so serving it on /dashboard would flash the landing page there.
+    expect(vercel.rewrites.at(-1)).toEqual({ source: "/((?!assets/|api/).*)", destination: "/app.html" });
+  });
+
   it("a tag that stops matching fails the build instead of shipping the landing card", () => {
     expect(() => shellFor(index.replace(/<link rel="canonical"[^>]*>/, ""), PAGE_META.demo)).toThrow(/canonical/);
   });

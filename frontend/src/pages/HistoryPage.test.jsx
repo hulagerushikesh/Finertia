@@ -10,7 +10,7 @@ vi.mock("../components/ComparisonPanel", () => ({ default: () => null }));
 import HistoryPage from "./HistoryPage";
 
 const RUN = {
-  id: "r1", ticker: "AAPL", strategy: "momentum", start: "2020-01-01", end: "2024-01-01",
+  runId: "r1", ticker: "AAPL", strategy: "momentum", start: "2020-01-01", end: "2024-01-01",
   createdAt: "2026-10-13T10:00:00Z", params: { ticker: "AAPL", strategy: "momentum" },
   metrics: { total_return: 0.1, sharpe_ratio: 0.5, max_drawdown: -0.2 },
 };
@@ -61,7 +61,7 @@ describe("HistoryPage — portfolio runs", () => {
   };
 
   it("names the basket and cannot be picked for compare", async () => {
-    api.getHistory.mockResolvedValue({ runs: [BASKET, { ...RUN, runId: "r1" }], total: 2 });
+    api.getHistory.mockResolvedValue({ runs: [BASKET, RUN], total: 2 });
     renderPage();
     expect(await screen.findByText("AAPL · MSFT")).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /AAPL · MSFT/ })).toBeDisabled();
