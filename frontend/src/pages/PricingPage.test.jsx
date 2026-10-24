@@ -32,7 +32,12 @@ async function proCard() {
   return label.closest("div.relative");
 }
 
-beforeEach(() => api.getPlans.mockReset());
+// A block body: a function returned from beforeEach is run as its teardown,
+// and mockReset returns the mock, so the arrow form called getPlans after
+// every test.
+beforeEach(() => {
+  api.getPlans.mockReset();
+});
 
 // Author, 13 Oct: with billing off, the Pro card's button made a free account
 // and, signed in, read "Billing is not enabled on this deployment".
@@ -63,5 +68,40 @@ describe("Pro card once billing is on", () => {
     expect(within(card).getByText("Recommended")).toBeInTheDocument();
     expect(within(card).getByRole("button", { name: "Upgrade to Pro" })).toBeInTheDocument();
     expect(screen.getByText(/Cancelling keeps Pro/)).toBeInTheDocument();
+  });
+});
+
+// The page starts from the build's copy of the plans (src/lib/plans.json), so
+// the pre-render has the cards and a cold API is not a page of skeletons.
+describe("before and without the API", () => {
+  it("shows the plans before /api/plans answers, with Pro not on sale", async () => {
+    let answer;
+    api.getPlans.mockReturnValue(new Promise((resolve) => (answer = resolve)));
+    render(
+      <AuthContext.Provider value={{ user: null }}>
+        <MemoryRouter>
+          <PricingPage />
+        </MemoryRouter>
+      </AuthContext.Provider>
+    );
+    expect(screen.getByText("Pro", { selector: "p" })).toBeInTheDocument();
+    expect(screen.getByText("Unlimited backtests")).toBeInTheDocument();
+    expect(screen.getByText("Coming soon")).toBeInTheDocument();
+    answer({ plans: PLANS, billing_enabled: false });
+    expect(await screen.findByText("50 backtests a month")).toBeInTheDocument();
+  });
+
+  it("keeps the plans and offers a retry when the API fails", async () => {
+    api.getPlans.mockRejectedValue(new Error("Network error"));
+    render(
+      <AuthContext.Provider value={{ user: null }}>
+        <MemoryRouter>
+          <PricingPage />
+        </MemoryRouter>
+      </AuthContext.Provider>
+    );
+    expect(await screen.findByText("Try again")).toBeInTheDocument();
+    expect(screen.getByText("Unlimited backtests")).toBeInTheDocument();
+    expect(screen.getByText("$12")).toBeInTheDocument();
   });
 });
