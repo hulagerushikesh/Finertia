@@ -5,6 +5,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 ## Small and unblocked
 
 - [ ] Narrow the `gh` token → in M9 phase 0
+- [ ] Remaining frontend advisories (21, 24 Oct): firebase 10 → 13 needs Node ≥ 24.12 on Vercel, CI and locally (fixes undici; grpc-js stays, both Node-side only); vite 5 → 7 + vitest 2 → 4 needs Node ≥ 20.19 locally (local is 20.12; dev and test only). Evidence: `npm audit` clean, build + E2E green on the new Node
 - [x] Project venv → M9 phase 0, done 14 Sep
 - [x] Bundle-size CI check — `frontend/scripts/check-bundle.mjs` + `bundle-budget.json`, gzip entry + total, limits ~10% over the 19 Sep build; CI step "Bundle budget" (19 Sep)
 - [x] Backend deploy reminder — `backend-drift.yml` diffs `backend/` against the `backend-deployed` tag on every push to main and comments on the merged PR; deploy.yml moves the tag, manual deploys move it per README (19 Sep)
