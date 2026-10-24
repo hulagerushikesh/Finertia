@@ -1,23 +1,16 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Rise } from "../components/motion";
 import { Block, inline, parse, slug } from "../lib/markdown";
 // The page IS planning/write-up.md — the same file reproduce_writeup.py checks —
 // so what is published cannot drift from what was verified.
 import source from "../../../planning/write-up.md?raw";
-
-const TITLE = "The best in-sample strategy was the worst out-of-sample one";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export default function WriteupPage() {
   const blocks = useMemo(() => parse(source), []);
 
-  useEffect(() => {
-    const previous = document.title;
-    document.title = `${TITLE} · Finertia`;
-    return () => {
-      document.title = previous;
-    };
-  }, []);
+  usePageTitle("writeup");
 
   // Title, then the italic meta line, then the body. The "Draft N, date" line
   // is for the repo; the page shows its date and its proof instead.

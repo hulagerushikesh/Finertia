@@ -11,8 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import { cn } from "@/lib/utils";
 import { SUPPORT_EMAIL } from "../lib/contact";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export default function PricingPage() {
+  usePageTitle("pricing");
   const { user } = useAuth();
   const { showToast } = useToast();
   const [plans, setPlans] = useState([]);

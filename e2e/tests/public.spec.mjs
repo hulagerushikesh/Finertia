@@ -2,6 +2,24 @@
 import { test, expect } from "@playwright/test";
 import { failOnPageErrors } from "./helpers.mjs";
 
+const TITLES = {
+  "/demo": "Momentum on Apple, 2019–2024: a real result · Finertia",
+  "/pricing": "Pricing · Finertia",
+  "/docs": "How it works · Finertia",
+  "/support": "Support · Finertia",
+  "/writeup": "The best-looking strategy was the worst on new data · Finertia",
+};
+
+test("each public page names itself on the tab, and the landing title comes back after", async ({ page }) => {
+  for (const [path, title] of Object.entries(TITLES)) {
+    await page.goto(path);
+    await expect(page).toHaveTitle(title);
+  }
+  await page.getByRole("link", { name: "Finertia" }).first().click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveTitle("Finertia — Test a trading idea before you risk money on it");
+});
+
 for (const path of ["/", "/pricing", "/writeup", "/docs"]) {
   test(`${path} loads without errors`, async ({ page }) => {
     const noErrors = failOnPageErrors(page);
