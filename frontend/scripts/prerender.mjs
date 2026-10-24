@@ -58,7 +58,7 @@ try {
     const markup = await render(name);
     if (!/<h1[\s>]/.test(markup)) throw new Error(`${name} rendered without an <h1>`);
     writeFileSync(file, html.replace(ROOT_DIV, `<div id="root" data-prerendered="${name}">${markup}</div>`));
-    console.log(`prerender: ${path.basename(file).padEnd(24)} ${(markup.length / 1024).toFixed(1).padStart(6)} kB`);
+    console.log(`prerender: ${path.basename(file).padEnd(36)} ${(markup.length / 1024).toFixed(1).padStart(6)} kB`);
   }
 } catch (err) {
   console.error(`::error::prerender: ${err.message}`);
