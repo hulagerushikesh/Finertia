@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { DocSection as Section, Term as Question, DocHeader } from "../components/Prose";
 import { Rise } from "../components/motion";
 import { SUPPORT_EMAIL } from "../lib/contact";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 
 /** An API error, quoted verbatim, with what actually causes it. */
@@ -18,6 +19,7 @@ function Problem({ message, children }) {
 }
 
 export default function SupportPage() {
+  usePageTitle("support");
   const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
     "Finertia support"
   )}`;
