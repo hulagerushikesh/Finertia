@@ -521,7 +521,7 @@ Fields are also pinned at creation. Registration is a browser write, so without 
 cd firestore-tests && npm install && npm test
 ```
 
-23 tests against the Firestore emulator, covering both directions: that registration, profile reads, and display-name edits still work, and that privilege escalation, cross-account access, run forgery, and tampering with rate-limit counters do not. `emulators:exec` starts and stops the emulator itself, so the only prerequisite is Java.
+27 tests against the Firestore emulator, covering both directions: that registration, profile reads, and display-name edits still work, and that privilege escalation, cross-account access, run forgery, and tampering with rate-limit counters do not. `emulators:exec` starts and stops the emulator itself, so the only prerequisite is Java.
 
 ### Error reporting (Sentry)
 
@@ -555,7 +555,7 @@ cd backend
 pytest tests/ -q
 ```
 
-732 tests covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference, basket validation, the Sharpe-difference test), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
+840 tests (plus 22 that need the Firestore emulator, which CI runs) covering signals, engine, metrics, analytics, strategies, validation, the research layer (deflated Sharpe, PBO, purge and embargo, block-bootstrap intervals, effective trials, rolling walk-forward, volatility regimes, whole-grid inference, basket validation, the Sharpe-difference test), the Firestore price cache, request schemas, risk overlays, portfolio construction, plan entitlements, Stripe webhook verification, the rate limiter, the log formatter, and the HTTP layer. No Firebase credentials needed, so they run in CI unmodified.
 
 `test_routes.py` covers the part that decides who may call everything else: token handling, suspended accounts, admin gating, quota and entitlement enforcement, rate limiting, and how failures become status codes. `verify_token`, the profile lookup, the Firestore client, and the price fetch are all replaced, so no network or credentials are involved.
 
@@ -570,7 +570,7 @@ cd frontend
 npm test
 ```
 
-53 Vitest + Testing Library tests in jsdom, about 2 s. They cover the logic that lives in the browser: how `api.js` turns FastAPI errors (including 422 arrays) into readable messages and carries status, request id and `Retry-After`; permalink encode/decode; CSV escaping; the write-up's markdown renderer, including that it never injects HTML; the validation verdict card; the usage meter; the config panel's blocking rules; and DashboardPage's run snapshot — Validation checks the run on screen, not the edited panel (tester bugs #6/#7), and a 402 points to pricing rather than "Try again". The API, the toast hook and the Recharts charts are mocked; `demoData.json` stands in for a backtest response. CI runs them in the "Frontend build" job, before the build.
+140 Vitest + Testing Library tests in jsdom, about 5 s. They cover the logic that lives in the browser: how `api.js` turns FastAPI errors (including 422 arrays) into readable messages and carries status, request id and `Retry-After`; permalink encode/decode; CSV escaping; the write-up's markdown renderer, including that it never injects HTML; the validation verdict card; the usage meter; the config panel's blocking rules; and DashboardPage's run snapshot — Validation checks the run on screen, not the edited panel (tester bugs #6/#7), and a 402 points to pricing rather than "Try again". The API, the toast hook and the Recharts charts are mocked; `demoData.json` stands in for a backtest response. CI runs them in the "Frontend build" job, before the build.
 
 ### End-to-end
 
@@ -580,6 +580,6 @@ npm install && npx playwright install chromium
 npm test
 ```
 
-15 Playwright tests drive the real app in Chromium against the real API and the real Firestore security rules, with Firebase's Auth and Firestore emulators standing in for the project. `npm test` starts all three (emulators, API on :8001, app on :5175), and `backend/scripts/seed_e2e.py` seeds two fixture accounts (`e2e/fixtures/users.json`) and deterministic synthetic prices so no run ever reaches Yahoo. Needs Java for the emulators.
+26 Playwright tests drive the real app in Chromium against the real API and the real Firestore security rules, with Firebase's Auth and Firestore emulators standing in for the project. `npm test` starts all three (emulators, API on :8001, app on :5175), and `backend/scripts/seed_e2e.py` seeds two fixture accounts (`e2e/fixtures/users.json`) and deterministic synthetic prices so no run ever reaches Yahoo. Needs Java for the emulators.
 
 They cover the logged-in paths the unit tests cannot: register with the unverified-email banner, a backtest, Validation on the run on screen with the Pro wall for a free user, the too-short-range error, History re-run, Profile save, the admin Pro grant and what it unlocks, and that a member cannot open the admin panel; plus the public pages, `/demo`'s verdict, and phone-width overflow. CI runs them on every PR (the "E2E (Playwright)" job). Emulator mode is refused on Cloud Run (`firebase_admin_init.emulator_mode`).
