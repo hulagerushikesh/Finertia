@@ -6,20 +6,26 @@ import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../hooks/useToast";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem } from "../components/motion";
 import { cn } from "@/lib/utils";
 import { SUPPORT_EMAIL } from "../lib/contact";
 import { usePageTitle } from "../hooks/usePageTitle";
+// The same plans the API serves, kept in step by a backend test. The page
+// starts from this copy, so the build can pre-render the cards and a cold API
+// never leaves a pricing page of skeletons; /api/plans then confirms it and
+// says whether billing is on.
+import PLANS from "../lib/plans.json";
 
 export default function PricingPage() {
   usePageTitle("pricing");
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [plans, setPlans] = useState([]);
+  const [plans, setPlans] = useState(PLANS);
+  // Off until the API says otherwise: "Coming soon" is the safe reading,
+  // because checkout needs the API anyway.
   const [billingEnabled, setBillingEnabled] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [redirecting, setRedirecting] = useState(false);
 
@@ -63,33 +69,20 @@ export default function PricingPage() {
         </p>
       </Rise>
 
-      {/* A pricing page that shows an error and nothing else has failed twice:
-          once at fetching, and again at being a pricing page. */}
       {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription className="flex flex-col gap-3">
-            <span>{error}</span>
-            <span className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" size="sm" onClick={loadPlans} disabled={loading}>
-                {loading ? "Retrying…" : "Try again"}
-              </Button>
-              <span className="text-xs text-graphite">
-                Plans and prices are served by the API, so they are not shown here rather than shown
-                wrong.
-              </span>
+        <Alert className="mb-6">
+          <AlertDescription className="flex flex-wrap items-center gap-3">
+            <span className="text-graphite">
+              Could not reach the API, so these are the plans as of this version of the site.
             </span>
+            <Button variant="outline" size="sm" onClick={loadPlans} disabled={loading}>
+              {loading ? "Retrying…" : "Try again"}
+            </Button>
           </AlertDescription>
         </Alert>
       )}
 
-      {loading ? (
-        <div className="grid sm:grid-cols-2 gap-5">
-          {[0, 1].map((i) => (
-            <Skeleton key={i} className="h-96 rounded-lg" />
-          ))}
-        </div>
-      ) : (
-        <Stagger className="grid sm:grid-cols-2 gap-5 items-start">
+      <Stagger className="grid sm:grid-cols-2 gap-5 items-start">
           {plans.map((plan) => {
             const isPro = plan.id === "pro";
             // Pro with no billing behind it is not for sale yet. Say so,
@@ -171,7 +164,6 @@ export default function PricingPage() {
             );
           })}
         </Stagger>
-      )}
 
       <p className="text-xs text-faint mt-10 max-w-xl leading-relaxed">
         Quotas count backtests, validation runs, and portfolios, and reset at the start of each

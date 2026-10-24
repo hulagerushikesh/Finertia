@@ -1,6 +1,8 @@
 """Plan entitlements and monthly quota accounting."""
 
+import json
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
@@ -172,3 +174,20 @@ class TestFreeValidationAllowance:
     def test_a_missing_profile_is_free(self):
         q = check_validation_quota(None, 1, at(2026, 8))
         assert (q["allowed"], q["plan"]) == (True, FREE)
+
+
+# The pricing page renders its plans from a copy in the frontend, so the build
+# can pre-render them and a slow API never shows an empty page. This keeps the
+# copy honest: change PLANS and this fails until frontend/src/lib/plans.json
+# is regenerated. Skipped where the frontend is not checked out (the image).
+FRONTEND_PLANS = Path(__file__).resolve().parents[2] / "frontend" / "src" / "lib" / "plans.json"
+
+
+@pytest.mark.skipif(not FRONTEND_PLANS.exists(), reason="frontend not checked out")
+def test_frontend_copy_of_plans_matches():
+    copy = json.loads(FRONTEND_PLANS.read_text())
+    assert copy == public_plans(), (
+        "frontend/src/lib/plans.json is out of date; regenerate it with\n"
+        "  cd backend && python -c 'import json, plans; print(json.dumps(plans.public_plans(), indent=2))' "
+        "> ../frontend/src/lib/plans.json"
+    )
