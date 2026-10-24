@@ -1,5 +1,8 @@
 """MACD and Bollinger signal generation, plus the strategy registry."""
 
+import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -209,3 +212,22 @@ class TestRegistry:
     def test_registry_exposes_a_label_for_each_strategy(self):
         for name in STRATEGY_NAMES:
             assert STRATEGIES[name]["label"]
+
+
+# The public strategy pages (/strategies/*) list each strategy's validation
+# grid from a copy in the frontend, so the build can pre-render them. Change a
+# grid or a label and this fails until frontend/src/lib/strategyGrids.json is
+# regenerated. Skipped where the frontend is not checked out (the image).
+FRONTEND_GRIDS = Path(__file__).resolve().parents[2] / "frontend" / "src" / "lib" / "strategyGrids.json"
+
+
+@pytest.mark.skipif(not FRONTEND_GRIDS.exists(), reason="frontend not checked out")
+def test_frontend_copy_of_grids_matches():
+    copy = json.loads(FRONTEND_GRIDS.read_text())
+    expected = {n: {"label": STRATEGIES[n]["label"], "grid": param_grid(n)} for n in STRATEGY_NAMES}
+    assert copy == expected, (
+        "frontend/src/lib/strategyGrids.json is out of date; regenerate it with\n"
+        "  cd backend && python -c 'import json, strategies as s; print(json.dumps("
+        "{n: {\"label\": s.STRATEGIES[n][\"label\"], \"grid\": s.param_grid(n)} "
+        "for n in s.STRATEGY_NAMES}, indent=2))' > ../frontend/src/lib/strategyGrids.json"
+    )

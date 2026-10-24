@@ -65,7 +65,9 @@ describe("Pro card once billing is on", () => {
   it("is recommended and sells Pro", async () => {
     renderPage({ billing: true, user: { uid: "u1" } });
     const card = await proCard();
-    expect(within(card).getByText("Recommended")).toBeInTheDocument();
+    // The card is there from the first render (the build's copy of the plans);
+    // only the API's answer turns billing on, so wait for that.
+    expect(await within(card).findByText("Recommended")).toBeInTheDocument();
     expect(within(card).getByRole("button", { name: "Upgrade to Pro" })).toBeInTheDocument();
     expect(screen.getByText(/Cancelling keeps Pro/)).toBeInTheDocument();
   });

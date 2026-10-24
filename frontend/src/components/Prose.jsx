@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils";
  */
 export function DocSection({ id, title, children }) {
   return (
-    <section id={id} className="scroll-mt-20 grid lg:grid-cols-[11rem_minmax(0,1fr)] gap-x-10 gap-y-3">
+    <section id={id} className="scroll-mt-20 grid grid-cols-1 lg:grid-cols-[11rem_minmax(0,1fr)] gap-x-10 gap-y-3">
       <h2 className="font-display text-xl font-semibold text-foreground lg:text-right lg:pt-0.5 text-balance">
         {title}
       </h2>
-      <div className="flex flex-col gap-3 text-[0.95rem] text-graphite leading-relaxed max-w-prose">
+      <div className="min-w-0 flex flex-col gap-3 text-[0.95rem] text-graphite leading-relaxed max-w-prose">
         {children}
       </div>
     </section>

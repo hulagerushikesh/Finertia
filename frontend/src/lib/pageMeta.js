@@ -62,6 +62,38 @@ export const PAGE_META = {
     imageAlt:
       "Sharpe ratios on AAPL 2018–2024. Momentum 0.95 tuned, −0.30 on new data; MACD 0.51, −0.30; Bollinger 0.56, 1.17.",
   },
+  strategies: {
+    path: "/strategies",
+    title: "Three trading strategies, backtested honestly · Finertia",
+    ogTitle: "Three ordinary strategies, and what validation said about them.",
+    description:
+      "Momentum, MACD and Bollinger bands: the exact rule each one trades, its parameters, and how it held up on data it was never tuned on.",
+    ...CARD,
+  },
+  "strategy-momentum": {
+    path: "/strategies/momentum",
+    title: "Momentum strategy: the exact rule and an honest backtest · Finertia",
+    ogTitle: "Momentum: the best-looking rule, until new data.",
+    description:
+      "The momentum rule with a moving-average trend filter, written out exactly: its parameters, the grid validation sweeps, and how it did on AAPL on years it never saw.",
+    ...CARD,
+  },
+  "strategy-macd": {
+    path: "/strategies/macd",
+    title: "MACD crossover strategy: the exact rule and an honest backtest · Finertia",
+    ogTitle: "MACD crossover: the rule, and what validation said.",
+    description:
+      "The MACD crossover rule written out exactly: its three averages, the grid validation sweeps, and how it did on AAPL on years it was never tuned on.",
+    ...CARD,
+  },
+  "strategy-bollinger": {
+    path: "/strategies/bollinger",
+    title: "Bollinger band strategy: the exact rule and an honest backtest · Finertia",
+    ogTitle: "Bollinger bands: fading extremes, tested out of sample.",
+    description:
+      "The Bollinger-band mean-reversion rule written out exactly: its window and band width, the grid validation sweeps, and how it did on AAPL on years it never saw.",
+    ...CARD,
+  },
 };
 
 const attr = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
