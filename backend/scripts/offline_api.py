@@ -13,6 +13,7 @@ Import this before anything imports `main`.
 import os
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 os.environ["PRICE_CACHE"] = "off"
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -49,14 +50,21 @@ class _Collection:
 
 
 class _Batch:
+    """One write result per write, so ratelimit.FirestoreStore.hit can read its
+    counters (always zero here) instead of falling back with a warning."""
+
+    def __init__(self):
+        self.n = 0
+
     def set(self, *a, **k):
-        pass
+        self.n += 1
 
     def update(self, *a, **k):
-        pass
+        self.n += 1
 
     def commit(self):
-        pass
+        zero = SimpleNamespace(transform_results=[SimpleNamespace(integer_value=0)])
+        return [zero] * self.n
 
 
 class _Db:

@@ -34,14 +34,14 @@ class TestTicker:
             req(ticker="   ")
 
     def test_overlong_is_rejected(self):
-        with pytest.raises(ValidationError, match="12 characters"):
-            req(ticker="A" * 13)
+        with pytest.raises(ValidationError, match="20 characters"):
+            req(ticker="A" * 21)
 
     def test_illegal_characters_are_rejected(self):
         with pytest.raises(ValidationError, match="letters, digits"):
             req(ticker="AA;DROP")
 
-    @pytest.mark.parametrize("symbol", ["BRK.B", "RDS-A", "^GSPC", "EURUSD=X"])
+    @pytest.mark.parametrize("symbol", ["BRK.B", "RDS-A", "^GSPC", "EURUSD=X", "BHARTIARTL.NS", "BAJAJ-AUTO.NS"])
     def test_real_world_symbol_formats_are_allowed(self, symbol):
         assert req(ticker=symbol).ticker == symbol
 

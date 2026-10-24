@@ -21,6 +21,8 @@ STRATEGY_FIELDS = {
 
 TRADING_DAYS_PER_YEAR = 252
 CALENDAR_DAYS_PER_YEAR = 365
+# NSE symbols run long: BHARTIARTL.NS and BAJAJ-AUTO.NS are 13.
+MAX_TICKER_LEN = 20
 
 # Fields that belong to the risk overlays rather than to a strategy. A run
 # document stores strategy params and overlay params in one flat map, so this
@@ -110,8 +112,8 @@ class BacktestRequest(BaseModel):
         cleaned = v.strip().upper()
         if not cleaned:
             raise ValueError("Ticker is required")
-        if len(cleaned) > 12:
-            raise ValueError("Ticker must be 12 characters or fewer")
+        if len(cleaned) > MAX_TICKER_LEN:
+            raise ValueError(f"Ticker must be {MAX_TICKER_LEN} characters or fewer")
         if not all(c.isalnum() or c in ".-^=" for c in cleaned):
             raise ValueError("Ticker may only contain letters, digits, and . - ^ =")
         return cleaned
@@ -217,7 +219,7 @@ class PortfolioRequest(BacktestRequest):
                 "position in one name, not a second holding."
             )
         for symbol in cleaned:
-            if len(symbol) > 12 or not all(c.isalnum() or c in ".-^=" for c in symbol):
+            if len(symbol) > MAX_TICKER_LEN or not all(c.isalnum() or c in ".-^=" for c in symbol):
                 raise ValueError(f"'{symbol}' is not a valid ticker")
         return cleaned
 
