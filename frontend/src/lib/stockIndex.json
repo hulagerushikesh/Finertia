@@ -82,6 +82,102 @@
    "buy_and_hold_sharpe": 0.939,
    "held_up": 1
   },
+  "amd": {
+   "symbol": "AMD",
+   "name": "AMD",
+   "market": "US",
+   "buy_and_hold_return": 5.415,
+   "buy_and_hold_sharpe": 0.689,
+   "held_up": 1
+  },
+  "nflx": {
+   "symbol": "NFLX",
+   "name": "Netflix",
+   "market": "US",
+   "buy_and_hold_return": 2.33,
+   "buy_and_hold_sharpe": 0.507,
+   "held_up": 1
+  },
+  "brk-b": {
+   "symbol": "BRK-B",
+   "name": "Berkshire Hathaway",
+   "market": "US",
+   "buy_and_hold_return": 1.235,
+   "buy_and_hold_sharpe": 0.692,
+   "held_up": 0
+  },
+  "v": {
+   "symbol": "V",
+   "name": "Visa",
+   "market": "US",
+   "buy_and_hold_return": 1.479,
+   "buy_and_hold_sharpe": 0.617,
+   "held_up": 0
+  },
+  "bac": {
+   "symbol": "BAC",
+   "name": "Bank of America",
+   "market": "US",
+   "buy_and_hold_return": 1.039,
+   "buy_and_hold_sharpe": 0.372,
+   "held_up": 0
+  },
+  "wmt": {
+   "symbol": "WMT",
+   "name": "Walmart",
+   "market": "US",
+   "buy_and_hold_return": 2.193,
+   "buy_and_hold_sharpe": 0.999,
+   "held_up": 0
+  },
+  "ko": {
+   "symbol": "KO",
+   "name": "Coca-Cola",
+   "market": "US",
+   "buy_and_hold_return": 0.598,
+   "buy_and_hold_sharpe": 0.403,
+   "held_up": 1
+  },
+  "jnj": {
+   "symbol": "JNJ",
+   "name": "Johnson & Johnson",
+   "market": "US",
+   "buy_and_hold_return": 0.337,
+   "buy_and_hold_sharpe": 0.26,
+   "held_up": 0
+  },
+  "xom": {
+   "symbol": "XOM",
+   "name": "ExxonMobil",
+   "market": "US",
+   "buy_and_hold_return": 1.061,
+   "buy_and_hold_sharpe": 0.398,
+   "held_up": 1
+  },
+  "dis": {
+   "symbol": "DIS",
+   "name": "Disney",
+   "market": "US",
+   "buy_and_hold_return": 0.047,
+   "buy_and_hold_sharpe": 0.024,
+   "held_up": 0
+  },
+  "dia": {
+   "symbol": "DIA",
+   "name": "Dow Jones ETF (DIA)",
+   "market": "US",
+   "buy_and_hold_return": 1.049,
+   "buy_and_hold_sharpe": 0.651,
+   "held_up": 0
+  },
+  "iwm": {
+   "symbol": "IWM",
+   "name": "Russell 2000 ETF (IWM)",
+   "market": "US",
+   "buy_and_hold_return": 0.774,
+   "buy_and_hold_sharpe": 0.389,
+   "held_up": 1
+  },
   "reliance": {
    "symbol": "RELIANCE.NS",
    "name": "Reliance Industries",
@@ -122,12 +218,100 @@
    "buy_and_hold_sharpe": 0.785,
    "held_up": 1
   },
+  "sbin": {
+   "symbol": "SBIN.NS",
+   "name": "State Bank of India",
+   "market": "India",
+   "buy_and_hold_return": 1.819,
+   "buy_and_hold_sharpe": 0.579,
+   "held_up": 0
+  },
+  "itc": {
+   "symbol": "ITC.NS",
+   "name": "ITC",
+   "market": "India",
+   "buy_and_hold_return": 1.184,
+   "buy_and_hold_sharpe": 0.567,
+   "held_up": 0
+  },
+  "bhartiartl": {
+   "symbol": "BHARTIARTL.NS",
+   "name": "Bharti Airtel",
+   "market": "India",
+   "buy_and_hold_return": 4.615,
+   "buy_and_hold_sharpe": 1.149,
+   "held_up": 1
+  },
+  "lt": {
+   "symbol": "LT.NS",
+   "name": "Larsen & Toubro",
+   "market": "India",
+   "buy_and_hold_return": 1.759,
+   "buy_and_hold_sharpe": 0.669,
+   "held_up": 0
+  },
+  "hindunilvr": {
+   "symbol": "HINDUNILVR.NS",
+   "name": "Hindustan Unilever",
+   "market": "India",
+   "buy_and_hold_return": 0.421,
+   "buy_and_hold_sharpe": 0.266,
+   "held_up": 1
+  },
+  "bajfinance": {
+   "symbol": "BAJFINANCE.NS",
+   "name": "Bajaj Finance",
+   "market": "India",
+   "buy_and_hold_return": 1.616,
+   "buy_and_hold_sharpe": 0.477,
+   "held_up": 1
+  },
+  "asianpaint": {
+   "symbol": "ASIANPAINT.NS",
+   "name": "Asian Paints",
+   "market": "India",
+   "buy_and_hold_return": 0.743,
+   "buy_and_hold_sharpe": 0.388,
+   "held_up": 1
+  },
+  "maruti": {
+   "symbol": "MARUTI.NS",
+   "name": "Maruti Suzuki",
+   "market": "India",
+   "buy_and_hold_return": 0.534,
+   "buy_and_hold_sharpe": 0.251,
+   "held_up": 0
+  },
+  "wipro": {
+   "symbol": "WIPRO.NS",
+   "name": "Wipro",
+   "market": "India",
+   "buy_and_hold_return": 1.523,
+   "buy_and_hold_sharpe": 0.604,
+   "held_up": 0
+  },
   "nifty-50": {
    "symbol": "^NSEI",
    "name": "Nifty 50",
    "market": "India",
    "buy_and_hold_return": 1.191,
    "buy_and_hold_sharpe": 0.779,
+   "held_up": 1
+  },
+  "nifty-bank": {
+   "symbol": "^NSEBANK",
+   "name": "Nifty Bank",
+   "market": "India",
+   "buy_and_hold_return": 0.857,
+   "buy_and_hold_sharpe": 0.446,
+   "held_up": 0
+  },
+  "sensex": {
+   "symbol": "^BSESN",
+   "name": "BSE Sensex",
+   "market": "India",
+   "buy_and_hold_return": 1.177,
+   "buy_and_hold_sharpe": 0.763,
    "held_up": 1
   }
  }
