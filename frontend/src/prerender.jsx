@@ -9,7 +9,7 @@
  */
 import React from "react";
 import { renderToString } from "react-dom/server";
-import { StaticRouter } from "react-router-dom/server";
+import { StaticRouter } from "react-router-dom";
 import { LazyMotion, domAnimation } from "motion/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthContext } from "./context/AuthContext";
