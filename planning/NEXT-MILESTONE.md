@@ -79,7 +79,7 @@ cannot, because the 31 Oct decision needs the data costs.
 4. **Account deletion and export UI** in Profile, on the sprint 1 backend. (Built 13 Oct behind the `account-data` switch: "Download my data", and deletion that needs the account's email typed, then a goodbye page that signs the browser out. Off on production until the round closes.)
 5. ~~Licensed data integration~~ → its own sprint after the build work (DECISIONS 13 Oct).
 6. ~~Terms and Privacy published~~ → after the legal consult, which follows the build work.
-7. **Stripe live**: only on the product path, and only after the data sprint and the legal review.
+7. **Payments live**: only on the product path, and only after the data sprint and the legal review. Provider research and the build plan (P0–P6, and eight gaps in today's Stripe code): [PAYMENTS-PLAN.md](PAYMENTS-PLAN.md).
 
 ## Sprint 2 by phase-4 outcome — drafted 24 Oct, chosen on 1 Nov
 
