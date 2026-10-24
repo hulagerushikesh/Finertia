@@ -48,20 +48,21 @@ in the plan has an owner hat so nothing falls between roles.
 - Claude merges its own PRs on green CI (standing rule); backend deploys and
   production data/config changes still need the author's yes.
 
-## Where we are — audit, 13 Oct
+## Where we are — audit, 13 Oct (rechecked 24 Oct)
 
-What is strong, and what a product would be missing, by hat.
+What is strong, and what a product would be missing, by hat. The last column
+is what has happened to each gap since; the first two are left as written.
 
-| Hat | Strong | Missing / risk |
-|---|---|---|
-| Backend | 728 tests, mutation-checked; validation suite (walk-forward, permutation, DSR, PBO, whole-grid, Sharpe-difference) | Rate limiter is **in-memory per instance** (`ratelimit.py`) — with `max-instances 2` the real limit is double and not shared |
-| Frontend | Theme and design system solid; accessible contrast | **Zero frontend tests, zero E2E.** Every logged-in bug this month (#58, #71, #74, #84) was found by a human |
-| DB | Rules tested (20 emulator tests); price cache | No `firestore.indexes.json` in the repo; admin stats **stream whole collections** (`main.py` ~1232) — fine at 6 users, breaks at a few thousand; no backup / point-in-time recovery; no account deletion path |
-| Cloud | One-command deploy (WIF), drift detector, ₹0 idle | Cold start **11.4 s** on the first run (`min-instances 0`) — testers read it as broken |
-| System | JSON logs; Sentry wired but **unset** (env-gated) | No error visibility in prod: we learn about crashes from WhatsApp |
-| Product | USP proven; /demo shows it logged out | **USP is behind the paywall:** 4 of 4 testers hit the Pro wall, 0 went Pro. A free user never sees the one thing that makes Finertia different |
-| SEO | robots.txt, sitemap (6 URLs), og cards and titles per page, the six public pages pre-rendered at build time (`scripts/prerender.mjs`) | Pricing's plan cards load from the API, so crawlers see the page without them; logged-in routes stay client-rendered (nothing there to index) |
-| Legal | — | Not cleared to charge: **SEBI** positioning (research-analyst / investment-advice lines), **Yahoo data licence** (yfinance is not licensed for commercial use), **DPDP Act 2023** (India: consent, deletion, grievance contact), no Terms / Privacy pages checked |
+| Hat | Strong | Missing / risk | 24 Oct |
+|---|---|---|---|
+| Backend | 728 tests, mutation-checked; validation suite (walk-forward, permutation, DSR, PBO, whole-grid, Sharpe-difference) | Rate limiter is **in-memory per instance** (`ratelimit.py`) — with `max-instances 2` the real limit is double and not shared | Closed: shared limits in Firestore (M11 #5); 847 backend tests |
+| Frontend | Theme and design system solid; accessible contrast | **Zero frontend tests, zero E2E.** Every logged-in bug this month (#58, #71, #74, #84) was found by a human | Closed: 140 vitest, 26 E2E against the emulators (M11 #1–2) |
+| DB | Rules tested (20 emulator tests); price cache | No `firestore.indexes.json` in the repo; admin stats **stream whole collections** (`main.py` ~1232) — fine at 6 users, breaks at a few thousand; no backup / point-in-time recovery; no account deletion path | Closed: `firestore.indexes.json`, `count()` aggregations (M11 #6), PITR + backups with a restore drill, deletion on the API (M12 #1, #5) |
+| Cloud | One-command deploy (WIF), drift detector, ₹0 idle | Cold start **11.4 s** on the first run (`min-instances 0`) — testers read it as broken | Closed for ₹0: the uptime check keeps an instance warm (M12 #6). B1 (API to us-central1, next to Firestore) on 1 Nov |
+| System | JSON logs; Sentry wired but **unset** (env-gated) | No error visibility in prod: we learn about crashes from WhatsApp | Closed: Sentry on both sides, uptime and 5xx alerts to the author (M11 #3, M12 #2) |
+| Product | USP proven; /demo shows it logged out | **USP is behind the paywall:** 4 of 4 testers hit the Pro wall, 0 went Pro. A free user never sees the one thing that makes Finertia different | Built, off until the round closes: one free validation a month (`FREE_VALIDATIONS_PER_MONTH`, `free-validation`); switched on 1 Nov with B1 |
+| SEO | robots.txt, sitemap (6 URLs), og cards, pre-rendered `/writeup` | Every other route is a client-rendered SPA — crawlers see an empty shell for `/`, `/demo`, `/pricing` | Closed 24 Oct: own title and card per page (#138), the six public pages' content rendered at build time (#139, `scripts/prerender.mjs`). Pricing's plan cards still load from the API |
+| Legal | — | Not cleared to charge: **SEBI** positioning (research-analyst / investment-advice lines), **Yahoo data licence** (yfinance is not licensed for commercial use), **DPDP Act 2023** (India: consent, deletion, grievance contact), no Terms / Privacy pages checked | Open: brief deferred until after the build work (DECISIONS 13 Oct); data on ₹0 until the data sprint |
 
 ## H1 — M11 "Quality foundation" (next sprint)
 
