@@ -29,9 +29,9 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 ## Product (parked — Phase 4 picked "portfolio"; reopen only on the reversal conditions in DECISIONS.md)
 
 - [ ] Wire Stripe: keys + `STRIPE_WEBHOOK_SECRET` on Cloud Run; never without the secret
-- [ ] Sentry DSN (env-gated; unset = SDK never imported)
-- [ ] Support inbox that a human reads
-- [ ] Admin stats via counters / aggregation queries instead of collection scans (defer until it hurts)
+- [x] Sentry DSN — on, backend and browser, errors only, uid only (M11 #3, 13 Oct)
+- [x] Support inbox that a human reads — `support@hulage.in` to the author (M12 #7, 13 Oct)
+- [x] Admin stats via aggregation queries instead of collection scans — `admin_queries.py` (M11 #6, 13 Oct)
 - [ ] Email notifications for long validation runs
 - [ ] Intraday bars (needs a paid data source)
 
