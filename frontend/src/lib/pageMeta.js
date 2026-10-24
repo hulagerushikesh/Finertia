@@ -11,6 +11,7 @@
  * Plain data and string functions only: vite.config.js imports this file in
  * Node, before any alias or browser global exists.
  */
+import { STOCKS, STOCK_PERIOD, ofThree, percent, signed } from "./stockMeta.js";
 
 const SITE = "https://finertia.hulage.in";
 
@@ -175,6 +176,33 @@ export const PAGE_META = {
       "Shuffle a strategy's positions 500 times and see whether its real timing beats random timing. How the permutation test works, how to read its p-value, and its limits.",
     ...CARD,
   },
+  stocks: {
+    name: "Stocks",
+    path: "/stocks",
+    title: `Backtests on ${STOCKS.length} well-known stocks, validated · Finertia`,
+    ogTitle: "Three strategies on well-known stocks, tested on data they never saw.",
+    description: `Momentum, MACD and Bollinger bands on ${STOCKS.length} US and Indian stocks and indices, ${STOCK_PERIOD.years}: each against buy-and-hold, and each validated on years it was never tuned on.`,
+    ...CARD,
+  },
+  // One page per stock in stockIndex.json (backend/scripts/build_stock_pages.py).
+  ...Object.fromEntries(
+    STOCKS.map((s) => [
+      `stock-${s.slug}`,
+      {
+        name: s.name,
+        path: s.path,
+        type: "article",
+        published: "2026-10-24",
+        title: `${s.label} backtest: momentum, MACD and Bollinger, ${STOCK_PERIOD.years} · Finertia`,
+        ogTitle: `${s.label}: three strategies, tested on data they never saw.`,
+        description:
+          `Holding ${s.name} from ${STOCK_PERIOD.years.replace("–", " to ")} returned ${percent(s.buy_and_hold_return)} ` +
+          `(Sharpe ${signed(s.buy_and_hold_sharpe)}). Momentum, MACD and Bollinger bands, validated walk-forward: ` +
+          `${ofThree(s.held_up)} held up on years they were never tuned on.`,
+        ...CARD,
+      },
+    ])
+  ),
 };
 
 const attr = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");

@@ -1,0 +1,1383 @@
+{
+ "start": "2019-01-01",
+ "end": "2025-01-01",
+ "generated": "2026-10-24",
+ "stocks": {
+  "aapl": {
+   "symbol": "AAPL",
+   "name": "Apple",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": 0.745,
+      "annualized_return": 0.097,
+      "sharpe_ratio": 0.358,
+      "max_drawdown": -0.422
+     },
+     "trades": 208,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 20,
+       "ma_window": 20
+      },
+      "in_sample_sharpe": 0.647,
+      "out_of_sample_sharpe": 0.203,
+      "verdict": "overfit",
+      "combinations": 16
+     },
+     "pbo": 0.37,
+     "permutation_p": 0.05,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": 0.833,
+      "annualized_return": 0.106,
+      "sharpe_ratio": 0.351,
+      "max_drawdown": -0.366
+     },
+     "trades": 110,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 12,
+       "macd_slow": 26,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 0.772,
+      "out_of_sample_sharpe": -0.528,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.74,
+     "permutation_p": 0.012,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": -0.016,
+      "annualized_return": -0.003,
+      "sharpe_ratio": -0.027,
+      "max_drawdown": -0.179
+     },
+     "trades": 174,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 50,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 1.097,
+      "out_of_sample_sharpe": -1.125,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.06,
+     "permutation_p": 0.054,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 5.641,
+    "annualized_return": 0.372,
+    "sharpe_ratio": 1.205,
+    "max_drawdown": -0.314
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "msft": {
+   "symbol": "MSFT",
+   "name": "Microsoft",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.528,
+      "annualized_return": -0.118,
+      "sharpe_ratio": -0.472,
+      "max_drawdown": -0.639
+     },
+     "trades": 260,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 20,
+       "ma_window": 200
+      },
+      "in_sample_sharpe": -0.295,
+      "out_of_sample_sharpe": -0.148,
+      "verdict": "failed",
+      "combinations": 16
+     },
+     "pbo": 0.79,
+     "permutation_p": 0.605,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.767,
+      "annualized_return": -0.216,
+      "sharpe_ratio": -0.751,
+      "max_drawdown": -0.79
+     },
+     "trades": 129,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 8,
+       "macd_slow": 17,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": -0.652,
+      "out_of_sample_sharpe": -0.68,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.14,
+     "permutation_p": 0.697,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": 0.452,
+      "annualized_return": 0.064,
+      "sharpe_ratio": 0.589,
+      "max_drawdown": -0.075
+     },
+     "trades": 181,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 30,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 0.847,
+      "out_of_sample_sharpe": 0.771,
+      "verdict": "held_up",
+      "combinations": 12
+     },
+     "pbo": 0.17,
+     "permutation_p": 0.002,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 3.422,
+    "annualized_return": 0.282,
+    "sharpe_ratio": 0.971,
+    "max_drawdown": -0.371
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "nvda": {
+   "symbol": "NVDA",
+   "name": "Nvidia",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": 0.545,
+      "annualized_return": 0.075,
+      "sharpe_ratio": 0.162,
+      "max_drawdown": -0.626
+     },
+     "trades": 206,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 10,
+       "ma_window": 200
+      },
+      "in_sample_sharpe": 0.585,
+      "out_of_sample_sharpe": 2.556,
+      "verdict": "held_up",
+      "combinations": 16
+     },
+     "pbo": 0.14,
+     "permutation_p": 0.391,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.209,
+      "annualized_return": -0.038,
+      "sharpe_ratio": -0.075,
+      "max_drawdown": -0.73
+     },
+     "trades": 116,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 16,
+       "macd_slow": 34,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 0.234,
+      "out_of_sample_sharpe": -0.478,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.59,
+     "permutation_p": 0.178,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": 0.319,
+      "annualized_return": 0.047,
+      "sharpe_ratio": 0.299,
+      "max_drawdown": -0.298
+     },
+     "trades": 196,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 10,
+       "bb_std": 2.0
+      },
+      "in_sample_sharpe": 0.602,
+      "out_of_sample_sharpe": -0.72,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.44,
+     "permutation_p": 0.014,
+     "rolling_verdict": "failed"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 38.753,
+    "annualized_return": 0.849,
+    "sharpe_ratio": 1.637,
+    "max_drawdown": -0.663
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "amzn": {
+   "symbol": "AMZN",
+   "name": "Amazon",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.472,
+      "annualized_return": -0.101,
+      "sharpe_ratio": -0.342,
+      "max_drawdown": -0.621
+     },
+     "trades": 252,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 20,
+       "ma_window": 20
+      },
+      "in_sample_sharpe": -0.048,
+      "out_of_sample_sharpe": -0.405,
+      "verdict": "failed",
+      "combinations": 16
+     },
+     "pbo": 0.79,
+     "permutation_p": 0.327,
+     "rolling_verdict": "failed"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.554,
+      "annualized_return": -0.126,
+      "sharpe_ratio": -0.373,
+      "max_drawdown": -0.658
+     },
+     "trades": 121,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 8,
+       "macd_slow": 17,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 0.453,
+      "out_of_sample_sharpe": -0.959,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.17,
+     "permutation_p": 0.317,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": -0.233,
+      "annualized_return": -0.043,
+      "sharpe_ratio": -0.387,
+      "max_drawdown": -0.337
+     },
+     "trades": 162,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 50,
+       "bb_std": 1.5
+      },
+      "in_sample_sharpe": 0.127,
+      "out_of_sample_sharpe": -0.052,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.77,
+     "permutation_p": 0.325,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 1.851,
+    "annualized_return": 0.191,
+    "sharpe_ratio": 0.56,
+    "max_drawdown": -0.561
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "googl": {
+   "symbol": "GOOGL",
+   "name": "Alphabet",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.519,
+      "annualized_return": -0.115,
+      "sharpe_ratio": -0.421,
+      "max_drawdown": -0.694
+     },
+     "trades": 221,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 20,
+       "ma_window": 200
+      },
+      "in_sample_sharpe": 0.094,
+      "out_of_sample_sharpe": -0.214,
+      "verdict": "failed",
+      "combinations": 16
+     },
+     "pbo": 0.46,
+     "permutation_p": 0.481,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.502,
+      "annualized_return": -0.11,
+      "sharpe_ratio": -0.354,
+      "max_drawdown": -0.721
+     },
+     "trades": 122,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 19,
+       "macd_slow": 39,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": -0.281,
+      "out_of_sample_sharpe": -0.654,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.76,
+     "permutation_p": 0.268,
+     "rolling_verdict": "failed"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": 0.419,
+      "annualized_return": 0.06,
+      "sharpe_ratio": 0.565,
+      "max_drawdown": -0.232
+     },
+     "trades": 182,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 20,
+       "bb_std": 2.0
+      },
+      "in_sample_sharpe": 1.303,
+      "out_of_sample_sharpe": -1.004,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.61,
+     "permutation_p": 0.002,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 2.603,
+    "annualized_return": 0.238,
+    "sharpe_ratio": 0.765,
+    "max_drawdown": -0.443
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "meta": {
+   "symbol": "META",
+   "name": "Meta Platforms",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.245,
+      "annualized_return": -0.046,
+      "sharpe_ratio": -0.12,
+      "max_drawdown": -0.67
+     },
+     "trades": 256,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 20,
+       "ma_window": 100
+      },
+      "in_sample_sharpe": 0.142,
+      "out_of_sample_sharpe": 0.911,
+      "verdict": "held_up",
+      "combinations": 16
+     },
+     "pbo": 0.1,
+     "permutation_p": 0.235,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.818,
+      "annualized_return": -0.247,
+      "sharpe_ratio": -0.587,
+      "max_drawdown": -0.926
+     },
+     "trades": 116,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 16,
+       "macd_slow": 34,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": -0.265,
+      "out_of_sample_sharpe": -0.384,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.23,
+     "permutation_p": 0.649,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": 0.581,
+      "annualized_return": 0.079,
+      "sharpe_ratio": 0.707,
+      "max_drawdown": -0.163
+     },
+     "trades": 174,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 10,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 1.099,
+      "out_of_sample_sharpe": 0.782,
+      "verdict": "held_up",
+      "combinations": 12
+     },
+     "pbo": 0.16,
+     "permutation_p": 0.004,
+     "rolling_verdict": "consistent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 3.332,
+    "annualized_return": 0.277,
+    "sharpe_ratio": 0.652,
+    "max_drawdown": -0.767
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "tsla": {
+   "symbol": "TSLA",
+   "name": "Tesla",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": 7.348,
+      "annualized_return": 0.425,
+      "sharpe_ratio": 0.712,
+      "max_drawdown": -0.712
+     },
+     "trades": 182,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 20,
+       "ma_window": 20
+      },
+      "in_sample_sharpe": 1.71,
+      "out_of_sample_sharpe": 0.233,
+      "verdict": "overfit",
+      "combinations": 16
+     },
+     "pbo": 0.5,
+     "permutation_p": 0.012,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": 9.025,
+      "annualized_return": 0.469,
+      "sharpe_ratio": 0.732,
+      "max_drawdown": -0.671
+     },
+     "trades": 112,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 19,
+       "macd_slow": 39,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 1.164,
+      "out_of_sample_sharpe": 0.873,
+      "verdict": "held_up",
+      "combinations": 4
+     },
+     "pbo": 0.93,
+     "permutation_p": 0.014,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": -0.909,
+      "annualized_return": -0.33,
+      "sharpe_ratio": -1.237,
+      "max_drawdown": -0.916
+     },
+     "trades": 170,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 20,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": -0.211,
+      "out_of_sample_sharpe": -0.873,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.21,
+     "permutation_p": 0.992,
+     "rolling_verdict": "failed"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 18.533,
+    "annualized_return": 0.642,
+    "sharpe_ratio": 0.996,
+    "max_drawdown": -0.736
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "jpm": {
+   "symbol": "JPM",
+   "name": "JPMorgan Chase",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.348,
+      "annualized_return": -0.069,
+      "sharpe_ratio": -0.262,
+      "max_drawdown": -0.611
+     },
+     "trades": 228,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 40,
+       "ma_window": 200
+      },
+      "in_sample_sharpe": 0.177,
+      "out_of_sample_sharpe": 0.932,
+      "verdict": "held_up",
+      "combinations": 16
+     },
+     "pbo": 0.09,
+     "permutation_p": 0.226,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.324,
+      "annualized_return": -0.063,
+      "sharpe_ratio": -0.207,
+      "max_drawdown": -0.594
+     },
+     "trades": 117,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 8,
+       "macd_slow": 17,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": -0.063,
+      "out_of_sample_sharpe": 0.076,
+      "verdict": "inconclusive",
+      "combinations": 4
+     },
+     "pbo": 0.44,
+     "permutation_p": 0.12,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": 0.036,
+      "annualized_return": 0.006,
+      "sharpe_ratio": 0.046,
+      "max_drawdown": -0.208
+     },
+     "trades": 160,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 20,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 0.563,
+      "out_of_sample_sharpe": 0.425,
+      "verdict": "held_up",
+      "combinations": 12
+     },
+     "pbo": 0.34,
+     "permutation_p": 0.066,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 1.876,
+    "annualized_return": 0.193,
+    "sharpe_ratio": 0.629,
+    "max_drawdown": -0.436
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "spy": {
+   "symbol": "SPY",
+   "name": "S&P 500 ETF (SPY)",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.24,
+      "annualized_return": -0.045,
+      "sharpe_ratio": -0.262,
+      "max_drawdown": -0.434
+     },
+     "trades": 235,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 40,
+       "ma_window": 20
+      },
+      "in_sample_sharpe": -0.074,
+      "out_of_sample_sharpe": 0.03,
+      "verdict": "inconclusive",
+      "combinations": 16
+     },
+     "pbo": 0.86,
+     "permutation_p": 0.124,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.195,
+      "annualized_return": -0.036,
+      "sharpe_ratio": -0.18,
+      "max_drawdown": -0.402
+     },
+     "trades": 134,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 12,
+       "macd_slow": 26,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 0.075,
+      "out_of_sample_sharpe": -0.832,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.47,
+     "permutation_p": 0.078,
+     "rolling_verdict": "failed"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": 0.162,
+      "annualized_return": 0.025,
+      "sharpe_ratio": 0.375,
+      "max_drawdown": -0.104
+     },
+     "trades": 166,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 20,
+       "bb_std": 2.0
+      },
+      "in_sample_sharpe": 0.713,
+      "out_of_sample_sharpe": -1.003,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.56,
+     "permutation_p": 0.004,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 1.575,
+    "annualized_return": 0.171,
+    "sharpe_ratio": 0.862,
+    "max_drawdown": -0.337
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "qqq": {
+   "symbol": "QQQ",
+   "name": "Nasdaq-100 ETF (QQQ)",
+   "market": "US",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.118,
+      "annualized_return": -0.021,
+      "sharpe_ratio": -0.099,
+      "max_drawdown": -0.363
+     },
+     "trades": 227,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "momentum_lookback": 20,
+       "ma_window": 200
+      },
+      "in_sample_sharpe": 0.259,
+      "out_of_sample_sharpe": 0.718,
+      "verdict": "held_up",
+      "combinations": 16
+     },
+     "pbo": 0.53,
+     "permutation_p": 0.152,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.24,
+      "annualized_return": -0.045,
+      "sharpe_ratio": -0.186,
+      "max_drawdown": -0.444
+     },
+     "trades": 116,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "macd_fast": 12,
+       "macd_slow": 26,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 0.047,
+      "out_of_sample_sharpe": -0.684,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.74,
+     "permutation_p": 0.118,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": 0.192,
+      "annualized_return": 0.03,
+      "sharpe_ratio": 0.399,
+      "max_drawdown": -0.143
+     },
+     "trades": 168,
+     "walk_forward": {
+      "split_date": "2023-03-15",
+      "best_params": {
+       "bb_window": 30,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 1.089,
+      "out_of_sample_sharpe": -0.794,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.13,
+     "permutation_p": 0.004,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 2.432,
+    "annualized_return": 0.228,
+    "sharpe_ratio": 0.939,
+    "max_drawdown": -0.351
+   },
+   "bars": 1510,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  },
+  "reliance": {
+   "symbol": "RELIANCE.NS",
+   "name": "Reliance Industries",
+   "market": "India",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": 0.079,
+      "annualized_return": 0.013,
+      "sharpe_ratio": 0.051,
+      "max_drawdown": -0.405
+     },
+     "trades": 221,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "momentum_lookback": 10,
+       "ma_window": 200
+      },
+      "in_sample_sharpe": 0.433,
+      "out_of_sample_sharpe": -0.374,
+      "verdict": "failed",
+      "combinations": 16
+     },
+     "pbo": 0.56,
+     "permutation_p": 0.026,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.496,
+      "annualized_return": -0.11,
+      "sharpe_ratio": -0.378,
+      "max_drawdown": -0.605
+     },
+     "trades": 118,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "macd_fast": 19,
+       "macd_slow": 39,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 0.34,
+      "out_of_sample_sharpe": -0.273,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.16,
+     "permutation_p": 0.279,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": -0.072,
+      "annualized_return": -0.013,
+      "sharpe_ratio": -0.133,
+      "max_drawdown": -0.245
+     },
+     "trades": 166,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "bb_window": 50,
+       "bb_std": 1.5
+      },
+      "in_sample_sharpe": -0.187,
+      "out_of_sample_sharpe": -0.431,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.74,
+     "permutation_p": 0.14,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 1.429,
+    "annualized_return": 0.163,
+    "sharpe_ratio": 0.556,
+    "max_drawdown": -0.451
+   },
+   "bars": 1481,
+   "first_date": "2019-01-01",
+   "last_date": "2024-12-31"
+  },
+  "tcs": {
+   "symbol": "TCS.NS",
+   "name": "Tata Consultancy Services",
+   "market": "India",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.093,
+      "annualized_return": -0.016,
+      "sharpe_ratio": -0.08,
+      "max_drawdown": -0.308
+     },
+     "trades": 231,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "momentum_lookback": 60,
+       "ma_window": 50
+      },
+      "in_sample_sharpe": 0.04,
+      "out_of_sample_sharpe": -0.107,
+      "verdict": "failed",
+      "combinations": 16
+     },
+     "pbo": 0.51,
+     "permutation_p": 0.058,
+     "rolling_verdict": "failed"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": 0.437,
+      "annualized_return": 0.064,
+      "sharpe_ratio": 0.265,
+      "max_drawdown": -0.338
+     },
+     "trades": 108,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "macd_fast": 16,
+       "macd_slow": 34,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 0.666,
+      "out_of_sample_sharpe": -0.909,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.33,
+     "permutation_p": 0.012,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": -0.177,
+      "annualized_return": -0.033,
+      "sharpe_ratio": -0.421,
+      "max_drawdown": -0.238
+     },
+     "trades": 180,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "bb_window": 10,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 0.778,
+      "out_of_sample_sharpe": 0.035,
+      "verdict": "overfit",
+      "combinations": 12
+     },
+     "pbo": 0.34,
+     "permutation_p": 0.17,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 1.456,
+    "annualized_return": 0.165,
+    "sharpe_ratio": 0.683,
+    "max_drawdown": -0.272
+   },
+   "bars": 1481,
+   "first_date": "2019-01-01",
+   "last_date": "2024-12-31"
+  },
+  "hdfcbank": {
+   "symbol": "HDFCBANK.NS",
+   "name": "HDFC Bank",
+   "market": "India",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.485,
+      "annualized_return": -0.107,
+      "sharpe_ratio": -0.485,
+      "max_drawdown": -0.663
+     },
+     "trades": 240,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "momentum_lookback": 40,
+       "ma_window": 50
+      },
+      "in_sample_sharpe": -0.053,
+      "out_of_sample_sharpe": -0.724,
+      "verdict": "failed",
+      "combinations": 16
+     },
+     "pbo": 0.43,
+     "permutation_p": 0.198,
+     "rolling_verdict": "failed"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.314,
+      "annualized_return": -0.062,
+      "sharpe_ratio": -0.238,
+      "max_drawdown": -0.482
+     },
+     "trades": 120,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "macd_fast": 8,
+       "macd_slow": 17,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": -0.283,
+      "out_of_sample_sharpe": 0.986,
+      "verdict": "inconclusive",
+      "combinations": 4
+     },
+     "pbo": 0.19,
+     "permutation_p": 0.13,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": -0.124,
+      "annualized_return": -0.022,
+      "sharpe_ratio": -0.233,
+      "max_drawdown": -0.168
+     },
+     "trades": 155,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "bb_window": 30,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 0.023,
+      "out_of_sample_sharpe": -0.785,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.57,
+     "permutation_p": 0.15,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 0.734,
+    "annualized_return": 0.098,
+    "sharpe_ratio": 0.375,
+    "max_drawdown": -0.411
+   },
+   "bars": 1481,
+   "first_date": "2019-01-01",
+   "last_date": "2024-12-31"
+  },
+  "infy": {
+   "symbol": "INFY.NS",
+   "name": "Infosys",
+   "market": "India",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": 0.985,
+      "annualized_return": 0.124,
+      "sharpe_ratio": 0.504,
+      "max_drawdown": -0.296
+     },
+     "trades": 199,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "momentum_lookback": 20,
+       "ma_window": 200
+      },
+      "in_sample_sharpe": 0.473,
+      "out_of_sample_sharpe": 0.588,
+      "verdict": "held_up",
+      "combinations": 16
+     },
+     "pbo": 0.04,
+     "permutation_p": 0.002,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": 0.477,
+      "annualized_return": 0.069,
+      "sharpe_ratio": 0.247,
+      "max_drawdown": -0.309
+     },
+     "trades": 96,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "macd_fast": 12,
+       "macd_slow": 26,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 0.335,
+      "out_of_sample_sharpe": -0.042,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.89,
+     "permutation_p": 0.022,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": -0.486,
+      "annualized_return": -0.107,
+      "sharpe_ratio": -0.984,
+      "max_drawdown": -0.512
+     },
+     "trades": 164,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "bb_window": 20,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 0.518,
+      "out_of_sample_sharpe": -0.413,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.07,
+     "permutation_p": 0.786,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 2.299,
+    "annualized_return": 0.225,
+    "sharpe_ratio": 0.809,
+    "max_drawdown": -0.365
+   },
+   "bars": 1481,
+   "first_date": "2019-01-01",
+   "last_date": "2024-12-31"
+  },
+  "icicibank": {
+   "symbol": "ICICIBANK.NS",
+   "name": "ICICI Bank",
+   "market": "India",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": -0.457,
+      "annualized_return": -0.099,
+      "sharpe_ratio": -0.37,
+      "max_drawdown": -0.614
+     },
+     "trades": 254,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "momentum_lookback": 40,
+       "ma_window": 200
+      },
+      "in_sample_sharpe": 0.53,
+      "out_of_sample_sharpe": 0.202,
+      "verdict": "overfit",
+      "combinations": 16
+     },
+     "pbo": 0.43,
+     "permutation_p": 0.457,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.458,
+      "annualized_return": -0.099,
+      "sharpe_ratio": -0.319,
+      "max_drawdown": -0.603
+     },
+     "trades": 121,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "macd_fast": 16,
+       "macd_slow": 34,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": -0.026,
+      "out_of_sample_sharpe": -0.358,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.87,
+     "permutation_p": 0.214,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": 0.625,
+      "annualized_return": 0.086,
+      "sharpe_ratio": 0.813,
+      "max_drawdown": -0.177
+     },
+     "trades": 195,
+     "walk_forward": {
+      "split_date": "2023-03-09",
+      "best_params": {
+       "bb_window": 20,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 0.976,
+      "out_of_sample_sharpe": 1.159,
+      "verdict": "held_up",
+      "combinations": 12
+     },
+     "pbo": 0.37,
+     "permutation_p": 0.004,
+     "rolling_verdict": "regime_dependent"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 2.624,
+    "annualized_return": 0.245,
+    "sharpe_ratio": 0.785,
+    "max_drawdown": -0.483
+   },
+   "bars": 1481,
+   "first_date": "2019-01-01",
+   "last_date": "2024-12-31"
+  },
+  "nifty-50": {
+   "symbol": "^NSEI",
+   "name": "Nifty 50",
+   "market": "India",
+   "strategies": {
+    "momentum": {
+     "defaults": {
+      "total_return": 0.064,
+      "annualized_return": 0.011,
+      "sharpe_ratio": 0.066,
+      "max_drawdown": -0.281
+     },
+     "trades": 212,
+     "walk_forward": {
+      "split_date": "2023-03-10",
+      "best_params": {
+       "momentum_lookback": 60,
+       "ma_window": 200
+      },
+      "in_sample_sharpe": 0.556,
+      "out_of_sample_sharpe": 1.076,
+      "verdict": "held_up",
+      "combinations": 16
+     },
+     "pbo": 0.56,
+     "permutation_p": 0.01,
+     "rolling_verdict": "regime_dependent"
+    },
+    "macd": {
+     "defaults": {
+      "total_return": -0.258,
+      "annualized_return": -0.05,
+      "sharpe_ratio": -0.27,
+      "max_drawdown": -0.37
+     },
+     "trades": 112,
+     "walk_forward": {
+      "split_date": "2023-03-10",
+      "best_params": {
+       "macd_fast": 19,
+       "macd_slow": 39,
+       "macd_signal": 9
+      },
+      "in_sample_sharpe": 0.902,
+      "out_of_sample_sharpe": -0.589,
+      "verdict": "failed",
+      "combinations": 4
+     },
+     "pbo": 0.11,
+     "permutation_p": 0.036,
+     "rolling_verdict": "regime_dependent"
+    },
+    "bollinger": {
+     "defaults": {
+      "total_return": -0.263,
+      "annualized_return": -0.051,
+      "sharpe_ratio": -0.709,
+      "max_drawdown": -0.306
+     },
+     "trades": 128,
+     "walk_forward": {
+      "split_date": "2023-03-10",
+      "best_params": {
+       "bb_window": 10,
+       "bb_std": 2.5
+      },
+      "in_sample_sharpe": 0.472,
+      "out_of_sample_sharpe": 0.0,
+      "verdict": "failed",
+      "combinations": 12
+     },
+     "pbo": 0.53,
+     "permutation_p": 0.389,
+     "rolling_verdict": "failed"
+    }
+   },
+   "buy_and_hold": {
+    "total_return": 1.191,
+    "annualized_return": 0.143,
+    "sharpe_ratio": 0.779,
+    "max_drawdown": -0.384
+   },
+   "bars": 1478,
+   "first_date": "2019-01-02",
+   "last_date": "2024-12-31"
+  }
+ }
+}

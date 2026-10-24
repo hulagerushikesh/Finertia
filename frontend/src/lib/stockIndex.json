@@ -1,0 +1,134 @@
+{
+ "start": "2019-01-01",
+ "end": "2025-01-01",
+ "stocks": {
+  "aapl": {
+   "symbol": "AAPL",
+   "name": "Apple",
+   "market": "US",
+   "buy_and_hold_return": 5.641,
+   "buy_and_hold_sharpe": 1.205,
+   "held_up": 0
+  },
+  "msft": {
+   "symbol": "MSFT",
+   "name": "Microsoft",
+   "market": "US",
+   "buy_and_hold_return": 3.422,
+   "buy_and_hold_sharpe": 0.971,
+   "held_up": 1
+  },
+  "nvda": {
+   "symbol": "NVDA",
+   "name": "Nvidia",
+   "market": "US",
+   "buy_and_hold_return": 38.753,
+   "buy_and_hold_sharpe": 1.637,
+   "held_up": 1
+  },
+  "amzn": {
+   "symbol": "AMZN",
+   "name": "Amazon",
+   "market": "US",
+   "buy_and_hold_return": 1.851,
+   "buy_and_hold_sharpe": 0.56,
+   "held_up": 0
+  },
+  "googl": {
+   "symbol": "GOOGL",
+   "name": "Alphabet",
+   "market": "US",
+   "buy_and_hold_return": 2.603,
+   "buy_and_hold_sharpe": 0.765,
+   "held_up": 0
+  },
+  "meta": {
+   "symbol": "META",
+   "name": "Meta Platforms",
+   "market": "US",
+   "buy_and_hold_return": 3.332,
+   "buy_and_hold_sharpe": 0.652,
+   "held_up": 2
+  },
+  "tsla": {
+   "symbol": "TSLA",
+   "name": "Tesla",
+   "market": "US",
+   "buy_and_hold_return": 18.533,
+   "buy_and_hold_sharpe": 0.996,
+   "held_up": 1
+  },
+  "jpm": {
+   "symbol": "JPM",
+   "name": "JPMorgan Chase",
+   "market": "US",
+   "buy_and_hold_return": 1.876,
+   "buy_and_hold_sharpe": 0.629,
+   "held_up": 2
+  },
+  "spy": {
+   "symbol": "SPY",
+   "name": "S&P 500 ETF (SPY)",
+   "market": "US",
+   "buy_and_hold_return": 1.575,
+   "buy_and_hold_sharpe": 0.862,
+   "held_up": 0
+  },
+  "qqq": {
+   "symbol": "QQQ",
+   "name": "Nasdaq-100 ETF (QQQ)",
+   "market": "US",
+   "buy_and_hold_return": 2.432,
+   "buy_and_hold_sharpe": 0.939,
+   "held_up": 1
+  },
+  "reliance": {
+   "symbol": "RELIANCE.NS",
+   "name": "Reliance Industries",
+   "market": "India",
+   "buy_and_hold_return": 1.429,
+   "buy_and_hold_sharpe": 0.556,
+   "held_up": 0
+  },
+  "tcs": {
+   "symbol": "TCS.NS",
+   "name": "Tata Consultancy Services",
+   "market": "India",
+   "buy_and_hold_return": 1.456,
+   "buy_and_hold_sharpe": 0.683,
+   "held_up": 0
+  },
+  "hdfcbank": {
+   "symbol": "HDFCBANK.NS",
+   "name": "HDFC Bank",
+   "market": "India",
+   "buy_and_hold_return": 0.734,
+   "buy_and_hold_sharpe": 0.375,
+   "held_up": 0
+  },
+  "infy": {
+   "symbol": "INFY.NS",
+   "name": "Infosys",
+   "market": "India",
+   "buy_and_hold_return": 2.299,
+   "buy_and_hold_sharpe": 0.809,
+   "held_up": 1
+  },
+  "icicibank": {
+   "symbol": "ICICIBANK.NS",
+   "name": "ICICI Bank",
+   "market": "India",
+   "buy_and_hold_return": 2.624,
+   "buy_and_hold_sharpe": 0.785,
+   "held_up": 1
+  },
+  "nifty-50": {
+   "symbol": "^NSEI",
+   "name": "Nifty 50",
+   "market": "India",
+   "buy_and_hold_return": 1.191,
+   "buy_and_hold_sharpe": 0.779,
+   "held_up": 1
+  }
+ }
+}

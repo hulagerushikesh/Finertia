@@ -1,7 +1,7 @@
 {
-  "_": "gzip bytes, level 9, measured by scripts/check-bundle.mjs. Limits sit ~10% above the 19 Sep 2026 build (30efb9d): entry 192.3 kB, total 369.2 kB. Raise a limit in the same PR that needs it, and say why. 13 Oct 2026: total raised to 464 kB (~10% above 421.5 kB) for the Sentry SDK, a 30 kB lazy chunk loaded after first paint; the entry limit is unchanged.",
+  "_": "gzip bytes, level 9, measured by scripts/check-bundle.mjs. Limits sit ~10% above the 19 Sep 2026 build (30efb9d): entry 192.3 kB, total 369.2 kB. Raise a limit in the same PR that needs it, and say why. 13 Oct 2026: total raised to 464 kB (~10% above 421.5 kB) for the Sentry SDK, a 30 kB lazy chunk loaded after first paint; the entry limit is unchanged. 24 Oct 2026: total raised to 500 kB (~10% above 452.5 kB) for the public /learn and /stocks pages, two lazy chunks (the stocks one carries its 3 kB of results data) that only those pages load; the entry limit is unchanged.",
   "limits": {
     "entry": 216000,
-    "total": 464000
+    "total": 500000
   }
 }
