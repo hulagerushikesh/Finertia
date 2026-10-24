@@ -10,7 +10,7 @@
     { "source": "/docs", "destination": "/docs.html" },
     { "source": "/support", "destination": "/support.html" },
     { "source": "/writeup", "destination": "/writeup.html" },
-    { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|api/).*)", "destination": "/app.html" }
   ],
   "headers": [
     {

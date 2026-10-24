@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createContext, useContext } from "react";
 import { m, useReducedMotion } from "motion/react";
 
 /**
@@ -14,12 +14,20 @@ import { m, useReducedMotion } from "motion/react";
  */
 export const EASE_OUT = [0.16, 1, 0.3, 1];
 
+/**
+ * True while a page is standing in for its build-time copy (scripts/prerender.mjs).
+ * That copy is already on screen, so its first render must not fade in from
+ * nothing; anything mounted after the first commit animates as usual.
+ */
+export const StillMotion = createContext(false);
+
 export function useMotionOff() {
-  return useReducedMotion();
+  const still = useContext(StillMotion);
+  return useReducedMotion() || still;
 }
 
 export function Rise({ children, delay = 0, className, as = "div", ...rest }) {
-  const off = useReducedMotion();
+  const off = useMotionOff();
   const Tag = m[as] || m.div;
   return (
     <Tag
@@ -45,7 +53,7 @@ export const staggerChild = {
 };
 
 export function Stagger({ children, className, ...rest }) {
-  const off = useReducedMotion();
+  const off = useMotionOff();
   return (
     <m.div
       variants={staggerParent}
