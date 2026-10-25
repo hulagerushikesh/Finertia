@@ -6,6 +6,7 @@ import { Rise } from "../components/motion";
 import { useAuth } from "../hooks/useAuth";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { ARTICLES, article } from "./learn/articles";
+import { stockLinks } from "./learn/stockLinks";
 import { STRATEGY_PAGES } from "../lib/strategyPages";
 import NotFoundPage from "./NotFoundPage";
 
@@ -58,6 +59,7 @@ function Article({ a }) {
   const { user } = useAuth();
   const { Body } = a;
   const others = ARTICLES.filter((o) => o.id !== a.id);
+  const onStocks = stockLinks(a.id);
 
   return (
     <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -72,6 +74,26 @@ function Article({ a }) {
 
       <div className="flex flex-col gap-14">
         <Body />
+
+        {onStocks && (
+          <section aria-labelledby="stocks-heading" className="flex flex-col gap-4">
+            <h2 id="stocks-heading" className="font-display text-xl font-semibold text-foreground">
+              On real stocks
+            </h2>
+            <p className="text-sm text-graphite leading-relaxed max-w-prose">{onStocks.lead}</p>
+            <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+              {onStocks.stocks.map((s) => (
+                <li key={s.slug}>
+                  <Link to={s.path} className={LINK}>{s.label}</Link>
+                  <span className="text-faint"> · {s.note}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-sm">
+              <Link to="/stocks" className={LINK}>All the stocks</Link>
+            </p>
+          </section>
+        )}
 
         <section aria-labelledby="try-heading" className="sheet px-6 py-8 flex flex-col gap-4">
           <h2 id="try-heading" className="font-display text-xl font-semibold text-foreground">
