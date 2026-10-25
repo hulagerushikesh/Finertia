@@ -8,6 +8,7 @@ for the same request.
 
     cd backend && .venv/bin/python scripts/build_stock_pages.py           # re-run, rewrite the JSON
     cd backend && .venv/bin/python scripts/build_stock_pages.py --check   # re-run, compare, exit 1 on drift
+    cd backend && .venv/bin/python scripts/build_stock_pages.py --index   # rewrite stockIndex.json only, no re-run
 
 Per stock: buy-and-hold over the period, and for each strategy a backtest at
 the workspace defaults plus a validation run (walk-forward, PBO, permutation
@@ -21,6 +22,7 @@ row has a page.
 import json
 import sys
 import time
+from itertools import combinations
 from pathlib import Path
 
 import numpy as np
@@ -147,9 +149,26 @@ def build():
     return {"start": START, "end": END, "generated": time.strftime("%Y-%m-%d"), "stocks": stocks}
 
 
+def _wins(stocks, a, b):
+    """Stocks where `a` had the higher Sharpe than `b` at the defaults."""
+    return sum(s["strategies"][a]["defaults"]["sharpe_ratio"] > s["strategies"][b]["defaults"]["sharpe_ratio"] for s in stocks)
+
+
 def summary(results):
-    """stockIndex.json: per stock, what its title, description and index row quote."""
-    return {"start": results["start"], "end": results["end"], "stocks": {
+    """stockIndex.json: what page titles and descriptions quote. Per stock, its
+    title and index row; per strategy and per pair of strategies, the counts
+    the /strategies/<a>-vs-<b> pages lead with."""
+    stocks = list(results["stocks"].values())
+    return {"start": results["start"], "end": results["end"], "strategies": {
+        name: {
+            "held_up": sum(s["strategies"][name]["walk_forward"]["verdict"] == "held_up" for s in stocks),
+            "beat_random": sum(s["strategies"][name]["permutation_p"] < 0.05 for s in stocks),
+        }
+        for name in STRATEGY_NAMES
+    }, "pairs": {
+        f"{a}-vs-{b}": {a: _wins(stocks, a, b), b: _wins(stocks, b, a)}
+        for a, b in combinations(STRATEGY_NAMES, 2)
+    }, "stocks": {
         slug: {
             "symbol": s["symbol"],
             "name": s["name"],
@@ -171,6 +190,10 @@ def _diff(old, new, path=""):
 
 
 def main_():
+    if "--index" in sys.argv:  # rewrite stockIndex.json from the saved results, no re-run
+        INDEX.write_text(json.dumps(summary(json.loads(OUT.read_text())), indent=1, ensure_ascii=False) + "\n")
+        print(f"wrote {INDEX.name}")
+        return
     fresh = build()
     if "--check" in sys.argv:
         saved = json.loads(OUT.read_text())
