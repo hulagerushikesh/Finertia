@@ -9,7 +9,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import { STRATEGY_PAGES, strategyPage } from "../lib/strategyPages";
 import { encodeParams } from "../utils/permalink";
 import { authPath } from "../utils/returnTo";
-import { STOCKS } from "../lib/stockMeta";
+import { PAIRS, STOCKS } from "../lib/stockMeta";
 import NotFoundPage from "./NotFoundPage";
 
 const LINK = "text-pencil underline underline-offset-2";
@@ -56,6 +56,16 @@ function StrategyIndex() {
           </li>
         ))}
       </ul>
+      <section aria-labelledby="compare-heading" className="mt-12 flex flex-col gap-2">
+        <h2 id="compare-heading" className="font-display text-xl font-semibold text-foreground">
+          Head to head on {STOCKS.length} stocks
+        </h2>
+        <ul className="flex flex-col gap-1.5 text-sm">
+          {PAIRS.map((p) => (
+            <li key={p.slug}><Link to={p.path} className={LINK}>{p.label}</Link></li>
+          ))}
+        </ul>
+      </section>
       <p className="text-sm text-graphite leading-relaxed mt-12 max-w-prose">
         How the engine turns any of them into returns, and where that can mislead, is on{" "}
         <Link to="/docs" className={LINK}>How it works</Link>. The questions behind the checks
@@ -181,6 +191,14 @@ function Strategy({ s }) {
                 <Link to={o.path} className={LINK}>{o.label}</Link>
               </React.Fragment>
             ))}
+            . Head to head:{" "}
+            {PAIRS.filter((p) => p.a === s.id || p.b === s.id).map((p, i) => (
+              <React.Fragment key={p.slug}>
+                {i > 0 && " · "}
+                <Link to={p.path} className={LINK}>{p.label}</Link>
+              </React.Fragment>
+            ))}
+            .
           </p>
         </Section>
       </div>

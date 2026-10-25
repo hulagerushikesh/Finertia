@@ -54,3 +54,18 @@ export function percent(x) {
 export function ofThree(n) {
   return n === 3 ? "all three" : `${["none", "one", "two"][n]} of the three`;
 }
+
+/** How the strategies are named in prose. The ids are backend/strategies.py's. */
+export const STRATEGY_LABEL = { momentum: "Momentum", macd: "MACD", bollinger: "Bollinger bands" };
+
+/** Per strategy, across every stock: walk-forward runs that held up, and permutation p-values under 0.05. */
+export const STRATEGY_TOTALS = index.strategies;
+
+/**
+ * The /strategies/<a>-vs-<b> pages, one per pair. `wins[id]` is how many stocks
+ * that strategy had the higher Sharpe ratio on at its default settings.
+ */
+export const PAIRS = Object.entries(index.pairs).map(([slug, wins]) => {
+  const [a, b] = slug.split("-vs-");
+  return { slug, a, b, wins, path: `/strategies/${slug}`, label: `${STRATEGY_LABEL[a]} vs ${STRATEGY_LABEL[b]}` };
+});
