@@ -11,7 +11,7 @@
  * Plain data and string functions only: vite.config.js imports this file in
  * Node, before any alias or browser global exists.
  */
-import { STOCKS, STOCK_PERIOD, ofThree, percent, signed } from "./stockMeta.js";
+import { PAIRS, STOCKS, STOCK_PERIOD, STRATEGY_LABEL, STRATEGY_TOTALS, ofThree, percent, signed } from "./stockMeta.js";
 
 const SITE = "https://finertia.hulage.in";
 
@@ -112,6 +112,25 @@ export const PAGE_META = {
       "The Bollinger-band mean-reversion rule written out exactly: its window and band width, the grid validation sweeps, and how it did on AAPL on years it never saw.",
     ...CARD,
   },
+  // One page per pair of strategies, from the same results as the stock pages.
+  ...Object.fromEntries(
+    PAIRS.map(({ slug, a, b, wins, path, label }) => [
+      `compare-${slug}`,
+      {
+        name: label,
+        path,
+        type: "article",
+        published: "2026-10-25",
+        title: `${label}: ${STOCKS.length} stocks backtested, ${STOCK_PERIOD.years} · Finertia`,
+        ogTitle: `${label}: which one held up on ${STOCKS.length} stocks?`,
+        description:
+          `At default settings ${STRATEGY_LABEL[a]} had the higher Sharpe ratio on ${wins[a]} of ${STOCKS.length} ` +
+          `US and Indian stocks, ${STRATEGY_LABEL[b]} on ${wins[b]}. Tuned and then scored on years they never saw, ` +
+          `${STRATEGY_LABEL[a]} held up on ${STRATEGY_TOTALS[a].held_up} and ${STRATEGY_LABEL[b]} on ${STRATEGY_TOTALS[b].held_up}.`,
+        ...CARD,
+      },
+    ])
+  ),
   learn: {
     name: "Learn",
     path: "/learn",
