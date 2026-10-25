@@ -51,6 +51,21 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://finertia.hulage.in/strategies/momentum-vs-macd</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://finertia.hulage.in/strategies/momentum-vs-bollinger</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://finertia.hulage.in/strategies/macd-vs-bollinger</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://finertia.hulage.in/learn</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

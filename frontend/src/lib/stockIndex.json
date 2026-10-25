@@ -1,6 +1,34 @@
 {
  "start": "2019-01-01",
  "end": "2025-01-01",
+ "strategies": {
+  "momentum": {
+   "held_up": 12,
+   "beat_random": 13
+  },
+  "macd": {
+   "held_up": 3,
+   "beat_random": 17
+  },
+  "bollinger": {
+   "held_up": 6,
+   "beat_random": 10
+  }
+ },
+ "pairs": {
+  "momentum-vs-macd": {
+   "momentum": 18,
+   "macd": 21
+  },
+  "momentum-vs-bollinger": {
+   "momentum": 24,
+   "bollinger": 15
+  },
+  "macd-vs-bollinger": {
+   "macd": 22,
+   "bollinger": 17
+  }
+ },
  "stocks": {
   "aapl": {
    "symbol": "AAPL",

@@ -14,7 +14,7 @@ import Footer from "./components/Footer";
 import { EASE_OUT, StillMotion, useMotionOff } from "./components/motion";
 import { lazyPage } from "./lib/lazyPage";
 import { feature } from "./lib/features";
-import { STOCKS } from "./lib/stockMeta";
+import { PAIRS, STOCKS } from "./lib/stockMeta";
 
 // Eager: the pages a first-time visitor actually lands on.
 import LandingPage from "./pages/LandingPage";
@@ -34,6 +34,7 @@ const WriteupPage = lazyPage(() => import("./pages/WriteupPage"));
 const StrategyPage = lazyPage(() => import("./pages/StrategyPage"));
 const LearnPage = lazyPage(() => import("./pages/LearnPage"));
 const StockPage = lazyPage(() => import("./pages/StockPage"));
+const ComparePage = lazyPage(() => import("./pages/ComparePage"));
 
 /**
  * What to load before the first render of each page the build pre-renders
@@ -51,6 +52,7 @@ export const PRELOAD = {
   "strategy-momentum": StrategyPage.preload,
   "strategy-macd": StrategyPage.preload,
   "strategy-bollinger": StrategyPage.preload,
+  ...Object.fromEntries(PAIRS.map((p) => [`compare-${p.slug}`, ComparePage.preload])),
   learn: LearnPage.preload,
   "learn-walk-forward-validation": LearnPage.preload,
   "learn-backtest-overfitting": LearnPage.preload,
@@ -126,6 +128,9 @@ export function Layout() {
                 <Route path="/writeup" element={<WriteupPage />} />
                 <Route path="/support" element={<SupportPage />} />
                 <Route path="/strategies" element={<StrategyPage />} />
+                {PAIRS.map((p) => (
+                  <Route key={p.slug} path={p.path} element={<ComparePage slug={p.slug} />} />
+                ))}
                 <Route path="/strategies/:id" element={<StrategyPage />} />
                 <Route path="/learn" element={<LearnPage />} />
                 <Route path="/learn/:id" element={<LearnPage />} />
