@@ -30,6 +30,13 @@ describe("stock pages", () => {
     for (const s of STOCKS) expect(hrefs).toContain(s.path);
   });
 
+  it("says any ticker runs in the workspace, through sign-up for a visitor", () => {
+    renderAt("/stocks");
+    expect(screen.getByText(/a sample, not a limit/)).toBeInTheDocument();
+    // authPath leaves out next= when it is the default landing, /dashboard.
+    expect(screen.getByRole("link", { name: "workspace" })).toHaveAttribute("href", "/register");
+  });
+
   for (const s of STOCKS) {
     it(`${s.slug}: renders its own figures`, () => {
       renderAt(s.path);
