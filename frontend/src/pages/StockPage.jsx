@@ -52,6 +52,8 @@ export default function StockPage() {
 
 function StocksIndex() {
   usePageTitle("stocks");
+  const { user } = useAuth();
+  const workspace = user ? "/dashboard" : authPath("/register", "/dashboard");
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Rise>
@@ -82,7 +84,13 @@ function StocksIndex() {
           </section>
         ))}
       </div>
-      <p className="text-xs text-faint mt-8 max-w-prose">
+      <p className="text-sm text-graphite leading-relaxed mt-10 max-w-prose">
+        These {STOCKS.length} are a sample, not a limit. The{" "}
+        <Link to={workspace} className={LINK}>workspace</Link> runs the same tests on any symbol
+        Yahoo Finance carries: US tickers as they are (MSFT), NSE stocks with .NS (INFY.NS), BSE
+        with .BO, indices with ^ (^NSEI).
+      </p>
+      <p className="text-xs text-faint mt-6 max-w-prose">
         Hypothetical results on past data, from a script in the repository that re-runs every
         figure. Not a recommendation to buy, sell or trade anything.
       </p>
@@ -190,8 +198,8 @@ function Stock({ meta, r }) {
         <Section id="try" title="Run it yourself">
           <p>
             Each opens in the workspace on {meta.name} over the same dates
-            {user ? "" : ", straight after sign-up if you are new"}. Change the dates and the
-            numbers change with them, which is the point.
+            {user ? "" : ", straight after sign-up if you are new"}. Change the ticker or the
+            dates and the numbers change with them, which is the point.
           </p>
           <div className="flex flex-wrap gap-3">
             {rows.map(({ p }, i) => {
