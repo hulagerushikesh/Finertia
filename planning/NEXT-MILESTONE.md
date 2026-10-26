@@ -65,7 +65,9 @@ cannot, because the 31 Oct decision needs the data costs.
   (round closes 31 Oct).
 - **Built ahead for sprint 2, all off on production**: items 2–4 below, plus
   the four 23 Oct findings (calm Pro wall #130, cost in bps #131, Sharpe note
-  #132, portfolio runs in History #133). Switching them on is step 7 of
+  #132, portfolio runs in History #133), and share cards (#157, 26 Oct: a
+  copied link previews the run's figures on a 1200×630 card; needs
+  `SHARE_CARDS=1` on the API and a backend deploy to both regions). Switching them on is step 7 of
   [B1-REGION-MOVE.md](B1-REGION-MOVE.md), after the move on 1 Nov.
 - **Since 24 Oct** (public pages only, so inside the round's rule):
   M13's content SEO ran ahead of plan. `/strategies` (one page per
