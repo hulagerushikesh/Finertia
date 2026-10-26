@@ -1,22 +1,24 @@
-"""Draw the link-preview card for each /stocks/<slug> page.
+"""Draw the link-preview cards for each /stocks/<slug> and /strategies/<a>-vs-<b> page.
 
 A shared stock page used the site's one og.png, so every preview looked the
 same. This draws a 1200x630 card per stock from stockResults.json, the same
 file the page reads, in share.py's palette and font: holding it and the three
-strategies at their defaults, with each one's walk-forward verdict.
+strategies at their defaults, with each one's walk-forward verdict. Each
+comparison page gets its scoreboard, computed as ComparePage.jsx computes it.
 
     cd backend && .venv/bin/python scripts/build_stock_cards.py           # rewrite every card
     cd backend && .venv/bin/python scripts/build_stock_cards.py --check   # exit 1 if a card is missing or stale
 
 Re-run after build_stock_pages.py. The PNGs are committed under
 frontend/public/og/, so the build needs no Python; pageMeta.js points each
-stock page's og:image at its card, and stockMeta.test.js checks each exists.
+page's og:image at its card, and pageMeta.test.js checks each exists.
 """
 
 import io
 import json
 import math
 import sys
+from itertools import combinations
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -125,25 +127,92 @@ def card(s: dict, period: str) -> bytes:
     return out.getvalue()
 
 
+def median(xs: list) -> float:
+    """ComparePage.jsx `median`."""
+    s = sorted(xs)
+    m = len(s) // 2
+    return s[m] if len(s) % 2 else (s[m - 1] + s[m]) / 2
+
+
+def compare_card(a: str, b: str, stocks: list, period: str) -> bytes:
+    """ComparePage.jsx's scoreboard: the two rules side by side on every stock."""
+    n = len(stocks)
+
+    def side(me: str, other: str) -> dict:
+        sharpe = [s["strategies"][me]["defaults"]["sharpe_ratio"] for s in stocks]
+        return {
+            "wins": sum(s["strategies"][me]["defaults"]["sharpe_ratio"] > s["strategies"][other]["defaults"]["sharpe_ratio"] for s in stocks),
+            "hold": sum(x > s["buy_and_hold"]["sharpe_ratio"] for x, s in zip(sharpe, stocks)),
+            "median": median(sharpe),
+            "held_up": sum(s["strategies"][me]["walk_forward"]["verdict"] == "held_up" for s in stocks),
+            "after": median([s["strategies"][me]["walk_forward"]["out_of_sample_sharpe"] for s in stocks]),
+        }
+
+    A, B = side(a, b), side(b, a)
+    of = lambda x: f"{x} of {n}"  # noqa: E731
+    rows = [
+        ("Higher Sharpe than the other", "wins", of),
+        ("Higher Sharpe than holding it", "hold", of),
+        ("Median Sharpe, default settings", "median", signed),
+        ("Held up on years it never saw", "held_up", of),
+        ("Median Sharpe on those years", "after", signed),
+    ]
+
+    img = Image.new("RGB", (WIDTH, HEIGHT), PAPER)
+    d = ImageDraw.Draw(img)
+    d.text((60, 44), "Finertia", font=_font(30), fill=PENCIL)
+    d.text((WIDTH - 60, 44), f"Backtest, {period}", font=_font(26), fill=FAINT, anchor="ra")
+    d.text((60, 100), f"{STRATEGY_LABEL[a]} vs {STRATEGY_LABEL[b]}", font=_font(60), fill=INK)
+    d.text((60, 178), f"On the same {n} US and Indian stocks and indices", font=_font(28), fill=FAINT)
+
+    cols = (60, 860, WIDTH - 60)  # the row's left edge, then each rule's right edge
+    y = 244
+    for x, head in zip(cols[1:], (STRATEGY_LABEL[a], STRATEGY_LABEL[b])):
+        d.text((x, y), head, font=_font(22), fill=FAINT, anchor="ra")
+    y += 36
+    for name, key, fmt in rows:
+        d.line((60, y, WIDTH - 60, y), fill=RULE, width=2)
+        mid = y + 29
+        d.text((cols[0], mid), name, font=_font(28), fill=INK, anchor="lm")
+        for x, me, them in ((cols[1], A, B), (cols[2], B, A)):
+            d.text((x, mid), fmt(me[key]), font=_font(32), fill=PENCIL if me[key] > them[key] else INK, anchor="rm")
+        y += 58
+
+    d.text(
+        (60, HEIGHT - 32),
+        "Hypothetical results on past data. Not advice.  finertia.hulage.in",
+        font=_font(20),
+        fill=FAINT,
+        anchor="ls",
+    )
+    out = io.BytesIO()
+    img.save(out, format="PNG", optimize=True)
+    return out.getvalue()
+
+
 def main(check: bool) -> int:
     data = json.loads(RESULTS.read_text())
     period = years(data["start"], data["end"])
+    stocks = list(data["stocks"].values())
     OUT.mkdir(parents=True, exist_ok=True)
+    cards = {f"stock-{slug}.png": lambda s=s: card(s, period) for slug, s in data["stocks"].items()}
+    for a, b in combinations(STRATEGY_LABEL, 2):
+        cards[f"compare-{a}-vs-{b}.png"] = lambda a=a, b=b: compare_card(a, b, stocks, period)
     stale = []
-    for slug, s in data["stocks"].items():
-        path = OUT / f"stock-{slug}.png"
-        png = card(s, period)
+    for name, draw in cards.items():
+        path = OUT / name
+        png = draw()
         if check:
             if not path.exists() or path.read_bytes() != png:
-                stale.append(path.name)
+                stale.append(name)
         else:
             path.write_bytes(png)
     if check:
         for name in stale:
             print(f"stale or missing: {name}")
-        print(f"{len(data['stocks']) - len(stale)} of {len(data['stocks'])} cards current")
+        print(f"{len(cards) - len(stale)} of {len(cards)} cards current")
         return 1 if stale else 0
-    print(f"wrote {len(data['stocks'])} cards to {OUT}")
+    print(f"wrote {len(cards)} cards to {OUT}")
     return 0
 
 
