@@ -127,7 +127,9 @@ export const PAGE_META = {
           `At default settings ${STRATEGY_LABEL[a]} had the higher Sharpe ratio on ${wins[a]} of ${STOCKS.length} ` +
           `US and Indian stocks, ${STRATEGY_LABEL[b]} on ${wins[b]}. Tuned and then scored on years they never saw, ` +
           `${STRATEGY_LABEL[a]} held up on ${STRATEGY_TOTALS[a].held_up} and ${STRATEGY_LABEL[b]} on ${STRATEGY_TOTALS[b].held_up}.`,
-        ...CARD,
+        // The scoreboard as a card (backend/scripts/build_stock_cards.py).
+        image: `${SITE}/og/compare-${slug}.png`,
+        imageAlt: `${label} on ${STOCKS.length} stocks, ${STOCK_PERIOD.years}: the scoreboard`,
       },
     ])
   ),
