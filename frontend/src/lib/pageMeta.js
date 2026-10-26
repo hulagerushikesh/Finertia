@@ -218,7 +218,9 @@ export const PAGE_META = {
           `Holding ${s.name} from ${STOCK_PERIOD.years.replace("–", " to ")} returned ${percent(s.buy_and_hold_return)} ` +
           `(Sharpe ${signed(s.buy_and_hold_sharpe)}). Momentum, MACD and Bollinger bands, validated walk-forward: ` +
           `${ofThree(s.held_up)} held up on years they were never tuned on.`,
-        ...CARD,
+        // Its own card (backend/scripts/build_stock_cards.py), from the same results.
+        image: `${SITE}/og/stock-${s.slug}.png`,
+        imageAlt: `${s.label}: holding it against momentum, MACD and Bollinger bands, ${STOCK_PERIOD.years}`,
       },
     ])
   ),
