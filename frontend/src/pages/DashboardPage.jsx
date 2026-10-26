@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Rise, Stagger, StaggerItem, EASE_OUT } from "../components/motion";
 import { runBacktest, validateStrategy, runPortfolio, validatePortfolio, getUsage } from "../api";
 import { exportEquityCurve, exportTrades, exportMetrics } from "../utils/csv";
-import { encodeParams, decodeParams, permalinkFor } from "../utils/permalink";
+import { encodeParams, decodeParams, permalinkFor, shareLinkFor } from "../utils/permalink";
 import { useToast } from "../hooks/useToast";
 import { useAuth } from "../hooks/useAuth";
 import { loadWorkspace, saveWorkspace } from "../lib/workspaceStore";
@@ -114,14 +114,16 @@ export default function DashboardPage() {
   }, [params, navigate]);
 
   async function handleCopyLink() {
+    // With share cards on, the link previews as this run's figures in a chat.
+    const link = feature("share-cards") ? shareLinkFor(params) : permalinkFor(params);
     try {
-      await navigator.clipboard.writeText(permalinkFor(params));
+      await navigator.clipboard.writeText(link);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
       // Clipboard access is denied outside a secure context. Showing the URL
       // is the useful fallback.
-      showToast(permalinkFor(params), "info");
+      showToast(link, "info");
     }
   }
 

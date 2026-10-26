@@ -11,7 +11,7 @@ import { defineConfig, devices } from "@playwright/test";
 const APP = "http://127.0.0.1:5175";
 const API = "http://127.0.0.1:8001";
 // A second app and API with the hidden switches on (frontend/src/lib/features.js,
-// FREE_VALIDATIONS_PER_MONTH and SAVE_PORTFOLIO_RUNS), for work built ahead of
+// FREE_VALIDATIONS_PER_MONTH, SAVE_PORTFOLIO_RUNS and SHARE_CARDS), for work built ahead of
 // the tester round's end. The default project keeps testing the product as it is live.
 const APP_ON = "http://127.0.0.1:5176";
 const API_ON = "http://127.0.0.1:8002";
@@ -77,7 +77,7 @@ export default defineConfig({
       url: `${API_ON}/api/health`,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
-      env: { API_PORT: "8002", SKIP_SEED: "1", FREE_VALIDATIONS_PER_MONTH: "1", SAVE_PORTFOLIO_RUNS: "1" },
+      env: { API_PORT: "8002", SKIP_SEED: "1", FREE_VALIDATIONS_PER_MONTH: "1", SAVE_PORTFOLIO_RUNS: "1", SHARE_CARDS: "1" },
     },
     {
       command: "npm --prefix ../frontend run dev -- --host 127.0.0.1 --port 5176 --strictPort",
@@ -87,7 +87,7 @@ export default defineConfig({
       env: {
         ...FIREBASE_ENV,
         VITE_API_BASE_URL: API_ON,
-        VITE_FEATURES: "free-validation,onboarding,account-data,calm-pro-wall,cost-in-bps,sharpe-note",
+        VITE_FEATURES: "free-validation,onboarding,account-data,calm-pro-wall,cost-in-bps,sharpe-note,share-cards",
       },
     },
   ],

@@ -105,11 +105,12 @@ right, each on the author's yes). Separate from the move, so a problem in
 either can be told apart:
 
 - API: `gcloud run services update finertia-api --region us-central1 --project momentbacktracking --update-env-vars SAVE_PORTFOLIO_RUNS=1`
-  (portfolio runs kept in History, #133). `FREE_VALIDATIONS_PER_MONTH` is a
+  (portfolio runs kept in History, #133), and `SHARE_CARDS=1` with it
+  (the share link's preview page and card, `backend/share.py`). `FREE_VALIDATIONS_PER_MONTH` is a
   pricing decision, not a switch to flip here.
 - Frontend: `VITE_FEATURES` on Vercel Production, then a redeploy. The full
   list is `FEATURES` in `frontend/src/lib/features.js` (as of 23 Oct:
-  `free-validation,onboarding,account-data,calm-pro-wall,cost-in-bps,sharpe-note`).
+  `free-validation,onboarding,account-data,calm-pro-wall,cost-in-bps,sharpe-note,share-cards`).
   `free-validation` only means something once the API's allowance is above 0.
 - Check signed in: a portfolio run appears in History; the cost field reads
   bps; the Pro wall is said once.
