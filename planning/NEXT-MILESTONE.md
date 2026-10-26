@@ -67,7 +67,18 @@ cannot, because the 31 Oct decision needs the data costs.
   the four 23 Oct findings (calm Pro wall #130, cost in bps #131, Sharpe note
   #132, portfolio runs in History #133). Switching them on is step 7 of
   [B1-REGION-MOVE.md](B1-REGION-MOVE.md), after the move on 1 Nov.
-- **For the author on the 27th**: confirm 1 Nov for B1 and the switch-on; the
+- **Since 24 Oct** (public pages only, so inside the round's rule):
+  M13's content SEO ran ahead of plan. `/strategies` (one page per
+  strategy, plus `/strategies/<a>-vs-<b>` for each pair across 39 stocks),
+  five `/learn` articles linked to the stock pages, `/stocks` for 39 US and
+  Indian stocks and indices, every figure re-checkable by
+  `build_stock_pages.py --check`, and `/stocks` saying any Yahoo Finance
+  symbol runs in the workspace (#154). Sitemap 59 URLs. Found on the way:
+  the API rejected tickers over 12 characters (BHARTIARTL.NS), fixed and
+  deployed 25 Oct (rev `00028-v6n`).
+- **B1 steps 1–4 done 25 Oct** on the author's yes: the us-central1 service
+  serves `main` with no traffic sent to it. The switch (step 5) stays on 1 Nov.
+- **For the author on the 27th**: the switch-on after B1 on 1 Nov; the
   free allowance (`FREE_VALIDATIONS_PER_MONTH`, a pricing call); when the
   data sprint and the legal consult start, which phase 4 may reorder.
 
