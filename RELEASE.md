@@ -40,7 +40,7 @@ scripts/release-check.sh pre
   - new `os.environ` reads;
   - live rules == `firestore.rules`;
   - composite indexes READY.
-- [ ] New env vars are set on the service first, or are safe when unset. Use `gcloud run services update finertia-api --region asia-south1 --update-env-vars …`, never `--set-env-vars`, which wipes the others.
+- [ ] New env vars are set on the service first, or are safe when unset. Use `gcloud run services update finertia-api --region us-central1 --update-env-vars …`, never `--set-env-vars`, which wipes the others.
 - [ ] Changed indexes are deployed first and READY: `firebase deploy --only firestore:indexes --project momentbacktracking`. A query that needs a missing index fails.
 - [ ] Changed rules are deployed: `firebase deploy --only firestore:rules --project momentbacktracking`.
 - [ ] The rollback revision printed by the script is noted.
@@ -92,7 +92,7 @@ Roll back first, then debug.
 **Backend.** Send traffic back to the previous revision, from part 2:
 
 ```bash
-gcloud run services update-traffic finertia-api --region asia-south1 --project momentbacktracking --to-revisions <previous-revision>=100
+gcloud run services update-traffic finertia-api --region us-central1 --project momentbacktracking --to-revisions <previous-revision>=100
 ```
 
 Then point the tag at what is serving again. `/api/health` names the commit:
