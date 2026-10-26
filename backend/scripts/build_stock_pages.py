@@ -16,7 +16,7 @@ test, rolling walk-forward). About six calls a stock, a second or two each.
 
 A page per stock only earns its place if the numbers on it are its own. Add a
 stock by adding a row to STOCKS and re-running; the frontend tests check every
-row has a page.
+row has a page. Then run build_stock_cards.py for its link-preview card.
 """
 
 import json
