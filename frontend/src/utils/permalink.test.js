@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { encodeParams, decodeParams } from "./permalink";
+import { encodeParams, decodeParams, shareLinkFor } from "./permalink";
 import { DEFAULTS } from "../components/ConfigPanel";
 
 describe("encodeParams", () => {
@@ -61,5 +61,17 @@ describe("decodeParams", () => {
   it("ignores another strategy's keys", () => {
     const out = decodeParams("?strategy=macd&bb_std=9");
     expect(out.bb_std).toBe(DEFAULTS.bb_std);
+  });
+});
+
+describe("shareLinkFor", () => {
+  it("points a single stock at the API's preview page, with the same query", () => {
+    const params = { ...DEFAULTS, ticker: "INFY.NS", strategy: "macd" };
+    expect(shareLinkFor(params)).toBe(`${window.location.origin}/api/share?${encodeParams(params)}`);
+  });
+
+  it("keeps the plain set-up link for a portfolio, which has no card", () => {
+    const params = { ...DEFAULTS, mode: "portfolio", tickers: ["AAPL", "MSFT"] };
+    expect(shareLinkFor(params)).toBe(`${window.location.origin}/dashboard?${encodeParams(params)}`);
   });
 });
