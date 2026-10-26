@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_TITLE, PAGE_META, shellFor, structuredData } from "./pageMeta";
@@ -19,6 +19,13 @@ describe("page shells", () => {
       expect(vercel.rewrites).toContainEqual({ source: meta.path, destination: `/${name}.html` });
     });
   }
+
+  it("every page's card is a file in public/ (stock cards: backend/scripts/build_stock_cards.py)", () => {
+    for (const meta of Object.values(PAGE_META)) {
+      const file = path.resolve(__dirname, "../../public", meta.image.replace("https://finertia.hulage.in/", ""));
+      expect(existsSync(file), meta.image).toBe(true);
+    }
+  });
 
   it("every page carries its breadcrumb trail, and articles an Article, as JSON-LD", () => {
     for (const meta of Object.values(PAGE_META)) {
