@@ -5,6 +5,7 @@ import json
 import os
 import time
 import uuid
+from urllib.parse import urlencode
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
 from typing import Optional
@@ -15,7 +16,8 @@ from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from pydantic import ValidationError
 from starlette.concurrency import run_in_threadpool
 from firebase_admin import firestore
 
@@ -68,6 +70,7 @@ from admin_queries import platform_stats, list_users, list_runs
 from history import history_page
 from account import delete_account, export_account
 from monitoring import init_sentry, set_user as sentry_set_user, tag_request
+import share
 import timing
 from timing import step
 
@@ -730,16 +733,13 @@ async def list_strategies():
     }
 
 
-@app.post("/api/backtest")
-def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(None)):
-    """Run a backtest for the selected strategy and persist results to Firestore."""
-    user = inject_user(authorization, limit=(backtest_limiter, "backtests", 1))
-    uid = user["uid"]
-    email = user["email"]
-    _enforce_quota(user)
+def _simulate(req: BacktestRequest):
+    """Fetch the prices and run one backtest: signals, overlays, engine.
 
-    start_time = time.time()
-
+    Shared by POST /api/backtest and the share card, so a card can never show
+    a different number from the run it links to. Returns (close, returns,
+    engine output, buy-and-hold equity, data source).
+    """
     # 1. Fetch data — a bad ticker or an empty range is the user's mistake, so
     # surface it as a 400 with the underlying reason rather than a 500.
     try:
@@ -781,6 +781,20 @@ def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(Non
     # 4. Engine
     engine_out = apply_positions(signals, returns, req.transaction_cost)
     benchmark = compute_benchmark(close)
+    return close, returns, engine_out, benchmark, data_source
+
+
+@app.post("/api/backtest")
+def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(None)):
+    """Run a backtest for the selected strategy and persist results to Firestore."""
+    user = inject_user(authorization, limit=(backtest_limiter, "backtests", 1))
+    uid = user["uid"]
+    email = user["email"]
+    _enforce_quota(user)
+
+    start_time = time.time()
+
+    close, returns, engine_out, benchmark, data_source = _simulate(req)
 
     net_return = engine_out["net_return"].fillna(0)
     equity_curve = engine_out["equity_curve"].fillna(1)
@@ -931,6 +945,66 @@ def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(Non
         "data_source": data_source,
         "duration_ms": duration_ms,
     }
+
+
+# ---------------------------------------------------------------------------
+# Share cards (share.py)
+# ---------------------------------------------------------------------------
+
+# Signed out, so metered per address, and only on a cache miss: a link going
+# round a group chat is computed once, then served from share.cache and the CDN.
+share_limiter = RateLimiter(limit=_int_env("RATE_LIMIT_SHARE_PER_MIN", 10), window_seconds=60)
+_SHARE_CACHE = {"Cache-Control": "public, max-age=3600, s-maxage=86400"}
+
+
+def _share_figures(request: Request):
+    """(canonical query, figures) for a single-stock link, or None if it is not one."""
+    params = request.query_params
+    if params.get("mode", "single") != "single":
+        return None
+    try:
+        req = BacktestRequest(**{k: v for k, v in params.items() if k in BacktestRequest.model_fields})
+    except ValidationError:
+        return None
+    query = share.canonical_query(req)
+    fig = share.cache.get(query)
+    if fig is None:
+        if not share_limiter.check(_client_ip(request))["allowed"]:
+            raise HTTPException(status_code=429, detail="Too many previews from this address. Try again in a minute.")
+        close, _, engine_out, benchmark, _ = _simulate(req)
+        fig = share.figures(req, close, engine_out, benchmark)
+        share.cache.put(query, fig)
+    return query, fig
+
+
+@app.get("/api/share")
+def share_page(request: Request):
+    """The preview page for a shared set-up; people are sent on to the workspace."""
+    if not share.enabled():
+        raise HTTPException(status_code=404, detail="Not found")
+    try:
+        found = _share_figures(request)
+    except HTTPException as exc:
+        if exc.status_code == 429:
+            raise
+        found = None  # a bad ticker or Yahoo down: the workspace explains it better
+    if found is None:
+        # Relative, so it stays on the site the link was opened on.
+        return RedirectResponse(f"/dashboard?{urlencode(list(request.query_params.multi_items()))}", status_code=302)
+    query, fig = found
+    site = ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "http://localhost:5174"
+    return HTMLResponse(share.page(fig, query, site), headers=_SHARE_CACHE)
+
+
+@app.get("/api/share/card.png")
+def share_card(request: Request):
+    """The 1200x630 card the preview page names as its og:image."""
+    if not share.enabled():
+        raise HTTPException(status_code=404, detail="Not found")
+    found = _share_figures(request)
+    if found is None:
+        raise HTTPException(status_code=404, detail="No card for this link")
+    return Response(share.card(found[1]), media_type="image/png", headers=_SHARE_CACHE)
 
 
 @app.post("/api/validate")
