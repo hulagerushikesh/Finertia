@@ -38,6 +38,11 @@ jobs:
       - name: Run tests
         run: pytest tests/ -q
 
+      # stockResults.json changed without build_stock_cards.py re-run would
+      # leave a stock page's link preview quoting old figures.
+      - name: Stock cards match stockResults.json
+        run: python scripts/build_stock_cards.py --check
+
   frontend:
     name: Frontend build
     runs-on: ubuntu-24.04

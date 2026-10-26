@@ -7,7 +7,7 @@ strategies at their defaults, with each one's walk-forward verdict. Each
 comparison page gets its scoreboard, computed as ComparePage.jsx computes it.
 
     cd backend && .venv/bin/python scripts/build_stock_cards.py           # rewrite every card
-    cd backend && .venv/bin/python scripts/build_stock_cards.py --check   # exit 1 if a card is missing or stale
+    cd backend && .venv/bin/python scripts/build_stock_cards.py --check   # exit 1 if a card is missing or stale (CI runs this)
 
 Re-run after build_stock_pages.py. The PNGs are committed under
 frontend/public/og/, so the build needs no Python; pageMeta.js points each
@@ -203,7 +203,8 @@ def main(check: bool) -> int:
         path = OUT / name
         png = draw()
         if check:
-            if not path.exists() or path.read_bytes() != png:
+            # Pixels, not bytes: CI's zlib may compress the same image differently.
+            if not path.exists() or Image.open(path).tobytes() != Image.open(io.BytesIO(png)).tobytes():
                 stale.append(name)
         else:
             path.write_bytes(png)
