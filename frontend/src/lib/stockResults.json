@@ -1,7 +1,7 @@
 {
  "start": "2019-01-01",
  "end": "2025-01-01",
- "generated": "2026-10-24",
+ "generated": "2026-10-26",
  "stocks": {
   "aapl": {
    "symbol": "AAPL",
@@ -1608,7 +1608,7 @@
       "total_return": -0.089,
       "annualized_return": -0.015,
       "sharpe_ratio": -0.14,
-      "max_drawdown": -0.168
+      "max_drawdown": -0.167
      },
      "trades": 168,
      "walk_forward": {
