@@ -156,3 +156,13 @@ export function decodeParams(search) {
 export function permalinkFor(params) {
   return `${window.location.origin}/dashboard?${encodeParams(params)}`;
 }
+
+/**
+ * The link to paste into a chat: the API's preview page (backend/share.py),
+ * which shows this run's figures as a card and sends a person on to the
+ * workspace. Portfolios have no card, so they keep the plain set-up link.
+ */
+export function shareLinkFor(params) {
+  if ((params.mode || "single") === "portfolio") return permalinkFor(params);
+  return `${window.location.origin}/api/share?${encodeParams(params)}`;
+}
