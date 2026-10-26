@@ -1145,24 +1145,30 @@ def test_the_profile_and_rate_limit_are_read_at_the_same_time(api, monkeypatch):
     import time as _time
 
     client, state = api
+    spans = {}
 
     def slow_profile(uid):
+        start = _time.perf_counter()
         _time.sleep(0.5)
+        spans["profile"] = (start, _time.perf_counter())
         return state["profile"]
 
     def slow_check(key, now=None, cost=1):
+        start = _time.perf_counter()
         _time.sleep(0.5)
+        spans["ratelimit"] = (start, _time.perf_counter())
         return {"allowed": True, "remaining": 1, "retry_after": 0.0}
 
     monkeypatch.setattr(main, "get_user_profile", slow_profile)
     monkeypatch.setattr(main.backtest_limiter, "check", slow_check)
-    started = _time.perf_counter()
     r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
     assert r.status_code == 200
     steps = _server_timing(r)
     assert steps["profile"] >= 490 and steps["ratelimit"] >= 490
-    # One after the other would be 1.0 s before any work.
-    assert _time.perf_counter() - started < 0.85
+    # Each read starts before the other ends. Timing the whole request instead
+    # also timed the backtest, which a slow CI runner pushed over the bound.
+    (a0, a1), (b0, b1) = spans["profile"], spans["ratelimit"]
+    assert a0 < b1 and b0 < a1
 
 
 def test_portfolio_legs_fetch_their_prices_together(api, monkeypatch):
