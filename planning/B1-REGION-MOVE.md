@@ -4,6 +4,13 @@ _Prepared 23 Oct 2026. Decided 23 Oct: B1, carried out **after the tester
 round closes on 31 Oct** (the five testers see the same product). Each step
 marked **prod** waits for the author's yes on the day._
 
+_25 Oct: steps 1–4 done on the author's yes (no traffic moved). us-central1
+serves `f0fc120` on revision `finertia-api-00002-rxr`; health, strategies and
+the CORS preflight pass, env names, scaling, CPU boost, resources and service
+account match Mumbai. Step 5, the switch, stays on 1 Nov. If `main` gains
+backend changes before then, redeploy us-central1 first (step 2) so both
+regions serve the same commit._
+
 ## Why
 
 The first signed-in backtest on rev `00025-82m` (18 Oct) took 3.7 s, and
