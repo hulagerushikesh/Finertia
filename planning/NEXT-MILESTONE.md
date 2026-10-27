@@ -80,7 +80,16 @@ cannot, because the 31 Oct decision needs the data costs.
   deployed 25 Oct (rev `00028-v6n`).
 - **B1 steps 1–4 done 25 Oct** on the author's yes: the us-central1 service
   serves `main` with no traffic sent to it. The switch (step 5) stays on 1 Nov.
-- **For the author on the 27th**: the switch-on after B1 on 1 Nov; the
+- **26 Oct**: each stock and comparison page gets its own link-preview card
+  (#160, #161), and CI fails when a card no longer matches
+  `stockResults.json` (#163). A flaky timing test on `main` fixed (#164).
+  `0f483fb` (share cards, still off) deployed to both regions, then the
+  author moved asia-south1 traffic back to `00028-v6n` (`1e0f65c`);
+  us-central1 still serves `0f483fb`. hulage.in's Finertia entry rewritten
+  to match the product (validation, the AAPL finding, the stock pages).
+- **For the author on the 27th**: restore asia-south1 to `00029-qhr`, or keep
+  `00028-v6n` and bring us-central1 back to match. B1 needs both regions on
+  one commit before 1 Nov. Then the switch-on after B1 on 1 Nov; the
   free allowance (`FREE_VALIDATIONS_PER_MONTH`, a pricing call); when the
   data sprint and the legal consult start, which phase 4 may reorder.
 
