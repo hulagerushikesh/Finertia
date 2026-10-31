@@ -11,6 +11,23 @@ account match Mumbai. Step 5, the switch, stays on 1 Nov. If `main` gains
 backend changes before then, redeploy us-central1 first (step 2) so both
 regions serve the same commit._
 
+_**31 Oct: step 5 done**, a day early on the author's yes — the tester round
+closed the same day, so the five no longer see a moving product. PR #159
+merged as `96428de`; Vercel had the `/api/*` rewrite live within a minute.
+`finertia.hulage.in/api/health` now answers from `finertia-api-00003-fqf`
+in us-central1, 100% of traffic, and asia-south1 `00029-qhr` stays up as the
+rollback. `release-check.sh post`: every check passes except the drift check,
+for the reason below. Steps 6 and 7 still follow._
+
+_**The drift check fails for a reason that is not drift.** It compares the
+commit the service reports with the `backend-deployed` tag, and today's
+history rewrite (the Claude trailers stripped from every commit) gave each
+commit a new sha. The running image was built from `0f483fb`, the tag points
+at `86d4af2`, and `git diff 0f483fb 86d4af2` is **empty** — same tree, two
+names for it. Do not "fix" this by forcing the tag to `0f483fb`: that sha is
+no longer on `main`, so the tag would leave the branch. It clears itself the
+next time the backend is deployed from the rewritten history._
+
 ## Why
 
 The first signed-in backtest on rev `00025-82m` (18 Oct) took 3.7 s, and
