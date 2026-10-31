@@ -12,14 +12,13 @@ on:
   workflow_dispatch:
     inputs:
       region:
-        # asia-south1 serves the site today. us-central1 is the system design's
-        # B1 target, next to Firestore nam5 (planning/B1-REGION-MOVE.md):
-        # deploying there does not change what users hit until the vercel.json
-        # rewrite points at it.
+        # us-central1 serves the site since B1 (1 Nov), next to Firestore nam5
+        # (planning/B1-REGION-MOVE.md). asia-south1 is kept for a week as the
+        # rollback: deploying there changes nothing users hit.
         description: Cloud Run region
         type: choice
         options: [asia-south1, us-central1]
-        default: asia-south1
+        default: us-central1
   # push:
   #   branches: [main]
   #   paths: [backend/**]
@@ -27,7 +26,7 @@ on:
 env:
   # The region users reach through the vercel.json rewrite. Only a deploy
   # there moves the backend-deployed tag; a deploy elsewhere is a staging step.
-  SERVING_REGION: asia-south1
+  SERVING_REGION: us-central1
 
 concurrency:
   # Two overlapping deploys race for the same revision name.
@@ -61,7 +60,7 @@ jobs:
     needs: test
     runs-on: ubuntu-24.04
     env:
-      REGION: ${{ inputs.region || 'asia-south1' }}
+      REGION: ${{ inputs.region || 'us-central1' }}
     permissions:
       contents: write   # moves the backend-deployed tag after a healthy deploy
       id-token: write
