@@ -38,9 +38,19 @@ recorded use so far is the author's.
 
 One sign-up since 13 Oct, with no run yet. No new runs since 13 Oct.
 
-**End, _date_:**
+**End, 31 Oct 2026** (same command):
 
-_(paste the script's output here)_
+| | All time | Since 2026-10-07 |
+|---|---|---|
+| Sign-ups | 5 | 5 |
+| Saved backtest runs | 15 | 15 |
+| Users with a saved run | 4 | 4 |
+| Backtest + portfolio runs (`totalRuns` sum) | 15 | — |
+| Pro accounts (paid / comped by admin) | 0 / 0 | — |
+| Free validations used this month | 0 | — |
+
+Unchanged since 17 Oct. No run by anyone but the author after 13 Oct; the
+fifth sign-up never ran one.
 
 ## Running a session
 
@@ -179,12 +189,17 @@ cd backend && .venv/bin/python scripts/round_score.py --since 2026-10-07 \
 
 | # | Type | Finished unaided | Opened Validation | Engaged | Returned | Would pay |
 |---|---|---|---|---|---|---|
-| 1 | | | | | | |
-| 2 | | | | | | |
-| 3 | | | | | | |
-| 4 | | | | | | |
-| 5 | | | | | | |
-| **Total** | | /5 | /5 | /5 | /5 | /5 |
+| `EQXP0o` | | | | — (1 run, no second ticker or rule) | no | |
+| `nYoT1I` | | | | more than asked: yes (6 runs) | no | |
+| `q38OUX` | | | | more than asked: yes (6 runs) | no | |
+| `XelUbH` | | | | — (2 runs, no second ticker or rule) | no | |
+| 5th sign-up | | | | no run | no | |
+| **Total** | | /5 | /5 | /5 | **0/5** | /5 |
+
+Filled from `round_score.py` on 31 Oct (author's two accounts excluded): first
+runs 12–13 Oct, no tester ran on a later day. The blank columns come from the
+conversations and only the author can fill them; uids match people in
+Admin → Users.
 
 **Rule result:** _product / education / portfolio_ — which line of the rule
 fired, and the numbers that fired it.
