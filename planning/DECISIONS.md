@@ -3,6 +3,37 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-10-31 — Phase 4: Finertia stays a portfolio piece
+
+**Decision (author, 31 Oct):** portfolio piece. Maintenance only; no new
+product build. This reverses the 13 Oct "build it as a product" direction,
+and this time the round's numbers point the same way.
+
+**The rule (8 Oct), applied:** line 3 fired.
+
+- n = 5 sign-ups, 4 of whom ran anything (12–13 Oct). Fewer than five
+  sessions, so decided on these, as the process rule says.
+- **Returned 0/5** (`round_score.py`, 31 Oct): no tester ran on a later day.
+  Two did more than asked on day one (6 runs each).
+- **Would pay: none recorded.** The conversation columns in
+  [feedback.md](feedback.md) were not filled; the author decided without
+  them. Under the rule an unrecorded answer is not a yes, so lines 1 and 2
+  cannot fire.
+
+**What follows:**
+
+- **Off:** Stripe and payments, the licensed-data sprint, the legal consult
+  and brief. [PAYMENTS-PLAN.md](PAYMENTS-PLAN.md) and the `data.py` seam stay
+  as written, for a later reversal.
+- **Still done**, because they are the shared rows of sprint 2 and finish
+  work already built: B1 (the API to us-central1) and switching on what is
+  built behind flags, each on the author's yes. A free monthly validation
+  above 0, since Validation is the demo's strongest point.
+- **Measure** visits to `/writeup`, `/demo` and the public stock pages
+  (Search Console), not conversion.
+- **Reversal** needs a new dated entry here with new evidence (for example,
+  two clear "would pay" from people who are not the author's friends).
+
 ## 2026-10-13 — Cold start: measured; the uptime check is the fix, no `min-instances`
 
 Sprint 1 item 6. Measured on a throwaway Cloud Run service

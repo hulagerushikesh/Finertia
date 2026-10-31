@@ -201,8 +201,9 @@ runs 12–13 Oct, no tester ran on a later day. The blank columns come from the
 conversations and only the author can fill them; uids match people in
 Admin → Users.
 
-**Rule result:** _product / education / portfolio_ — which line of the rule
-fired, and the numbers that fired it.
+**Rule result:** **portfolio** — line 3 of the 8 Oct rule. Returned 0/5, no
+"would pay" recorded, so neither line 1 nor line 2 can fire. Decided by the
+author on 31 Oct: [DECISIONS.md](DECISIONS.md).
 
 _Patterns, not anecdotes (fill in after entry 5): where people got stuck in
 more than one session, what the Pro wall did, what the price answers had in

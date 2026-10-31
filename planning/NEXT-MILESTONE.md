@@ -103,7 +103,11 @@ cannot, because the 31 Oct decision needs the data costs.
 6. ~~Terms and Privacy published~~ → after the legal consult, which follows the build work.
 7. **Payments live**: only on the product path, and only after the data sprint and the legal review. Provider research and the build plan (P0–P6, and eight gaps in today's Stripe code): [PAYMENTS-PLAN.md](PAYMENTS-PLAN.md).
 
-## Sprint 2 by phase-4 outcome — drafted 24 Oct, chosen on 1 Nov
+## Sprint 2 by phase-4 outcome — drafted 24 Oct, chosen 31 Oct: **Portfolio**
+
+**Chosen 31 Oct: the Portfolio column** (DECISIONS 31 Oct). Returned 0/5, no
+"would pay" recorded. Sprint 2 is the shared rows (B1, the switch-on) plus
+maintenance; items 5–7 of the pencilled list above do not happen.
 
 The 1 Nov decision picks one column; the shared rows happen whatever it says.
 Written now so the re-plan is a choice, not a fresh plan.
