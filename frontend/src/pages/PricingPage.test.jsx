@@ -107,3 +107,27 @@ describe("before and without the API", () => {
     expect(screen.getByText("$12")).toBeInTheDocument();
   });
 });
+
+describe("the free monthly validation", () => {
+  async function freeCard() {
+    const label = await screen.findByText("Free", { selector: "p" });
+    return label.closest("div.relative");
+  }
+
+  it("is on the Free card while the switch is on", async () => {
+    vi.stubEnv("VITE_FEATURES", "free-validation");
+    renderPage({ billing: false });
+    const card = await freeCard();
+    expect(within(card).getByText(/One validation a month/)).toBeInTheDocument();
+    expect(await screen.findByText(/more than one validation a month/)).toBeInTheDocument();
+    vi.unstubAllEnvs();
+  });
+
+  it("is not mentioned while the switch is off", async () => {
+    vi.stubEnv("VITE_FEATURES", "");
+    renderPage({ billing: false });
+    const card = await freeCard();
+    expect(within(card).queryByText(/One validation a month/)).not.toBeInTheDocument();
+    vi.unstubAllEnvs();
+  });
+});

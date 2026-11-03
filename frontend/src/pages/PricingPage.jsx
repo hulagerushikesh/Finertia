@@ -11,11 +11,24 @@ import { Rise, Stagger, StaggerItem } from "../components/motion";
 import { cn } from "@/lib/utils";
 import { SUPPORT_EMAIL } from "../lib/contact";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { feature } from "../lib/features";
 // The same plans the API serves, kept in step by a backend test. The page
 // starts from this copy, so the build can pre-render the cards and a cold API
 // never leaves a pricing page of skeletons; /api/plans then confirms it and
 // says whether billing is on.
 import PLANS from "../lib/plans.json";
+
+// The API's allowance is FREE_VALIDATIONS_PER_MONTH (1 since 1 Nov). The plans
+// it serves predate the allowance, so the Free card gains the line here, behind
+// the same switch as the rest of the free-validation UI.
+const FREE_VALIDATION_LINE = "One validation a month: walk-forward and permutation tests";
+
+function planFeatures(plan) {
+  if (plan.id !== "free" || !feature("free-validation")) return plan.features;
+  const out = [...plan.features];
+  out.splice(2, 0, FREE_VALIDATION_LINE);
+  return out;
+}
 
 export default function PricingPage() {
   usePageTitle("pricing");
@@ -66,6 +79,7 @@ export default function PricingPage() {
         <p className="text-graphite leading-relaxed mt-4">
           Both plans run the same engine on the same data. Pro adds the tests that tell you whether
           a result is worth anything — and raises the monthly run quota.
+          {feature("free-validation") && " Free includes one of those tests a month, to try them."}
         </p>
       </Rise>
 
@@ -116,7 +130,7 @@ export default function PricingPage() {
                 </p>
 
                 <ul className="flex flex-col gap-3 mb-8 flex-1">
-                  {plan.features.map((f) => (
+                  {planFeatures(plan).map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-sm text-graphite leading-relaxed">
                       <Check
                         className={cn("size-4 mt-0.5 shrink-0", isPro ? "text-pencil" : "text-faint")}
@@ -135,8 +149,10 @@ export default function PricingPage() {
                       </Button>
                     )}
                     <p className="text-xs text-graphite leading-relaxed">
-                      Pro isn&rsquo;t on sale yet. Testing Finertia and need validation? Ask for
-                      access at{" "}
+                      Pro isn&rsquo;t on sale yet.{" "}
+                      {feature("free-validation")
+                        ? "Need more than one validation a month? Ask for access at"
+                        : "Testing Finertia and need validation? Ask for access at"}{" "}
                       <a href={`mailto:${SUPPORT_EMAIL}`} className="text-pencil underline underline-offset-2">
                         {SUPPORT_EMAIL}
                       </a>
