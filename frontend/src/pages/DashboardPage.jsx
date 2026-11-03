@@ -29,6 +29,7 @@ import { useToast } from "../hooks/useToast";
 import { useAuth } from "../hooks/useAuth";
 import { loadWorkspace, saveWorkspace } from "../lib/workspaceStore";
 import { feature } from "../lib/features";
+import { withTickerHint } from "../lib/tickerHint";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -174,7 +175,7 @@ export default function DashboardPage() {
       const subject = isPortfolio ? `${params.tickers.length}-name portfolio` : params.ticker;
       showToast(`${subject} complete — ${pct}% total return`, "success");
     } catch (err) {
-      const message = err.message || "Backtest failed.";
+      const message = withTickerHint(err.message || "Backtest failed.");
       setError({ message, status: err.status, action: "run" });
       showToast(message, "error");
     } finally {

@@ -583,3 +583,7 @@ npm test
 26 Playwright tests drive the real app in Chromium against the real API and the real Firestore security rules, with Firebase's Auth and Firestore emulators standing in for the project. `npm test` starts all three (emulators, API on :8001, app on :5175), and `backend/scripts/seed_e2e.py` seeds two fixture accounts (`e2e/fixtures/users.json`) and deterministic synthetic prices so no run ever reaches Yahoo. Needs Java for the emulators.
 
 They cover the logged-in paths the unit tests cannot: register with the unverified-email banner, a backtest, Validation on the run on screen with the Pro wall for a free user, the too-short-range error, History re-run, Profile save, the admin Pro grant and what it unlocks, and that a member cannot open the admin panel; plus the public pages, `/demo`'s verdict, and phone-width overflow. CI runs them on every PR (the "E2E (Playwright)" job). Emulator mode is refused on Cloud Run (`firebase_admin_init.emulator_mode`).
+
+## License
+
+MIT, see [LICENSE](LICENSE). The price data comes from Yahoo Finance and is not covered by it.
