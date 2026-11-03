@@ -41,7 +41,7 @@ class TestTicker:
         with pytest.raises(ValidationError, match="letters, digits"):
             req(ticker="AA;DROP")
 
-    @pytest.mark.parametrize("symbol", ["BRK.B", "RDS-A", "^GSPC", "EURUSD=X", "BHARTIARTL.NS", "BAJAJ-AUTO.NS"])
+    @pytest.mark.parametrize("symbol", ["BRK.B", "RDS-A", "^GSPC", "EURUSD=X", "BHARTIARTL.NS", "BAJAJ-AUTO.NS", "M&M.NS"])
     def test_real_world_symbol_formats_are_allowed(self, symbol):
         assert req(ticker=symbol).ticker == symbol
 
