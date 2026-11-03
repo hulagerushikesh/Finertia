@@ -205,6 +205,39 @@ Admin → Users.
 "would pay" recorded, so neither line 1 nor line 2 can fire. Decided by the
 author on 31 Oct: [DECISIONS.md](DECISIONS.md).
 
-_Patterns, not anecdotes (fill in after entry 5): where people got stuck in
-more than one session, what the Pro wall did, what the price answers had in
-common. This is the input to phase 4._
+### Patterns (written 3 Nov, from the logs and the fix log)
+
+The five conversations were never written up as entries, so what follows
+comes from what the round left behind: the `runs` collection, the bug log
+above, and the request logs. The interview columns (finished unaided, opened
+Validation, would pay) stay blank: only the author heard those answers.
+
+- **Starting was not the problem.** Four of five ran a backtest on their own
+  first day, and two went well past the task (six runs each, other tickers
+  or rules). The fifth signed up and never ran one.
+- **Nobody came back.** 0/5 ran anything on a later day, and nothing has been
+  run by a tester since 13 Oct. Whatever the product gave them, it was not a
+  reason to return; for a free tool with no saved goal, that is the expected
+  result, and it is what the 8 Oct rule read as "portfolio".
+- **Where people tripped, in more than one session:**
+  - *Input that looked right but was read differently.* Dates typed day-first
+    read as month-first (bug 2), and Indian shares typed without `.NS`
+    (`RELIANCE` rather than `RELIANCE.NS`), which Yahoo does not know: three
+    such errors in the logs on 3 Nov. Both errors now say what was understood
+    and what to type instead.
+  - *The screen and the run disagreeing.* Validation read the live ticker box
+    rather than the run on screen (bugs 6 and 7), and the strategy badge
+    relabelled a finished result (bug 14). All fixed: the result screen reads
+    the run it came from.
+  - *Work lost on leaving the workspace* (bug 8). Fixed: the last run is kept
+    for the session.
+- **The Pro wall stopped people, and nobody tried to pay.** Validation was
+  Pro-only and Pro was not on sale, so "would pay" was never tested against a
+  real button. Since 3 Nov a free account gets one validation a month, and the
+  wall is said once, calmly, in the Validation panel.
+- **Price answers:** none recorded, so no pattern can be drawn from them.
+
+**What this changed:** Finertia is kept as a portfolio piece (DECISIONS
+31 Oct). Every defect above is fixed and live; the switches built during the
+round (onboarding, account data, share cards, saved portfolio runs) are all on
+since 3 Nov.
