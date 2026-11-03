@@ -13,6 +13,7 @@ Where the project is, what is next, and why past choices were made.
 | [feedback.md](feedback.md) | Outside-user sessions (M10 phase 3): messages, session script, one entry per person, usage counts | after each session |
 | [product-brief.md](product-brief.md) | Positioning, users, competitors, credibility gaps | rarely |
 | [write-up.md](write-up.md) | The finding, written up: walk-forward inversion, five checks that disagree, the window flip | when figures are re-run |
+| [RESEARCH-PLAN.md](RESEARCH-PLAN.md) | The Nifty study: how many strategies survive honest testing, method and pre-registered thresholds | before each run |
 | [artifacts.md](artifacts.md) | Links to the published interactive trackers these files replaced | when one is refreshed |
 
 Rule carried over from the build ledger: **verified and built are different
