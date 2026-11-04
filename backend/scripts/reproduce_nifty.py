@@ -2,7 +2,7 @@
 
     cd backend && .venv/bin/python scripts/reproduce_nifty.py
 
-Reads the study's saved results, nifty-funnel.json and nifty-grid.json, so it
+Reads the study's saved results (nifty-funnel, nifty-grid and nifty-perm .json), so it
 runs in a second. Re-running the study itself from fresh prices is the job of
 `nifty_study.py --check` and `nifty_grid.py --check`. Prints each quoted
 figure beside the saved value, exits 1 if any no longer matches at the
@@ -18,6 +18,7 @@ from pathlib import Path
 RESEARCH = Path(__file__).resolve().parents[2] / "planning" / "research"
 FUNNEL = json.loads((RESEARCH / "nifty-funnel.json").read_text())
 GRID = json.loads((RESEARCH / "nifty-grid.json").read_text())
+PERM = json.loads((RESEARCH / "nifty-perm.json").read_text())
 
 
 def rows(universe="start_2011", cost="default"):
@@ -99,6 +100,18 @@ EXPECTED = [
     ("pick timing p", PICK["permutation_p"], "0.046"),
     ("small grid pick", GRID["small_grid_same_strategy"]["best_params"], "{'bb_window': 50, 'bb_std': 2.5}"),
     ("small grid in-sample", GRID["small_grid_same_strategy"]["is_sharpe"], "-0.086"),
+    *[
+        (f"re-run {u} {c} {k}", PERM["universes"][u][c]["passing_timing_test"][k], q)
+        for u, k, vals in [
+            ("start_2011", "defaults_day_shuffle", ("37", "60", "107")),
+            ("start_2011", "pick_day_shuffle", ("58", "92", "109")),
+            ("start_2011", "pick_run_shuffle", ("26", "25", "21")),
+            ("today", "pick_run_shuffle", ("19", "17", "11")),
+        ]
+        for c, q in zip(("half", "default", "double"), vals)
+    ],
+    ("re-run survivors, default", sorted(PERM["universes"]["start_2011"]["default"]["survivors_after"]) == SURVIVORS, "True"),
+    ("re-run survive, double", PERM["universes"]["start_2011"]["double"]["survives_after"], "3"),
 ]
 
 

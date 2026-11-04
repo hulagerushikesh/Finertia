@@ -170,19 +170,37 @@ settings instead of 12 raised the best tuning-years number from −0.086 to
 
 ## What the checks themselves showed
 
-Two things about the method came out of the run, and both are reported here
-rather than fixed quietly.
+Two things about the method came out of the run. Both are reported here
+rather than fixed quietly, and both were then re-tested under rules written
+down before the re-run.
 
 - **The funnel's timing test ran on the default settings**, the way the
-  product runs it, not on the setting the tuning picked. The 834-try half of
-  the study tests the pick itself. A re-run of the funnel with the pick is
-  planned.
+  product runs it, not on the setting the tuning picked.
 - **The timing test gets easier to pass as costs rise.** On the 2011 list, 37
   pairs passed it at half cost, 60 at the default and 107 at double. Shuffling
   a strategy's trades breaks its long holding runs into many short ones, and
   each short one pays the cost again, so the shuffled versions are penalised
-  more than the real one. That makes the test's bar fall as costs rise. It
-  needs a version that shuffles whole holding runs instead of single days.
+  more than the real one. That makes the test's bar fall as costs rise.
+
+The re-run tests the pick, and shuffles whole holding runs instead of single
+days, so each shuffle trades about as often as the real strategy.
+
+| Timing test, 2011 list | Half cost | Default | Double |
+|---|---|---|---|
+| Day shuffle, default settings (as first run) | 37 | 60 | 107 |
+| Day shuffle, the pick | 58 | 92 | 109 |
+| Run shuffle, the pick | 26 | 25 | 21 |
+
+Testing the pick with the old shuffle made the test easier still: 92 of 129
+passed at the default cost. With whole runs shuffled the passes no longer
+climb with cost; they fall slightly, which is what a higher cost should do.
+On today's list the run shuffle passes 19, 17 and 11.
+
+The survivors do not change. The same four pass the fairer test at the
+default cost, and the same three at double, so the funnel's ending was not
+an artefact of the flawed test. Its middle was: most of the pairs that
+"passed on timing" in the first run were passing a test that rewarded them
+for trading less than their shuffles.
 
 ## What this is not
 
