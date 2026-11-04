@@ -1,0 +1,71 @@
+<!--
+  Source for public/og-writeup-nifty.png, the share card for /writeup/nifty-50.
+  Render with headless Chrome at exactly 1200×630 (fonts come from Google
+  Fonts, so give it a virtual-time budget), from frontend/:
+
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+      --disable-gpu --hide-scrollbars --window-size=1200,630 --virtual-time-budget=8000 \
+      --screenshot=public/og-writeup-nifty.png "file://$PWD/design/og-writeup-nifty.html"
+
+  The figures are the funnel table of planning/research/nifty-write-up.md (the
+  2011 list, default cost). If that table changes, change these and re-render.
+  Bar widths are the counts as a share of 129.
+-->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink: #0F172A; --chalk: #F1F5F9; --mute: #94A3B8; --line: #1E293B; --mint: #34D399; --bar: #334155; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; background: var(--ink); }
+  body { font-family: "DM Sans", sans-serif; color: var(--chalk); padding: 64px 72px; position: relative; }
+  .brand { display: flex; align-items: center; gap: 14px; font-weight: 700; font-size: 26px; letter-spacing: -0.01em; }
+  .brand span { color: var(--mint); }
+  .eyebrow { margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 17px; color: var(--mute); letter-spacing: 0.08em; text-transform: uppercase; }
+  h1 { margin-top: 40px; font-weight: 700; font-size: 56px; line-height: 1.04; letter-spacing: -0.03em; max-width: 1000px; }
+  h1 em { font-style: normal; color: var(--mint); }
+  .funnel { margin-top: 36px; display: grid; grid-template-columns: 400px 1fr; row-gap: 12px; align-items: center; }
+  .label { font-size: 21px; font-weight: 500; color: var(--chalk); }
+  .track { display: flex; align-items: center; gap: 16px; }
+  .bar { height: 28px; border-radius: 4px; background: var(--bar); }
+  .n { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 24px; }
+  .last .bar { background: var(--mint); }
+  .last .n, .last.label { color: var(--mint); }
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 56px; display: flex; justify-content: space-between; font-size: 19px; color: var(--mute); }
+  .foot b { font-family: "IBM Plex Mono", monospace; font-weight: 400; }
+</style>
+</head>
+<body>
+  <div class="brand">
+    <svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="14" fill="#1E293B"/>
+      <g fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 47 L23 36 L31 42 L40 29" stroke="#F1F5F9"/>
+        <path d="M40 29 L54 15" stroke="#34D399"/>
+      </g>
+    </svg>
+    <div>Finertia<span>.</span></div>
+    <div class="eyebrow">Nifty 50 · 2011–2025</div>
+  </div>
+
+  <h1>Of 129 Nifty strategies, <em>four</em> survived honest testing.</h1>
+
+  <div class="funnel">
+    <div class="label">Tested, after costs</div>
+    <div class="track"><div class="bar" style="width: 600px"></div><div class="n">129</div></div>
+    <div class="label">Beat holding the stock, tuning years</div>
+    <div class="track"><div class="bar" style="width: 233px"></div><div class="n">50</div></div>
+    <div class="label">Still ahead on unseen years</div>
+    <div class="track"><div class="bar" style="width: 33px"></div><div class="n">7</div></div>
+    <div class="label last">Passed the luck checks</div>
+    <div class="track last"><div class="bar" style="width: 19px"></div><div class="n">4</div></div>
+  </div>
+
+  <div class="foot">
+    <div>All four were betting against collapsing stocks.</div>
+    <b>finertia.hulage.in/writeup/nifty-50</b>
+  </div>
+</body>
+</html>

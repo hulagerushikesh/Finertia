@@ -79,7 +79,9 @@ export const PAGE_META = {
     ogTitle: "Of 129 Nifty strategies, four survived honest testing.",
     description:
       "Momentum, MACD and Bollinger on the Nifty 50 as it stood in 2011, after costs, judged on years they never saw. Four beat holding the stock, all by sitting out collapsing ones.",
-    ...CARD,
+    image: `${SITE}/og-writeup-nifty.png`,
+    imageAlt:
+      "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
   },
   strategies: {
     name: "Strategies",
