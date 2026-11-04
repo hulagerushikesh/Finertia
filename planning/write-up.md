@@ -226,6 +226,11 @@ it is not. What it shows is narrower and more useful:
 A rolling walk-forward for a basket is not built. The bootstrap intervals do
 not resample by regime, so the volatility-interval coverage gap stands.
 
+One stock is one stock. The follow-up asks the wider question: the same
+three strategies across the Nifty 50 as it stood in 2011, fifteen years,
+judged the same way. Of 129, four survived, and all four were betting
+against collapsing stocks: https://finertia.hulage.in/writeup/nifty-50
+
 ## Reproduce it
 
 - Live: https://finertia.hulage.in → Dashboard → Validate, AAPL, 2018-01-01,
