@@ -70,6 +70,17 @@ export const PAGE_META = {
     imageAlt:
       "Sharpe ratios on AAPL 2018–2024. Momentum 0.95 tuned, −0.30 on new data; MACD 0.51, −0.30; Bollinger 0.56, 1.17.",
   },
+  "writeup-nifty": {
+    name: "The Nifty 50 study",
+    path: "/writeup/nifty-50",
+    type: "article",
+    published: "2026-11-04",
+    title: "Of 129 Nifty strategies, four survived honest testing · Finertia",
+    ogTitle: "Of 129 Nifty strategies, four survived honest testing.",
+    description:
+      "Momentum, MACD and Bollinger on the Nifty 50 as it stood in 2011, after costs, judged on years they never saw. Four beat holding the stock, all by sitting out collapsing ones.",
+    ...CARD,
+  },
   strategies: {
     name: "Strategies",
     path: "/strategies",

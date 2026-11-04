@@ -9,6 +9,7 @@ const LINKS = [
   ["/learn", "Learn"],
   ["/stocks", "Stocks"],
   ["/writeup", "The write-up"],
+  ["/writeup/nifty-50", "The Nifty 50 study"],
   ["/pricing", "Pricing"],
   ["/support", "Support"],
 ];
