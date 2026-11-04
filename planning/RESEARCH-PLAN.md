@@ -95,6 +95,28 @@ them:
   default parameters rather than the walk-forward's pick. Question 2 tests
   the pick. The write-up says so.
 
+## Follow-up, fixed before its run (4 Nov 2026)
+
+The write-up named two flaws in the timing test. This re-run fixes both,
+in the study only; the product's own test is unchanged.
+
+- **The pick, not the defaults.** For every row of question 1 (both lists,
+  all three costs), the timing test is re-run on the positions of the
+  walk-forward's chosen parameters, over the full period, as question 2 did.
+- **Shuffling whole holding runs.** Beside the product's day-by-day
+  shuffle, a second version cuts the positions into runs of unchanged
+  position and shuffles the order of the runs. Each run keeps its length,
+  so a shuffle trades about as often as the real strategy (a little less
+  when two runs of the same position end up side by side), and higher
+  costs no longer penalise the shuffles more than the real one. 500
+  shuffles, seed 42, as the product.
+- **Survives** is re-counted with the run-shuffle on the pick in place of
+  the old timing test; the other checks are as before. Both old and new
+  counts are reported.
+- **What would show the fix worked:** the number of pairs passing the
+  timing test should no longer rise steeply with cost. If it still does,
+  the write-up says so.
+
 ## Timeline (about 2 weeks part-time)
 
 | Week | Work | Done when |
