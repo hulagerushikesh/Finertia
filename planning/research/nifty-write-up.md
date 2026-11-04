@@ -1,6 +1,6 @@
 # Of 129 Nifty strategies, four survived honest testing, and all four were betting against collapsing stocks
 
-_Draft 1, 4 Nov 2026. Not yet published. Every figure below comes from
+_Draft 1, 4 Nov 2026. Every figure below comes from
 `planning/research/nifty-funnel.json` and `nifty-grid.json`, and
 `backend/scripts/reproduce_nifty.py` checks each one against them. The study's
 rules were written down in `planning/RESEARCH-PLAN.md` before the first run._

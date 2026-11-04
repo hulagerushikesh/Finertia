@@ -14,6 +14,15 @@ describe("parse", () => {
     expect(blocks[5].ordered).toBe(true);
   });
 
+  it("takes an image on a line of its own, ending the paragraph before it", () => {
+    const blocks = parse(["Text", "![A chart](chart.svg)", "More"].join("\n"));
+    expect(blocks).toEqual([
+      { type: "p", text: "Text" },
+      { type: "img", alt: "A chart", src: "chart.svg" },
+      { type: "p", text: "More" },
+    ]);
+  });
+
   it("handles Windows line endings", () => {
     expect(parse("## A\r\nb")).toEqual([{ type: "h", level: 2, text: "A" }, { type: "p", text: "b" }]);
   });

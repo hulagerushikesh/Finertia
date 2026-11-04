@@ -48,6 +48,7 @@ export const PRELOAD = {
   docs: DocsPage.preload,
   support: SupportPage.preload,
   writeup: WriteupPage.preload,
+  "writeup-nifty": WriteupPage.preload,
   strategies: StrategyPage.preload,
   "strategy-momentum": StrategyPage.preload,
   "strategy-macd": StrategyPage.preload,
@@ -126,6 +127,7 @@ export function Layout() {
                 <Route path="/demo" element={<DemoPage />} />
                 <Route path="/docs" element={<DocsPage />} />
                 <Route path="/writeup" element={<WriteupPage />} />
+                <Route path="/writeup/nifty-50" element={<WriteupPage name="writeup-nifty" />} />
                 <Route path="/support" element={<SupportPage />} />
                 <Route path="/strategies" element={<StrategyPage />} />
                 {PAIRS.map((p) => (

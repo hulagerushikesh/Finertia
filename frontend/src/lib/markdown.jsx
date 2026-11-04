@@ -3,7 +3,7 @@ import React from "react";
 /**
  * A renderer for the small slice of Markdown that planning/write-up.md uses:
  * #/##/### headings, paragraphs, pipe tables, "-" and "1." lists, a "---" rule,
- * and inline code, bold, italics and bare URLs.
+ * an image on a line of its own, and inline code, bold, italics and bare URLs.
  *
  * Hand-written rather than a library because that subset is all the write-up
  * needs, and because it returns React elements — no HTML string, so nothing in
@@ -57,6 +57,9 @@ export function parse(source) {
 
     if (/^---+\s*$/.test(line)) { blocks.push({ type: "hr" }); i++; continue; }
 
+    const img = line.match(/^!\[([^\]]*)\]\(([^)\s]+)\)\s*$/);
+    if (img) { blocks.push({ type: "img", alt: img[1], src: img[2] }); i++; continue; }
+
     if (line.trim().startsWith("|")) {
       const rows = [];
       while (i < lines.length && lines[i].trim().startsWith("|")) rows.push(lines[i++]);
@@ -80,7 +83,7 @@ export function parse(source) {
     }
 
     const para = [];
-    while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|\||---+\s*$|(\d+\.|-)\s)/.test(lines[i])) {
+    while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|\||---+\s*$|(\d+\.|-)\s|!\[)/.test(lines[i])) {
       para.push(lines[i++].trim());
     }
     blocks.push({ type: "p", text: para.join(" ") });
@@ -90,9 +93,19 @@ export function parse(source) {
 
 const NUMERIC = /^[−+\-]?[\d.,]+(\s?%|%\/yr)?(\s*\[.*\])?$|^\*\*[−+\-]?[\d.,]+/;
 
-export function Block({ block, index }) {
+/**
+ * `images` maps a file name as the Markdown writes it to the URL the build gave
+ * it. An image missing from the map renders nothing rather than a broken link.
+ */
+export function Block({ block, index, images = {} }) {
   const key = `b${index}`;
   switch (block.type) {
+    case "img":
+      return images[block.src] ? (
+        <figure className="my-4 -mx-4 sm:mx-0 border-y sm:border border-border sm:rounded-lg bg-white overflow-hidden">
+          <img src={images[block.src]} alt={block.alt} className="w-full h-auto" loading="lazy" />
+        </figure>
+      ) : null;
     case "h": {
       const id = slug(block.text);
       if (block.level === 2) {

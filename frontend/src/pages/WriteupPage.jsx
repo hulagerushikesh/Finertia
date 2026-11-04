@@ -2,15 +2,24 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Rise } from "../components/motion";
 import { Block, inline, parse, slug } from "../lib/markdown";
-// The page IS planning/write-up.md — the same file reproduce_writeup.py checks —
+// Each page IS its Markdown file — the same file its reproduce script checks —
 // so what is published cannot drift from what was verified.
-import source from "../../../planning/write-up.md?raw";
+import writeup from "../../../planning/write-up.md?raw";
+import nifty from "../../../planning/research/nifty-write-up.md?raw";
+import niftyGrid from "../../../planning/research/nifty-grid.svg?url";
 import { usePageTitle } from "../hooks/usePageTitle";
 
-export default function WriteupPage() {
-  const blocks = useMemo(() => parse(source), []);
+// Keyed as in PAGE_META. `images` maps the file names the Markdown uses.
+const ESSAYS = {
+  writeup: { source: writeup, images: {} },
+  "writeup-nifty": { source: nifty, images: { "nifty-grid.svg": niftyGrid } },
+};
 
-  usePageTitle("writeup");
+export default function WriteupPage({ name = "writeup" }) {
+  const { source, images } = ESSAYS[name];
+  const blocks = useMemo(() => parse(source), [source]);
+
+  usePageTitle(name);
 
   // Title, then the italic meta line, then the body. The "Draft N, date" line
   // is for the repo; the page shows its date and its proof instead.
@@ -51,7 +60,7 @@ export default function WriteupPage() {
 
       <div className="flex flex-col gap-4 text-[0.98rem]">
         {body.map((b, i) => (
-          <Block key={i} block={b} index={i} />
+          <Block key={i} block={b} index={i} images={images} />
         ))}
       </div>
     </article>
