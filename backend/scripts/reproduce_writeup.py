@@ -70,9 +70,9 @@ def _bt(key):
 
 EXPECTED = []
 for s, is_, oos, pbo, perm in (
-    ("momentum", "0.949", "-0.303", "0.23", "0.022"),
-    ("macd", "0.511", "-0.300", "0.30", "0.008"),
-    ("bollinger", "0.558", "1.169", "0.13", "0.066"),
+    ("momentum", "0.949", "-0.303", "0.23", "0.216"),
+    ("macd", "0.511", "-0.300", "0.30", "0.060"),
+    ("bollinger", "0.558", "1.169", "0.13", "0.164"),
 ):
     EXPECTED += [
         ("first window", f"{s} in-sample Sharpe", V24.format(s), WF + ("best_in_sample", "sharpe_ratio"), is_),
@@ -177,8 +177,8 @@ for run, excess, naive, rc, spa in (
     ]
 PV = "portfolio/validate AAPL+MSFT+GOOGL {} 2018-01-01..2024-01-01"
 for s, is_, oos, verdict, p, legs, excess in (
-    ("momentum", "0.42", "-0.51", "failed", "0.134", "1", "-23.9"),
-    ("bollinger", "0.83", "0.77", "held_up", "0.002", "3", "-18.7"),
+    ("momentum", "0.42", "-0.51", "failed", "0.914", "0", "-23.9"),
+    ("bollinger", "0.83", "0.77", "held_up", "0.002", "2", "-18.7"),
 ):
     EXPECTED += [
         ("basket", f"{s} in-sample Sharpe", PV.format(s), WF + ("best_in_sample", "sharpe_ratio"), is_),

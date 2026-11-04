@@ -5,6 +5,13 @@ https://finertia.hulage.in (Validate tab), and all 174 of them are re-run and
 checked by `backend/scripts/reproduce_writeup.py`, last run 7 Oct 2026. The
 main text is the argument; the appendices hold the per-check detail._
 
+_Corrected 4 Nov 2026. The timing test used to shuffle single days, which
+charged the shuffles for many extra trades and made it too easy to pass. It
+now shuffles whole holding stretches. Its figures below are re-run with the
+fixed test, and the reading of the momentum column changed with them: the
+first version said four checks found a genuine edge; with the fixed test it
+is three._
+
 Most backtesting tools show you a winning strategy and let you believe it.
 Finertia was built to argue back: every result goes through walk-forward
 validation, a timing test, multiple-testing corrections and bootstrap
@@ -54,14 +61,15 @@ condemn momentum. They do not.
 | Deflated Sharpe | Does the winner beat the best of N lucky draws? | yes, 0.81 | no, 0.37 |
 | Effective N | How many genuinely different cells were tried? | 6 of 16 | 7 of 12 |
 | PBO | Is selecting in-sample better than picking at random? | yes, 0.23 | yes, 0.13 |
-| Permutation | Does the timing beat shuffled timing? | yes, p 0.022 | no, p 0.066 |
+| Permutation | Does the timing beat shuffled timing? | no, p 0.216 | no, p 0.164 |
 
 Read across the momentum column: walk-forward says failed; DSR says the
 in-sample edge was real; PBO says the selection was not overfit; permutation
-says the timing mattered. Four checks say the edge was genuine and one says
-it did not persist. Those are compatible — the edge was there in 2018–2021
-and was not there in 2022–2023. Bollinger is the reverse: it held up
-out-of-sample with entries that cannot be told apart from shuffled ones.
+says its timing, over the whole period, cannot be told apart from shuffled
+timing. Those are compatible — the edge was there in 2018–2021 and was not
+there in 2022–2023, and over all six years the entries did no better than
+chance. Bollinger is the odd one: it held up out-of-sample with entries that
+cannot be told apart from shuffled ones either.
 
 Bootstrap intervals widen the picture rather than change it. Momentum's
 out-of-sample Sharpe of −0.30 has a 95 % interval of [−1.4, +1.4], which
@@ -184,11 +192,12 @@ re-times each leg independently. AAPL + MSFT + GOOGL, 2018→2024, equal weight:
 
 | Strategy | Walk-forward | Timing p (book) | Legs beating random timing | Best cell vs holding the basket | SPA p |
 |---|---|---|---|---|---|
-| Momentum | failed, 0.42 → −0.51 | 0.134 | 1 of 3 | −23.9%/yr | 1.00 |
-| Bollinger | **held up**, 0.83 → 0.77 | **0.002** | **3 of 3** | −18.7%/yr | 1.00 |
+| Momentum | failed, 0.42 → −0.51 | 0.914 | 0 of 3 | −23.9%/yr | 1.00 |
+| Bollinger | **held up**, 0.83 → 0.77 | **0.002** | **2 of 3** | −18.7%/yr | 1.00 |
 
 Bollinger on the mega-cap basket is the cleanest two-verdict result in the
-piece: it survived the split, every leg beat random timing, and it still
+piece: it survived the split, the book and two of its three legs beat
+random timing, and it still
 trails simply holding the three stocks by nineteen points a year. The timing
 is real. It was not worth doing.
 
@@ -270,11 +279,15 @@ survives; the one split we happened to look at is unkind to it. PBO was the
 most stable check across the two windows for momentum (0.23 → 0.19) and
 Bollinger (0.13 → 0.11), and the least stable for MACD (0.30 → 0.77).
 
-**Signal permutation** (`validation.py`). Shuffle the position series 500
-times, holding the number of long, short and flat days fixed, so only
-*timing* changes. Momentum's real Sharpe sits at the 98th percentile of the
-shuffles (p = 0.022); MACD at the 99th (p = 0.008). Bollinger sits at the
-94th (p = 0.066) — indistinguishable from random timing at the 5 % level.
+**Signal permutation** (`validation.py`). Cut the position series into
+stretches of unchanged position and shuffle their order 500 times, so the
+number of long, short and flat days, and about the number of trades, stay
+fixed and only *timing* changes. Momentum's real Sharpe sits at the 79th
+percentile of the shuffles (p = 0.216), MACD at the 94th (p = 0.060) and
+Bollinger at the 84th (p = 0.164) — none distinguishable from random timing
+at the 5 % level. The first version of this essay shuffled single days and
+reported p = 0.022, 0.008 and 0.066; that version charged its shuffles for
+trades the real strategies never made.
 
 **Block-bootstrap confidence intervals** (`bootstrap.py`, stationary block
 bootstrap, BCa) sit under every metric on every plan. Momentum's

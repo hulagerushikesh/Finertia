@@ -4,15 +4,15 @@
  "strategies": {
   "momentum": {
    "held_up": 12,
-   "beat_random": 13
+   "beat_random": 1
   },
   "macd": {
    "held_up": 3,
-   "beat_random": 17
+   "beat_random": 2
   },
   "bollinger": {
    "held_up": 6,
-   "beat_random": 10
+   "beat_random": 7
   }
  },
  "pairs": {
