@@ -1,7 +1,7 @@
 {
  "start": "2019-01-01",
  "end": "2025-01-01",
- "generated": "2026-10-26",
+ "generated": "2026-11-04",
  "stocks": {
   "aapl": {
    "symbol": "AAPL",
@@ -28,7 +28,7 @@
       "combinations": 16
      },
      "pbo": 0.37,
-     "permutation_p": 0.05,
+     "permutation_p": 0.297,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -52,7 +52,7 @@
       "combinations": 4
      },
      "pbo": 0.74,
-     "permutation_p": 0.012,
+     "permutation_p": 0.094,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -75,7 +75,7 @@
       "combinations": 12
      },
      "pbo": 0.06,
-     "permutation_p": 0.054,
+     "permutation_p": 0.23,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -114,7 +114,7 @@
       "combinations": 16
      },
      "pbo": 0.79,
-     "permutation_p": 0.605,
+     "permutation_p": 0.992,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -138,7 +138,7 @@
       "combinations": 4
      },
      "pbo": 0.14,
-     "permutation_p": 0.697,
+     "permutation_p": 0.976,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -161,7 +161,7 @@
       "combinations": 12
      },
      "pbo": 0.17,
-     "permutation_p": 0.002,
+     "permutation_p": 0.01,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -200,7 +200,7 @@
       "combinations": 16
      },
      "pbo": 0.14,
-     "permutation_p": 0.391,
+     "permutation_p": 0.683,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -224,7 +224,7 @@
       "combinations": 4
      },
      "pbo": 0.59,
-     "permutation_p": 0.178,
+     "permutation_p": 0.355,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -247,7 +247,7 @@
       "combinations": 12
      },
      "pbo": 0.44,
-     "permutation_p": 0.014,
+     "permutation_p": 0.04,
      "rolling_verdict": "failed"
     }
    },
@@ -286,7 +286,7 @@
       "combinations": 16
      },
      "pbo": 0.79,
-     "permutation_p": 0.327,
+     "permutation_p": 0.79,
      "rolling_verdict": "failed"
     },
     "macd": {
@@ -310,7 +310,7 @@
       "combinations": 4
      },
      "pbo": 0.17,
-     "permutation_p": 0.317,
+     "permutation_p": 0.687,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -333,7 +333,7 @@
       "combinations": 12
      },
      "pbo": 0.77,
-     "permutation_p": 0.325,
+     "permutation_p": 0.619,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -372,7 +372,7 @@
       "combinations": 16
      },
      "pbo": 0.46,
-     "permutation_p": 0.481,
+     "permutation_p": 0.94,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -396,7 +396,7 @@
       "combinations": 4
      },
      "pbo": 0.76,
-     "permutation_p": 0.268,
+     "permutation_p": 0.637,
      "rolling_verdict": "failed"
     },
     "bollinger": {
@@ -419,7 +419,7 @@
       "combinations": 12
      },
      "pbo": 0.61,
-     "permutation_p": 0.002,
+     "permutation_p": 0.014,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -458,7 +458,7 @@
       "combinations": 16
      },
      "pbo": 0.1,
-     "permutation_p": 0.235,
+     "permutation_p": 0.607,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -482,7 +482,7 @@
       "combinations": 4
      },
      "pbo": 0.23,
-     "permutation_p": 0.649,
+     "permutation_p": 0.864,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -505,7 +505,7 @@
       "combinations": 12
      },
      "pbo": 0.16,
-     "permutation_p": 0.004,
+     "permutation_p": 0.016,
      "rolling_verdict": "consistent"
     }
    },
@@ -544,7 +544,7 @@
       "combinations": 16
      },
      "pbo": 0.5,
-     "permutation_p": 0.012,
+     "permutation_p": 0.058,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -568,7 +568,7 @@
       "combinations": 4
      },
      "pbo": 0.93,
-     "permutation_p": 0.014,
+     "permutation_p": 0.028,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -591,7 +591,7 @@
       "combinations": 12
      },
      "pbo": 0.21,
-     "permutation_p": 0.992,
+     "permutation_p": 0.998,
      "rolling_verdict": "failed"
     }
    },
@@ -630,7 +630,7 @@
       "combinations": 16
      },
      "pbo": 0.09,
-     "permutation_p": 0.226,
+     "permutation_p": 0.75,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -654,7 +654,7 @@
       "combinations": 4
      },
      "pbo": 0.44,
-     "permutation_p": 0.12,
+     "permutation_p": 0.443,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -677,7 +677,7 @@
       "combinations": 12
      },
      "pbo": 0.34,
-     "permutation_p": 0.066,
+     "permutation_p": 0.234,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -716,7 +716,7 @@
       "combinations": 16
      },
      "pbo": 0.86,
-     "permutation_p": 0.124,
+     "permutation_p": 0.866,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -740,7 +740,7 @@
       "combinations": 4
      },
      "pbo": 0.47,
-     "permutation_p": 0.078,
+     "permutation_p": 0.463,
      "rolling_verdict": "failed"
     },
     "bollinger": {
@@ -763,7 +763,7 @@
       "combinations": 12
      },
      "pbo": 0.56,
-     "permutation_p": 0.004,
+     "permutation_p": 0.03,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -802,7 +802,7 @@
       "combinations": 16
      },
      "pbo": 0.53,
-     "permutation_p": 0.152,
+     "permutation_p": 0.774,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -826,7 +826,7 @@
       "combinations": 4
      },
      "pbo": 0.74,
-     "permutation_p": 0.118,
+     "permutation_p": 0.499,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -849,7 +849,7 @@
       "combinations": 12
      },
      "pbo": 0.13,
-     "permutation_p": 0.004,
+     "permutation_p": 0.04,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -888,7 +888,7 @@
       "combinations": 16
      },
      "pbo": 0.53,
-     "permutation_p": 0.279,
+     "permutation_p": 0.569,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -912,7 +912,7 @@
       "combinations": 4
      },
      "pbo": 0.44,
-     "permutation_p": 0.066,
+     "permutation_p": 0.124,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -935,7 +935,7 @@
       "combinations": 12
      },
      "pbo": 0.38,
-     "permutation_p": 0.451,
+     "permutation_p": 0.627,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -974,7 +974,7 @@
       "combinations": 16
      },
      "pbo": 0.23,
-     "permutation_p": 0.297,
+     "permutation_p": 0.625,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -998,7 +998,7 @@
       "combinations": 4
      },
      "pbo": 0.99,
-     "permutation_p": 0.403,
+     "permutation_p": 0.649,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1021,7 +1021,7 @@
       "combinations": 12
      },
      "pbo": 0.83,
-     "permutation_p": 0.07,
+     "permutation_p": 0.158,
      "rolling_verdict": "failed"
     }
    },
@@ -1060,7 +1060,7 @@
       "combinations": 16
      },
      "pbo": 0.96,
-     "permutation_p": 0.02,
+     "permutation_p": 0.527,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -1084,7 +1084,7 @@
       "combinations": 4
      },
      "pbo": 0.23,
-     "permutation_p": 0.004,
+     "permutation_p": 0.06,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1107,7 +1107,7 @@
       "combinations": 12
      },
      "pbo": 0.6,
-     "permutation_p": 0.196,
+     "permutation_p": 0.613,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -1146,7 +1146,7 @@
       "combinations": 16
      },
      "pbo": 0.56,
-     "permutation_p": 0.603,
+     "permutation_p": 0.984,
      "rolling_verdict": "failed"
     },
     "macd": {
@@ -1170,7 +1170,7 @@
       "combinations": 4
      },
      "pbo": 0.7,
-     "permutation_p": 0.305,
+     "permutation_p": 0.81,
      "rolling_verdict": "failed"
     },
     "bollinger": {
@@ -1193,7 +1193,7 @@
       "combinations": 12
      },
      "pbo": 0.3,
-     "permutation_p": 0.018,
+     "permutation_p": 0.124,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -1232,7 +1232,7 @@
       "combinations": 16
      },
      "pbo": 0.37,
-     "permutation_p": 0.06,
+     "permutation_p": 0.371,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -1256,7 +1256,7 @@
       "combinations": 4
      },
      "pbo": 0.83,
-     "permutation_p": 0.034,
+     "permutation_p": 0.158,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1279,7 +1279,7 @@
       "combinations": 12
      },
      "pbo": 0.54,
-     "permutation_p": 0.673,
+     "permutation_p": 0.89,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -1318,7 +1318,7 @@
       "combinations": 16
      },
      "pbo": 0.56,
-     "permutation_p": 0.274,
+     "permutation_p": 0.966,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -1342,7 +1342,7 @@
       "combinations": 4
      },
      "pbo": 0.8,
-     "permutation_p": 0.194,
+     "permutation_p": 0.715,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1365,7 +1365,7 @@
       "combinations": 12
      },
      "pbo": 0.53,
-     "permutation_p": 0.052,
+     "permutation_p": 0.254,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -1404,7 +1404,7 @@
       "combinations": 16
      },
      "pbo": 0.83,
-     "permutation_p": 0.074,
+     "permutation_p": 0.752,
      "rolling_verdict": "failed"
     },
     "macd": {
@@ -1428,7 +1428,7 @@
       "combinations": 4
      },
      "pbo": 0.2,
-     "permutation_p": 0.072,
+     "permutation_p": 0.451,
      "rolling_verdict": "consistent"
     },
     "bollinger": {
@@ -1451,7 +1451,7 @@
       "combinations": 12
      },
      "pbo": 0.47,
-     "permutation_p": 0.018,
+     "permutation_p": 0.162,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -1490,7 +1490,7 @@
       "combinations": 16
      },
      "pbo": 0.56,
-     "permutation_p": 0.096,
+     "permutation_p": 0.838,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -1514,7 +1514,7 @@
       "combinations": 4
      },
      "pbo": 0.03,
-     "permutation_p": 0.028,
+     "permutation_p": 0.313,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1537,7 +1537,7 @@
       "combinations": 12
      },
      "pbo": 0.0,
-     "permutation_p": 0.116,
+     "permutation_p": 0.463,
      "rolling_verdict": "consistent"
     }
    },
@@ -1576,7 +1576,7 @@
       "combinations": 16
      },
      "pbo": 0.74,
-     "permutation_p": 0.062,
+     "permutation_p": 0.397,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -1600,7 +1600,7 @@
       "combinations": 4
      },
      "pbo": 0.81,
-     "permutation_p": 0.028,
+     "permutation_p": 0.206,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1623,7 +1623,7 @@
       "combinations": 12
      },
      "pbo": 0.43,
-     "permutation_p": 0.15,
+     "permutation_p": 0.415,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -1662,7 +1662,7 @@
       "combinations": 16
      },
      "pbo": 0.91,
-     "permutation_p": 0.07,
+     "permutation_p": 0.435,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -1686,7 +1686,7 @@
       "combinations": 4
      },
      "pbo": 0.71,
-     "permutation_p": 0.026,
+     "permutation_p": 0.15,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1709,7 +1709,7 @@
       "combinations": 12
      },
      "pbo": 0.79,
-     "permutation_p": 0.27,
+     "permutation_p": 0.537,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -1748,7 +1748,7 @@
       "combinations": 16
      },
      "pbo": 0.77,
-     "permutation_p": 0.092,
+     "permutation_p": 0.85,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -1772,7 +1772,7 @@
       "combinations": 4
      },
      "pbo": 0.63,
-     "permutation_p": 0.014,
+     "permutation_p": 0.245,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1795,7 +1795,7 @@
       "combinations": 12
      },
      "pbo": 0.4,
-     "permutation_p": 0.008,
+     "permutation_p": 0.182,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -1834,7 +1834,7 @@
       "combinations": 16
      },
      "pbo": 0.47,
-     "permutation_p": 0.1,
+     "permutation_p": 0.621,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -1858,7 +1858,7 @@
       "combinations": 4
      },
      "pbo": 0.64,
-     "permutation_p": 0.07,
+     "permutation_p": 0.347,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1881,7 +1881,7 @@
       "combinations": 12
      },
      "pbo": 0.8,
-     "permutation_p": 0.291,
+     "permutation_p": 0.637,
      "rolling_verdict": "failed"
     }
    },
@@ -1920,7 +1920,7 @@
       "combinations": 16
      },
      "pbo": 0.56,
-     "permutation_p": 0.026,
+     "permutation_p": 0.291,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -1944,7 +1944,7 @@
       "combinations": 4
      },
      "pbo": 0.16,
-     "permutation_p": 0.279,
+     "permutation_p": 0.621,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -1967,7 +1967,7 @@
       "combinations": 12
      },
      "pbo": 0.74,
-     "permutation_p": 0.14,
+     "permutation_p": 0.403,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2006,7 +2006,7 @@
       "combinations": 16
      },
      "pbo": 0.51,
-     "permutation_p": 0.058,
+     "permutation_p": 0.521,
      "rolling_verdict": "failed"
     },
     "macd": {
@@ -2030,7 +2030,7 @@
       "combinations": 4
      },
      "pbo": 0.33,
-     "permutation_p": 0.012,
+     "permutation_p": 0.112,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2053,7 +2053,7 @@
       "combinations": 12
      },
      "pbo": 0.34,
-     "permutation_p": 0.17,
+     "permutation_p": 0.593,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2092,7 +2092,7 @@
       "combinations": 16
      },
      "pbo": 0.43,
-     "permutation_p": 0.198,
+     "permutation_p": 0.816,
      "rolling_verdict": "failed"
     },
     "macd": {
@@ -2116,7 +2116,7 @@
       "combinations": 4
      },
      "pbo": 0.19,
-     "permutation_p": 0.13,
+     "permutation_p": 0.477,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2139,7 +2139,7 @@
       "combinations": 12
      },
      "pbo": 0.57,
-     "permutation_p": 0.15,
+     "permutation_p": 0.427,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2178,7 +2178,7 @@
       "combinations": 16
      },
      "pbo": 0.04,
-     "permutation_p": 0.002,
+     "permutation_p": 0.142,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -2202,7 +2202,7 @@
       "combinations": 4
      },
      "pbo": 0.89,
-     "permutation_p": 0.022,
+     "permutation_p": 0.156,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2225,7 +2225,7 @@
       "combinations": 12
      },
      "pbo": 0.07,
-     "permutation_p": 0.786,
+     "permutation_p": 0.978,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2264,7 +2264,7 @@
       "combinations": 16
      },
      "pbo": 0.43,
-     "permutation_p": 0.457,
+     "permutation_p": 0.886,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -2288,7 +2288,7 @@
       "combinations": 4
      },
      "pbo": 0.87,
-     "permutation_p": 0.214,
+     "permutation_p": 0.527,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2311,7 +2311,7 @@
       "combinations": 12
      },
      "pbo": 0.37,
-     "permutation_p": 0.004,
+     "permutation_p": 0.006,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2350,7 +2350,7 @@
       "combinations": 16
      },
      "pbo": 0.91,
-     "permutation_p": 0.04,
+     "permutation_p": 0.285,
      "rolling_verdict": "failed"
     },
     "macd": {
@@ -2374,7 +2374,7 @@
       "combinations": 4
      },
      "pbo": 0.83,
-     "permutation_p": 0.03,
+     "permutation_p": 0.138,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2397,7 +2397,7 @@
       "combinations": 12
      },
      "pbo": 0.01,
-     "permutation_p": 0.214,
+     "permutation_p": 0.465,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2436,7 +2436,7 @@
       "combinations": 16
      },
      "pbo": 0.26,
-     "permutation_p": 0.058,
+     "permutation_p": 0.491,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -2460,7 +2460,7 @@
       "combinations": 4
      },
      "pbo": 0.84,
-     "permutation_p": 0.05,
+     "permutation_p": 0.371,
      "rolling_verdict": "failed"
     },
     "bollinger": {
@@ -2483,7 +2483,7 @@
       "combinations": 12
      },
      "pbo": 0.49,
-     "permutation_p": 0.373,
+     "permutation_p": 0.705,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2522,7 +2522,7 @@
       "combinations": 16
      },
      "pbo": 0.3,
-     "permutation_p": 0.09,
+     "permutation_p": 0.403,
      "rolling_verdict": "consistent"
     },
     "macd": {
@@ -2546,7 +2546,7 @@
       "combinations": 4
      },
      "pbo": 0.56,
-     "permutation_p": 0.493,
+     "permutation_p": 0.852,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2569,7 +2569,7 @@
       "combinations": 12
      },
      "pbo": 0.61,
-     "permutation_p": 0.066,
+     "permutation_p": 0.241,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2608,7 +2608,7 @@
       "combinations": 16
      },
      "pbo": 0.21,
-     "permutation_p": 0.036,
+     "permutation_p": 0.311,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -2632,7 +2632,7 @@
       "combinations": 4
      },
      "pbo": 0.99,
-     "permutation_p": 0.124,
+     "permutation_p": 0.419,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2655,7 +2655,7 @@
       "combinations": 12
      },
      "pbo": 0.59,
-     "permutation_p": 0.15,
+     "permutation_p": 0.457,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2694,7 +2694,7 @@
       "combinations": 16
      },
      "pbo": 0.39,
-     "permutation_p": 0.03,
+     "permutation_p": 0.417,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -2718,7 +2718,7 @@
       "combinations": 4
      },
      "pbo": 0.47,
-     "permutation_p": 0.002,
+     "permutation_p": 0.026,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2741,7 +2741,7 @@
       "combinations": 12
      },
      "pbo": 0.66,
-     "permutation_p": 0.329,
+     "permutation_p": 0.796,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2780,7 +2780,7 @@
       "combinations": 16
      },
      "pbo": 0.39,
-     "permutation_p": 0.018,
+     "permutation_p": 0.192,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -2804,7 +2804,7 @@
       "combinations": 4
      },
      "pbo": 0.04,
-     "permutation_p": 0.012,
+     "permutation_p": 0.072,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2827,7 +2827,7 @@
       "combinations": 12
      },
      "pbo": 0.57,
-     "permutation_p": 0.206,
+     "permutation_p": 0.435,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -2866,7 +2866,7 @@
       "combinations": 16
      },
      "pbo": 0.41,
-     "permutation_p": 0.004,
+     "permutation_p": 0.232,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -2890,7 +2890,7 @@
       "combinations": 4
      },
      "pbo": 0.63,
-     "permutation_p": 0.289,
+     "permutation_p": 0.717,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2913,7 +2913,7 @@
       "combinations": 12
      },
      "pbo": 0.39,
-     "permutation_p": 0.433,
+     "permutation_p": 0.784,
      "rolling_verdict": "failed"
     }
    },
@@ -2952,7 +2952,7 @@
       "combinations": 16
      },
      "pbo": 0.53,
-     "permutation_p": 0.186,
+     "permutation_p": 0.75,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -2976,7 +2976,7 @@
       "combinations": 4
      },
      "pbo": 0.09,
-     "permutation_p": 0.481,
+     "permutation_p": 0.874,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -2999,7 +2999,7 @@
       "combinations": 12
      },
      "pbo": 0.39,
-     "permutation_p": 0.325,
+     "permutation_p": 0.639,
      "rolling_verdict": "failed"
     }
    },
@@ -3038,7 +3038,7 @@
       "combinations": 16
      },
      "pbo": 0.6,
-     "permutation_p": 0.002,
+     "permutation_p": 0.048,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -3062,7 +3062,7 @@
       "combinations": 4
      },
      "pbo": 0.8,
-     "permutation_p": 0.022,
+     "permutation_p": 0.178,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -3085,7 +3085,7 @@
       "combinations": 12
      },
      "pbo": 0.3,
-     "permutation_p": 0.966,
+     "permutation_p": 0.998,
      "rolling_verdict": "failed"
     }
    },
@@ -3124,7 +3124,7 @@
       "combinations": 16
      },
      "pbo": 0.56,
-     "permutation_p": 0.01,
+     "permutation_p": 0.419,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -3148,7 +3148,7 @@
       "combinations": 4
      },
      "pbo": 0.11,
-     "permutation_p": 0.036,
+     "permutation_p": 0.515,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -3171,7 +3171,7 @@
       "combinations": 12
      },
      "pbo": 0.53,
-     "permutation_p": 0.389,
+     "permutation_p": 0.832,
      "rolling_verdict": "failed"
     }
    },
@@ -3210,7 +3210,7 @@
       "combinations": 16
      },
      "pbo": 0.47,
-     "permutation_p": 0.014,
+     "permutation_p": 0.299,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -3234,7 +3234,7 @@
       "combinations": 4
      },
      "pbo": 0.79,
-     "permutation_p": 0.038,
+     "permutation_p": 0.335,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -3257,7 +3257,7 @@
       "combinations": 12
      },
      "pbo": 0.31,
-     "permutation_p": 0.711,
+     "permutation_p": 0.958,
      "rolling_verdict": "regime_dependent"
     }
    },
@@ -3296,7 +3296,7 @@
       "combinations": 16
      },
      "pbo": 0.51,
-     "permutation_p": 0.004,
+     "permutation_p": 0.479,
      "rolling_verdict": "regime_dependent"
     },
     "macd": {
@@ -3320,7 +3320,7 @@
       "combinations": 4
      },
      "pbo": 0.23,
-     "permutation_p": 0.03,
+     "permutation_p": 0.387,
      "rolling_verdict": "regime_dependent"
     },
     "bollinger": {
@@ -3343,7 +3343,7 @@
       "combinations": 12
      },
      "pbo": 0.52,
-     "permutation_p": 0.241,
+     "permutation_p": 0.695,
      "rolling_verdict": "regime_dependent"
     }
    },

@@ -91,7 +91,7 @@ export const STRATEGY_PAGES = [
       moved: { is: "0.686", oos: "−0.157", verdict: "failed" },
     },
     misleads:
-      "Mean reversion earns in chop and sells every rally in a sustained uptrend. Because it is flat most of the time, few trades decide its result, and on AAPL its entries could not be told apart from shuffled ones (permutation test, p 0.066).",
+      "Mean reversion earns in chop and sells every rally in a sustained uptrend. Because it is flat most of the time, few trades decide its result, and on AAPL its entries could not be told apart from shuffled ones (permutation test, p 0.164).",
   },
 ].map((s) => ({
   ...s,

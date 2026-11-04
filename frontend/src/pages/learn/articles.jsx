@@ -303,8 +303,9 @@ function Permutation() {
         <ol className="list-decimal pl-5 flex flex-col gap-1.5">
           <li>Take the strategy's daily positions: long, short or flat.</li>
           <li>
-            Shuffle their order 500 times. Each shuffle keeps exactly as many long, short and
-            flat days; only the timing changes.
+            Cut them into stretches of unchanged position, and shuffle the order of the
+            stretches 500 times. Each shuffle keeps exactly as many long, short and flat days,
+            and about as many trades; only the timing changes.
           </li>
           <li>Run each shuffled series against the same returns and costs, and compute its Sharpe.</li>
           <li>
@@ -318,8 +319,7 @@ function Permutation() {
         <p>
           A low p-value says the entries and exits carried information. A high one says the
           result could have come from the same exposure spread at random. Bollinger bands on
-          Apple came out at p 0.066: close, but its entries could not be told apart from
-          shuffled ones.
+          Apple came out at p 0.164: its entries could not be told apart from shuffled ones.
         </p>
         <p>
           It is not a test of whether the strategy makes money. A rule can beat random timing
@@ -329,10 +329,11 @@ function Permutation() {
 
       <Section id="limits" title="Its limits">
         <p>
-          Shuffling single days breaks up the strategy's holding periods, so shuffled series
-          trade more often and pay more in costs than the real one did. That tilts the test
-          slightly in the strategy's favour, which is worth knowing when a p-value lands just
-          under 0.05. It also says nothing about overfitting: a combination picked from a grid
+          Until November 2026 the test shuffled single days. That broke up the strategy's
+          holding periods, so shuffled series traded far more often and paid more in costs than
+          the real one, and the test got easier to pass as costs rose. Shuffling whole stretches
+          fixed that, and fewer strategies pass now. The test still says nothing about
+          overfitting: a combination picked from a grid
           can beat random timing on the data it was picked on.{" "}
           <Link to="/learn/backtest-overfitting" className={LINK}>The overfitting checks</Link>{" "}
           cover that.

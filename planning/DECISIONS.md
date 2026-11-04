@@ -3,6 +3,22 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-11-04 — The timing test shuffles whole holding stretches
+
+**Decision (author, 4 Nov):** the permutation test, single-ticker and basket,
+reorders whole runs of unchanged position instead of single days.
+
+**Why:** the day shuffle broke long holds into many short ones, each paying
+the cost again, so the shuffles were charged for trades the real strategy
+never made. On the Nifty study it passed 37, 60 and 107 of 129 pairs at half,
+default and double cost — easier as costs rose. Shuffling runs passed 26, 25
+and 21.
+
+**What changed with it:** the public stock pages go from 40 to 10 of 117
+strategy-and-stock pairs beating random timing. The first write-up's AAPL
+timing p-values move from 0.022 / 0.008 / 0.066 to 0.216 / 0.060 / 0.164;
+the essay carries a dated correction and quotes both.
+
 ## 2026-10-31 — Phase 4: Finertia stays a portfolio piece
 
 **Decision (author, 31 Oct):** portfolio piece. Maintenance only; no new

@@ -709,8 +709,8 @@ export default function ValidationPanel({ data }) {
           title="Signal timing test"
           blurb={
             isBasket
-              ? `Each name's position series was randomly reordered ${pm.trials} times on its own, keeping its exact number of long, short, and flat days, with the weights left as they were. If the real basket beats the shuffled ones, some name's entries are doing work that exposure and diversification alone would not.`
-              : `The position series was randomly reordered ${pm.trials} times, keeping the exact same number of long, short, and flat days. If real timing beats the shuffles, the entries are doing work that market exposure alone would not.`
+              ? `Each name's holding stretches were randomly reordered ${pm.trials} times, separately for each name, keeping its exact number of long, short, and flat days and about its number of trades, with the weights left as they were. If the real basket beats the shuffled ones, some name's entries are doing work that exposure and diversification alone would not.`
+              : `The strategy's holding stretches were randomly reordered ${pm.trials} times, keeping the exact same number of long, short, and flat days and about the same number of trades. If real timing beats the shuffles, the entries are doing work that market exposure alone would not.`
           }
           stamp={pm.significant ? "Significant" : "Not significant"}
           tone={pm.significant ? "gain" : "loss"}
