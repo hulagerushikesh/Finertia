@@ -6,7 +6,7 @@ import pytest
 
 from engine import compute_returns
 from strategies import build_positions, STRATEGY_NAMES
-from validation import walk_forward, permutation_test, _verdict
+from validation import walk_forward, permutation_test, shuffle_runs, _verdict
 
 
 def price_series(n=600, drift=0.0006, vol=0.015, seed=0):
@@ -182,6 +182,23 @@ class TestPermutationTest:
         pos, ret = self._setup()
         with pytest.raises(ValueError, match="same length"):
             permutation_test(pos.iloc[:-5], ret, 0.001, 10)
+
+    def test_shuffle_runs_keeps_exposure_and_never_adds_trades(self):
+        pos = np.array([0, 0, 1, 1, 1, 0, -1, -1, 1, 0, 0, 0], dtype=float)
+        for seed in range(20):
+            out = shuffle_runs(pos, np.random.default_rng(seed))
+            assert sorted(out) == sorted(pos)
+            # Runs only ever merge (two of the same value side by side), so
+            # a shuffle never trades more than the real series.
+            assert np.count_nonzero(np.diff(out)) <= np.count_nonzero(np.diff(pos))
+
+    def test_a_higher_cost_does_not_make_the_test_easier(self):
+        # The day shuffle charged its shuffles for many extra trades, so its
+        # p fell as costs rose. With whole runs moved it should not.
+        pos, ret = self._setup()
+        low = permutation_test(pos, ret, 0.0005, 300, seed=0)["p_value"]
+        high = permutation_test(pos, ret, 0.004, 300, seed=0)["p_value"]
+        assert high >= low - 0.05
 
     def test_shuffling_preserves_exposure_so_a_flat_strategy_stays_flat(self):
         close = price_series(300)

@@ -204,7 +204,7 @@ class TestPermutationNull:
             assert 0 < v["p_value"] <= 1
             assert v["significant"] == (v["p_value"] < 0.05)
         assert r["legs_significant"] == sum(v["significant"] for v in r["legs"].values())
-        assert r["null"].startswith("each leg's timing shuffled independently")
+        assert r["null"].startswith("each leg's holding runs reordered independently")
 
     def test_deterministic_under_a_seed(self):
         aligned, w = basket(1, 2)

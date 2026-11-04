@@ -35,7 +35,7 @@ from pbo import combinatorial_pbo
 from purge import purged_split
 from snooping import whole_grid_test
 from strategies import build_positions, longest_window, param_grid
-from validation import _effective_trials, _segment_net_return, _verdict
+from validation import _effective_trials, _segment_net_return, _verdict, shuffle_runs
 
 
 # --------------------------------------------------------------------------
@@ -257,9 +257,9 @@ def portfolio_permutation_test(
 ) -> dict:
     """Book Sharpe against books whose legs were each randomly re-timed.
 
-    Each trial draws an independent permutation for every leg, so each leg
-    keeps exactly its own count of long, short and flat days and only *when*
-    changes; the weight path is untouched. Under this null no leg can time its
+    Each trial reorders every leg's holding runs independently (shuffle_runs),
+    so each leg keeps exactly its own count of long, short and flat days, and
+    about its own trade count, and only *when* changes; the weight path is untouched. Under this null no leg can time its
     market, and any book-level Sharpe is exposure plus the diversification the
     weights bought — which is why the null distribution is not centred where a
     single leg's would be. The per-leg block runs the ordinary single-ticker
@@ -293,7 +293,7 @@ def portfolio_permutation_test(
     for i in range(n_trials):
         shuffled = np.empty_like(pos)
         for k in range(n_legs):
-            shuffled[:, k] = rng.permutation(pos[:, k])
+            shuffled[:, k] = shuffle_runs(pos[:, k], rng)
         trades = np.abs(np.diff(shuffled, axis=0, prepend=shuffled[:1])) > 0
         leg_net = shuffled * ret - trades * transaction_cost
         book_sharpes[i] = _sharpe((leg_net * w).sum(axis=1))
@@ -313,7 +313,7 @@ def portfolio_permutation_test(
         }
 
     return {
-        "null": "each leg's timing shuffled independently; weights held fixed",
+        "null": "each leg's holding runs reordered independently; weights held fixed",
         "real_sharpe": real_sharpe,
         "trials": n_trials,
         "percentile": round(beaten / n_trials, 4),

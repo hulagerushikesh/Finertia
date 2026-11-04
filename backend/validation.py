@@ -345,6 +345,20 @@ def _verdict(is_sharpe: float, oos_sharpe: float) -> str:
     return "overfit"
 
 
+def shuffle_runs(position: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """Reorder whole runs of unchanged position, keeping each run's length.
+
+    A day-by-day shuffle breaks a strategy's long holds into many short ones,
+    each paying the cost again, so the shuffles were charged far more than the
+    real strategy and the bar fell as costs rose (the Nifty study, 4 Nov 2026:
+    37, 60 and 107 of 129 pairs passed at half, default and double cost).
+    Moving whole runs keeps the number of trades about the same — slightly
+    fewer when two runs of the same position land side by side.
+    """
+    runs = np.split(position, np.flatnonzero(np.diff(position)) + 1)
+    return np.concatenate([runs[j] for j in rng.permutation(len(runs))])
+
+
 def permutation_test(
     position: pd.Series,
     returns: pd.Series,
@@ -354,8 +368,9 @@ def permutation_test(
 ) -> dict:
     """Compare the real Sharpe against Sharpes from randomly reordered positions.
 
-    Shuffling preserves exactly how many long, short, and flat days there were —
-    only *when* they happened changes. So this isolates signal timing: if the real
+    Shuffling whole holding runs (shuffle_runs) preserves exactly how many
+    long, short, and flat days there were, and about how often the strategy
+    trades — only *when* they happened changes. So this isolates signal timing: if the real
     result sits mid-pack among the shuffles, the edge came from market exposure
     rather than from the strategy picking moments.
     """
@@ -372,7 +387,7 @@ def permutation_test(
 
     shuffled_sharpes = np.empty(n_trials)
     for i in range(n_trials):
-        shuffled = rng.permutation(pos_values)
+        shuffled = shuffle_runs(pos_values, rng)
         trades = np.abs(np.diff(shuffled, prepend=shuffled[0])) > 0
         net = shuffled * ret_values - trades * transaction_cost
         sd = net.std()
@@ -394,6 +409,7 @@ def permutation_test(
     p_value = float((shuffled_sharpes >= real_sharpe).sum() + 1) / (n_trials + 1)
 
     return {
+        "null": "whole holding runs reordered; each run keeps its length",
         "real_sharpe": real_sharpe,
         "trials": n_trials,
         "percentile": round(percentile, 4),
