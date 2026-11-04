@@ -65,6 +65,36 @@ them:
 - Any change to these after the first run is recorded in DECISIONS.md with
   the reason, and the original reading is reported too.
 
+## Question 2, fixed before its run (4 Nov 2026)
+
+- **Stock:** RELIANCE.NS. "Most liquid" means the highest median daily
+  traded value (close × volume) over 2011–2025 among the 2011 list; Reliance
+  is first at about ₹749 crore a day, ahead of ICICI Bank (₹625 crore) and SBI
+  (₹590 crore). Chosen on liquidity alone, before any strategy was run on it
+  for this question.
+- **Period, cost, split:** as question 1. 2011-01-01 to 2026-01-01, the
+  default cost (0.1%), and the first 70% for tuning.
+- **Grid, 834 combinations in all** (first written as 830, a miscount of the
+  MACD pairs found when the script asserted the sizes; the values below are
+  unchanged):
+  - Momentum, 480: lookback 5, 10, 15, 20, 30, 40, 60, 80, 100, 120, 150,
+    200 × trend average 10, 20, 30, 50, 75, 100, 150, 200, 250, 300 ×
+    threshold 0, 0.01, 0.02, 0.05.
+  - MACD, 284: fast 3, 5, 8, 10, 12, 15, 19, 25 × slow 10, 15, 20, 26, 30,
+    39, 50, 60, 80, 100 (only where fast < slow) × signal 5, 9, 12, 15.
+  - Bollinger, 70: window 5, 10, 15, 20, 25, 30, 40, 50, 75, 100 × width
+    1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0.
+- **The hand-tuner's pick:** the single best in-sample Sharpe across all 834.
+  It is scored on the unseen years, its Deflated Sharpe is computed with
+  N = 834, and the permutation test is run on the pick's own positions. PBO
+  and the whole-grid tests run per strategy, on that strategy's part of the
+  grid.
+- **Beside it:** the same stock on the product's small grid, from question 1,
+  so the effect of trying more is a number.
+- Question 1 ran the permutation test the way the product does, on the
+  default parameters rather than the walk-forward's pick. Question 2 tests
+  the pick. The write-up says so.
+
 ## Timeline (about 2 weeks part-time)
 
 | Week | Work | Done when |
