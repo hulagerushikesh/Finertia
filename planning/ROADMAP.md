@@ -1,5 +1,7 @@
 # Roadmap — from project to product
 
+> **Superseded 12 Nov 2026 by [PLAN.md](PLAN.md).** Kept as the record of what was planned and done.
+
 _Drafted 13 Oct 2026 by the PM hat. Direction change recorded in
 [DECISIONS.md](DECISIONS.md) (13 Oct). Sprint detail lives in
 [NEXT-MILESTONE.md](NEXT-MILESTONE.md); everything unscheduled in
