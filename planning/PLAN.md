@@ -77,7 +77,7 @@ Three phases, in order. **You** marks what only the author can do.
 
 | # | Item | Done when | You |
 |---|---|---|---|
-| C1 | **Three drafts of the Nifty finding**: a LinkedIn post, a longer post for a trading forum, a one-paragraph note for direct messages | Drafts in `planning/outreach/`, each with the funnel image | Edit in your own voice |
+| C1 | Drafted 13 Nov, waiting on the author's edit · **Three drafts of the Nifty finding**: a LinkedIn post, a longer post for a trading forum, a one-paragraph note for direct messages | Drafts in `planning/outreach/`, each with the funnel image | Edit in your own voice |
 | C2 | **Post them**, one channel per week | Three posts live, links recorded with dates | **You post.** Claude never posts or messages for you |
 | C3 | **Send the direct note to 10 people** who hire or trade | 10 sent, replies recorded | You send |
 | C4 | **Weekly read-out** every Monday: visits, where from, replies | One row per week in part 5 | — |
