@@ -141,6 +141,10 @@ through the site, so the first requests after a revert may take ~8 s.
 Keep Mumbai for at least a week after the switch, then delete it (with the
 author's yes) so that only one service holds production config.
 
+**Done 13 Nov 2026:** the author deleted the asia-south1 service. The
+revert-the-switch rollback above no longer works; roll back by redeploying an
+earlier commit to us-central1.
+
 ## Not affected
 
 Firestore data, rules, indexes, backups and PITR; Firebase Auth; Sentry

@@ -13,11 +13,11 @@ on:
     inputs:
       region:
         # us-central1 serves the site since B1 (1 Nov), next to Firestore nam5
-        # (planning/B1-REGION-MOVE.md). asia-south1 is kept for a week as the
-        # rollback: deploying there changes nothing users hit.
+        # (planning/B1-REGION-MOVE.md). The asia-south1 service was deleted
+        # 13 Nov (PLAN A2), so us-central1 is the only region.
         description: Cloud Run region
         type: choice
-        options: [asia-south1, us-central1]
+        options: [us-central1]
         default: us-central1
   # push:
   #   branches: [main]

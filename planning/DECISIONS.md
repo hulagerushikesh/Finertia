@@ -3,6 +3,17 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-11-13 — One region: the Mumbai service is deleted
+
+**Decision (author, 13 Nov):** delete the asia-south1 Cloud Run service, kept
+since the 31 Oct move as a rollback.
+
+**Why:** twelve days on us-central1 with no rollback needed, and two services
+meant production settings had to be kept in step in two places.
+
+**Cost of it:** a rollback is now a redeploy of an earlier commit (a few
+minutes), not a one-line revert.
+
 ## 2026-11-04 — The timing test shuffles whole holding stretches
 
 **Decision (author, 4 Nov):** the permutation test, single-ticker and basket,
