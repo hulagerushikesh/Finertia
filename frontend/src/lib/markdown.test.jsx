@@ -45,6 +45,12 @@ describe("Block", () => {
     expect(screen.getByRole("link", { name: "example.com/x" })).toHaveAttribute("href", "https://example.com/x");
   });
 
+  it("renders [text](/path) links, and leaves other schemes as text", () => {
+    render(<Block index={0} block={{ type: "p", text: "See [the first study](/writeup); not [x](javascript:alert(1))." }} />);
+    expect(screen.getByRole("link", { name: "the first study" })).toHaveAttribute("href", "/writeup");
+    expect(screen.getAllByRole("link")).toHaveLength(1);
+  });
+
   // It returns React elements, never an HTML string: markup in the file stays text.
   it("does not inject HTML", () => {
     const { container } = render(<Block index={0} block={{ type: "p", text: "<img src=x onerror=alert(1)>" }} />);
