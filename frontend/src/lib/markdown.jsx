@@ -19,7 +19,7 @@ export function slug(text) {
     .replace(/\s+/g, "-");
 }
 
-const INLINE = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*\s][^*]*\*)|((?:^|(?<=[\s(]))_[^_\s][^_]*_(?=[\s).,;:]|$))|(https?:\/\/[^\s)]+[^\s).,;:])/g;
+const INLINE = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*\s][^*]*\*)|((?:^|(?<=[\s(]))_[^_\s][^_]*_(?=[\s).,;:]|$))|(https?:\/\/[^\s)]+[^\s).,;:])|(\[([^\]]+)\]\((\/[^\s)]*|https:\/\/[^\s)]+)\))/g;
 
 export function inline(text, keyPrefix = "i") {
   const out = [];
@@ -33,6 +33,9 @@ export function inline(text, keyPrefix = "i") {
     else if (m[2]) out.push(<strong key={key} className="font-semibold text-foreground">{inline(tok.slice(2, -2), key)}</strong>);
     else if (m[3] || m[4]) out.push(<em key={key}>{inline(tok.slice(1, -1), key)}</em>);
     else if (m[5]) out.push(<a key={key} href={tok} className="text-pencil underline underline-offset-2 break-words">{tok.replace(/^https?:\/\//, "")}</a>);
+    // [text](/path): only site paths and https, so a file can never carry a
+    // javascript: link.
+    else if (m[6]) out.push(<a key={key} href={m[8]} className="text-pencil underline underline-offset-2">{inline(m[7], key)}</a>);
     last = m.index + tok.length;
   }
   if (last < text.length) out.push(text.slice(last));

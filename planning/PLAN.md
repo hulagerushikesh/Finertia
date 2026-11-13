@@ -70,7 +70,7 @@ Three phases, in order. **You** marks what only the author can do.
 | B1 | Built 13 Nov, waiting on the author's read · **README as the front door**: what it is, the two findings with one chart each, how to check the figures, then the engineering. No "SaaS" | A stranger can say what the project found after reading the first screen | Read it once |
 | B2 | Built 13 Nov, waiting on the dashboard switch · **Count visitors**, without cookies or personal data | Daily visits per page visible for `/writeup`, `/writeup/nifty-50`, `/demo` | Turn it on in the hosting dashboard (decision 2) |
 | B3 | ✅ 13 Nov · **Landing page points at the studies** first, the tool second | Both studies are one click from the home page, above the fold | — |
-| B4 | **Link the Nifty study back** to the first one in its own text | Link present on the live page | Yes needed: it edits a published essay |
+| B4 | ✅ 13 Nov · **Link the Nifty study back** to the first one in its own text | Link present on the live page | Yes needed: it edits a published essay |
 | B5 | **Search Console check** | Sitemap accepted; a list of which pages get impressions | Share the screen or the numbers |
 
 ### Phase C — Put it in front of people (24 Nov → 10 Dec)

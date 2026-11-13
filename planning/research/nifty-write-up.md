@@ -5,7 +5,7 @@ _Draft 1, 4 Nov 2026. Every figure below comes from
 `backend/scripts/reproduce_nifty.py` checks each one against them. The study's
 rules were written down in `planning/RESEARCH-PLAN.md` before the first run._
 
-The first write-up followed three strategies on one stock and watched the
+[The first write-up](/writeup) followed three strategies on one stock and watched the
 checks disagree. This one asks the wider question: run the same three simple
 strategies across India's fifty biggest companies for fifteen years, after
 costs, tune them the way anyone would, and judge them on years the tuning
