@@ -48,6 +48,19 @@ const STEPS = [
   },
 ];
 
+const STUDIES = [
+  {
+    to: "/writeup",
+    label: "STUDY 1 · APPLE, 2018–2024",
+    title: "The best-looking strategy was the worst on new data.",
+  },
+  {
+    to: "/writeup/nifty-50",
+    label: "STUDY 2 · NIFTY 50, 2011–2025",
+    title: "Of 129 Nifty strategies, four survived honest testing.",
+  },
+];
+
 const AUDIENCES = [
   {
     icon: Compass,
@@ -139,6 +152,30 @@ export default function LandingPage() {
           <Button asChild size="lg" variant="outline">
             <Link to="/demo">See an example</Link>
           </Button>
+        </div>
+      </Rise>
+
+      {/* ── 1b. What it found ─────────────────────────────────────────
+          The two published studies, one click from the top: they are the
+          reason to look at this project (planning/PLAN.md, B3). */}
+      <Rise delay={0.08} className="mt-12">
+        <p id="found-heading" className="eyebrow mb-3">What it found</p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {STUDIES.map((s) => (
+            <Link
+              key={s.to}
+              to={s.to}
+              className="sheet p-5 flex flex-col gap-2 group hover:border-pencil/40 transition-colors"
+            >
+              <span className="font-mono text-2xs text-faint tracking-wide">{s.label}</span>
+              <span className="font-display text-lg font-semibold text-foreground text-balance leading-snug">
+                {s.title}
+              </span>
+              <span className="mt-auto inline-flex items-center gap-1.5 text-sm text-pencil group-hover:underline underline-offset-4">
+                Read the study <ArrowRight className="size-3.5" aria-hidden="true" />
+              </span>
+            </Link>
+          ))}
         </div>
       </Rise>
 
