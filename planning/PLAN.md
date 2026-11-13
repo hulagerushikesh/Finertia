@@ -45,7 +45,7 @@ people hiring for quant or full-stack roles, and people who trade._
 **Loose ends from the last sprint**
 
 1. ~~The status update (pull request #185) is not merged.~~ Merged 13 Nov.
-2. The old Mumbai server is still running as a rollback. Due for deletion.
+2. ~~The old Mumbai server is still running as a rollback.~~ Deleted 13 Nov.
 3. Two things were never looked at signed in: the cost box in the new
    units, and the single "Pro" message for a free account.
 4. The README still calls the project a "SaaS" and does not mention the
@@ -60,7 +60,7 @@ Three phases, in order. **You** marks what only the author can do.
 | # | Item | Done when | You |
 |---|---|---|---|
 | A1 | ✅ 13 Nov · Merge the status update and this plan | Both on the main branch | Say "approve" |
-| A2 | Delete the Mumbai server | Only one server holds production settings; site health still passes | One command, on your yes |
+| A2 | ✅ 13 Nov · Delete the Mumbai server | Only one server holds production settings; site health still passes | One command, on your yes |
 | A3 | The two signed-in looks | Both seen working on the live site, or a defect logged and fixed | 5 minutes signed in, or let Claude drive your Chrome |
 | A4 | ✅ 13 Nov · Archive M12; trim STATUS to one screen at the top | STATUS "At a glance" fits one screen; history moved below | — |
 
@@ -124,7 +124,7 @@ Claude fills one row every Monday in phase C.
 |---|---|---|---|
 | 1 | Who should read this: hiring managers, traders, or both? | Both; the drafts lead with the finding, not the code | 17 Nov |
 | 2 | Visitor counting: the host's built-in counter (free, no cookies) | Wait; nothing is switched on without a yes | 17 Nov |
-| 3 | Delete the Mumbai server | Stays up, costs nothing idle | 16 Nov |
+| 3 | ~~Delete the Mumbai server~~ | Decided 13 Nov: deleted | — |
 | 4 | The 10 Dec thresholds in part 4 | As written | 23 Nov |
 | 5 | Hours per week you can give | 3 hours: mostly editing and posting | 17 Nov |
 

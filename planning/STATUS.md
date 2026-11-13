@@ -6,10 +6,10 @@ _Current to `5f65889` (main) · 13 Nov 2026. The table below fits one screen; hi
 
 | | |
 |---|---|
-| Live | https://finertia.hulage.in — frontend on Vercel, API on Cloud Run **us-central1 rev `00008-9rf` (`fc69fd7`, 4 Nov)**; all seven switches on. `backend/` on `main` matches production except one figure-check script. Mumbai (asia-south1) is still up as the rollback on an older commit; deleting it is PLAN item A2. Earlier revisions: [Live history](#live-history) |
+| Live | https://finertia.hulage.in — frontend on Vercel, API on Cloud Run **us-central1 rev `00008-9rf` (`fc69fd7`, 4 Nov)**; all seven switches on. `backend/` on `main` matches production except one figure-check script. The Mumbai (asia-south1) service was deleted 13 Nov (PLAN A2); us-central1 is the only one. Earlier revisions: [Live history](#live-history) |
 | In flight | **M13 "Make the work seen" (13 Nov → 10 Dec)** — [PLAN.md](PLAN.md). M12 closed 10 Nov; its record is [NEXT-MILESTONE.md](NEXT-MILESTONE.md) |
 | Direction | **Portfolio piece**, maintenance only (31 Oct, DECISIONS.md). Two studies published: [/writeup](https://finertia.hulage.in/writeup) (Apple, 7 Oct, corrected 4 Nov) and [/writeup/nifty-50](https://finertia.hulage.in/writeup/nifty-50) (129 → 4, 4 Nov); every figure re-run by a script |
-| Waiting on the author | PLAN A2 (yes to delete Mumbai) and A3 (two signed-in looks). Earlier sign-offs: [Live history](#live-history) |
+| Waiting on the author | PLAN A3 (two signed-in looks). Earlier sign-offs: [Live history](#live-history) |
 | Tests | 856 backend (22 skipped without the emulator), 342 frontend, 26 end-to-end, 27 Firestore-rule — counted 5 Nov |
 | CI | green on `main` (backend tests, frontend build, end-to-end, secret scan) |
 | Safety net | Firestore point-in-time recovery 7 days, daily and weekly backups, restore drilled; uptime and 5xx alerts email the author (RELEASE.md part 5) |
@@ -138,6 +138,7 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 | 4 Nov | **The timing test now reorders whole holding runs** instead of single days (#180 the study's re-run, fixed in RESEARCH-PLAN before it ran; #181 the product; #182 the site's figures; DECISIONS 4 Nov). The day shuffle added trades, so it grew easier to pass as costs rose. On the Nifty pick: 25 of 129 pass rather than 92, and the four survivors are unchanged. Stock pages beating random timing: 10 of 117 (was 40). First write-up corrected with a dated note: AAPL timing p 0.216 / 0.060 / 0.164 (was 0.022 / 0.008 / 0.066). Deployed as us-central1 rev `00008-9rf` | 856 backend tests; `reproduce_writeup.py` 174/174, `reproduce_nifty.py` 68/68; deploy run green, `/api/health` names `fc69fd7` |
 | 4 Nov | **Share card for `/writeup/nifty-50`** (#183: the funnel, 129 → 50 → 7 → 4) and a link to the study from the end of the first write-up (#184). GitHub dropped #183's push event during an outage, so an empty commit rebuilt the site | Card served at `/og-writeup-nifty.png`; the link is on live `/writeup` |
 | 12–13 Nov | **M12 closed; M13 planned** (#185): PLAN.md replaces ROADMAP and NEXT-MILESTONE as the place to look; CLAUDE.md points every session at it. STATUS trimmed to one screen (PLAN A4) | — |
+| 13 Nov | **Mumbai service deleted** (PLAN A2, the author ran the delete on their yes). us-central1 is the only Cloud Run service; the deploy workflow offers only that region | Site health 200 on rev `00008-9rf`; release post-check all pass |
 
 ## Known risks
 
@@ -151,7 +152,7 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 2. **Backend redeploy is a manual trigger** and was forgotten once (5 days of stale prod). Since 28 Sep it is one command — `gh workflow run deploy.yml --ref main` — which tests, deploys, health-checks and moves the `backend-deployed` tag itself, so the tag can no longer be moved without a deploy behind it (the 23 Sep failure). `backend-drift.yml` still comments on any merged PR that leaves `backend/` ahead of the tag. Still not push-triggered, deliberately: a deploy stays a decision. Hand-deploys (README fallback) must still move the tag only after the revision serves and `/api/health` returns 200.
 3. **Python version** — prod runs 3.11 (`Dockerfile`); CI and the deploy gate ran 3.12 until 8 Oct and now run 3.11, so the suite is tested on what prod runs (727 pass on 3.11.13 and on 3.12). Pandas 3.0.5 / numpy 2.4.6 are pinned and identical locally, in CI and in prod. Local `.venv` is still 3.12.
 4. **`gh` token** still account-wide `repo` + `workflow`, no expiry — narrowing skipped by the user's choice (7 Oct).
-5. **Rollback** — until PLAN A2, the first rollback is reverting the region-switch PR, which sends traffic back to Mumbai ([B1-REGION-MOVE.md](B1-REGION-MOVE.md)). After A2 there is one region, so a rollback means redeploying an earlier commit with the Deploy workflow (`gh workflow run deploy.yml --ref <commit>`), or shifting traffic to an earlier us-central1 revision. Mumbai revisions from before 20 Sep (rev 00007 and earlier) run as the default compute account, which lost its secret grant that day, so they cannot take traffic.
+5. **Rollback** — Mumbai was deleted 13 Nov (PLAN A2), so there is one region and a rollback means redeploying an earlier commit with the Deploy workflow (`gh workflow run deploy.yml --ref <commit>`), or shifting traffic to an earlier us-central1 revision. Mumbai revisions from before 20 Sep (rev 00007 and earlier) run as the default compute account, which lost its secret grant that day, so they cannot take traffic.
 
 ## Live history
 
