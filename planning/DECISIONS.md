@@ -3,6 +3,19 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-11-13 — Count visitors with Vercel Web Analytics
+
+**Decision (author, 13 Nov):** turn on the host's built-in visitor counter
+(PLAN decision 2, B2).
+
+**Why:** the 10 Dec rule in PLAN part 4 is a visitor count, and the site had
+no way to count. The host's counter needs no cookies, stores no personal data
+and is free at this traffic.
+
+**Cost of it:** one small same-origin script on every page, added only to
+builds made on the host. Counts start the day it is switched on; nothing
+before 13 Nov can be recovered.
+
 ## 2026-11-13 — One region: the Mumbai service is deleted
 
 **Decision (author, 13 Nov):** delete the asia-south1 Cloud Run service, kept
