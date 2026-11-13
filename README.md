@@ -1,10 +1,63 @@
-# Finertia — Strategy Backtesting SaaS
+# Finertia
 
-Production-grade backtesting platform for momentum, MACD, and Bollinger mean-reversion strategies. All signal, position, and metric logic is hand-written pure Python (pandas + numpy). Zero external backtesting libraries — you can read the exact lines that produce your Sharpe ratio.
+**A backtester built to tell you when a good-looking trading result is luck.**
+It runs three classic strategies on real prices, then puts every result
+through six checks for overfitting and chance. Live at
+**[finertia.hulage.in](https://finertia.hulage.in)**; the
+[demo](https://finertia.hulage.in/demo) needs no account.
+
+It is a portfolio project by one author: a full product (FastAPI, React,
+Firestore, Cloud Run, Vercel; 856 backend tests) and two published studies
+whose every figure a script re-runs.
+
+## What it found
+
+### 1. The best-looking strategy was the worst on new data
+
+[![AAPL 2018–2024: momentum and MACD looked best on the years they were tuned on and lost on new data; Bollinger held up](frontend/public/og-writeup.png)](https://finertia.hulage.in/writeup)
+
+Three strategies tuned on Apple, then scored on years they had never seen:
+the ranking flipped. Move the cut by one year and it flips again, so the
+honest verdict is "depends on the market", not "works".
+**[Read the study →](https://finertia.hulage.in/writeup)**
+
+### 2. Of 129 Nifty 50 strategies, four survived honest testing
+
+[![Nifty 50, 2011–2025: 129 tested, 50 beat holding on the tuning years, 7 stayed ahead on unseen years, 4 passed the luck checks](frontend/public/og-writeup-nifty.png)](https://finertia.hulage.in/writeup/nifty-50)
+
+The same three strategies on India's 50 biggest companies as they stood in
+2011 (so the later losers are not quietly removed), fifteen years, after
+costs, with the rules written down before the first run. All four survivors
+were on stocks that collapsed: they won by sitting in cash, not by timing.
+**[Read the study →](https://finertia.hulage.in/writeup/nifty-50)**
+
+## Check the figures yourself
+
+Each study has a script that re-runs every quoted number and fails if any
+no longer matches:
+
+```bash
+cd backend && .venv/bin/python scripts/reproduce_writeup.py runs.json   # Apple study: re-runs through the production code on fresh prices
+cd backend && .venv/bin/python scripts/reproduce_nifty.py               # Nifty study: checks every figure against the saved results
+```
+
+Study texts: [planning/write-up.md](planning/write-up.md) and
+[planning/research/nifty-write-up.md](planning/research/nifty-write-up.md).
+The Nifty study's rules, fixed before any run, are in
+[planning/RESEARCH-PLAN.md](planning/RESEARCH-PLAN.md).
+
+## The product
 
 ![The /demo page: a momentum backtest on AAPL that lost to holding, then its Validation tab: 2 of 6 checks passed](docs/demo.gif)
 
 <sub>[finertia.hulage.in/demo](https://finertia.hulage.in/demo), no account needed. Re-record with `frontend/design/record-demo-gif.mjs`.</sub>
+
+Momentum, MACD and Bollinger mean-reversion, single stocks or baskets, with
+stop-loss, take-profit and volatility sizing. All signal, position and metric
+logic is hand-written pandas + numpy, with no backtesting library, so you
+can read the exact lines that produce a Sharpe ratio.
+
+## The checks, and why each exists
 
 Beyond a single backtest, Finertia answers the two questions that decide whether a result means anything:
 
@@ -25,7 +78,7 @@ Four more checks sit behind those, each built because the previous one was found
 
 See [learning/03-validation-methods.md](learning/03-validation-methods.md) for formulas, traps, and where each lives.
 
-### What it found
+### The Apple study in detail
 
 The full write-up, with every figure re-run and checked by a script: **[finertia.hulage.in/writeup](https://finertia.hulage.in/writeup)** (source: [planning/write-up.md](planning/write-up.md)).
 
@@ -91,7 +144,7 @@ losing strategy for the same reason.
 ## Learning and planning
 
 - [`learning/`](learning/) — how to understand this project from price data up to the validation papers, with each concept mapped to the file that uses it. Start at [learning/README.md](learning/README.md).
-- [`planning/`](planning/) — current status, the milestone in progress, backlog, and the decision log. Start at [planning/STATUS.md](planning/STATUS.md); the full history is [planning/PROGRESS.md](planning/PROGRESS.md).
+- [`planning/`](planning/) — the plan, current status, backlog, and the decision log. Start at [planning/PLAN.md](planning/PLAN.md), then [planning/STATUS.md](planning/STATUS.md); the full history is [planning/PROGRESS.md](planning/PROGRESS.md).
 
 ## Stack
 
