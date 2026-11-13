@@ -46,8 +46,7 @@ people hiring for quant or full-stack roles, and people who trade._
 
 1. ~~The status update (pull request #185) is not merged.~~ Merged 13 Nov.
 2. ~~The old Mumbai server is still running as a rollback.~~ Deleted 13 Nov.
-3. Two things were never looked at signed in: the cost box in the new
-   units, and the single "Pro" message for a free account.
+3. ~~Two things were never looked at signed in.~~ Both seen working 13 Nov.
 4. The README still calls the project a "SaaS" and does not mention the
    Nifty study.
 
@@ -61,7 +60,7 @@ Three phases, in order. **You** marks what only the author can do.
 |---|---|---|---|
 | A1 | ✅ 13 Nov · Merge the status update and this plan | Both on the main branch | Say "approve" |
 | A2 | ✅ 13 Nov · Delete the Mumbai server | Only one server holds production settings; site health still passes | One command, on your yes |
-| A3 | The two signed-in looks | Both seen working on the live site, or a defect logged and fixed | 5 minutes signed in, or let Claude drive your Chrome |
+| A3 | ✅ 13 Nov · The two signed-in looks | Both seen working on the live site, or a defect logged and fixed | 5 minutes signed in, or let Claude drive your Chrome |
 | A4 | ✅ 13 Nov · Archive M12; trim STATUS to one screen at the top | STATUS "At a glance" fits one screen; history moved below | — |
 
 ### Phase B — Make it judgeable in five minutes (17–23 Nov)
