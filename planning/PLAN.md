@@ -36,7 +36,7 @@ people hiring for quant or full-stack roles, and people who trade._
 | Operations | One server in the US, backups, alerts, ₹0 when idle | Restore drill done; uptime alert proven |
 | Public pages | 60 pages for search: strategies, 39 stocks, five explainers, two studies | All pre-rendered, each with a share card |
 | Users | 5 sign-ups from friends, **0 returned**, nobody said they would pay | Tester round closed 31 Oct |
-| Readers | **Unknown.** The site has no visitor counting | — |
+| Readers | **Counting from 13 Nov** with the host's cookie-free counter (B2) | — |
 | Money | Payments, licensed data and the legal review are **off** | DECISIONS 31 Oct |
 
 **What is strong:** the engineering and the honesty of the research.
@@ -68,7 +68,7 @@ Three phases, in order. **You** marks what only the author can do.
 | # | Item | Done when | You |
 |---|---|---|---|
 | B1 | Built 13 Nov, waiting on the author's read · **README as the front door**: what it is, the two findings with one chart each, how to check the figures, then the engineering. No "SaaS" | A stranger can say what the project found after reading the first screen | Read it once |
-| B2 | **Count visitors**, without cookies or personal data | Daily visits per page visible for `/writeup`, `/writeup/nifty-50`, `/demo` | Turn it on in the hosting dashboard (decision 2) |
+| B2 | Built 13 Nov, waiting on the dashboard switch · **Count visitors**, without cookies or personal data | Daily visits per page visible for `/writeup`, `/writeup/nifty-50`, `/demo` | Turn it on in the hosting dashboard (decision 2) |
 | B3 | ✅ 13 Nov · **Landing page points at the studies** first, the tool second | Both studies are one click from the home page, above the fold | — |
 | B4 | **Link the Nifty study back** to the first one in its own text | Link present on the live page | Yes needed: it edits a published essay |
 | B5 | **Search Console check** | Sitemap accepted; a list of which pages get impressions | Share the screen or the numbers |
@@ -122,7 +122,7 @@ Claude fills one row every Monday in phase C.
 | # | Decision | Default if you say nothing | Needed by |
 |---|---|---|---|
 | 1 | Who should read this: hiring managers, traders, or both? | Both; the drafts lead with the finding, not the code | 17 Nov |
-| 2 | Visitor counting: the host's built-in counter (free, no cookies) | Wait; nothing is switched on without a yes | 17 Nov |
+| 2 | ~~Visitor counting: the host's built-in counter (free, no cookies)~~ | Decided 13 Nov: yes | — |
 | 3 | ~~Delete the Mumbai server~~ | Decided 13 Nov: deleted | — |
 | 4 | The 10 Dec thresholds in part 4 | As written | 23 Nov |
 | 5 | Hours per week you can give | 3 hours: mostly editing and posting | 17 Nov |

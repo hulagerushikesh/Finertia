@@ -33,12 +33,36 @@ function routeShells() {
   };
 }
 
+/**
+ * Vercel Web Analytics: page views per path, no cookies, no personal data
+ * (PLAN B2, decision 2). Added only to builds made on Vercel, where the
+ * script is served from the same origin; local builds, CI and E2E would only
+ * get a 404 for it. Injected into index.html before routeShells copies it, so
+ * every public page and app.html carry it. The script follows the app's own
+ * route changes, so in-app navigation is counted too.
+ */
+function vercelAnalytics() {
+  return {
+    name: "vercel-analytics",
+    apply: "build",
+    transformIndexHtml(html) {
+      if (!process.env.VERCEL) return html;
+      return html.replace(
+        "</head>",
+        `    <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+    <script defer src="/_vercel/insights/script.js"></script>
+  </head>`,
+      );
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const apiBase = env.VITE_API_BASE_URL || "http://localhost:8000";
 
   return {
-    plugins: [react(), routeShells()],
+    plugins: [react(), vercelAnalytics(), routeShells()],
     resolve: {
       alias: { "@": path.resolve(__dirname, "src") },
     },
