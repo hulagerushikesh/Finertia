@@ -1,5 +1,7 @@
 # Next milestone — M12 "Product readiness", sprint 1
 
+> **Superseded 12 Nov 2026 by [PLAN.md](PLAN.md).** Kept as the record of what was planned and done.
+
 _Planned 13 Oct 2026 (PM + Scrum). Sprint 1: **Wed 14 Oct → Tue 27 Oct**,
 review on the 27th with the author. Sprint 2 runs 28 Oct → 10 Nov. M11
 (quality foundation) closed 13 Oct, all seven items: see [ROADMAP.md](ROADMAP.md).
