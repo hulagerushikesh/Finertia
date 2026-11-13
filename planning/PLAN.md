@@ -71,7 +71,7 @@ Three phases, in order. **You** marks what only the author can do.
 | B2 | ✅ 13 Nov · **Count visitors**, without cookies or personal data | Daily visits per page visible for `/writeup`, `/writeup/nifty-50`, `/demo` | Turn it on in the hosting dashboard (decision 2) |
 | B3 | ✅ 13 Nov · **Landing page points at the studies** first, the tool second | Both studies are one click from the home page, above the fold | — |
 | B4 | ✅ 13 Nov · **Link the Nifty study back** to the first one in its own text | Link present on the live page | Yes needed: it edits a published essay |
-| B5 | Read 13 Nov (Finertia: 10 impressions, 0 clicks in 3 months); sitemap never submitted, waiting on a yes · **Search Console check** | Sitemap accepted; a list of which pages get impressions | Share the screen or the numbers |
+| B5 | ✅ 13 Nov (Finertia: 10 impressions, 0 clicks in 3 months; sitemap accepted, 60 pages) · **Search Console check** | Sitemap accepted; a list of which pages get impressions | Share the screen or the numbers |
 
 ### Phase C — Put it in front of people (24 Nov → 10 Dec)
 
