@@ -140,6 +140,7 @@ check, the five sections folded behind "Show the working" (PR #17, replacing
 | 12–13 Nov | **M12 closed; M13 planned** (#185): PLAN.md replaces ROADMAP and NEXT-MILESTONE as the place to look; CLAUDE.md points every session at it. STATUS trimmed to one screen (PLAN A4) | — |
 | 13 Nov | **Mumbai service deleted** (PLAN A2, the author ran the delete on their yes). us-central1 is the only Cloud Run service; the deploy workflow offers only that region | Site health 200 on rev `00008-9rf`; release post-check all pass |
 | 13 Nov | **The two signed-in looks** (PLAN A3, by Claude in the author's Chrome, author's Free account). Cost box reads 10 bps and the report says "assumed 10 bps, breakeven 25 bps". The month's one free Validation ran (AAPL momentum, 0 of 6 checks, "0 of 1 left this month"); a second set-up then showed one calm Pro wall, no banner or extra toast, and its button opens Pricing. No console errors | Phase A closed |
+| 13 Nov | **Search Console read** (PLAN B5, by Claude in the author's Chrome; property is the whole hulage.in domain). Last 3 months: 424 impressions, 3 clicks, all 3 clicks to the hulage.in home page. Finertia pages: home 9 impressions, /writeup 1, no clicks; /writeup/nifty-50 none yet. **No sitemap has ever been submitted** (the live sitemap lists 60 pages and robots.txt points to it) | Sitemap submission waits on the author's yes |
 
 ## Known risks
 
