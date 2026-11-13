@@ -47,8 +47,8 @@ people hiring for quant or full-stack roles, and people who trade._
 1. ~~The status update (pull request #185) is not merged.~~ Merged 13 Nov.
 2. ~~The old Mumbai server is still running as a rollback.~~ Deleted 13 Nov.
 3. ~~Two things were never looked at signed in.~~ Both seen working 13 Nov.
-4. The README still calls the project a "SaaS" and does not mention the
-   Nifty study.
+4. ~~The README still calls the project a "SaaS" and does not mention the
+   Nifty study.~~ Rewritten 13 Nov (B1).
 
 ## 3. The plan — M13 "Make the work seen" (13 Nov → 10 Dec)
 
@@ -67,7 +67,7 @@ Three phases, in order. **You** marks what only the author can do.
 
 | # | Item | Done when | You |
 |---|---|---|---|
-| B1 | **README as the front door**: what it is, the two findings with one chart each, how to check the figures, then the engineering. No "SaaS" | A stranger can say what the project found after reading the first screen | Read it once |
+| B1 | Built 13 Nov, waiting on the author's read · **README as the front door**: what it is, the two findings with one chart each, how to check the figures, then the engineering. No "SaaS" | A stranger can say what the project found after reading the first screen | Read it once |
 | B2 | **Count visitors**, without cookies or personal data | Daily visits per page visible for `/writeup`, `/writeup/nifty-50`, `/demo` | Turn it on in the hosting dashboard (decision 2) |
 | B3 | **Landing page points at the studies** first, the tool second | Both studies are one click from the home page, above the fold | — |
 | B4 | **Link the Nifty study back** to the first one in its own text | Link present on the live page | Yes needed: it edits a published essay |
