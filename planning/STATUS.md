@@ -9,7 +9,7 @@ _Current to `5f65889` (main) · 13 Nov 2026. The table below fits one screen; hi
 | Live | https://finertia.hulage.in — frontend on Vercel, API on Cloud Run **us-central1 rev `00008-9rf` (`fc69fd7`, 4 Nov)**; all seven switches on. `backend/` on `main` matches production except one figure-check script. The Mumbai (asia-south1) service was deleted 13 Nov (PLAN A2); us-central1 is the only one. Earlier revisions: [Live history](#live-history) |
 | In flight | **M13 "Make the work seen" (13 Nov → 10 Dec)** — [PLAN.md](PLAN.md). M12 closed 10 Nov; its record is [NEXT-MILESTONE.md](NEXT-MILESTONE.md) |
 | Direction | **Portfolio piece**, maintenance only (31 Oct, DECISIONS.md). Two studies published: [/writeup](https://finertia.hulage.in/writeup) (Apple, 7 Oct, corrected 4 Nov) and [/writeup/nifty-50](https://finertia.hulage.in/writeup/nifty-50) (129 → 4, 4 Nov); every figure re-run by a script |
-| Waiting on the author | Nothing in phase A; phase B starts 17 Nov (PLAN part 6 decisions). Earlier sign-offs: [Live history](#live-history) |
+| Waiting on the author | B1 read the README; B5 Search Console numbers; C1 edit the outreach drafts; PLAN part 6 decisions 1, 4, 5. Visitor counting is on and seen working 13 Nov (B2). Earlier sign-offs: [Live history](#live-history) |
 | Tests | 856 backend (22 skipped without the emulator), 342 frontend, 26 end-to-end, 27 Firestore-rule — counted 5 Nov |
 | CI | green on `main` (backend tests, frontend build, end-to-end, secret scan) |
 | Safety net | Firestore point-in-time recovery 7 days, daily and weekly backups, restore drilled; uptime and 5xx alerts email the author (RELEASE.md part 5) |
