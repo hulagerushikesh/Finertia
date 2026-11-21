@@ -61,7 +61,18 @@ function lookahead() {
   };
 }
 
+function nifty() {
+  const indian = STOCKS.filter((s) => s.market !== "US" && !s.slug.startsWith("nifty") && s.slug !== "sensex");
+  return {
+    lead:
+      `Each stock page runs the same three rules on one stock, ${STOCK_PERIOD.years}, against holding it. ` +
+      `${indian.length} of them are Indian large caps.`,
+    stocks: pick(["nifty-50", "reliance", "hdfcbank", "tcs", "infy", "sbin"]).map((s) => ({ ...s, note: sharpeNote(s) })),
+  };
+}
+
 const BUILDERS = {
+  "nifty-50-strategies-vs-buy-and-hold": nifty,
   "walk-forward-validation": validation,
   "backtest-overfitting": validation,
   "sharpe-ratio": sharpe,
