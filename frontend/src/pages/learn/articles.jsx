@@ -13,6 +13,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { DocSection as Section, Term } from "../../components/Prose";
 import { strategyPage } from "../../lib/strategyPages";
+import { NIFTY } from "../../lib/niftyFigures";
 
 const LINK = "text-pencil underline underline-offset-2";
 
@@ -343,6 +344,144 @@ function Permutation() {
   );
 }
 
+const TH = "text-left font-mono text-2xs uppercase tracking-wider text-faint font-medium px-4 py-2.5 border-b border-border align-bottom";
+const TD = "px-4 py-2.5 align-top text-graphite tabular-nums";
+
+function Table({ head, rows }) {
+  return (
+    <div className="overflow-x-auto border border-border rounded-lg bg-card">
+      <table className="w-full text-sm border-collapse min-w-[26rem]">
+        <thead>
+          <tr>{head.map((h) => <th key={h} className={TH}>{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} className={i ? "border-t border-border" : ""}>
+              {r.map((c, j) => <td key={j} className={TD}>{c}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function NiftyVsHolding() {
+  const { funnel: f, beatHoldUnseen: b } = NIFTY;
+  return (
+    <>
+      <Section id="answer" title="The short answer">
+        <p>
+          Mostly no. Momentum, MACD crossover and Bollinger-band strategies were run on{" "}
+          {NIFTY.stocks} of the Nifty 50 stocks for fifteen years ({NIFTY.period}), after a{" "}
+          {NIFTY.cost} cost on every trade. Each one was tuned on the first 70% of the years
+          and then scored on the rest. On those later years, only {b.total} of {f.tested}{" "}
+          strategy-and-stock pairs had a better Sharpe ratio than simply buying the stock and
+          holding it.
+        </p>
+        <p>
+          The typical pair scored a Sharpe of {NIFTY.medianOutOfSample} on the later years.
+          Holding the typical stock over the same years scored {NIFTY.medianHoldOutOfSample}.
+        </p>
+      </Section>
+
+      <Section id="setup" title="How the test was run">
+        <ul className="list-disc pl-5 flex flex-col gap-1.5">
+          <li>
+            The stocks are the Nifty 50 <em>as it stood on 1 January 2011</em>, not today’s
+            list. Today’s list holds the companies that did well enough to stay in, which makes
+            holding them look better than it was. {NIFTY.missing} of the 2011 names have no
+            price history any more and are named in the study rather than dropped.
+          </li>
+          <li>
+            Each strategy’s settings were picked on the tuning years, then left unchanged on
+            the later years. Only the later years count as evidence; see{" "}
+            <Link to="/learn/walk-forward-validation" className={LINK}>walk-forward validation</Link>.
+          </li>
+          <li>The rules for passing were written down before the first run.</li>
+        </ul>
+      </Section>
+
+      <Section id="by-strategy" title="Strategy by strategy">
+        <p>Pairs whose later-years Sharpe beat holding the same stock, out of {NIFTY.stocks} each:</p>
+        <Table
+          head={["Strategy", "Beat holding, later years"]}
+          rows={[
+            ["Momentum", `${b.momentum} of ${NIFTY.stocks}`],
+            ["MACD crossover", `${b.macd} of ${NIFTY.stocks}`],
+            ["Bollinger bands", `${b.bollinger} of ${NIFTY.stocks}`],
+          ]}
+        />
+        <p>
+          No strategy type stood out. Each beat holding on only a handful of the{" "}
+          {NIFTY.stocks} stocks.
+        </p>
+      </Section>
+
+      <Section id="funnel" title="Looking good is not the same as being good">
+        <p>The study then asked for more than one good number:</p>
+        <Table
+          head={["Step", "Pairs left"]}
+          rows={[
+            ["Tested", f.tested],
+            ["Beat holding on the tuning years", f.beatInSample],
+            ["Still ahead on the later years", f.aheadOutOfSample],
+            ["Passed three checks for luck", f.survives],
+          ]}
+        />
+        <p>
+          {f.beatInSample} pairs looked better than holding on the years they were tuned on.
+          The typical pair had a Sharpe of {NIFTY.medianInSample} there and{" "}
+          {NIFTY.medianOutOfSample} afterwards. Tuning finds settings that fit the past; it
+          does not find settings that keep working. The{" "}
+          <Link to="/learn/backtest-overfitting" className={LINK}>overfitting checks</Link>{" "}
+          exist for exactly this gap.
+        </p>
+        <p>
+          Costs do not change the picture: at half the cost {NIFTY.survivesHalfCost} pairs
+          survive, at double the cost {NIFTY.survivesDoubleCost}.
+        </p>
+      </Section>
+
+      <Section id="survivors" title="The four that survived">
+        <Table
+          head={["Stock", "Strategy", "Later-years Sharpe", "Holding"]}
+          rows={NIFTY.survivors.map((s) => [s.stock, s.strategy, s.oos, s.hold])}
+        />
+        <p>
+          All four are on companies of one business group that fell apart over the decade.
+          The strategies beat holding by spending much of a long decline in cash, not by
+          timing good moments to buy. On a stock that mostly falls, any rule that is
+          sometimes out of the market beats one that is always in.
+        </p>
+        <p>
+          Reliance Communications’ price history also has long stretches with no trading at
+          all, so its figures are not something a person could have earned.
+        </p>
+      </Section>
+
+      <Section id="takeaway" title="What to take from it">
+        <p>
+          For a large Indian stock over these fifteen years, a simple rule tuned on the past
+          was far more likely to trail holding than to beat it. A backtest that says
+          otherwise should be checked on years it was not tuned on, and against the
+          possibility of luck, before it is trusted.
+        </p>
+        <p>
+          This is three strategies on one market over one period. It does not show that no
+          strategy beats holding Indian stocks. It shows how rarely these ones did when
+          tested fairly. On today’s Nifty 50 list the same test found {NIFTY.today.survives}{" "}
+          survivor out of {NIFTY.today.tested}.
+        </p>
+        <p>
+          The full study, with every table and the reasons behind each rule:{" "}
+          <Link to="/writeup/nifty-50" className={LINK}>Of 129 Nifty strategies, four survived honest testing</Link>.
+        </p>
+      </Section>
+    </>
+  );
+}
+
 export const ARTICLES = [
   {
     id: "walk-forward-validation",
@@ -383,6 +522,14 @@ export const ARTICLES = [
     lede:
       "Shuffle a strategy's trades and see whether the real timing beats random timing. How it works, how to read it, and what it cannot tell you.",
     Body: Permutation,
+  },
+  {
+    id: "nifty-50-strategies-vs-buy-and-hold",
+    eyebrow: "Results",
+    title: "Do trading strategies beat buy-and-hold on the Nifty 50?",
+    lede:
+      "Momentum, MACD and Bollinger bands on 43 Nifty 50 stocks, fifteen years, after costs, scored on years they were never tuned on. How often they beat simply holding the stock.",
+    Body: NiftyVsHolding,
   },
 ].map((a) => ({ ...a, path: `/learn/${a.id}` }));
 

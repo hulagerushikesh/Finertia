@@ -101,6 +101,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://finertia.hulage.in/learn/nifty-50-strategies-vs-buy-and-hold</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://finertia.hulage.in/stocks</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

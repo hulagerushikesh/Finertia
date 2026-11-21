@@ -210,6 +210,19 @@ export const PAGE_META = {
       "Shuffle a strategy's positions 500 times and see whether its real timing beats random timing. How the permutation test works, how to read its p-value, and its limits.",
     ...CARD,
   },
+  "learn-nifty-50-strategies-vs-buy-and-hold": {
+    name: "Nifty 50 strategies vs buy-and-hold",
+    path: "/learn/nifty-50-strategies-vs-buy-and-hold",
+    type: "article",
+    published: "2026-11-21",
+    title: "Do trading strategies beat buy-and-hold on the Nifty 50? · Finertia",
+    ogTitle: "Do trading strategies beat buy-and-hold on the Nifty 50?",
+    description:
+      "Momentum, MACD and Bollinger bands backtested on 43 Nifty 50 stocks, 2011–2025, after costs. Scored on years they were never tuned on, 15 of 129 beat holding the stock.",
+    image: `${SITE}/og-writeup-nifty.png`,
+    imageAlt:
+      "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
+  },
   stocks: {
     name: "Stocks",
     path: "/stocks",
