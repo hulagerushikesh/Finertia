@@ -609,6 +609,144 @@ function Survivorship() {
   );
 }
 
+function BollingerNifty() {
+  const B = NIFTY.bollinger;
+  const f = B.funnel;
+  const G = B.grid;
+  return (
+    <>
+      <Section id="answer" title="The short answer">
+        <p>
+          On these stocks and years, Bollinger bands mostly trailed simply holding the stock.
+          Finertia’s Nifty study ran a Bollinger-band rule on {f.tested} stocks of the Nifty 50
+          as it stood in 2011, for fifteen years ({NIFTY.period}), after a {NIFTY.cost} cost on
+          every trade. Each stock’s settings were tuned on the first 70% of the years and then
+          scored, unchanged, on the rest.
+        </p>
+        <p>
+          {f.beatInSample} of the {f.tested} looked better than holding on the years they were
+          tuned on. {f.aheadOutOfSample === 1 ? "One" : f.aheadOutOfSample} stayed ahead on the
+          later years, and {f.survives === 0 ? "none" : f.survives} passed the checks for luck.
+          The typical stock’s Bollinger Sharpe ratio on the later years was{" "}
+          {B.medianOutOfSample}; holding the typical stock over the same years gave{" "}
+          {NIFTY.medianHoldOutOfSample}.
+        </p>
+      </Section>
+
+      <Section id="rule" title="The rule that was tested">
+        <p>
+          The bands are a moving average of the closing price, plus and minus a number of
+          standard deviations of the close over the same window. The rule holds the stock
+          while the close is below the lower band, is short while it is above the upper band,
+          and is out of the market whenever the close is back inside, which is most of the
+          time. It bets that stretched prices come back. The full rule is on the{" "}
+          <Link to="/strategies/bollinger" className={LINK}>Bollinger strategy page</Link>.
+        </p>
+        <p>
+          The tuning chose from Finertia’s {B.settings} built-in settings: windows of 10, 20,
+          30 and 50 days, with bands 1.5, 2 or 2.5 standard deviations wide. The setting
+          chosen most often was a {B.commonPick.window}-day window with bands{" "}
+          {B.commonPick.width} wide, on {B.commonPick.stocks} of the {f.tested} stocks.
+        </p>
+      </Section>
+
+      <Section id="funnel" title="Good on the tuning years, not afterwards">
+        <Table
+          head={["Step", "Stocks left"]}
+          rows={[
+            ["Tested", f.tested],
+            ["Beat holding on the tuning years", f.beatInSample],
+            ["Still ahead on the later years", f.aheadOutOfSample],
+            ["Passed three checks for luck", f.survives],
+          ]}
+        />
+        <p>
+          The typical Sharpe fell from {B.medianInSample} on the tuning years to{" "}
+          {B.medianOutOfSample} on the later ones. Only {B.positiveOutOfSample} of the{" "}
+          {f.tested} had a Sharpe above zero on the later years. The one stock that stayed ahead of
+          holding, {B.aheadStock}, failed two of the three luck checks, so its result could
+          not be told apart from chance. Why tuned settings lose their edge on new years is
+          covered in{" "}
+          <Link to="/learn/backtest-overfitting" className={LINK}>how to tell if a backtest is overfit</Link>.
+        </p>
+      </Section>
+
+      <Section id="costs" title="What trading costs do to it">
+        <p>The whole study was re-run at half and at double the {NIFTY.cost} cost per trade:</p>
+        <Table
+          head={["", "Half cost", "Default", "Double cost"]}
+          rows={[
+            ["Beat holding on the tuning years", B.half.beatInSample, f.beatInSample, B.double.beatInSample],
+            ["Still ahead on the later years", B.half.aheadOutOfSample, f.aheadOutOfSample, B.double.aheadOutOfSample],
+            ["Passed three checks for luck", B.half.survives, f.survives, B.double.survives],
+          ]}
+        />
+        <p>
+          The rule moves in and out of the market often, so each extra fraction of a percent
+          per trade adds up. Even at half the cost, no stock passed.
+        </p>
+      </Section>
+
+      <Section id="today" title="On today’s Nifty 50 list">
+        <p>
+          The same test on today’s {B.today.tested} members, over the same years:{" "}
+          {B.today.beatInSample} beat holding on the tuning years,{" "}
+          {B.today.aheadOutOfSample === 0 ? "none" : B.today.aheadOutOfSample} stayed ahead
+          afterwards, and {B.today.survives === 0 ? "none" : B.today.survives} passed. Today’s
+          list flatters holding, which makes the bar higher; see{" "}
+          <Link to="/learn/survivorship-bias-nifty-50" className={LINK}>survivorship bias on the Nifty 50</Link>.
+        </p>
+      </Section>
+
+      <Section id="more-settings" title="Trying many more settings">
+        <p>
+          {B.settings} settings is far fewer than a person tuning by hand would try. So the
+          study took one stock, {G.stock}, chosen in advance, and tried {G.combinations}{" "}
+          Bollinger settings: windows from {G.windows} days and bands from {G.widths} standard
+          deviations wide. Holding {G.stock} gave a Sharpe of {G.holdInSample} on the tuning
+          years and {G.holdOutOfSample} on the later ones.
+        </p>
+        <Table
+          head={["Setting", "Tuning years", "Later years"]}
+          rows={[
+            [`Best of ${G.combinations}: ${G.best.window} days, ${G.best.width} wide`, G.best.is, G.best.oos],
+            [`Best of Finertia’s ${B.settings}: ${G.small.window} days, ${G.small.width} wide`, G.small.is, G.small.oos],
+            [`Holding ${G.stock}`, G.holdInSample, G.holdOutOfSample],
+          ]}
+        />
+        <p>
+          {G.beatHold === 0 ? "None" : G.beatHold} of the {G.combinations} settings beat holding
+          the stock, on either the tuning years or the later ones. Searching more settings
+          raised the best tuning-years Sharpe from {G.small.is} to {G.best.is}, and the later
+          years took all of it back: that setting ranked {G.best.rank} of all {G.best.of}{" "}
+          combinations the study tried on the stock. The typical Bollinger setting scored{" "}
+          {G.medianOutOfSample} on the later years, and {G.positiveOutOfSample} of{" "}
+          {G.combinations} were above zero.
+        </p>
+      </Section>
+
+      <Section id="takeaway" title="What to take from it">
+        <p>
+          A Bollinger-band backtest that looks good on the years it was tuned on says little
+          about the years after. Here, searching harder for a better setting made the
+          tuning-years number better and the later-years number worse. Judge any version of
+          this rule on years it was not tuned on, after costs, and against simply holding
+          the same stock.
+        </p>
+        <p>
+          This is one rule, with one way of trading the bands, on one market over one period.
+          It does not show that band rules never work; it shows how this one did when tested
+          fairly. The full study, with every table:{" "}
+          <Link to="/writeup/nifty-50" className={LINK}>Of 129 Nifty strategies, four survived honest testing</Link>.
+          All three strategies side by side:{" "}
+          <Link to="/learn/nifty-50-strategies-vs-buy-and-hold" className={LINK}>do trading strategies beat buy-and-hold on the Nifty 50?</Link>{" "}
+          To run the rule yourself on past data, <Link to="/demo" className={LINK}>open the demo</Link>.
+        </p>
+      </Section>
+    </>
+  );
+}
+
 export const ARTICLES = [
   {
     id: "walk-forward-validation",
@@ -665,6 +803,14 @@ export const ARTICLES = [
     lede:
       "Today’s index holds the companies that made it. The same test on the 2011 Nifty 50 and on today’s list, side by side, so the bias is a number rather than a warning.",
     Body: Survivorship,
+  },
+  {
+    id: "bollinger-bands-nifty-50",
+    eyebrow: "Results",
+    title: "Bollinger Bands on Indian stocks: 15 years of backtest results.",
+    lede:
+      "A Bollinger-band rule on 43 Nifty 50 stocks, 2011–2025, after costs, tuned on the early years and scored on the later ones. How often it beat simply holding the stock, and what searching more settings did.",
+    Body: BollingerNifty,
   },
 ].map((a) => ({ ...a, path: `/learn/${a.id}` }));
 

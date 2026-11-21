@@ -26,6 +26,7 @@
     { "source": "/learn/permutation-test", "destination": "/learn-permutation-test.html" },
     { "source": "/learn/nifty-50-strategies-vs-buy-and-hold", "destination": "/learn-nifty-50-strategies-vs-buy-and-hold.html" },
     { "source": "/learn/survivorship-bias-nifty-50", "destination": "/learn-survivorship-bias-nifty-50.html" },
+    { "source": "/learn/bollinger-bands-nifty-50", "destination": "/learn-bollinger-bands-nifty-50.html" },
     { "source": "/stocks", "destination": "/stocks.html" },
     { "source": "/stocks/aapl", "destination": "/stock-aapl.html" },
     { "source": "/stocks/msft", "destination": "/stock-msft.html" },
