@@ -275,6 +275,19 @@ export const PAGE_META = {
     imageAlt:
       "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
   },
+  "learn-trading-costs-backtest-india": {
+    name: "Trading costs in an Indian backtest",
+    path: "/learn/trading-costs-backtest-india",
+    type: "article",
+    published: "2026-11-22",
+    title: "Transaction costs in a backtest: brokerage, STT and tax in India · Finertia",
+    ogTitle: "What brokerage and taxes do to a backtest in India",
+    description:
+      "STT, stamp duty, brokerage and tax on profits in an Indian backtest. On 129 Nifty 50 tests, doubling costs moved the typical unseen-years Sharpe from −0.11 to −0.31.",
+    image: `${SITE}/og-writeup-nifty.png`,
+    imageAlt:
+      "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
+  },
   stocks: {
     name: "Stocks",
     path: "/stocks",

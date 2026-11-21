@@ -65,6 +65,7 @@ export const PRELOAD = {
   "learn-bollinger-bands-nifty-50": LearnPage.preload,
   "learn-how-to-backtest-a-trading-strategy": LearnPage.preload,
   "learn-macd-strategy-nifty-50": LearnPage.preload,
+  "learn-trading-costs-backtest-india": LearnPage.preload,
   stocks: StockPage.preload,
   ...Object.fromEntries(STOCKS.map((s) => [`stock-${s.slug}`, StockPage.preload])),
 };

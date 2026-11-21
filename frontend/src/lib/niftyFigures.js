@@ -111,4 +111,26 @@ export const NIFTY = {
       positiveOutOfSample: 43,
     },
   },
+
+  // All 129 pairs on the 2011 list at half, default and double the cost.
+  costs: {
+    half: { beatInSample: 56, aheadOutOfSample: 8, survives: 4, medianInSample: "0.18", medianOutOfSample: "−0.11", positiveOutOfSample: 50 },
+    default: { beatInSample: 50, aheadOutOfSample: 7, survives: 4, medianInSample: "0.09", medianOutOfSample: "−0.18", positiveOutOfSample: 41 },
+    double: { beatInSample: 42, aheadOutOfSample: 6, survives: 3, medianInSample: "−0.04", medianOutOfSample: "−0.31", positiveOutOfSample: 33 },
+  },
+};
+
+/**
+ * The /demo run's cost curve (momentum on Apple, from src/demoData.json),
+ * copied here so the /learn chunk does not carry the whole demo payload.
+ * niftyFigures.test.js checks each value against that file.
+ */
+export const DEMO_COST = {
+  ticker: "AAPL",
+  years: "2019–2024",
+  trades: 164,
+  assumed: "0.1%",
+  breakeven: "0.41%",
+  headroom: "4.1",
+  sharpe: { free: "0.52", half: "0.45", assumed: "0.39", double: "0.26", five: "−0.10" },
 };

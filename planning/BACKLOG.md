@@ -6,7 +6,7 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 
 - [x] G1 request indexing, done 21 Nov by the author: W1 article queued; `/` already indexed; `/writeup`, `/writeup/nifty-50`, `/demo`, `/learn` requested or already indexed
 - [ ] Google steps G2–G5 (weekly Pages and Performance reads, Bing import, link from hulage.in). Evidence: Bing shows the sitemap; hulage.in links to Finertia
-- [ ] Article W6 under `/learn`, one a week (W1 live 21 Nov, PR #198; W2 live 21 Nov, PR #199; W3 Bollinger live 21 Nov, PR #201; W4 backtesting guide live 21 Nov, PR #203; W5 MACD built 22 Nov, waiting on the author's read). Evidence: each live, pre-rendered, in the sitemap; impressions read after 8 weeks
+- [ ] Articles W1–W6 under `/learn`, one a week (W1 live 21 Nov, PR #198; W2 live 21 Nov, PR #199; W3 Bollinger live 21 Nov, PR #201; W4 backtesting guide live 21 Nov, PR #203; W5 MACD live 22 Nov, PR #204; W6 costs built 22 Nov, waiting on the author's read). Evidence: each live, pre-rendered, in the sitemap; impressions read after 8 weeks
 
 ## Small and unblocked
 
