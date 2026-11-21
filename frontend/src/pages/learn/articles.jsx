@@ -558,7 +558,8 @@ function Survivorship() {
           over the decade. The strategies won by sitting in cash through a long decline. None
           of those stocks is in today’s index, so a test on today’s list cannot find them. Its
           single survivor was {S.todaySurvivor.stock}, with {S.todaySurvivor.strategy.toLowerCase()},
-          and at double the cost there were {S.todaySurvivesDoubleCost}.
+          and at double the cost{" "}
+          {S.todaySurvivesDoubleCost === 0 ? "none survived" : `${S.todaySurvivesDoubleCost} survived`}.
         </p>
         <p>
           So the bias does not push results in one fixed direction. It changes which stocks
