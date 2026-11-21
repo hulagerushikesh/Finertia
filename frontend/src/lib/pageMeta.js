@@ -227,7 +227,7 @@ export const PAGE_META = {
     name: "Survivorship bias on the Nifty 50",
     path: "/learn/survivorship-bias-nifty-50",
     type: "article",
-    published: "2026-11-28",
+    published: "2026-11-21",
     title: "Survivorship bias: why backtesting today's Nifty 50 misleads · Finertia",
     ogTitle: "Survivorship bias: why backtesting today's Nifty 50 misleads",
     description:

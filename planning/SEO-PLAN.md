@@ -56,6 +56,28 @@ redirect to `/learn` — one address for Google, either word for people.
 - Its own title, description and share card, in the sitemap the same day.
 - No advice to buy or sell anything; same tone as the studies.
 
+### SEBI: what articles may and may not say (author's rule, 21 Nov)
+
+Finertia is a research tool, not a SEBI-registered investment adviser or
+research analyst, so every article stays on the research side of that line:
+
+- **May:** describe what a rule did on past prices, with the method, costs and
+  the years it was not tuned on; name the stocks a study tested.
+- **May not:** claim Finertia or any rule predicts or forecasts prices; promise,
+  guarantee or project returns; say what a reader should buy, sell or hold;
+  give target prices, tips or "best stocks"; state what a price will do.
+- **Prices used are historical.** The studies end on 1 Jan 2026 and the stock
+  pages on 1 Jan 2025, well over three months before any article, in line with
+  SEBI's rule that education may only use price data at least three months old.
+- Every article carries the same note at the foot: hypothetical results, no
+  prediction, no recommendation, not investment advice, not SEBI-registered.
+- `learnCompliance.test.jsx` reads each article's full text and search
+  description and fails on prediction, promise or call-to-trade wording.
+
+Claude is not a lawyer. Before Finertia charges for anything that could look
+like advice, the author confirms the position with someone who knows SEBI's
+adviser and research-analyst rules.
+
 ### First six topics, ordered by how directly they reuse finished work
 
 | # | Working title | Search phrase it aims at | Draws on |

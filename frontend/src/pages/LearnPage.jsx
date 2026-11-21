@@ -8,9 +8,35 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import { ARTICLES, article } from "./learn/articles";
 import { stockLinks } from "./learn/stockLinks";
 import { STRATEGY_PAGES } from "../lib/strategyPages";
+import { PAGE_META } from "../lib/pageMeta";
 import NotFoundPage from "./NotFoundPage";
 
 const LINK = "text-pencil underline underline-offset-2";
+
+const published = (a) => PAGE_META[`learn-${a.id}`].published;
+const longDate = (iso) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+// Newest first; same-day articles keep their order in ARTICLES.
+const BY_DATE = ARTICLES.map((a, i) => ({ a, i }))
+  .sort((x, y) => published(y.a).localeCompare(published(x.a)) || x.i - y.i)
+  .map(({ a }) => a);
+
+/**
+ * Shown under every article. Finertia is a research tool: it does not predict
+ * prices or tell anyone what to buy or sell, and articles must not suggest it
+ * does (see learnCompliance.test.js and planning/SEO-PLAN.md, "SEBI").
+ */
+export function ResearchNote() {
+  return (
+    <aside aria-label="About this article" className="border-l-2 border-border pl-4 text-xs text-graphite leading-relaxed max-w-prose">
+      Educational research on historical prices. Backtested results are hypothetical: they are
+      not what trading would have returned, and past results say nothing about future ones.
+      Finertia does not predict prices and does not recommend buying, selling or holding any
+      security. It is not investment advice, and Finertia is not a SEBI-registered investment
+      adviser or research analyst.
+    </aside>
+  );
+}
 
 /**
  * /learn and /learn/:id: short articles on the questions people search for
@@ -36,11 +62,16 @@ function LearnIndex() {
           tied to what this engine actually does about it.
         </DocHeader>
       </Rise>
+      <p className="text-sm text-faint mb-6">
+        {ARTICLES.length} articles, newest first.
+      </p>
       <ul className="flex flex-col gap-6">
-        {ARTICLES.map((a) => (
+        {BY_DATE.map((a) => (
           <li key={a.id}>
             <Term name={<Link to={a.path} className="hover:text-pencil transition-colors">{a.title}</Link>}>
-              <p className="eyebrow">{a.eyebrow}</p>
+              <p className="eyebrow">
+                {a.eyebrow} · <time dateTime={published(a)}>{longDate(published(a))}</time>
+              </p>
               <p>{a.lede}</p>
             </Term>
           </li>
@@ -74,6 +105,8 @@ function Article({ a }) {
 
       <div className="flex flex-col gap-14">
         <Body />
+
+        <ResearchNote />
 
         {onStocks && (
           <section aria-labelledby="stocks-heading" className="flex flex-col gap-4">
