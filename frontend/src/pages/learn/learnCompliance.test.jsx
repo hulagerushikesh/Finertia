@@ -15,7 +15,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { ARTICLES } from "./articles";
 import { PAGE_META } from "../../lib/pageMeta";
-import { ResearchNote } from "../LearnPage";
+import { ResearchNote } from "./ResearchNote";
 
 const text = (el) =>
   renderToStaticMarkup(<MemoryRouter>{el}</MemoryRouter>)

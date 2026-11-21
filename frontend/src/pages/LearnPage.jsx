@@ -9,6 +9,7 @@ import { ARTICLES, article } from "./learn/articles";
 import { stockLinks } from "./learn/stockLinks";
 import { STRATEGY_PAGES } from "../lib/strategyPages";
 import { PAGE_META } from "../lib/pageMeta";
+import { ResearchNote } from "./learn/ResearchNote";
 import NotFoundPage from "./NotFoundPage";
 
 const LINK = "text-pencil underline underline-offset-2";
