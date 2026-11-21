@@ -23,23 +23,6 @@ const BY_DATE = ARTICLES.map((a, i) => ({ a, i }))
   .map(({ a }) => a);
 
 /**
- * Shown under every article. Finertia is a research tool: it does not predict
- * prices or tell anyone what to buy or sell, and articles must not suggest it
- * does (see learnCompliance.test.js and planning/SEO-PLAN.md, "SEBI").
- */
-export function ResearchNote() {
-  return (
-    <aside aria-label="About this article" className="border-l-2 border-border pl-4 text-xs text-graphite leading-relaxed max-w-prose">
-      Educational research on historical prices. Backtested results are hypothetical: they are
-      not what trading would have returned, and past results say nothing about future ones.
-      Finertia does not predict prices and does not recommend buying, selling or holding any
-      security. It is not investment advice, and Finertia is not a SEBI-registered investment
-      adviser or research analyst.
-    </aside>
-  );
-}
-
-/**
  * /learn and /learn/:id: short articles on the questions people search for
  * before they trust a backtest. Pre-rendered like the other public pages
  * (src/lib/pageMeta.js, scripts/prerender.mjs); the articles themselves are
