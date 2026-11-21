@@ -13,7 +13,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { DocSection as Section, Term } from "../../components/Prose";
 import { strategyPage } from "../../lib/strategyPages";
-import { NIFTY } from "../../lib/niftyFigures";
+import { DEMO_COST, NIFTY } from "../../lib/niftyFigures";
 
 const LINK = "text-pencil underline underline-offset-2";
 
@@ -901,6 +901,157 @@ function MacdNifty() {
   );
 }
 
+function CostsIndia() {
+  const C = NIFTY.costs;
+  const D = DEMO_COST;
+  return (
+    <>
+      <Section id="answer" title="The short answer">
+        <p>
+          Costs decide whether a lot of backtests are worth anything. In Finertia’s Nifty 50
+          study, every rule was charged {NIFTY.cost} each time it moved in or out of a stock,
+          and the whole study was re-run at half and at double that. The typical
+          strategy-and-stock pair scored a Sharpe ratio of {C.half.medianOutOfSample} on the
+          later years at half the cost, {C.default.medianOutOfSample} at the default and{" "}
+          {C.double.medianOutOfSample} at double. On delivery trades in India, the taxes alone
+          come to about the default, before brokerage or the spread.
+        </p>
+        <p>
+          Taxes on profits are not in that number at all. A backtest’s returns are before
+          income tax.
+        </p>
+      </Section>
+
+      <Section id="what-a-trade-costs" title="What a share trade costs in India">
+        <p>
+          The charges on a delivery trade in listed shares, as they stood in November 2026.
+          Rates change with each budget, so check them against a current contract note.
+        </p>
+        <Table
+          head={["Charge", "Delivery trade", "On which side"]}
+          rows={[
+            ["Securities transaction tax (STT)", "0.1%", "Buy and sell"],
+            ["Stamp duty", "0.015%", "Buy"],
+            ["Exchange transaction charge and SEBI fee", "a few thousandths of a percent", "Buy and sell"],
+            ["GST", "18% of brokerage and exchange charges", "Buy and sell"],
+            ["Brokerage", "set by the broker, often zero on delivery", "Buy and sell"],
+            ["Depository charge", "a flat amount per stock sold", "Sell"],
+          ]}
+        />
+        <p>
+          Intraday trades pay less tax per trade (STT of 0.025% on the sell side only, stamp
+          duty of 0.003%), but rules like the ones tested here hold positions for days or
+          weeks, so the delivery rates are the ones that apply.
+        </p>
+        <p>
+          None of these include the spread: the gap between the price you see and the price
+          you get. It is small on the largest stocks and much larger on thinly traded ones,
+          and it never appears on a contract note.
+        </p>
+      </Section>
+
+      <Section id="how-finertia-charges" title="How a backtest charges them">
+        <p>
+          Finertia charges the cost on every unit of position change. Buying a stock is one
+          unit and selling it is another, so a round trip pays {NIFTY.cost} twice. Turning a
+          long position straight into a short one is two units at once. At the default, a
+          round trip costs 0.2%, which is about what STT and stamp duty take on their own.
+          Brokerage, GST and the spread come on top, so for delivery trades the real figure
+          sits between the default and the double-cost columns below.
+        </p>
+        <p>
+          The rules tested here also go short. In India a short sale of shares has to be
+          closed the same day; holding one for longer means futures or borrowing the shares
+          through the exchanges’ lending scheme, each with its own costs and rules. The study’s short positions are a simplification of that.
+        </p>
+      </Section>
+
+      <Section id="nifty" title="The Nifty 50 study at three costs">
+        <p>Momentum, MACD and Bollinger bands on {NIFTY.stocks} stocks, {NIFTY.period}, {NIFTY.funnel.tested} pairs in all:</p>
+        <Table
+          head={["", "Half cost", "Default", "Double cost"]}
+          rows={[
+            ["Typical Sharpe, tuning years", C.half.medianInSample, C.default.medianInSample, C.double.medianInSample],
+            ["Typical Sharpe, later years", C.half.medianOutOfSample, C.default.medianOutOfSample, C.double.medianOutOfSample],
+            ["Above zero on the later years", C.half.positiveOutOfSample, C.default.positiveOutOfSample, C.double.positiveOutOfSample],
+            ["Beat holding on the tuning years", C.half.beatInSample, C.default.beatInSample, C.double.beatInSample],
+            ["Still ahead on the later years", C.half.aheadOutOfSample, C.default.aheadOutOfSample, C.double.aheadOutOfSample],
+            ["Passed three checks for luck", C.half.survives, C.default.survives, C.double.survives],
+          ]}
+        />
+        <p>
+          At double the cost, even the tuning years, where the settings were picked to look
+          their best, came out below zero for the typical pair. Rules that trade often pay
+          most: the{" "}
+          <Link to="/learn/bollinger-bands-nifty-50" className={LINK}>Bollinger-band results</Link>{" "}
+          went from {NIFTY.bollinger.half.beatInSample} stocks ahead of holding on the tuning
+          years at half cost to {NIFTY.bollinger.double.beatInSample} at double.
+        </p>
+      </Section>
+
+      <Section id="breakeven" title="The cost at which a result disappears">
+        <p>
+          A better question than “what did it cost” is “how much could it cost before the
+          result is gone”. Every backtest in Finertia’s workspace answers it with a break-even
+          cost: the charge per unit of position change at which the strategy’s return falls
+          to zero. The <Link to="/demo" className={LINK}>demo</Link>, momentum on{" "}
+          {D.ticker} {D.years} with {D.trades} trades, shows it:
+        </p>
+        <Table
+          head={["Cost per unit of position change", "Sharpe ratio"]}
+          rows={[
+            ["None", D.sharpe.free],
+            ["Half the assumed cost", D.sharpe.half],
+            [`Assumed, ${D.assumed}`, D.sharpe.assumed],
+            ["Double", D.sharpe.double],
+            ["Five times", D.sharpe.five],
+          ]}
+        />
+        <p>
+          It breaks even at {D.breakeven}, {D.headroom} times the cost it assumed. That sounds
+          like room to spare, but every step up in cost took a slice off the Sharpe ratio,
+          and the strategy trailed simply holding {D.ticker} at every one of them.
+        </p>
+      </Section>
+
+      <Section id="tax" title="Tax on the profits">
+        <p>
+          A backtest reports returns before income tax, and a rule that trades often realises
+          nearly all its gains within a year. As of November 2026, gains on listed shares held
+          for twelve months or less are taxed as short-term capital gains at 20%; held longer,
+          at 12.5% on gains above ₹1.25 lakh a year. Intraday profits count as business
+          income and are taxed at your slab rate. Holding a stock for years defers the tax
+          until it is sold; trading it often does not. For your own situation, ask a tax
+          professional.
+        </p>
+      </Section>
+
+      <Section id="check-your-own" title="How to check your own backtest">
+        <ul className="list-disc pl-5 flex flex-col gap-1.5">
+          <li>Find out what cost it assumed, and whether it charges both the buy and the sell.</li>
+          <li>Run it again at double the cost. If the result is gone, it was never far from gone.</li>
+          <li>Read the break-even cost, and compare it with what your trades actually pay.</li>
+          <li>Compare the after-cost result with holding the same stock, which pays almost nothing.</li>
+          <li>Remember the figure is before income tax.</li>
+        </ul>
+        <p>
+          The other steps of a fair test are in{" "}
+          <Link to="/learn/how-to-backtest-a-trading-strategy" className={LINK}>how to backtest a trading strategy without fooling yourself</Link>.
+        </p>
+      </Section>
+
+      <Section id="limits" title="What this does not cover">
+        <p>
+          The figures are from three rules on one market over one period, with a flat cost per
+          trade. Real costs vary by broker, by stock and by the size of the trade, and the tax
+          rules above are a summary, not tax advice. The full study:{" "}
+          <Link to="/writeup/nifty-50" className={LINK}>Of 129 Nifty strategies, four survived honest testing</Link>.
+        </p>
+      </Section>
+    </>
+  );
+}
+
 function HowToBacktest() {
   const { funnel: f, survivorship: S, bollinger: B } = NIFTY;
   const G = B.grid;
@@ -1157,6 +1308,14 @@ export const ARTICLES = [
     lede:
       "A MACD crossover rule on 43 Nifty 50 stocks, 2011–2025, after costs, tuned on the early years and scored on the later ones. How often it beat simply holding the stock, and why the few that passed did.",
     Body: MacdNifty,
+  },
+  {
+    id: "trading-costs-backtest-india",
+    eyebrow: "Pitfalls",
+    title: "What brokerage and taxes do to a backtest in India.",
+    lede:
+      "STT, stamp duty, brokerage, the spread and tax on profits, set against Finertia’s Nifty 50 study run at half, default and double the cost. Where the result goes as costs rise.",
+    Body: CostsIndia,
   },
 ].map((a) => ({ ...a, path: `/learn/${a.id}` }));
 

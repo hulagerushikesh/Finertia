@@ -77,6 +77,7 @@ const BUILDERS = {
   "bollinger-bands-nifty-50": nifty,
   "how-to-backtest-a-trading-strategy": nifty,
   "macd-strategy-nifty-50": nifty,
+  "trading-costs-backtest-india": nifty,
   "walk-forward-validation": validation,
   "backtest-overfitting": validation,
   "sharpe-ratio": sharpe,

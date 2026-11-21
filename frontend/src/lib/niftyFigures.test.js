@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { NIFTY } from "./niftyFigures";
+import { DEMO_COST, NIFTY } from "./niftyFigures";
 import { PAGE_META } from "./pageMeta";
 
 const research = path.resolve(__dirname, "../../../planning/research");
@@ -235,6 +235,38 @@ describe("Nifty study figures quoted on /learn", () => {
     expect(desc).toContain(`${M.funnel.beatInSample} beat holding on the tuning years`);
     expect(desc).toContain(`${M.funnel.aheadOutOfSample} stayed ahead`);
     expect(desc).toContain(`${M.funnel.survives} passed the luck checks`);
+  });
+
+  it("cost figures match the saved results and the demo's cost curve", () => {
+    for (const c of ["half", "default", "double"]) {
+      const r = rows("start_2011", c);
+      const f = funnel("start_2011", c);
+      expect(NIFTY.costs[c], c).toEqual({
+        beatInSample: f.beat_in_sample,
+        aheadOutOfSample: f.ahead_out_of_sample,
+        survives: f.survives,
+        medianInSample: fmt(median(r.map((x) => x.is_sharpe)), 2),
+        medianOutOfSample: fmt(median(r.map((x) => x.oos_sharpe)), 2),
+        positiveOutOfSample: r.filter((x) => x.oos_sharpe > 0).length,
+      });
+    }
+    expect(NIFTY.costs.default.medianOutOfSample).toBe(NIFTY.medianOutOfSample);
+
+    const demo = JSON.parse(readFileSync(path.resolve(__dirname, "../demoData.json"), "utf8"));
+    const cs = demo.cost_sensitivity;
+    const pct = (x) => `${+(x * 100).toFixed(2)}%`;
+    expect(DEMO_COST.ticker).toBe(demo.ticker);
+    // Written the way the demo page writes it.
+    expect(DEMO_COST.years).toBe(`${demo.start.slice(0, 4)}–${demo.end.slice(0, 4)}`);
+    expect(DEMO_COST.trades).toBe(demo.metrics.num_trades);
+    expect(DEMO_COST.assumed).toBe(pct(cs.assumed_cost));
+    expect(DEMO_COST.breakeven).toBe(pct(cs.breakeven_cost));
+    expect(DEMO_COST.headroom).toBe(cs.headroom.toFixed(1));
+    const at = (m) => fmt(cs.curve.find((p) => Math.abs(p.cost - m * cs.assumed_cost) < 1e-12).sharpe_ratio, 2);
+    expect(DEMO_COST.sharpe).toEqual({ free: at(0), half: at(0.5), assumed: at(1), double: at(2), five: at(5) });
+
+    const desc = PAGE_META["learn-trading-costs-backtest-india"].description;
+    expect(desc).toContain(`from ${NIFTY.costs.half.medianOutOfSample} to ${NIFTY.costs.double.medianOutOfSample}`);
   });
 
   it("the backtesting guide's search description quotes the study's funnel", () => {
