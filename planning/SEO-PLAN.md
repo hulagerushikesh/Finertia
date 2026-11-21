@@ -82,6 +82,6 @@ quotes the published studies).
 
 | # | Decision | Default if you say nothing |
 |---|---|---|
-| S1 | Build articles **now** (an exception to "no new pages before 10 Dec") or **after 10 Dec** | After 10 Dec; the Google steps G1–G5 start now |
+| S1 | ~~Build articles now or after 10 Dec~~ | Decided 21 Nov: **now**. W1 built (PR #198), waiting on the author's read |
 | S2 | Section name: grow `/learn` (with `/blog` redirecting to it), or a separate `/blogs` | Grow `/learn` |
-| S3 | Who does G1–G5: you, or Claude in your Chrome | Claude in your Chrome, with you watching |
+| S3 | ~~Who does G1–G5~~ | Decided 21 Nov: Claude in the author's Chrome. Not started: the Chrome extension was not connected to the session |
