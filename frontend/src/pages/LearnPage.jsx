@@ -8,19 +8,15 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import { ARTICLES, article } from "./learn/articles";
 import { stockLinks } from "./learn/stockLinks";
 import { STRATEGY_PAGES } from "../lib/strategyPages";
-import { PAGE_META } from "../lib/pageMeta";
 import { ResearchNote } from "./learn/ResearchNote";
+import { NEWEST_FIRST, published } from "./learn/order";
 import NotFoundPage from "./NotFoundPage";
 
 const LINK = "text-pencil underline underline-offset-2";
 
-const published = (a) => PAGE_META[`learn-${a.id}`].published;
 const longDate = (iso) =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-// Newest first; same-day articles keep their order in ARTICLES.
-const BY_DATE = ARTICLES.map((a, i) => ({ a, i }))
-  .sort((x, y) => published(y.a).localeCompare(published(x.a)) || x.i - y.i)
-  .map(({ a }) => a);
+const BY_DATE = NEWEST_FIRST;
 
 /**
  * /learn and /learn/:id: short articles on the questions people search for
