@@ -747,6 +747,182 @@ function BollingerNifty() {
   );
 }
 
+function HowToBacktest() {
+  const { funnel: f, survivorship: S, bollinger: B } = NIFTY;
+  const G = B.grid;
+  return (
+    <>
+      <Section id="answer" title="The short answer">
+        <p>
+          A backtest fools you when the same data both choose the rule and grade it. Every
+          step below takes one of those chances away. Together they are how Finertia ran its
+          study of the Nifty 50: {f.tested} strategy-and-stock pairs over {NIFTY.period},
+          of which {f.beatInSample} looked better than holding the stock on the years they
+          were tuned on, and {f.survives} were still standing after every check.
+        </p>
+        <p>
+          Most of what looked good at the start did not hold up. That is the normal outcome
+          of an honest backtest, not a sign it went wrong.
+        </p>
+      </Section>
+
+      <Section id="write-it-down" title="1. Write the test down before you run it">
+        <p>
+          Decide the strategy, its settings to try, the years, the costs and what counts as a
+          pass before the first run. Afterwards it is too easy to move the bar to where the
+          result landed. The Nifty study wrote its passing rules down first and reported how many
+          pairs fell at each step, not only the {f.survives} that passed.
+        </p>
+      </Section>
+
+      <Section id="stock-list" title="2. Use the stock list as it stood at the start">
+        <p>
+          Today’s index holds the companies that did well enough to stay in. Testing on it
+          quietly picks the winners in advance. Holding the typical stock from today’s Nifty
+          50 gave a Sharpe ratio of {S.holdTuningToday} over the tuning years; holding the
+          typical stock from the list as it stood in 2011 gave {S.holdTuning2011}. Same years,
+          different list.{" "}
+          <Link to="/learn/survivorship-bias-nifty-50" className={LINK}>Survivorship bias on the Nifty 50</Link>{" "}
+          has the full comparison.
+        </p>
+      </Section>
+
+      <Section id="next-day" title="3. Trade on the next day, not the same one">
+        <p>
+          A signal worked out from today’s close can only be traded tomorrow. A backtest that
+          trades it today gets a price no one could have had, and nothing in the code warns
+          you. See{" "}
+          <Link to="/learn/lookahead-bias" className={LINK}>lookahead bias</Link>.
+        </p>
+      </Section>
+
+      <Section id="costs" title="4. Charge costs, then change them">
+        <p>
+          Every trade costs brokerage, taxes and the spread. The Nifty study charged{" "}
+          {NIFTY.cost} per trade, then re-ran everything at half and at double that. The
+          number of surviving pairs went from {NIFTY.survivesHalfCost} at half cost to{" "}
+          {f.survives} at the default and {NIFTY.survivesDoubleCost} at double. A result that
+          only exists at one cost is a result about the cost.
+        </p>
+      </Section>
+
+      <Section id="unseen-years" title="5. Tune on the early years, score on the later ones">
+        <p>
+          Pick the settings on the first part of the history and score them, unchanged, on
+          the rest. Only the second number is evidence. In the Nifty study the typical pair
+          had a Sharpe of {NIFTY.medianInSample} on the tuning years and{" "}
+          {NIFTY.medianOutOfSample} on the later ones, and of the {f.beatInSample} pairs ahead
+          of holding at first, {f.aheadOutOfSample} were still ahead afterwards.{" "}
+          <Link to="/learn/walk-forward-validation" className={LINK}>Walk-forward validation</Link>{" "}
+          explains the method.
+        </p>
+      </Section>
+
+      <Section id="count-settings" title="6. Count every setting you tried">
+        <p>
+          The more settings you try, the better the best one looks by luck. On{" "}
+          {G.stock} the study tried {G.combinations} Bollinger-band settings. The best on the
+          tuning years scored {G.best.is}; on the later years it scored {G.best.oos} and
+          ranked {G.best.rank} of {G.best.of} combinations tried on the stock. Searching
+          harder made the tuning number better and the later number worse.
+        </p>
+      </Section>
+
+      <Section id="move-split" title="7. Move the split and run it again">
+        <p>
+          One split is one draw. On Apple from 2018, momentum’s pick scored{" "}
+          {momentum.first.is} on the tuning years and {momentum.first.oos} on the later ones:{" "}
+          {momentum.first.verdict}. Ending the test one year later, the same strategy{" "}
+          {momentum.moved.verdict} at {momentum.moved.oos}. Bollinger bands went the other
+          way, from {bollinger.first.verdict} to {bollinger.moved.verdict}. If the verdict
+          flips when the dates move, the dates were doing the work.
+        </p>
+      </Section>
+
+      <Section id="vs-holding" title="8. Compare against holding the same stock">
+        <p>
+          Making money is not the bar; beating the plain alternative is. On the later years
+          the typical Nifty pair scored {NIFTY.medianOutOfSample}, while holding the typical
+          stock scored {NIFTY.medianHoldOutOfSample}. Only {NIFTY.beatHoldUnseen.total} of{" "}
+          {f.tested} pairs did better than holding.{" "}
+          <Link to="/learn/sharpe-ratio" className={LINK}>The Sharpe ratio</Link> explains
+          how to compare the two fairly.
+        </p>
+      </Section>
+
+      <Section id="luck" title="9. Check whether luck explains it">
+        <Term name="Permutation test">
+          <p>
+            Would the same time in the market, at random moments, have done as well? Bollinger
+            bands on Apple came out at p 0.164: their timing could not be told apart from
+            shuffled timing.{" "}
+            <Link to="/learn/permutation-test" className={LINK}>How it works</Link>.
+          </p>
+        </Term>
+        <Term name="Deflated Sharpe ratio">
+          <p>Is the best Sharpe higher than the best of that many random tries would reach?</p>
+        </Term>
+        <Term name="Probability of backtest overfitting">
+          <p>
+            When the history is cut up many ways, how often does the tuning winner land in the
+            bottom half on the other part?{" "}
+            <Link to="/learn/backtest-overfitting" className={LINK}>The overfitting checks</Link>.
+          </p>
+        </Term>
+      </Section>
+
+      <Section id="why-it-worked" title="10. Ask why the survivors survived">
+        <p>
+          A result that passes every check still needs a reason. All {f.survives} Nifty
+          survivors were on companies of one business group that fell apart over the decade.
+          The rules beat holding by sitting in cash through a long fall, not by timing good
+          moments to buy, and one of the stocks had long stretches with no trading at all.
+          That is something to know, but it is not a skill a rule can be expected to repeat.
+        </p>
+      </Section>
+
+      <Section id="checklist" title="The list on one page">
+        <Table
+          head={["Step", "The question it asks"]}
+          rows={[
+            ["Write it down first", "Was the bar set before the result was known?"],
+            ["Stock list as it was", "Were the losers in the test too?"],
+            ["Next-day trading", "Could anyone have traded at that price?"],
+            ["Costs, changed", "Does it survive realistic and harsher costs?"],
+            ["Unseen years", "Does it work on years it was not tuned on?"],
+            ["Count the settings", "How many tries did the winner beat?"],
+            ["Move the split", "Does the verdict hold on other dates?"],
+            ["Against holding", "Did it beat simply owning the stock?"],
+            ["Luck checks", "Could chance alone have produced it?"],
+            ["Why it worked", "Is there a reason, or only a number?"],
+          ]}
+        />
+      </Section>
+
+      <Section id="in-finertia" title="Which steps Finertia does for you">
+        <p>
+          The workspace trades every signal on the next day, charges costs on every trade and
+          shows how far they could rise before the result goes, tunes on the first 70% and
+          scores on the rest, slides the split through the period, compares against holding
+          the same stock and runs the luck checks. Steps 1, 2 and 10 are yours: what to test,
+          on which stocks, and what to make of what passes. To see a full result on past
+          data first, <Link to="/demo" className={LINK}>open the demo</Link>.
+        </p>
+      </Section>
+
+      <Section id="limits" title="What this list does not do">
+        <p>
+          Passing all ten steps means a backtest has fewer ways to fool you. It does not mean
+          the rule has an edge, or that what it did on past prices says anything about later
+          ones. The two studies these figures come from:{" "}
+          <Link to="/writeup/nifty-50" className={LINK}>Of 129 Nifty strategies, four survived honest testing</Link>{" "}
+          and <Link to="/writeup" className={LINK}>the best-looking one was the worst on new data</Link>.
+        </p>
+      </Section>
+    </>
+  );
+}
+
 export const ARTICLES = [
   {
     id: "walk-forward-validation",
@@ -811,6 +987,14 @@ export const ARTICLES = [
     lede:
       "A Bollinger-band rule on 43 Nifty 50 stocks, 2011–2025, after costs, tuned on the early years and scored on the later ones. How often it beat simply holding the stock, and what searching more settings did.",
     Body: BollingerNifty,
+  },
+  {
+    id: "how-to-backtest-a-trading-strategy",
+    eyebrow: "Guide",
+    title: "How to backtest a trading strategy without fooling yourself.",
+    lede:
+      "Ten steps, from writing the test down first to asking why the survivors survived, each shown on Finertia’s own runs of the Nifty 50 and Apple.",
+    Body: HowToBacktest,
   },
 ].map((a) => ({ ...a, path: `/learn/${a.id}` }));
 

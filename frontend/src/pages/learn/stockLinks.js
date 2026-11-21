@@ -75,6 +75,7 @@ const BUILDERS = {
   "nifty-50-strategies-vs-buy-and-hold": nifty,
   "survivorship-bias-nifty-50": nifty,
   "bollinger-bands-nifty-50": nifty,
+  "how-to-backtest-a-trading-strategy": nifty,
   "walk-forward-validation": validation,
   "backtest-overfitting": validation,
   "sharpe-ratio": sharpe,
