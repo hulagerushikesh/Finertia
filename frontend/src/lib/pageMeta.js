@@ -262,6 +262,19 @@ export const PAGE_META = {
     imageAlt:
       "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
   },
+  "learn-macd-strategy-nifty-50": {
+    name: "MACD strategy on Nifty 50 stocks",
+    path: "/learn/macd-strategy-nifty-50",
+    type: "article",
+    published: "2026-11-22",
+    title: "MACD strategy backtest on Nifty 50 stocks, 2011–2025 · Finertia",
+    ogTitle: "MACD strategy on Indian stocks: what 15 years of Nifty data show",
+    description:
+      "A MACD crossover backtested on 43 Nifty 50 stocks, 2011–2025, after costs. 15 beat holding on the tuning years, 4 stayed ahead on unseen years, 3 passed the luck checks.",
+    image: `${SITE}/og-writeup-nifty.png`,
+    imageAlt:
+      "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
+  },
   stocks: {
     name: "Stocks",
     path: "/stocks",

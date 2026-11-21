@@ -83,4 +83,32 @@ export const NIFTY = {
       positiveOutOfSample: 11,
     },
   },
+
+  // MACD crossover alone: the 2011 list at three costs, today's list, and
+  // the 284 MACD settings of the one-stock grid (nifty-grid.json).
+  macd: {
+    settings: 4,
+    funnel: { tested: 43, beatInSample: 15, aheadOutOfSample: 4, survives: 3 },
+    half: { beatInSample: 15, aheadOutOfSample: 4, survives: 3 },
+    double: { beatInSample: 15, aheadOutOfSample: 4, survives: 3 },
+    medianInSample: "0.05",
+    medianOutOfSample: "−0.22",
+    medianOutOfSampleHalf: "−0.19",
+    medianOutOfSampleDouble: "−0.30",
+    positiveOutOfSample: 15,
+    // Ahead on the later years but not a survivor: failed the Deflated Sharpe only.
+    nearMiss: "Tata Motors",
+    commonPick: { fast: 16, slow: 34, signal: 9, stocks: 14 },
+    today: { tested: 50, beatInSample: 9, aheadOutOfSample: 1, survives: 0 },
+    grid: {
+      combinations: 284,
+      fast: "3 to 25",
+      slow: "10 to 100",
+      signal: "5 to 15",
+      beatHold: 0,
+      best: { fast: 5, slow: 60, signal: 5, is: "0.309", oos: "0.199", isRank: 2, oosRank: 13 },
+      medianOutOfSample: "−0.17",
+      positiveOutOfSample: 43,
+    },
+  },
 };
