@@ -38,6 +38,7 @@ export default function Navbar() {
     ? [
         ["/dashboard", "Workspace"],
         ["/history", "History"],
+        ["/learn", "Learn"],
         ["/pricing", "Pricing"],
         ...(userProfile?.role === "admin" ? [["/admin/overview", "Admin"]] : []),
       ]
@@ -45,6 +46,7 @@ export default function Navbar() {
         ["/demo", "A real result"],
         ["/strategies", "Strategies"],
         ["/writeup", "The finding"],
+        ["/learn", "Learn"],
         ["/docs", "How it works"],
         ["/pricing", "Pricing"],
       ];
