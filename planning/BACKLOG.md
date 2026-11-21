@@ -4,8 +4,9 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 
 ## Search (proposed 21 Nov, waits on the author — see SEO-PLAN.md)
 
-- [ ] Google steps G1–G5 (request indexing, Bing import, link from hulage.in). Evidence: the five key pages show "URL is on Google" in URL Inspection
-- [ ] Articles W1–W6 under `/learn`, one a week, after decision S1. Evidence: each live, pre-rendered, in the sitemap; impressions read after 8 weeks
+- [x] G1 request indexing, done 21 Nov by the author: W1 article queued; `/` already indexed; `/writeup`, `/writeup/nifty-50`, `/demo`, `/learn` requested or already indexed
+- [ ] Google steps G2–G5 (weekly Pages and Performance reads, Bing import, link from hulage.in). Evidence: Bing shows the sitemap; hulage.in links to Finertia
+- [ ] Articles W2–W6 under `/learn`, one a week (W1 live 21 Nov, PR #198). Evidence: each live, pre-rendered, in the sitemap; impressions read after 8 weeks
 
 ## Small and unblocked
 

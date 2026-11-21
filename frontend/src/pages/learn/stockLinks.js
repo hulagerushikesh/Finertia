@@ -73,6 +73,7 @@ function nifty() {
 
 const BUILDERS = {
   "nifty-50-strategies-vs-buy-and-hold": nifty,
+  "survivorship-bias-nifty-50": nifty,
   "walk-forward-validation": validation,
   "backtest-overfitting": validation,
   "sharpe-ratio": sharpe,

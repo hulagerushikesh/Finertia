@@ -482,6 +482,132 @@ function NiftyVsHolding() {
   );
 }
 
+function Survivorship() {
+  const S = NIFTY.survivorship;
+  const f = NIFTY.funnel;
+  const t = S.todayFunnel;
+  const left = NIFTY.stocks - S.stillInIndex;
+  return (
+    <>
+      <Section id="answer" title="The short answer">
+        <p>
+          <strong>Survivorship bias</strong> is testing only the things that survived. To backtest
+          on Indian large caps from 2011, the easy choice is today’s Nifty 50 list. But today’s
+          list is made of the companies that did well enough to be in the index now. The ones
+          that shrank, merged away or collapsed since 2011 are already gone, so the test
+          never sees them.
+        </p>
+        <p>
+          Finertia’s Nifty study ran the same test on both lists over the same years,{" "}
+          {NIFTY.period}, so the size of the bias is a measured number. Holding the typical
+          stock on today’s list gave a Sharpe ratio of {S.holdTuningToday} over the tuning
+          years. On the list as it really stood in 2011, the same figure was{" "}
+          {S.holdTuning2011}.
+        </p>
+      </Section>
+
+      <Section id="how-many-left" title="How much the list changed">
+        <p>
+          Of the {NIFTY.stocks} stocks from the 2011 Nifty 50 that still have price history,
+          only {S.stillInIndex} are in the index today. The other {left} dropped out.{" "}
+          {NIFTY.missing} more of the 2011 names have no price history at all any more:
+        </p>
+        <ul className="list-disc pl-5 flex flex-col gap-1.5">
+          {S.missingNames.map((n) => <li key={n}>{n}</li>)}
+        </ul>
+        <p>
+          Most of those seven were absorbed by other members. Two, Jaiprakash Associates and
+          Reliance Capital, collapsed. A test that starts from today’s list skips all of this
+          without saying so.
+        </p>
+      </Section>
+
+      <Section id="measured" title="The bias, measured">
+        <p>Same three strategies, same years, same 0.1% cost, two lists:</p>
+        <Table
+          head={["", "2011 list", "Today’s list"]}
+          rows={[
+            ["Median Sharpe of holding, tuning years", S.holdTuning2011, S.holdTuningToday],
+            [
+              "Stocks that lost money for a holder over the tuning years",
+              `${S.holdNegative2011} of ${NIFTY.stocks}`,
+              `${S.holdNegativeToday} of ${S.stocksToday}`,
+            ],
+            ["Strategy-and-stock pairs tested", f.tested, t.tested],
+            ["Beat holding on the tuning years", f.beatInSample, t.beatInSample],
+            ["Still ahead on the later years", f.aheadOutOfSample, t.aheadOutOfSample],
+            ["Passed three checks for luck", f.survives, t.survives],
+          ]}
+        />
+        <p>
+          Today’s list makes buying and holding look much better than it was for someone who
+          bought the index in 2011. Its members are, by construction, the ones that rose.
+        </p>
+      </Section>
+
+      <Section id="which-way" title="It does not always flatter the strategy">
+        <p>
+          The usual warning is that survivorship bias makes a strategy look better than it
+          is. Here it went the other way. Because holding today’s winners looked so good, the
+          bar for a strategy was higher, and fewer cleared it: {t.beatInSample} of {t.tested}{" "}
+          on today’s list against {f.beatInSample} of {f.tested} on the 2011 list.
+        </p>
+        <p>
+          It also hid where the 2011 winners came from. All {f.survives} strategies that
+          survived on the 2011 list were on stocks of one business group that fell apart
+          over the decade. The strategies won by sitting in cash through a long decline. None
+          of those stocks is in today’s index, so a test on today’s list cannot find them. Its
+          single survivor was {S.todaySurvivor.stock}, with {S.todaySurvivor.strategy.toLowerCase()},
+          and at double the cost there were {S.todaySurvivesDoubleCost}.
+        </p>
+        <p>
+          So the bias does not push results in one fixed direction. It changes which stocks
+          are in the test, and with them the answer. The only way to know its size is to run
+          both lists.
+        </p>
+      </Section>
+
+      <Section id="avoid" title="How to avoid it in your own backtests">
+        <ul className="list-disc pl-5 flex flex-col gap-1.5">
+          <li>
+            Start from the list as it stood on the first day of the test, not today’s. Index
+            providers publish their changes; undo them back to the start date.
+          </li>
+          <li>
+            Name the stocks you cannot get prices for, and say what happened to them, rather
+            than quietly dropping them. Collapsed companies are exactly the ones that go
+            missing.
+          </li>
+          <li>
+            If you must use today’s list, run it beside the historical one and report both, so
+            the bias is a number instead of a footnote.
+          </li>
+          <li>
+            Judge results on years the settings were not tuned on; see{" "}
+            <Link to="/learn/walk-forward-validation" className={LINK}>walk-forward validation</Link>.
+          </li>
+        </ul>
+      </Section>
+
+      <Section id="takeaway" title="What to take from it">
+        <p>
+          A backtest on today’s index answers the question “how did today’s winners do?”,
+          which is not the question an investor in 2011 faced. On the Nifty 50, the difference
+          moved the typical holding Sharpe from {S.holdTuning2011} to {S.holdTuningToday}.
+        </p>
+        <p>
+          This is one index over one fifteen-year period, and even the 2011 list here is
+          missing {NIFTY.missing} names, so it still flatters holding a little. The full
+          study, with the rebuilt list and every table:{" "}
+          <Link to="/writeup/nifty-50" className={LINK}>Of 129 Nifty strategies, four survived honest testing</Link>.
+          The headline results on their own:{" "}
+          <Link to="/learn/nifty-50-strategies-vs-buy-and-hold" className={LINK}>do trading strategies beat buy-and-hold on the Nifty 50?</Link>
+        </p>
+      </Section>
+    </>
+  );
+}
+
 export const ARTICLES = [
   {
     id: "walk-forward-validation",
@@ -530,6 +656,14 @@ export const ARTICLES = [
     lede:
       "Momentum, MACD and Bollinger bands on 43 Nifty 50 stocks, fifteen years, after costs, scored on years they were never tuned on. How often they beat simply holding the stock.",
     Body: NiftyVsHolding,
+  },
+  {
+    id: "survivorship-bias-nifty-50",
+    eyebrow: "Pitfalls",
+    title: "Survivorship bias: why backtesting today’s Nifty 50 misleads.",
+    lede:
+      "Today’s index holds the companies that made it. The same test on the 2011 Nifty 50 and on today’s list, side by side, so the bias is a number rather than a warning.",
+    Body: Survivorship,
   },
 ].map((a) => ({ ...a, path: `/learn/${a.id}` }));
 
