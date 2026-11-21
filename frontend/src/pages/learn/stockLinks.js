@@ -76,6 +76,7 @@ const BUILDERS = {
   "survivorship-bias-nifty-50": nifty,
   "bollinger-bands-nifty-50": nifty,
   "how-to-backtest-a-trading-strategy": nifty,
+  "macd-strategy-nifty-50": nifty,
   "walk-forward-validation": validation,
   "backtest-overfitting": validation,
   "sharpe-ratio": sharpe,

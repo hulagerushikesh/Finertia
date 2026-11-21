@@ -28,6 +28,7 @@
     { "source": "/learn/survivorship-bias-nifty-50", "destination": "/learn-survivorship-bias-nifty-50.html" },
     { "source": "/learn/bollinger-bands-nifty-50", "destination": "/learn-bollinger-bands-nifty-50.html" },
     { "source": "/learn/how-to-backtest-a-trading-strategy", "destination": "/learn-how-to-backtest-a-trading-strategy.html" },
+    { "source": "/learn/macd-strategy-nifty-50", "destination": "/learn-macd-strategy-nifty-50.html" },
     { "source": "/stocks", "destination": "/stocks.html" },
     { "source": "/stocks/aapl", "destination": "/stock-aapl.html" },
     { "source": "/stocks/msft", "destination": "/stock-msft.html" },

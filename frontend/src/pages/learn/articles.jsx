@@ -747,6 +747,160 @@ function BollingerNifty() {
   );
 }
 
+function MacdNifty() {
+  const M = NIFTY.macd;
+  const f = M.funnel;
+  const G = M.grid;
+  const hold = NIFTY.bollinger.grid;
+  const survivors = NIFTY.survivors.filter((s) => s.strategy === "MACD");
+  const none = (n) => (n === 0 ? "none" : n);
+  return (
+    <>
+      <Section id="answer" title="The short answer">
+        <p>
+          On these stocks and years, a MACD crossover rule mostly trailed simply holding the
+          stock. It was run on {f.tested} of the Nifty 50 stocks for fifteen years
+          ({NIFTY.period}), after a {NIFTY.cost} cost on every trade, tuned on the first 70% of
+          the years and scored on the rest. {f.beatInSample} of the {f.tested} beat holding on
+          the tuning years, {f.aheadOutOfSample} were still ahead on the later years, and{" "}
+          {f.survives} passed the checks for luck.
+        </p>
+        <p>
+          Those {f.survives} are all companies of one business group that fell apart over the
+          decade. The rule beat holding them because those stocks fell for years, and a rule
+          that is not always long beats one that is on a stock like that.
+        </p>
+      </Section>
+
+      <Section id="rule" title="The rule that was tested">
+        <p>
+          The MACD line is a fast exponential average of the close minus a slow one; the
+          signal line is an average of the MACD line. The rule is long while the MACD line is
+          above the signal line and short while it is below, so once it has warmed up it is
+          always in the market. The full rule is on the{" "}
+          <Link to="/strategies/macd" className={LINK}>MACD strategy page</Link>.
+        </p>
+        <p>
+          The tuning chose from Finertia’s {M.settings} built-in settings, from 8/17/9 to
+          19/39/9 (fast, slow and signal spans in days). The one chosen most often was{" "}
+          {M.commonPick.fast}/{M.commonPick.slow}/{M.commonPick.signal}, on{" "}
+          {M.commonPick.stocks} of the {f.tested} stocks.
+        </p>
+      </Section>
+
+      <Section id="funnel" title="Good on the tuning years, rarely afterwards">
+        <Table
+          head={["Step", "Stocks left"]}
+          rows={[
+            ["Tested", f.tested],
+            ["Beat holding on the tuning years", f.beatInSample],
+            ["Still ahead on the later years", f.aheadOutOfSample],
+            ["Passed three checks for luck", f.survives],
+          ]}
+        />
+        <p>
+          The typical Sharpe ratio fell from {M.medianInSample} on the tuning years to{" "}
+          {M.medianOutOfSample} on the later ones, and only {M.positiveOutOfSample} of the{" "}
+          {f.tested} were above zero there. Of the {f.aheadOutOfSample} still ahead of holding,{" "}
+          {M.nearMiss} failed the Deflated Sharpe check: its Sharpe was not high enough to
+          rule out being the lucky best of the settings tried. Why tuned settings lose their
+          edge is covered in{" "}
+          <Link to="/learn/backtest-overfitting" className={LINK}>how to tell if a backtest is overfit</Link>.
+        </p>
+      </Section>
+
+      <Section id="survivors" title="The three that passed">
+        <Table
+          head={["Stock", "Later-years Sharpe", "Holding"]}
+          rows={survivors.map((s) => [s.stock, s.oos, s.hold])}
+        />
+        <p>
+          On a stock that mostly falls, a rule that can go short or step aside beats one
+          that only holds. That is what happened here. Reliance Communications’ price history also has long
+          stretches with no trading, so its figure is not something a person could have
+          earned. None of the three is on today’s Nifty 50.
+        </p>
+      </Section>
+
+      <Section id="costs" title="What trading costs do to it">
+        <p>The whole study was re-run at half and at double the {NIFTY.cost} cost per trade:</p>
+        <Table
+          head={["", "Half cost", "Default", "Double cost"]}
+          rows={[
+            ["Beat holding on the tuning years", M.half.beatInSample, f.beatInSample, M.double.beatInSample],
+            ["Still ahead on the later years", M.half.aheadOutOfSample, f.aheadOutOfSample, M.double.aheadOutOfSample],
+            ["Passed three checks for luck", M.half.survives, f.survives, M.double.survives],
+            ["Typical later-years Sharpe", M.medianOutOfSampleHalf, M.medianOutOfSample, M.medianOutOfSampleDouble],
+          ]}
+        />
+        <p>
+          The counts did not move, but the typical result got worse as costs rose. Which
+          stocks passed did not depend on the cost; how much the typical one lost did.
+        </p>
+      </Section>
+
+      <Section id="today" title="On today’s Nifty 50 list">
+        <p>
+          The same test on today’s {M.today.tested} members, over the same years:{" "}
+          {M.today.beatInSample} beat holding on the tuning years, {none(M.today.aheadOutOfSample)}{" "}
+          stayed ahead afterwards, and {none(M.today.survives)} passed. The three stocks that
+          passed on the 2011 list are not on today’s list; see{" "}
+          <Link to="/learn/survivorship-bias-nifty-50" className={LINK}>survivorship bias on the Nifty 50</Link>.
+        </p>
+      </Section>
+
+      <Section id="more-settings" title="Trying many more settings">
+        <p>
+          {M.settings} settings is very few. So the study took one stock, {hold.stock}, chosen
+          in advance, and tried {G.combinations} MACD settings: fast spans from {G.fast} days,
+          slow from {G.slow} and signal from {G.signal}. Holding {hold.stock} gave a Sharpe of{" "}
+          {hold.holdInSample} on the tuning years and {hold.holdOutOfSample} on the later ones.
+        </p>
+        <Table
+          head={["Setting", "Tuning years", "Later years"]}
+          rows={[
+            [`Best MACD of ${G.combinations}: ${G.best.fast}/${G.best.slow}/${G.best.signal}`, G.best.is, G.best.oos],
+            [`Holding ${hold.stock}`, hold.holdInSample, hold.holdOutOfSample],
+          ]}
+        />
+        <p>
+          {G.beatHold === 0 ? "None" : G.beatHold} of the {G.combinations} settings beat
+          holding, on either the tuning years or the later ones. The best MACD setting did
+          keep some of its result: it ranked {G.best.isRank} of all {hold.best.of} combinations
+          the study tried on the stock on the tuning years, and {G.best.oosRank} on the later
+          ones. It still trailed holding the stock in both. The typical MACD setting scored{" "}
+          {G.medianOutOfSample} on the later years, and {G.positiveOutOfSample} of{" "}
+          {G.combinations} were above zero.
+        </p>
+        <p>
+          On Apple, in Finertia’s first study, MACD failed on both test windows, at{" "}
+          {macd.first.oos} and {macd.moved.oos}.{" "}
+          <Link to="/writeup" className={LINK}>That write-up</Link> has the details.
+        </p>
+      </Section>
+
+      <Section id="takeaway" title="What to take from it">
+        <p>
+          A MACD backtest that beats holding on the years it was tuned on says little about
+          the years after. Where it did beat holding here, it was on falling stocks, where
+          any rule that is not always long has the advantage. Judge any version of this rule on
+          years it was not tuned on, after costs, against holding the same stock, and ask
+          why the winners won.
+        </p>
+        <p>
+          This is one way of trading MACD, on one market over one period. It does not show
+          that MACD rules never work; it shows how this one did when tested fairly. The full
+          study, with every table:{" "}
+          <Link to="/writeup/nifty-50" className={LINK}>Of 129 Nifty strategies, four survived honest testing</Link>.
+          The steps behind a fair test:{" "}
+          <Link to="/learn/how-to-backtest-a-trading-strategy" className={LINK}>how to backtest a trading strategy without fooling yourself</Link>.
+          To run the rule yourself on past data, <Link to="/demo" className={LINK}>open the demo</Link>.
+        </p>
+      </Section>
+    </>
+  );
+}
+
 function HowToBacktest() {
   const { funnel: f, survivorship: S, bollinger: B } = NIFTY;
   const G = B.grid;
@@ -995,6 +1149,14 @@ export const ARTICLES = [
     lede:
       "Ten steps, from writing the test down first to asking why the survivors survived, each shown on Finertia’s own runs of the Nifty 50 and Apple.",
     Body: HowToBacktest,
+  },
+  {
+    id: "macd-strategy-nifty-50",
+    eyebrow: "Results",
+    title: "MACD strategy on Indian stocks: what 15 years of Nifty data show.",
+    lede:
+      "A MACD crossover rule on 43 Nifty 50 stocks, 2011–2025, after costs, tuned on the early years and scored on the later ones. How often it beat simply holding the stock, and why the few that passed did.",
+    Body: MacdNifty,
   },
 ].map((a) => ({ ...a, path: `/learn/${a.id}` }));
 

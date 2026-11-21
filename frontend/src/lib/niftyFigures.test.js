@@ -175,6 +175,68 @@ describe("Nifty study figures quoted on /learn", () => {
     expect(desc).toContain(`${B.funnel.aheadOutOfSample} stayed ahead`);
   });
 
+  it("MACD figures match the saved results and the one-stock grid", () => {
+    const M = NIFTY.macd;
+    const macdRows = (u = "start_2011", c = "default") => rows(u, c).filter((x) => x.strategy === "macd");
+    const count = (r) => ({
+      beatInSample: r.filter((x) => x.beat_in_sample).length,
+      aheadOutOfSample: r.filter((x) => x.ahead_out_of_sample).length,
+      survives: r.filter((x) => x.survives).length,
+    });
+    const r = macdRows();
+    expect(M.funnel).toEqual({ tested: r.length, ...count(r) });
+    expect(M.half).toEqual(count(macdRows("start_2011", "half")));
+    expect(M.double).toEqual(count(macdRows("start_2011", "double")));
+    expect(M.today).toEqual({ tested: macdRows("today").length, ...count(macdRows("today")) });
+    expect(M.medianInSample).toBe(fmt(median(r.map((x) => x.is_sharpe)), 2));
+    expect(M.medianOutOfSample).toBe(fmt(median(r.map((x) => x.oos_sharpe)), 2));
+    expect(M.medianOutOfSampleHalf).toBe(fmt(median(macdRows("start_2011", "half").map((x) => x.oos_sharpe)), 2));
+    expect(M.medianOutOfSampleDouble).toBe(fmt(median(macdRows("start_2011", "double").map((x) => x.oos_sharpe)), 2));
+    expect(M.positiveOutOfSample).toBe(r.filter((x) => x.oos_sharpe > 0).length);
+    // The survivors are the three MACD rows of the published table.
+    expect(r.filter((x) => x.survives)).toHaveLength(NIFTY.survivors.filter((s) => s.strategy === "MACD").length);
+    // The one ahead but not surviving: Tata Motors, which failed only the Deflated Sharpe.
+    const near = r.filter((x) => x.ahead_out_of_sample && !x.survives);
+    expect(near.map((x) => x.symbol)).toEqual(["TMPV.NS"]);
+    expect([near[0].permutation_p >= 0.05, near[0].deflated_sharpe <= 0.95, near[0].pbo >= 0.5]).toEqual([false, true, false]);
+    const tally = {};
+    for (const x of r) tally[JSON.stringify(x.best_params)] = (tally[JSON.stringify(x.best_params)] || 0) + 1;
+    const p = M.commonPick;
+    expect(tally[JSON.stringify({ macd_fast: p.fast, macd_slow: p.slow, macd_signal: p.signal })]).toBe(p.stocks);
+    expect(Math.max(...Object.values(tally))).toBe(p.stocks);
+
+    const grids = JSON.parse(readFileSync(path.resolve(__dirname, "strategyGrids.json"), "utf8"));
+    expect(M.settings).toBe(grids.macd.grid.length);
+
+    const g = JSON.parse(readFileSync(path.join(research, "nifty-grid.json"), "utf8"));
+    const pts = g.points.filter((x) => x.strategy === "macd");
+    const G = M.grid;
+    expect(G.combinations).toBe(pts.length);
+    expect(G.combinations).toBe(g.per_strategy.macd.combinations);
+    const span = (k) => `${Math.min(...pts.map((x) => x.params[k]))} to ${Math.max(...pts.map((x) => x.params[k]))}`;
+    expect([G.fast, G.slow, G.signal]).toEqual([span("macd_fast"), span("macd_slow"), span("macd_signal")]);
+    expect(G.beatHold).toBe(pts.filter((x) => x.is_sharpe > g.bh_is_sharpe || x.oos_sharpe > g.bh_oos_sharpe).length);
+    const best = pts.reduce((a, b) => (b.is_sharpe > a.is_sharpe ? b : a));
+    expect(best.params).toEqual(g.per_strategy.macd.best_params);
+    expect(G.best).toEqual({
+      fast: best.params.macd_fast,
+      slow: best.params.macd_slow,
+      signal: best.params.macd_signal,
+      is: fmt(best.is_sharpe, 3),
+      oos: fmt(best.oos_sharpe, 3),
+      isRank: 1 + g.points.filter((x) => x.is_sharpe > best.is_sharpe).length,
+      oosRank: 1 + g.points.filter((x) => x.oos_sharpe > best.oos_sharpe).length,
+    });
+    expect(G.medianOutOfSample).toBe(fmt(median(pts.map((x) => x.oos_sharpe)), 2));
+    expect(G.positiveOutOfSample).toBe(pts.filter((x) => x.oos_sharpe > 0).length);
+
+    const desc = PAGE_META["learn-macd-strategy-nifty-50"].description;
+    expect(desc).toContain(`${M.funnel.tested} Nifty 50 stocks`);
+    expect(desc).toContain(`${M.funnel.beatInSample} beat holding on the tuning years`);
+    expect(desc).toContain(`${M.funnel.aheadOutOfSample} stayed ahead`);
+    expect(desc).toContain(`${M.funnel.survives} passed the luck checks`);
+  });
+
   it("the backtesting guide's search description quotes the study's funnel", () => {
     const f = NIFTY.funnel;
     const desc = PAGE_META["learn-how-to-backtest-a-trading-strategy"].description;
