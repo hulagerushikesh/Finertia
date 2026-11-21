@@ -175,6 +175,12 @@ describe("Nifty study figures quoted on /learn", () => {
     expect(desc).toContain(`${B.funnel.aheadOutOfSample} stayed ahead`);
   });
 
+  it("the backtesting guide's search description quotes the study's funnel", () => {
+    const f = NIFTY.funnel;
+    const desc = PAGE_META["learn-how-to-backtest-a-trading-strategy"].description;
+    expect(desc).toContain(`${f.beatInSample} of ${f.tested} tests beat holding at first and ${f.survives} survived`);
+  });
+
   it("every survivor row is the published study's own", () => {
     for (const s of NIFTY.survivors) {
       const line = writeup.split("\n").find((l) => l.startsWith(`| ${s.stock} | ${s.strategy === "Momentum" ? "momentum" : s.strategy} |`));

@@ -249,6 +249,19 @@ export const PAGE_META = {
     imageAlt:
       "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
   },
+  "learn-how-to-backtest-a-trading-strategy": {
+    name: "How to backtest a trading strategy",
+    path: "/learn/how-to-backtest-a-trading-strategy",
+    type: "article",
+    published: "2026-11-21",
+    title: "How to backtest a trading strategy without fooling yourself · Finertia",
+    ogTitle: "How to backtest a trading strategy without fooling yourself",
+    description:
+      "Ten steps to an honest backtest: costs, unseen years, survivorship, luck checks. Each shown on a Nifty 50 study where 50 of 129 tests beat holding at first and 4 survived.",
+    image: `${SITE}/og-writeup-nifty.png`,
+    imageAlt:
+      "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
+  },
   stocks: {
     name: "Stocks",
     path: "/stocks",
