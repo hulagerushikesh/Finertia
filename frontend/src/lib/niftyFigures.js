@@ -27,4 +27,32 @@ export const NIFTY = {
     { stock: "Reliance Power", strategy: "MACD", oos: "0.955", hold: "0.505" },
   ],
   today: { tested: 150, survives: 1 },
+
+  // Survivorship: the 2011 list against today's list, same test, same years.
+  survivorship: {
+    // Funnel on today's list at the default cost; its one survivor.
+    todayFunnel: { tested: 150, beatInSample: 33, aheadOutOfSample: 4, survives: 1 },
+    todaySurvivor: { stock: "Adani Enterprises", strategy: "Momentum" },
+    todaySurvivesDoubleCost: 0,
+    // Median Sharpe of simply holding the stock, tuning years, one figure per stock.
+    holdTuning2011: "0.28",
+    holdTuningToday: "0.51",
+    // Stocks whose holding Sharpe on the tuning years was below zero.
+    holdNegative2011: 11,
+    stocksToday: 50,
+    holdNegativeToday: 4,
+    // Of the 43 priced 2011 stocks, how many are still on today's list.
+    stillInIndex: 25,
+    // None of the stocks behind the 2011 survivors is on today's list.
+    survivorStocksStillIn: 0,
+    missingNames: [
+      "Cairn India",
+      "HDFC",
+      "IDFC",
+      "Jaiprakash Associates",
+      "Ranbaxy Laboratories",
+      "Reliance Capital",
+      "Sterlite Industries",
+    ],
+  },
 };

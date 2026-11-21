@@ -223,6 +223,19 @@ export const PAGE_META = {
     imageAlt:
       "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
   },
+  "learn-survivorship-bias-nifty-50": {
+    name: "Survivorship bias on the Nifty 50",
+    path: "/learn/survivorship-bias-nifty-50",
+    type: "article",
+    published: "2026-11-28",
+    title: "Survivorship bias: why backtesting today's Nifty 50 misleads · Finertia",
+    ogTitle: "Survivorship bias: why backtesting today's Nifty 50 misleads",
+    description:
+      "The same backtest on the 2011 Nifty 50 and on today's list, 2011–2025. Holding today's members shows a median Sharpe of 0.51; the real 2011 list, 0.28.",
+    image: `${SITE}/og-writeup-nifty.png`,
+    imageAlt:
+      "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
+  },
   stocks: {
     name: "Stocks",
     path: "/stocks",

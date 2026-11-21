@@ -61,6 +61,7 @@ export const PRELOAD = {
   "learn-sharpe-ratio": LearnPage.preload,
   "learn-permutation-test": LearnPage.preload,
   "learn-nifty-50-strategies-vs-buy-and-hold": LearnPage.preload,
+  "learn-survivorship-bias-nifty-50": LearnPage.preload,
   stocks: StockPage.preload,
   ...Object.fromEntries(STOCKS.map((s) => [`stock-${s.slug}`, StockPage.preload])),
 };
