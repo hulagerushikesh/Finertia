@@ -2,6 +2,11 @@
 
 Everything not in the current milestone. "Evidence" = what would prove it done.
 
+## Search (proposed 21 Nov, waits on the author — see SEO-PLAN.md)
+
+- [ ] Google steps G1–G5 (request indexing, Bing import, link from hulage.in). Evidence: the five key pages show "URL is on Google" in URL Inspection
+- [ ] Articles W1–W6 under `/learn`, one a week, after decision S1. Evidence: each live, pre-rendered, in the sitemap; impressions read after 8 weeks
+
 ## Small and unblocked
 
 - [ ] Narrow the `gh` token → in M9 phase 0
