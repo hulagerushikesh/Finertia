@@ -55,4 +55,32 @@ export const NIFTY = {
       "Sterlite Industries",
     ],
   },
+
+  // Bollinger bands alone: the 2011 list at three costs, today's list, and
+  // the 70 Bollinger settings of the one-stock grid (nifty-grid.json).
+  bollinger: {
+    settings: 12,
+    funnel: { tested: 43, beatInSample: 18, aheadOutOfSample: 1, survives: 0 },
+    half: { beatInSample: 21, aheadOutOfSample: 2, survives: 0 },
+    double: { beatInSample: 11, aheadOutOfSample: 0, survives: 0 },
+    medianInSample: "0.12",
+    medianOutOfSample: "−0.22",
+    positiveOutOfSample: 14,
+    aheadStock: "Steel Authority of India",
+    commonPick: { window: 10, width: "2.5", stocks: 15 },
+    today: { tested: 50, beatInSample: 12, aheadOutOfSample: 0, survives: 0 },
+    grid: {
+      stock: "Reliance Industries",
+      combinations: 70,
+      windows: "5 to 100",
+      widths: "1 to 3",
+      beatHold: 0,
+      holdInSample: "0.553",
+      holdOutOfSample: "0.544",
+      best: { window: 40, width: "3.0", is: "0.342", oos: "−0.463", rank: 623, of: 834 },
+      small: { window: 50, width: "2.5", is: "−0.086", oos: "−0.333" },
+      medianOutOfSample: "−0.31",
+      positiveOutOfSample: 11,
+    },
+  },
 };

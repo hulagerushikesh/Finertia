@@ -101,6 +101,80 @@ describe("Nifty study figures quoted on /learn", () => {
     expect(writeup).toContain(`(${S.todaySurvivor.stock}, momentum)`);
   });
 
+  it("Bollinger figures match the saved results and the one-stock grid", () => {
+    const B = NIFTY.bollinger;
+    const boll = (u = "start_2011", c = "default") => rows(u, c).filter((x) => x.strategy === "bollinger");
+    const count = (r) => ({
+      beatInSample: r.filter((x) => x.beat_in_sample).length,
+      aheadOutOfSample: r.filter((x) => x.ahead_out_of_sample).length,
+      survives: r.filter((x) => x.survives).length,
+    });
+    const r = boll();
+    expect(B.funnel).toEqual({ tested: r.length, ...count(r) });
+    expect(B.half).toEqual(count(boll("start_2011", "half")));
+    expect(B.double).toEqual(count(boll("start_2011", "double")));
+    expect(B.today).toEqual({ tested: boll("today").length, ...count(boll("today")) });
+    expect(B.medianInSample).toBe(fmt(median(r.map((x) => x.is_sharpe)), 2));
+    expect(B.medianOutOfSample).toBe(fmt(median(r.map((x) => x.oos_sharpe)), 2));
+    expect(B.positiveOutOfSample).toBe(r.filter((x) => x.oos_sharpe > 0).length);
+    expect(r.filter((x) => x.ahead_out_of_sample).map((x) => x.symbol)).toEqual(["SAIL.NS"]);
+    // "Failed two of the three luck checks": timing test and Deflated Sharpe.
+    const sail = r.find((x) => x.symbol === "SAIL.NS");
+    expect([sail.permutation_p >= 0.05, sail.deflated_sharpe <= 0.95, sail.pbo >= 0.5]).toEqual([true, true, false]);
+    const picks = r.filter((x) => x.best_params.bb_window === B.commonPick.window && x.best_params.bb_std.toFixed(1) === B.commonPick.width);
+    expect(picks).toHaveLength(B.commonPick.stocks);
+    const tally = {};
+    for (const x of r) tally[JSON.stringify(x.best_params)] = (tally[JSON.stringify(x.best_params)] || 0) + 1;
+    expect(Math.max(...Object.values(tally))).toBe(B.commonPick.stocks);
+
+    const grids = JSON.parse(readFileSync(path.resolve(__dirname, "strategyGrids.json"), "utf8"));
+    expect(B.settings).toBe(grids.bollinger.grid.length);
+
+    const g = JSON.parse(readFileSync(path.join(research, "nifty-grid.json"), "utf8"));
+    const pts = g.points.filter((p) => p.strategy === "bollinger");
+    const G = B.grid;
+    expect(G.combinations).toBe(pts.length);
+    expect(G.combinations).toBe(g.per_strategy.bollinger.combinations);
+    const windows = pts.map((p) => p.params.bb_window);
+    const widths = pts.map((p) => p.params.bb_std);
+    expect(G.windows).toBe(`${Math.min(...windows)} to ${Math.max(...windows)}`);
+    expect(G.widths).toBe(`${Math.min(...widths)} to ${Math.max(...widths)}`);
+    expect(G.beatHold).toBe(pts.filter((p) => p.is_sharpe > g.bh_is_sharpe || p.oos_sharpe > g.bh_oos_sharpe).length);
+    expect(G.holdInSample).toBe(g.bh_is_sharpe.toFixed(3));
+    expect(G.holdOutOfSample).toBe(g.bh_oos_sharpe.toFixed(3));
+    expect(g.pick.strategy).toBe("bollinger");
+    expect(G.best).toEqual({
+      window: g.pick.params.bb_window,
+      width: g.pick.params.bb_std.toFixed(1),
+      is: fmt(g.pick.is_sharpe, 3),
+      oos: fmt(g.pick.oos_sharpe, 3),
+      rank: g.pick.oos_rank_of_834,
+      of: g.combinations,
+    });
+    const s = g.small_grid_same_strategy;
+    expect(G.small).toEqual({
+      window: s.best_params.bb_window,
+      width: s.best_params.bb_std.toFixed(1),
+      is: fmt(s.is_sharpe, 3),
+      oos: fmt(s.oos_sharpe, 3),
+    });
+    expect(G.medianOutOfSample).toBe(fmt(median(pts.map((p) => p.oos_sharpe)), 2));
+    expect(G.positiveOutOfSample).toBe(pts.filter((p) => p.oos_sharpe > 0).length);
+
+    // The study's own text says the same about the pick and the grids.
+    const flat = writeup.replace(/\s+/g, " ");
+    expect(flat).toContain(`${B.settings} Bollinger`);
+    expect(flat).toContain(`Bollinger with a ${G.best.window}-day window and bands ${G.best.width} wide, with a Sharpe of ${G.best.is}`);
+    expect(flat).toContain(`it scored ${G.best.oos} and ranked ${G.best.rank}rd of ${G.best.of}`);
+    expect(flat).toContain(`(window ${G.small.window}, width ${G.small.width}) with a tuning-years Sharpe of ${G.small.is}`);
+
+    // The search description quotes the same funnel.
+    const desc = PAGE_META["learn-bollinger-bands-nifty-50"].description;
+    expect(desc).toContain(`${B.funnel.tested} Nifty 50 stocks`);
+    expect(desc).toContain(`${B.funnel.beatInSample} beat holding on the tuning years`);
+    expect(desc).toContain(`${B.funnel.aheadOutOfSample} stayed ahead`);
+  });
+
   it("every survivor row is the published study's own", () => {
     for (const s of NIFTY.survivors) {
       const line = writeup.split("\n").find((l) => l.startsWith(`| ${s.stock} | ${s.strategy === "Momentum" ? "momentum" : s.strategy} |`));

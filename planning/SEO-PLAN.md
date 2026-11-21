@@ -104,6 +104,6 @@ quotes the published studies).
 
 | # | Decision | Default if you say nothing |
 |---|---|---|
-| S1 | ~~Build articles now or after 10 Dec~~ | Decided 21 Nov: **now**. W1 live 21 Nov (PR #198). W2 (survivorship bias) built 21 Nov, waiting on the author's read; goes live 28 Nov |
+| S1 | ~~Build articles now or after 10 Dec~~ | Decided 21 Nov: **now**. W1 live 21 Nov (PR #198). W2 (survivorship bias) live 21 Nov (PR #199). W3 (Bollinger Bands) built 21 Nov, waiting on the author's read |
 | S2 | Section name: grow `/learn` (with `/blog` redirecting to it), or a separate `/blogs` | Grow `/learn` |
 | S3 | ~~Who does G1–G5~~ | Decided 21 Nov: Claude in the author's Chrome; the extension never reached the session, so the author did **G1 on 21 Nov** (W1 article queued, home page already indexed, the other four requested or already indexed). G2–G5 open |

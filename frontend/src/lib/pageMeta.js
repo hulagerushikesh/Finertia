@@ -236,6 +236,19 @@ export const PAGE_META = {
     imageAlt:
       "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
   },
+  "learn-bollinger-bands-nifty-50": {
+    name: "Bollinger Bands on Nifty 50 stocks",
+    path: "/learn/bollinger-bands-nifty-50",
+    type: "article",
+    published: "2026-11-21",
+    title: "Bollinger Bands strategy backtest on Nifty 50 stocks, 2011–2025 · Finertia",
+    ogTitle: "Bollinger Bands on Indian stocks: 15 years of backtest results",
+    description:
+      "A Bollinger Bands strategy backtested on 43 Nifty 50 stocks, 2011–2025, after costs. 18 beat holding on the tuning years, 1 stayed ahead on unseen years, none passed the luck checks.",
+    image: `${SITE}/og-writeup-nifty.png`,
+    imageAlt:
+      "Nifty 50 as of 2011, three strategies on 43 stocks: 129 tested, 50 beat holding on the tuning years, 7 still ahead on unseen years, 4 passed the luck checks.",
+  },
   stocks: {
     name: "Stocks",
     path: "/stocks",
