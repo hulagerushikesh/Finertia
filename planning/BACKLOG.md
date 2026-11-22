@@ -6,12 +6,13 @@ Everything not in the current milestone. "Evidence" = what would prove it done.
 
 - [x] G1 request indexing, done 21 Nov by the author: W1 article queued; `/` already indexed; `/writeup`, `/writeup/nifty-50`, `/demo`, `/learn` requested or already indexed
 - [ ] Google steps G2–G5 (weekly Pages and Performance reads, Bing import, link from hulage.in). Evidence: Bing shows the sitemap; hulage.in links to Finertia
-- [ ] Articles W1–W6 under `/learn`, one a week (W1 live 21 Nov, PR #198; W2 live 21 Nov, PR #199; W3 Bollinger live 21 Nov, PR #201; W4 backtesting guide live 21 Nov, PR #203; W5 MACD live 22 Nov, PR #204; W6 costs built 22 Nov, waiting on the author's read). Evidence: each live, pre-rendered, in the sitemap; impressions read after 8 weeks
+- [ ] Articles W1–W6 under `/learn`, one a week (W1 live 21 Nov, PR #198; W2 live 21 Nov, PR #199; W3 Bollinger live 21 Nov, PR #201; W4 backtesting guide live 21 Nov, PR #203; W5 MACD live 22 Nov, PR #204; W6 costs live 22 Nov, PR #205 — all six live; next is the 8-week read, mid-Jan 2027). Evidence: each live, pre-rendered, in the sitemap; impressions read after 8 weeks
 
 ## Small and unblocked
 
 - [ ] Narrow the `gh` token → in M9 phase 0
-- [ ] Remaining frontend advisories (21, 24 Oct): firebase 10 → 13 needs Node ≥ 24.12 on Vercel, CI and locally (fixes undici; grpc-js stays, both Node-side only); vite 5 → 7 + vitest 2 → 4 needs Node ≥ 20.19 locally (local is 20.12; dev and test only). Evidence: `npm audit` clean, build + E2E green on the new Node
+- [x] Remaining frontend advisories (21, 24 Oct) — done 22 Nov: firebase 10 → 12.19 (fixes undici; 13 was not needed and wants Node ≥ 24.12), grpc-js forced to 1.14.7 by an `overrides` entry (firestore still pins ~1.9; Node-side only), vite 5 → 7.3, plugin-react 4 → 5, vitest 2 → 4.1.12. Node pinned to 22.x (`engines` + `.nvmrc`; CI was already 22). `npm audit` 0, 384 tests, build and bundle budget pass (entry 210.6 of 210.9 kB — firebase 12 added ~2 kB). Local Node 20.12 is now too old to run the tests
+- [ ] Tab double-fire on `@radix-ui/react-tabs` ≥ 1.2: a fresh lockfile pulls 1.2.1, where one click on the Validation tab calls `handleTab` twice and sends two validation requests (two DashboardPage tests catch it). The lockfile holds 1.1.21, so live is unaffected. Fix before any lockfile regeneration: guard `handleValidate` with a ref, or pin the tabs package. Evidence: those tests pass on 1.2.x
 - [x] Project venv → M9 phase 0, done 14 Sep
 - [x] Bundle-size CI check — `frontend/scripts/check-bundle.mjs` + `bundle-budget.json`, gzip entry + total, limits ~10% over the 19 Sep build; CI step "Bundle budget" (19 Sep)
 - [x] Backend deploy reminder — `backend-drift.yml` diffs `backend/` against the `backend-deployed` tag on every push to main and comments on the merged PR; deploy.yml moves the tag, manual deploys move it per README (19 Sep)
