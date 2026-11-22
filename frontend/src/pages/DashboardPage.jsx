@@ -85,6 +85,11 @@ export default function DashboardPage() {
   const [showDetail, , toggleDetail] = useDisclosure("finertia-results-detail");
   const [validation, setValidation] = useState(kept?.validation ?? null);
   const [validating, setValidating] = useState(false);
+  // `validating` is state, so two calls in the same event read it as false.
+  // Radix Tabs 1.2 fires onValueChange on both mousedown and focus of one
+  // click; without this, that click sent two validations (and spent two of a
+  // free user's allowance).
+  const validatingNow = useRef(false);
   const [copied, setCopied] = useState(false);
   // The free plan's monthly validations, { limit, remaining }, or null when
   // the account has no cap (Pro) or the allowance is off. Behind a switch
@@ -184,6 +189,8 @@ export default function DashboardPage() {
   }
 
   async function handleValidate() {
+    if (validatingNow.current) return;
+    validatingNow.current = true;
     setError(null);
     setValidating(true);
     setTab("validation");
@@ -210,6 +217,7 @@ export default function DashboardPage() {
       // said once, in the Validation panel, not also as a toast.
       if (!(feature("calm-pro-wall") && err.status === 402 && !validation)) showToast(message, "error");
     } finally {
+      validatingNow.current = false;
       setValidating(false);
     }
   }
