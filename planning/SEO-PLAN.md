@@ -106,4 +106,4 @@ quotes the published studies).
 |---|---|---|
 | S1 | ~~Build articles now or after 10 Dec~~ | Decided 21 Nov: **now**. W1 live 21 Nov (PR #198). W2 (survivorship bias) live 21 Nov (PR #199). W3 (Bollinger Bands) live 21 Nov (PR #201). W4 (backtesting guide) live 21 Nov (PR #203). W5 (MACD) live 22 Nov (PR #204). W6 (costs) live 22 Nov (PR #205). All six live |
 | S2 | Section name: grow `/learn` (with `/blog` redirecting to it), or a separate `/blogs` | Grow `/learn` |
-| S3 | ~~Who does G1–G5~~ | Decided 21 Nov: Claude in the author's Chrome; the extension never reached the session, so the author did **G1 on 21 Nov** (W1 article queued, home page already indexed, the other four requested or already indexed). G2–G5 open |
+| S3 | ~~Who does G1–G5~~ | Decided 21 Nov: Claude in the author's Chrome; the extension never reached the session, so the author did **G1 on 21 Nov** (W1 article queued, home page already indexed, the other four requested or already indexed). **G4 done 22 Nov** (Bing import + sitemap submitted). G2, G3, G5 open |
