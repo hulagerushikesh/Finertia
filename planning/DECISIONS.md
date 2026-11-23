@@ -3,6 +3,21 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-11-23 — The 10 Dec thresholds stay as written
+
+**Decision (author, 23 Nov):** keep PLAN part 4's rule unchanged (PLAN
+decision 4). On 10 Dec: 300 or more visitors to the two studies together, or 2
+or more replies from strangers that engage with the content, means write study
+3; one channel that clearly worked means one more month on that channel;
+otherwise freeze.
+
+**Why:** the thresholds were set before any posting, so the result cannot
+move them. Fixing them now keeps the 10 Dec call honest.
+
+**Cost of it:** with posting starting only on 24 Nov, two and a half weeks may
+be too short for search traffic to count; a low number then says more about
+reach than about the studies.
+
 ## 2026-11-13 — Count visitors with Vercel Web Analytics
 
 **Decision (author, 13 Nov):** turn on the host's built-in visitor counter

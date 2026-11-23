@@ -124,7 +124,7 @@ Claude fills one row every Monday in phase C.
 | 1 | Who should read this: hiring managers, traders, or both? | Both; the drafts lead with the finding, not the code | 17 Nov |
 | 2 | ~~Visitor counting: the host's built-in counter (free, no cookies)~~ | Decided 13 Nov: yes | — |
 | 3 | ~~Delete the Mumbai server~~ | Decided 13 Nov: deleted | — |
-| 4 | The 10 Dec thresholds in part 4 | As written | 23 Nov |
+| 4 | ~~The 10 Dec thresholds in part 4~~ | Decided 23 Nov: as written | — |
 | 5 | Hours per week you can give | 3 hours: mostly editing and posting | 17 Nov |
 
 ## 7. Instructions to Claude
