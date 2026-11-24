@@ -3,6 +3,24 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-11-24 — Finertia becomes a product, aimed at 100,000 users
+
+**Decision (author, 24 Nov):** the project is to be built as a product that can
+serve 100k+ users, run the way a staff engineer would run it. This reverses the
+31 Oct "portfolio piece, maintenance only" entry. The plan is
+[PRODUCT-PLAN.md](PRODUCT-PLAN.md).
+
+**Why:** the author judged that the project reads as a personal or college
+project, and wants it to be a real product.
+
+**The evidence against it, kept on the record:** the October round had 5
+testers, none returned, and none would pay. So PRODUCT-PLAN puts a gate on real
+users at the end of each phase: retention and the first paying users before
+scale work beyond Phase 1.
+
+**Open:** PRODUCT-PLAN decisions P1–P7 (market, budget, data vendor, payments,
+legal review, hours, pricing).
+
 ## 2026-11-24 — Back to building: study 3 starts now; search work pauses a week
 
 **Decision (author, 24 Nov):** less time on search, more on the project.
