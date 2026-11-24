@@ -98,7 +98,7 @@ jobs:
             --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 --cpu-boost \
             --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
             --set-secrets "FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest" \
-            --update-env-vars "SENTRY_DSN=$SENTRY_DSN,GIT_SHA=$GITHUB_SHA" \
+            --update-env-vars "SENTRY_DSN=$SENTRY_DSN,GIT_SHA=$GITHUB_SHA,FREE_VALIDATIONS_PER_MONTH=10" \
             --allow-unauthenticated \
             --quiet
 

@@ -76,10 +76,10 @@ export default function RegisterPage() {
   return (
     <AuthShell
       title="Create your account."
-      subtitle="Free to start. No card, and the engine is the same one Pro runs on."
+      subtitle="Free to use. No card, no plans, nothing to install."
       aside={
         <div className="max-w-sm">
-          <p className="eyebrow mb-4">What the free plan runs</p>
+          <p className="eyebrow mb-4">What every account runs</p>
           <ul className="flex flex-col gap-3 text-sm text-graphite leading-relaxed">
             <li>
               <span className="text-foreground font-medium">Three strategies</span> on any symbol
@@ -95,7 +95,7 @@ export default function RegisterPage() {
             </li>
           </ul>
           <p className="margin-note mt-6">
-            Walk-forward validation and the permutation test are the Pro additions.
+            Walk-forward validation and the permutation test too, within a monthly fair-use limit.
           </p>
         </div>
       }

@@ -53,8 +53,8 @@ async function runAapl() {
   await screen.findByRole("heading", { name: "AAPL" });
 }
 
-function payPlan() {
-  const err = new Error("Walk-forward validation and the permutation test are Pro features.");
+function limitReached() {
+  const err = new Error("You have used your 10 validations for this month.");
   err.status = 402;
   return err;
 }
@@ -64,6 +64,10 @@ beforeEach(() => {
   showToast.mockReset();
   clearWorkspace();
   api.runBacktest.mockResolvedValue({ ...demo, ticker: "AAPL" });
+  // The workspace always asks for the validation allowance; by default there
+  // is none to show.
+  api.getUsage.mockResolvedValue({ plan: "free", validation: false, validations_used: 0,
+    validations_limit: 0, validations_remaining: 0 });
 });
 
 describe("DashboardPage", () => {
@@ -91,16 +95,17 @@ describe("DashboardPage", () => {
     expect(screen.getByRole("heading", { name: "AAPL" })).toBeInTheDocument();
   });
 
-  it("sends a 402 to the pricing page instead of offering a retry", async () => {
-    api.validateStrategy.mockRejectedValue(payPlan());
+  it("sends a 402 to the limits page instead of offering a retry or an upgrade", async () => {
+    api.validateStrategy.mockRejectedValue(limitReached());
     renderPage();
     await runAapl();
     await userEvent.click(screen.getByRole("tab", { name: /Validation/ }));
 
     const banner = await screen.findByRole("alert");
-    expect(within(banner).getByText(/Pro features/)).toBeInTheDocument();
-    expect(within(banner).getByRole("link", { name: "See Pro" })).toHaveAttribute("href", "/pricing");
+    expect(within(banner).getByText(/validations for this month/)).toBeInTheDocument();
+    expect(within(banner).getByRole("link", { name: "See the limits" })).toHaveAttribute("href", "/limits");
     expect(within(banner).queryByRole("button", { name: "Try again" })).toBeNull();
+    expect(screen.queryByText(/\bPro\b|upgrade/i)).toBeNull();
   });
 
   it("offers a retry of the action that failed", async () => {
@@ -166,40 +171,34 @@ describe("DashboardPage", () => {
 });
 
 
-// Sprint 2 item 2, behind the "free-validation" switch until the round closes.
-describe("DashboardPage — free validation (switch)", () => {
+// The monthly validation allowance (a fair-use limit set on the API).
+describe("DashboardPage — the monthly validations", () => {
   const FREE_USAGE = { plan: "free", validation: false, validations_used: 0,
     validations_limit: 1, validations_remaining: 1 };
-
-  afterEach(() => vi.unstubAllEnvs());
 
   async function openValidation() {
     await runAapl();
     await userEvent.click(screen.getByRole("tab", { name: /Validation/ }));
   }
 
-  it("changes nothing while the switch is off", async () => {
-    vi.stubEnv("VITE_FEATURES", "");
-    api.validateStrategy.mockRejectedValue(payPlan());
+  it("says validation is switched off when the allowance is 0", async () => {
+    api.validateStrategy.mockRejectedValue(limitReached());
     renderPage();
     await openValidation();
-    expect(await screen.findByRole("link", { name: "Validation is on Pro — see plans" })).toBeInTheDocument();
-    expect(api.getUsage).not.toHaveBeenCalled();
+    expect(await screen.findByRole("link", { name: "Validation is switched off — see the limits" })).toBeInTheDocument();
   });
 
-  it("says after a free validation how many are left", async () => {
-    vi.stubEnv("VITE_FEATURES", "free-validation");
+  it("says after a validation how many are left", async () => {
     api.getUsage.mockResolvedValue(FREE_USAGE);
     api.validateStrategy.mockResolvedValue({ ...demoValidation, free_validations_remaining: 0 });
     renderPage();
     await openValidation();
     expect(await screen.findByTestId("free-validation-used")).toHaveTextContent(
-      "That was a free validation: 0 of 1 left this month"
+      "0 of 1 validations left this month"
     );
   });
 
   it("shows the counter beside Run validation", async () => {
-    vi.stubEnv("VITE_FEATURES", "free-validation");
     api.getUsage.mockResolvedValue(FREE_USAGE);
     const outage = new Error("Market data unavailable");
     outage.status = 503;
@@ -211,19 +210,17 @@ describe("DashboardPage — free validation (switch)", () => {
     );
   });
 
-  it("names the used-up free validation on a 402", async () => {
-    vi.stubEnv("VITE_FEATURES", "free-validation");
+  it("names the used-up allowance on a 402, with the limits, not a plan", async () => {
     api.getUsage.mockResolvedValue({ ...FREE_USAGE, validations_used: 1, validations_remaining: 0 });
-    api.validateStrategy.mockRejectedValue(payPlan());
+    api.validateStrategy.mockRejectedValue(limitReached());
     renderPage();
     await openValidation();
     expect(
-      await screen.findByRole("link", { name: "This month's free validation is used — see Pro" })
-    ).toHaveAttribute("href", "/pricing");
+      await screen.findByRole("link", { name: "This month's validations are used — see the limits" })
+    ).toHaveAttribute("href", "/limits");
   });
 
-  it("shows nothing extra to Pro", async () => {
-    vi.stubEnv("VITE_FEATURES", "free-validation");
+  it("shows nothing extra to an unlimited account", async () => {
     api.getUsage.mockResolvedValue({ plan: "pro", validation: true, validations_used: 0,
       validations_limit: null, validations_remaining: null });
     api.validateStrategy.mockResolvedValue(demoValidation);

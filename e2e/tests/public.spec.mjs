@@ -4,7 +4,9 @@ import { failOnPageErrors } from "./helpers.mjs";
 
 const TITLES = {
   "/demo": "Momentum on Apple, 2019–2024: a real result · Finertia",
-  "/pricing": "Pricing · Finertia",
+  "/limits": "Limits · Finertia",
+  "/privacy": "Privacy · Finertia",
+  "/terms": "Terms of use · Finertia",
   "/docs": "How it works · Finertia",
   "/support": "Support · Finertia",
   "/writeup": "The best-looking strategy was the worst on new data · Finertia",
@@ -20,7 +22,7 @@ test("each public page names itself on the tab, and the landing title comes back
   await expect(page).toHaveTitle("Finertia — Test a trading idea before you risk money on it");
 });
 
-for (const path of ["/", "/pricing", "/writeup", "/docs"]) {
+for (const path of ["/", "/limits", "/privacy", "/terms", "/writeup", "/docs"]) {
   test(`${path} loads without errors`, async ({ page }) => {
     const noErrors = failOnPageErrors(page);
     await page.goto(path);
@@ -28,6 +30,14 @@ for (const path of ["/", "/pricing", "/writeup", "/docs"]) {
     noErrors();
   });
 }
+
+// Personal, non-commercial project (DECISIONS 24 Nov): an old pricing link
+// lands on the limits, and nothing on the way offers a plan to buy.
+test("/pricing lands on the limits, with nothing for sale", async ({ page }) => {
+  await page.goto("/pricing");
+  await expect(page).toHaveURL(/\/limits$/);
+  await expect(page.locator("main")).not.toContainText(/\$\d|\bPro\b|upgrade/i);
+});
 
 test("/demo shows a result and its validation verdict without an account", async ({ page }) => {
   const noErrors = failOnPageErrors(page);

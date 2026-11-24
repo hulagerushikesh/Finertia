@@ -10,6 +10,8 @@ import os
 
 import pytest
 
+import billing
+
 from billing import (
     is_configured,
     parse_signature_header,
@@ -39,7 +41,16 @@ class TestConfiguration:
     def test_billing_is_off_without_a_key(self):
         assert is_configured() is False
 
-    def test_billing_is_on_with_a_key(self, monkeypatch):
+    def test_a_key_alone_cannot_switch_charging_on(self, monkeypatch):
+        # Personal, non-commercial project (DECISIONS 24 Nov): charging is off
+        # in code, so a key set by mistake changes nothing.
+        monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_x")
+        monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_x")
+        assert is_configured() is False
+        assert billing.webhook_secret() is None
+
+    def test_billing_is_on_with_a_key_once_charging_is_allowed(self, monkeypatch):
+        monkeypatch.setattr(billing, "CHARGING_ALLOWED", True)
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_x")
         assert is_configured() is True
 
@@ -48,6 +59,7 @@ class TestConfiguration:
             create_checkout_session("u1", "a@b.c", "https://s", "https://c")
 
     def test_checkout_refuses_without_a_price(self, monkeypatch):
+        monkeypatch.setattr(billing, "CHARGING_ALLOWED", True)
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_x")
         with pytest.raises(RuntimeError, match="STRIPE_PRICE_ID"):
             create_checkout_session("u1", "a@b.c", "https://s", "https://c")

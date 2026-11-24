@@ -79,27 +79,27 @@ export default function SupportPage() {
             2021 gives you 2021 onward.
           </Problem>
 
-          <Problem message="You have used all N runs on the free plan this month.">
-            A monthly quota, not a speed limit. It resets at the start of the
-            next calendar month, counted in UTC. The current allowance is on the{" "}
-            <Link to="/pricing" className="text-pencil hover:underline">
-              pricing page
+          <Problem message="You have used all N runs for this month.">
+            A monthly fair-use limit, not a speed limit. Finertia is a free
+            personal project, so nothing is for sale; the limit keeps the shared
+            server and the data source healthy. It resets at the start of the
+            next calendar month, counted in UTC. The current limits are on the{" "}
+            <Link to="/limits" className="text-pencil hover:underline">
+              limits page
             </Link>
-            , which reads it from the API rather than repeating it — Pro removes
-            the cap entirely.
+            , which reads them from the API rather than repeating them.
           </Problem>
 
-          <Problem message="Walk-forward validation and the permutation test are Pro features.">
+          <Problem message="You have used your validations for this month.">
             A single validation run sweeps a whole parameter grid and then
             reshuffles the signals hundreds of times — it costs far more compute
-            than one backtest, which is why it sits behind the paid plan rather
-            than the quota.
+            than one backtest, so validations have their own, smaller monthly
+            limit. It resets at the start of the next month.
           </Problem>
 
           <Problem message="Rate limit reached for … Try again in N second(s).">
             A short burst limit measured over the last minute, separate from the
-            monthly quota. It means slow down, not upgrade. Waiting the stated
-            number of seconds clears it.
+            monthly limit. Waiting the stated number of seconds clears it.
           </Problem>
 
           <Problem message="Your account has been suspended.">
@@ -197,8 +197,8 @@ export default function SupportPage() {
           <Link to="/demo" className="text-pencil hover:underline">
             See a real run →
           </Link>
-          <Link to="/pricing" className="text-pencil hover:underline">
-            Plans →
+          <Link to="/limits" className="text-pencil hover:underline">
+            Limits →
           </Link>
         </div>
       </div>

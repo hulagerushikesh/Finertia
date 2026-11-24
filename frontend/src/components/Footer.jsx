@@ -10,14 +10,18 @@ const LINKS = [
   ["/stocks", "Stocks"],
   ["/writeup", "The write-up"],
   ["/writeup/nifty-50", "The Nifty 50 study"],
-  ["/pricing", "Pricing"],
+  ["/limits", "Limits"],
   ["/support", "Support"],
+  ["/privacy", "Privacy"],
+  ["/terms", "Terms"],
 ];
 
 /**
- * The colophon. Exists mainly so /support and /docs are reachable from every
- * page, and to carry the disclaimer where a research note would carry it —
- * at the foot, in small type, on every copy.
+ * The colophon. Exists mainly so /support, /docs and the legal pages are
+ * reachable from every page, and to carry the disclaimer where a research note
+ * would carry it — at the foot, in small type, on every copy. The wording is
+ * the checklist in planning/PRODUCT-PLAN.md section 6: not advice, not
+ * registered (India or US), the data's source and terms, non-commercial.
  */
 export default function Footer() {
   return (
@@ -25,11 +29,18 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid gap-8 md:grid-cols-[1fr_auto] items-start">
         <div className="max-w-xl">
           <Wordmark className="text-lg" />
-          <p className="text-xs text-graphite leading-relaxed mt-3">
+          <p className="text-xs text-graphite leading-relaxed mt-3" data-testid="disclaimer">
             Backtested results are hypothetical and do not reflect what trading
             this strategy would have returned. Past performance says nothing
-            about future performance. Finertia is a research tool, not
-            investment advice.
+            about future performance. Finertia is an educational research tool,
+            not investment advice or a recommendation to buy or sell anything. It
+            is not registered with SEBI as an investment adviser or research
+            analyst, and is not a registered investment adviser in the US.
+          </p>
+          <p className="text-xs text-graphite leading-relaxed mt-2">
+            Price data from Yahoo Finance via the open-source yfinance library,
+            for personal, non-commercial use. Not affiliated with Yahoo. Finertia
+            is a free, non-commercial personal project.
           </p>
         </div>
         <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Footer">

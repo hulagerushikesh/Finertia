@@ -98,8 +98,8 @@ export default function DemoPage() {
           <p className="text-sm text-graphite leading-relaxed max-w-3xl">
             Was it skill or luck? The same rule, re-tuned on the first 70% of {demo.start.slice(0, 4)}–
             {demo.end.slice(0, 4)} and scored on the last 30% it never saw, then checked against
-            hundreds of shuffled versions of itself. This is a real run of the checks, saved. On
-            the Pro plan they run on any stock and rule you choose.
+            hundreds of shuffled versions of itself. This is a real run of the checks, saved. With
+            a free account they run on any stock and rule you choose.
           </p>
           <ValidationPanel data={validation} />
         </div>
@@ -132,8 +132,8 @@ export default function DemoPage() {
             <button type="button" onClick={() => { setTab("validation"); window.scrollTo({ top: 0 }); }} className="text-pencil underline underline-offset-2">
               Validation tab
             </button>{" "}
-            answers that for this run. A free account runs the backtest on any stock; the checks
-            are part of <Link to="/pricing" className="text-pencil underline underline-offset-2">Pro</Link>.
+            answers that for this run. A free account runs the backtest and the checks on any
+            stock, within <Link to="/limits" className="text-pencil underline underline-offset-2">fair-use limits</Link>.
           </p>
           <div className="flex items-center gap-3 flex-wrap mt-5">
             <Button asChild>

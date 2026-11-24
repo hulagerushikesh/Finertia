@@ -113,8 +113,8 @@ function Article({ a }) {
             See it on a real strategy.
           </h2>
           <p className="text-sm text-graphite leading-relaxed max-w-prose">
-            Finertia runs these checks on any stock you pick. The free plan runs the backtest;
-            Pro adds the validation.
+            Finertia runs these checks on any stock you pick, free, within monthly fair-use
+            limits.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild>

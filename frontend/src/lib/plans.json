@@ -3,30 +3,16 @@
     "id": "free",
     "label": "Free",
     "price_monthly": 0,
-    "monthly_runs": 50,
-    "max_portfolio_size": 3,
+    "monthly_runs": 100,
+    "max_portfolio_size": 10,
     "validation": false,
     "features": [
-      "50 backtests a month",
-      "All three strategies",
+      "100 backtests a month",
+      "Walk-forward validation and permutation tests, within a monthly fair-use limit",
+      "All three strategies, on US and Indian stocks",
       "Stop-loss, take-profit, volatility sizing",
-      "Portfolios up to 3 holdings",
-      "CSV export and shareable links"
-    ]
-  },
-  {
-    "id": "pro",
-    "label": "Pro",
-    "price_monthly": 12,
-    "monthly_runs": null,
-    "max_portfolio_size": 10,
-    "validation": true,
-    "features": [
-      "Unlimited backtests",
-      "Walk-forward validation and permutation tests",
       "Portfolios up to 10 holdings",
-      "Run comparison",
-      "Priority support"
+      "Run comparison, CSV export and shareable links"
     ]
   }
 ]

@@ -252,7 +252,7 @@ gcloud run deploy finertia-api \
   --min-instances 0 --max-instances 2 --memory 512Mi --cpu 1 --concurrency 40 \
   --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
   --set-secrets FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest \
-  --update-env-vars SENTRY_DSN=https://3e79d3553ba15e22d80c2b964eb2bc47@o4512247279976448.ingest.us.sentry.io/4512247309402112,GIT_SHA=$(git rev-parse HEAD) \
+  --update-env-vars SENTRY_DSN=https://3e79d3553ba15e22d80c2b964eb2bc47@o4512247279976448.ingest.us.sentry.io/4512247309402112,GIT_SHA=$(git rev-parse HEAD),FREE_VALIDATIONS_PER_MONTH=10 \
   --allow-unauthenticated
 ```
 
@@ -519,23 +519,23 @@ Unhandled exceptions return a generic message rather than a stack trace, with th
 
 Optional. With `SENTRY_DSN` set, unhandled exceptions are reported; without it the SDK is never imported and nothing changes. `send_default_pii` is off deliberately — request bodies here contain users' strategy parameters, which do not belong in a third-party error tracker. The startup log line reports whether it is enabled.
 
-### Billing and quotas
+### Fair-use limits (no billing)
 
-`backend/plans.py` holds the tiers and quota rules, free of any Stripe or Firebase import so entitlements are testable without credentials or a network.
+Finertia is a free, non-commercial personal project. Its price data comes from Yahoo Finance, which may be used for personal, non-commercial purposes only, so nothing is sold and charging is switched off in code (`billing.CHARGING_ALLOWED = False`; see `planning/DECISIONS.md`, 24 Nov). `backend/plans.py` holds one public plan and its fair-use limits, free of any Stripe or Firebase import so the rules are testable without credentials or a network. A second tier, "Unlimited" (stored as `pro`), is never sold; an admin can grant it.
 
-| | Free | Pro |
+| | Free (everyone) | Unlimited (admin-granted) |
 |---|---|---|
-| Backtests / month | 50 | Unlimited |
-| Walk-forward + permutation tests | `FREE_VALIDATIONS_PER_MONTH` (default 0) | ✓ |
-| Portfolio holdings | 3 | 10 |
+| Backtests / month | 100 | No limit |
+| Walk-forward + permutation tests / month | `FREE_VALIDATIONS_PER_MONTH` (default 10) | No limit |
+| Portfolio holdings | 10 | 10 |
 
-Quotas count per calendar month in UTC — not local time, or a user crossing a date line could reset their own. A counter stamped with a previous month reads as zero rather than being reset by a write, so nothing has to run at midnight on the first. Exceeding a quota returns **402**, distinct from the rate limiter's 429, so the client can tell "slow down" apart from "upgrade".
+Quotas count per calendar month in UTC — not local time, or a user crossing a date line could reset their own. A counter stamped with a previous month reads as zero rather than being reset by a write, so nothing has to run at midnight on the first. Exceeding a quota returns **402**, distinct from the rate limiter's 429, so the client can tell "slow down for a minute" apart from "this month is used up".
 
-The free plan's validations are a deployment setting, `FREE_VALIDATIONS_PER_MONTH`, so they can stay at 0 (the Pro wall) while a tester round runs and be switched on with an env var afterwards. A validation costs hundreds of backtests, so the slot is taken in a Firestore transaction before the work starts (`backend/validation_allowance.py`): of several requests racing for the last one, only one gets it. It is handed back if the run produces no result, a bad ticker or a crash, so a failure does not cost the user their month's validation. The counters (`validationsThisPeriod`, `validationPeriod`, `totalValidations`) are server-owned and pinned by the Firestore rules. `/api/me/usage` reports `validations_used`, `validations_limit` and `validations_remaining`; a free validation's response carries `free_validations_remaining`.
+The free plan's validations are a deployment setting, `FREE_VALIDATIONS_PER_MONTH` (10 unless set; the Deploy workflow sets it explicitly; 0 switches validation off for free accounts). A validation costs hundreds of backtests, so the slot is taken in a Firestore transaction before the work starts (`backend/validation_allowance.py`): of several requests racing for the last one, only one gets it. It is handed back if the run produces no result, a bad ticker or a crash, so a failure does not cost the user their month's validation. The counters (`validationsThisPeriod`, `validationPeriod`, `totalValidations`) are server-owned and pinned by the Firestore rules. `/api/me/usage` reports `validations_used`, `validations_limit` and `validations_remaining`; a free validation's response carries `free_validations_remaining`.
 
-**Hidden switches.** Work finished ahead of the tester round's end ships behind `VITE_FEATURES`, a comma-separated build-time list in `frontend/src/lib/features.js`: `free-validation` (the counter in the Validation tab and the usage meter), `onboarding` (examples in the workspace, History empty states) `account-data` (Profile → download my data, delete my account, and the `/account-deleted` page) and `share-cards` (the copy-link button copies `/api/share?…`, a preview page whose card shows the run's figures; the API serves it only with `SHARE_CARDS=1`). Unset on Vercel production, so the live product does not change. They hide UI only; the API enforces anything that matters. The E2E suite runs a second app and API pair with every switch on (ports 5176 and 8002, `e2e/tests/switched-on/`), so the hidden screens are tested end to end before they are shown.
+**Hidden switches.** Work finished ahead of the tester round's end ships behind `VITE_FEATURES`, a comma-separated build-time list in `frontend/src/lib/features.js`: `onboarding` (examples in the workspace, History empty states) and `share-cards` (the copy-link button copies `/api/share?…`, a preview page whose card shows the run's figures; the API serves it only with `SHARE_CARDS=1`), among others. Since 24 Nov the validation counter and Profile → download my data / delete my account (with the `/account-deleted` page) are always shown, no longer behind `free-validation` and `account-data`: the privacy notice promises export and deletion. Unset on Vercel production, so the live product does not change. They hide UI only; the API enforces anything that matters. The E2E suite runs a second app and API pair with every switch on (ports 5176 and 8002, `e2e/tests/switched-on/`), so the hidden screens are tested end to end before they are shown.
 
-Billing is entirely optional. With no `STRIPE_SECRET_KEY` the app runs unchanged: the pricing page renders, the upgrade button says billing is not enabled, and every account stays free.
+The Stripe code is kept but unreachable: with `CHARGING_ALLOWED` False, `is_configured()` is False whatever keys are set, checkout answers 503 and the webhook refuses every event. Turning it on needs licensed data, a legal review and the author's decision first.
 
 The webhook is necessarily unauthenticated — Stripe cannot present a Firebase token — so **the signature check is the authentication**. Without it, anyone who learned the URL could POST a completed-checkout event and upgrade themselves. It is implemented in `billing.py` rather than taken from the SDK so the constant-time comparison and the 5-minute replay window are visible and testable. Events that are valid but unrecognised return 200; a non-2xx would make Stripe retry them forever.
 

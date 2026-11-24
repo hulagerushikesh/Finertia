@@ -337,14 +337,14 @@ export default function LandingPage() {
           Try one idea today.
         </h2>
         <p className="text-base text-graphite mt-3 max-w-xl mx-auto">
-          Free plan runs the full engine on any stock. No card, nothing to install.
+          Free to use, on US and Indian stocks. No card, nothing to install.
         </p>
         <div className="flex flex-wrap justify-center items-center gap-3 mt-7">
           <Button asChild size="lg">
             <Link to={start}>{user ? "Open your workspace" : "Create a free account"}</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-            <Link to="/pricing">See plans</Link>
+            <Link to="/demo">See a real result</Link>
           </Button>
         </div>
       </section>

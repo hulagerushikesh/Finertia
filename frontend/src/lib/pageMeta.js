@@ -29,13 +29,31 @@ export const PAGE_META = {
       "A momentum rule on Apple, 2019–2024: the equity curve, drawdowns and returns, then the validation checks that ask whether it was skill or luck. No account needed.",
     ...CARD,
   },
-  pricing: {
-    name: "Pricing",
-    path: "/pricing",
-    title: "Pricing · Finertia",
-    ogTitle: "Start free. Pay when you want the checks.",
+  limits: {
+    name: "Limits",
+    path: "/limits",
+    title: "Limits · Finertia",
+    ogTitle: "Free to use, with fair-use limits.",
     description:
-      "Both plans run the same engine on the same data. Pro adds the tests that tell you whether a result is worth anything, and raises the monthly run quota.",
+      "Finertia is a free, non-commercial personal project: no plans, no card, no ads. The monthly fair-use limits that keep it running for everyone.",
+    ...CARD,
+  },
+  privacy: {
+    name: "Privacy",
+    path: "/privacy",
+    title: "Privacy · Finertia",
+    ogTitle: "What Finertia keeps about you, and why.",
+    description:
+      "What Finertia stores (your email, your saved runs, usage counts), what it never collects, and how to download or delete it all.",
+    ...CARD,
+  },
+  terms: {
+    name: "Terms",
+    path: "/terms",
+    title: "Terms of use · Finertia",
+    ogTitle: "Terms of use.",
+    description:
+      "Finertia is a free research tool, not investment advice. Prices from Yahoo Finance, for personal, non-commercial use.",
     ...CARD,
   },
   docs: {

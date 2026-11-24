@@ -38,7 +38,7 @@ test("admin gives Pro → member runs validation → admin removes Pro", async (
   await member.getByRole("tab", { name: /Validation/ }).click();
   // The real validation suite on seeded prices: a verdict, not a wall.
   await expect(member.getByText(/checks? passed/i).first()).toBeVisible({ timeout: 120_000 });
-  await expect(member.locator("#main").getByText(/Pro features/)).toHaveCount(0);
+  await expect(member.locator("#main").getByText(/switched off on this deployment/)).toHaveCount(0);
 
   row = await memberRow(admin);
   await row.getByRole("button", { name: "Remove Pro" }).click();
