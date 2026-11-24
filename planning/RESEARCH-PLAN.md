@@ -151,7 +151,10 @@ the study has seen?
   survivors won by being out of the market while their stocks collapsed. If a
   stock rose in 2026, a rule that is often in cash should lag holding it. Each
   stock's 2026 buy-and-hold return is reported next to its result so this can
-  be checked.
+  be checked. Added after a test of the script on 2025, still before any
+  2026 run: MACD here goes short as well as long and is never flat, so for
+  the three MACD pairs "out of the market" means short. A rising stock hurts
+  them more than it hurts a rule that only steps aside.
 - **Tradeability.** Zero-volume days in 2026 are counted per stock. A pair
   with more than 20 is flagged as not tradeable as tested (Reliance
   Infrastructure has 74 in the data check), and its result is reported but
