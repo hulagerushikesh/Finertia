@@ -117,6 +117,68 @@ in the study only; the product's own test is unchanged.
   timing test should no longer rise steeply with cost. If it still does,
   the write-up says so.
 
+## Study 3: do the survivors hold on 2026? Fixed before its run (24 Nov 2026)
+
+Chosen by the author on 24 Nov (PLAN part 4, candidate 1; DECISIONS 24 Nov).
+The question: the funnel ended on a handful of pairs that passed every check
+on 2011–2025. Do they still beat holding the stock on 2026, which no part of
+the study has seen?
+
+- **What was seen before this was written.** Only a data check: Yahoo has
+  220 daily bars from 2026-01-01 to 2026-11-23 for each of the five stocks,
+  and their counts of zero-volume days. No strategy, Sharpe or price change
+  for 2026 was computed or looked at.
+- **Data.** Yahoo adjusted daily closes, through the close of 2026-11-23,
+  the last close before this plan. Later days are not added. Signals are
+  built over 2011-01-01 to 2026-11-24 so the indicators have their history,
+  and only 2026 returns are scored (equity rebased at the first 2026 close).
+- **Settings frozen.** Each pair uses the parameters its walk-forward chose
+  in the published funnel (`nifty-funnel.json`). Nothing is re-tuned.
+- **Main pairs, five:** the four 2011-list survivors at the default cost
+  (Reliance Communications momentum and MACD, Reliance Infrastructure MACD,
+  Reliance Power MACD) and today's list's one survivor (Adani Enterprises
+  momentum).
+- **"Held"** means a higher 2026 Sharpe after costs than holding the same
+  stock over 2026, at the default cost (0.1%).
+- **How to read the count.** With no edge at all, each pair is a coin flip
+  against holding. All four 2011 survivors ahead would happen by luck about
+  1 time in 16; 3 of 4 happens about 1 time in 3. So the result reads "the
+  survivors held" only if all four 2011 survivors are ahead; anything less
+  reads "no sign that they held". The two Reliance Communications pairs share
+  one stock, so they are not two independent flips, and the write-up says
+  so. Adani Enterprises is reported beside them, not counted in.
+- **The mechanism, stated before the run.** The study found that the 2011
+  survivors won by being out of the market while their stocks collapsed. If a
+  stock rose in 2026, a rule that is often in cash should lag holding it. Each
+  stock's 2026 buy-and-hold return is reported next to its result so this can
+  be checked. Added after a test of the script on 2025, still before any
+  2026 run: MACD here goes short as well as long and is never flat, so for
+  the three MACD pairs "out of the market" means short. A rising stock hurts
+  them more than it hurts a rule that only steps aside.
+- **Tradeability.** Zero-volume days in 2026 are counted per stock. A pair
+  with more than 20 is flagged as not tradeable as tested (Reliance
+  Infrastructure has 74 in the data check), and its result is reported but
+  marked.
+- **Reported beside, not part of "held":**
+  - the run-shuffle timing test (500 shuffles, seed 42, as in the
+    follow-up) on the 2026 positions alone, at p < 0.05;
+  - the five pairs at half and double cost.
+- **Breadth check, all 129 pairs on the 2011 list at the default cost.**
+  Each pair is scored on 2026 with its frozen settings. Two numbers: how many
+  are ahead of holding in 2026, and the rank correlation (Spearman) between
+  each pair's lead over holding in the unseen years (2021–2025) and its lead
+  in 2026. The p-value is one-sided, from 10,000 shuffles of the 2026 leads,
+  seed 42. p < 0.05 with a positive correlation reads "the funnel's ranking
+  carried over into 2026"; otherwise it did not.
+- **Sample size, said now.** About 0.9 of a year is a short window: a
+  single pair's Sharpe over 220 days has a standard error near 1. One
+  pair's result is weak evidence either way, and the write-up says so.
+- **Output.** `backend/scripts/nifty_2026.py` writes
+  `planning/research/nifty-2026.json`, and `--check` re-runs it. Whether the
+  result goes on the site as a section of `/writeup/nifty-50` or as its own
+  page is the author's call at the draft. It is not advice, and a null result
+  is published as one.
+
 ## Timeline (about 2 weeks part-time)
 
 | Week | Work | Done when |

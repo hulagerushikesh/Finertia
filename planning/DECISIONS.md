@@ -3,6 +3,22 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-11-24 — Back to building: study 3 starts now; search work pauses a week
+
+**Decision (author, 24 Nov):** less time on search, more on the project.
+Study 3, candidate 1 (do the Nifty survivors hold on 2026 prices they have
+never seen?), starts now instead of after 10 Dec. Search and reach work
+(weekly reads, indexing) pauses for about a week. Then the author judges reach:
+big numbers mean success, and anything less means a new plan, worked out then.
+
+**Why:** the build list was almost empty, and waiting on visitors left the
+project idle. The study uses the engine and statistics that already exist.
+
+**What it changes:** PLAN part 4 had made study 3 depend on the 10 Dec result,
+and that link is dropped. The 10 Dec counts are still taken. The study's plan
+and thresholds are written before the run (RESEARCH-PLAN "Study 3"), as with
+the Nifty study.
+
 ## 2026-11-23 — The 10 Dec thresholds stay as written
 
 **Decision (author, 23 Nov):** keep PLAN part 4's rule unchanged (PLAN

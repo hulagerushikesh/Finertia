@@ -1,0 +1,1016 @@
+{
+ "holdout": [
+  "2026-01-01",
+  "2026-11-24"
+ ],
+ "dry_run": false,
+ "generated": "2026-11-24",
+ "main": {
+  "rows": [
+   {
+    "universe": "start_2011",
+    "symbol": "RCOM.NS",
+    "strategy": "momentum",
+    "params": {
+     "momentum_lookback": 10,
+     "ma_window": 20
+    },
+    "half": {
+     "days": 220,
+     "sharpe": 0.164,
+     "hold_sharpe": -0.861,
+     "hold_return": -0.2973,
+     "strategy_return": 0.0497,
+     "days_in_market": 162,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.499,
+     "held": true
+    },
+    "default": {
+     "days": 220,
+     "sharpe": 0.072,
+     "hold_sharpe": -0.861,
+     "hold_return": -0.2973,
+     "strategy_return": 0.0219,
+     "days_in_market": 162,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.511,
+     "held": true
+    },
+    "double": {
+     "days": 220,
+     "sharpe": -0.104,
+     "hold_sharpe": -0.861,
+     "hold_return": -0.2973,
+     "strategy_return": -0.0316,
+     "days_in_market": 162,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.5349,
+     "held": true
+    },
+    "not_tradeable_as_tested": false
+   },
+   {
+    "universe": "start_2011",
+    "symbol": "RCOM.NS",
+    "strategy": "macd",
+    "params": {
+     "macd_fast": 8,
+     "macd_slow": 17,
+     "macd_signal": 9
+    },
+    "half": {
+     "days": 220,
+     "sharpe": 1.24,
+     "hold_sharpe": -0.861,
+     "hold_return": -0.2973,
+     "strategy_return": 0.4057,
+     "days_in_market": 220,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.1457,
+     "held": true
+    },
+    "default": {
+     "days": 220,
+     "sharpe": 1.177,
+     "hold_sharpe": -0.861,
+     "hold_return": -0.2973,
+     "strategy_return": 0.385,
+     "days_in_market": 220,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.1477,
+     "held": true
+    },
+    "double": {
+     "days": 220,
+     "sharpe": 1.053,
+     "hold_sharpe": -0.861,
+     "hold_return": -0.2973,
+     "strategy_return": 0.3445,
+     "days_in_market": 220,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.1537,
+     "held": true
+    },
+    "not_tradeable_as_tested": false
+   },
+   {
+    "universe": "start_2011",
+    "symbol": "RELINFRA.NS",
+    "strategy": "macd",
+    "params": {
+     "macd_fast": 8,
+     "macd_slow": 17,
+     "macd_signal": 9
+    },
+    "half": {
+     "days": 220,
+     "sharpe": 5.663,
+     "hold_sharpe": -1.517,
+     "hold_return": -0.6626,
+     "strategy_return": 2.0889,
+     "days_in_market": 220,
+     "zero_volume_days": 74,
+     "run_shuffle_p": 0.0339,
+     "held": true
+    },
+    "default": {
+     "days": 220,
+     "sharpe": 5.487,
+     "hold_sharpe": -1.517,
+     "hold_return": -0.6626,
+     "strategy_return": 2.028,
+     "days_in_market": 220,
+     "zero_volume_days": 74,
+     "run_shuffle_p": 0.0339,
+     "held": true
+    },
+    "double": {
+     "days": 220,
+     "sharpe": 5.145,
+     "hold_sharpe": -1.517,
+     "hold_return": -0.6626,
+     "strategy_return": 1.9096,
+     "days_in_market": 220,
+     "zero_volume_days": 74,
+     "run_shuffle_p": 0.0339,
+     "held": true
+    },
+    "not_tradeable_as_tested": true
+   },
+   {
+    "universe": "start_2011",
+    "symbol": "RPOWER.NS",
+    "strategy": "macd",
+    "params": {
+     "macd_fast": 8,
+     "macd_slow": 17,
+     "macd_signal": 9
+    },
+    "half": {
+     "days": 220,
+     "sharpe": -0.554,
+     "hold_sharpe": -1.251,
+     "hold_return": -0.5035,
+     "strategy_return": -0.2179,
+     "days_in_market": 220,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.7006,
+     "held": true
+    },
+    "default": {
+     "days": 220,
+     "sharpe": -0.6,
+     "hold_sharpe": -1.251,
+     "hold_return": -0.5035,
+     "strategy_return": -0.2365,
+     "days_in_market": 220,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.7046,
+     "held": true
+    },
+    "double": {
+     "days": 220,
+     "sharpe": -0.688,
+     "hold_sharpe": -1.251,
+     "hold_return": -0.5035,
+     "strategy_return": -0.2726,
+     "days_in_market": 220,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.7186,
+     "held": true
+    },
+    "not_tradeable_as_tested": false
+   },
+   {
+    "universe": "today",
+    "symbol": "ADANIENT.NS",
+    "strategy": "momentum",
+    "params": {
+     "momentum_lookback": 20,
+     "ma_window": 20
+    },
+    "half": {
+     "days": 220,
+     "sharpe": -0.095,
+     "hold_sharpe": 0.556,
+     "hold_return": 0.1854,
+     "strategy_return": -0.0301,
+     "days_in_market": 178,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.4551,
+     "held": false
+    },
+    "default": {
+     "days": 220,
+     "sharpe": -0.154,
+     "hold_sharpe": 0.556,
+     "hold_return": 0.1854,
+     "strategy_return": -0.0488,
+     "days_in_market": 178,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.4651,
+     "held": false
+    },
+    "double": {
+     "days": 220,
+     "sharpe": -0.267,
+     "hold_sharpe": 0.556,
+     "hold_return": 0.1854,
+     "strategy_return": -0.0853,
+     "days_in_market": 178,
+     "zero_volume_days": 1,
+     "run_shuffle_p": 0.475,
+     "held": false
+    },
+    "not_tradeable_as_tested": false
+   }
+  ],
+  "start_2011_held": 4,
+  "start_2011_pairs": 4,
+  "reading": "the survivors held"
+ },
+ "breadth": {
+  "pairs": 129,
+  "ahead_of_hold": 64,
+  "spearman": 0.182,
+  "p_one_sided": 0.0197,
+  "reading": "the ranking carried over",
+  "rows": [
+   {
+    "symbol": "ACC.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.193,
+    "lead": 1.292
+   },
+   {
+    "symbol": "ACC.NS",
+    "strategy": "macd",
+    "unseen_lead": 0.052,
+    "lead": 0.781
+   },
+   {
+    "symbol": "ACC.NS",
+    "strategy": "bollinger",
+    "unseen_lead": 0.036,
+    "lead": 0.341
+   },
+   {
+    "symbol": "AMBUJACEM.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.203,
+    "lead": 0.998
+   },
+   {
+    "symbol": "AMBUJACEM.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.141,
+    "lead": 1.406
+   },
+   {
+    "symbol": "AMBUJACEM.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.34,
+    "lead": 2.728
+   },
+   {
+    "symbol": "AXISBANK.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.763,
+    "lead": -2.302
+   },
+   {
+    "symbol": "AXISBANK.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.81,
+    "lead": -0.125
+   },
+   {
+    "symbol": "AXISBANK.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.845,
+    "lead": 1.364
+   },
+   {
+    "symbol": "BAJAJ-AUTO.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.589,
+    "lead": 0.886
+   },
+   {
+    "symbol": "BAJAJ-AUTO.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.674,
+    "lead": -0.022
+   },
+   {
+    "symbol": "BAJAJ-AUTO.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.32,
+    "lead": -0.931
+   },
+   {
+    "symbol": "BHEL.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.775,
+    "lead": -2.1
+   },
+   {
+    "symbol": "BHEL.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.65,
+    "lead": -2.759
+   },
+   {
+    "symbol": "BHEL.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.484,
+    "lead": -0.376
+   },
+   {
+    "symbol": "BPCL.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.076,
+    "lead": 0.012
+   },
+   {
+    "symbol": "BPCL.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.075,
+    "lead": 0.478
+   },
+   {
+    "symbol": "BPCL.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.655,
+    "lead": -0.74
+   },
+   {
+    "symbol": "BHARTIARTL.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.95,
+    "lead": -0.429
+   },
+   {
+    "symbol": "BHARTIARTL.NS",
+    "strategy": "macd",
+    "unseen_lead": -2.351,
+    "lead": -0.258
+   },
+   {
+    "symbol": "BHARTIARTL.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -2.0,
+    "lead": -0.059
+   },
+   {
+    "symbol": "CIPLA.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.175,
+    "lead": -0.138
+   },
+   {
+    "symbol": "CIPLA.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.283,
+    "lead": 1.153
+   },
+   {
+    "symbol": "CIPLA.NS",
+    "strategy": "bollinger",
+    "unseen_lead": 0.145,
+    "lead": 0.59
+   },
+   {
+    "symbol": "DLF.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.048,
+    "lead": -1.222
+   },
+   {
+    "symbol": "DLF.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.335,
+    "lead": -0.463
+   },
+   {
+    "symbol": "DLF.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.396,
+    "lead": -0.096
+   },
+   {
+    "symbol": "DRREDDY.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.9,
+    "lead": -1.822
+   },
+   {
+    "symbol": "DRREDDY.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.373,
+    "lead": -0.732
+   },
+   {
+    "symbol": "DRREDDY.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.432,
+    "lead": -0.032
+   },
+   {
+    "symbol": "GAIL.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.647,
+    "lead": -1.303
+   },
+   {
+    "symbol": "GAIL.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.683,
+    "lead": -0.272
+   },
+   {
+    "symbol": "GAIL.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.104,
+    "lead": -0.293
+   },
+   {
+    "symbol": "HCLTECH.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.468,
+    "lead": 1.167
+   },
+   {
+    "symbol": "HCLTECH.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.564,
+    "lead": 0.868
+   },
+   {
+    "symbol": "HCLTECH.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.984,
+    "lead": -1.058
+   },
+   {
+    "symbol": "HDFCBANK.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.373,
+    "lead": 1.788
+   },
+   {
+    "symbol": "HDFCBANK.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.463,
+    "lead": 0.424
+   },
+   {
+    "symbol": "HDFCBANK.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.164,
+    "lead": -0.759
+   },
+   {
+    "symbol": "HEROMOTOCO.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.663,
+    "lead": -1.829
+   },
+   {
+    "symbol": "HEROMOTOCO.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.123,
+    "lead": -0.216
+   },
+   {
+    "symbol": "HEROMOTOCO.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.761,
+    "lead": 0.31
+   },
+   {
+    "symbol": "HINDALCO.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.045,
+    "lead": -0.111
+   },
+   {
+    "symbol": "HINDALCO.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.518,
+    "lead": -0.423
+   },
+   {
+    "symbol": "HINDALCO.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.187,
+    "lead": 0.839
+   },
+   {
+    "symbol": "HINDUNILVR.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.17,
+    "lead": -0.005
+   },
+   {
+    "symbol": "HINDUNILVR.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.225,
+    "lead": 0.764
+   },
+   {
+    "symbol": "HINDUNILVR.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.379,
+    "lead": 1.269
+   },
+   {
+    "symbol": "ICICIBANK.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.926,
+    "lead": -1.615
+   },
+   {
+    "symbol": "ICICIBANK.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.278,
+    "lead": -0.592
+   },
+   {
+    "symbol": "ICICIBANK.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.269,
+    "lead": -2.091
+   },
+   {
+    "symbol": "INFY.NS",
+    "strategy": "momentum",
+    "unseen_lead": 0.355,
+    "lead": 1.153
+   },
+   {
+    "symbol": "INFY.NS",
+    "strategy": "macd",
+    "unseen_lead": 0.35,
+    "lead": 1.339
+   },
+   {
+    "symbol": "INFY.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.879,
+    "lead": 1.026
+   },
+   {
+    "symbol": "ITC.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.22,
+    "lead": 0.642
+   },
+   {
+    "symbol": "ITC.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.785,
+    "lead": 1.252
+   },
+   {
+    "symbol": "ITC.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.187,
+    "lead": 0.559
+   },
+   {
+    "symbol": "JINDALSTEL.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.298,
+    "lead": -1.122
+   },
+   {
+    "symbol": "JINDALSTEL.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.786,
+    "lead": 1.896
+   },
+   {
+    "symbol": "JINDALSTEL.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.883,
+    "lead": -0.24
+   },
+   {
+    "symbol": "KOTAKBANK.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.325,
+    "lead": -0.263
+   },
+   {
+    "symbol": "KOTAKBANK.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.83,
+    "lead": -0.966
+   },
+   {
+    "symbol": "KOTAKBANK.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.143,
+    "lead": -1.093
+   },
+   {
+    "symbol": "LT.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.969,
+    "lead": 0.005
+   },
+   {
+    "symbol": "LT.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.968,
+    "lead": 0.834
+   },
+   {
+    "symbol": "LT.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.64,
+    "lead": -1.787
+   },
+   {
+    "symbol": "M&M.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.727,
+    "lead": 0.345
+   },
+   {
+    "symbol": "M&M.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.809,
+    "lead": 2.596
+   },
+   {
+    "symbol": "M&M.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -2.629,
+    "lead": -0.677
+   },
+   {
+    "symbol": "MARUTI.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.702,
+    "lead": 0.92
+   },
+   {
+    "symbol": "MARUTI.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.921,
+    "lead": 2.915
+   },
+   {
+    "symbol": "MARUTI.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.698,
+    "lead": -0.581
+   },
+   {
+    "symbol": "NTPC.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.601,
+    "lead": 0.66
+   },
+   {
+    "symbol": "NTPC.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.762,
+    "lead": -0.942
+   },
+   {
+    "symbol": "NTPC.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.765,
+    "lead": 0.516
+   },
+   {
+    "symbol": "ONGC.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.775,
+    "lead": 0.64
+   },
+   {
+    "symbol": "ONGC.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.304,
+    "lead": -0.152
+   },
+   {
+    "symbol": "ONGC.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.224,
+    "lead": -1.553
+   },
+   {
+    "symbol": "POWERGRID.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.007,
+    "lead": -1.004
+   },
+   {
+    "symbol": "POWERGRID.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.658,
+    "lead": -0.142
+   },
+   {
+    "symbol": "POWERGRID.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.004,
+    "lead": 0.938
+   },
+   {
+    "symbol": "PNB.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.249,
+    "lead": -0.219
+   },
+   {
+    "symbol": "PNB.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.457,
+    "lead": -0.688
+   },
+   {
+    "symbol": "PNB.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.702,
+    "lead": -1.372
+   },
+   {
+    "symbol": "RCOM.NS",
+    "strategy": "momentum",
+    "unseen_lead": 2.276,
+    "lead": 0.933
+   },
+   {
+    "symbol": "RCOM.NS",
+    "strategy": "macd",
+    "unseen_lead": 3.493,
+    "lead": 2.038
+   },
+   {
+    "symbol": "RCOM.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.04,
+    "lead": -0.238
+   },
+   {
+    "symbol": "RELIANCE.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.742,
+    "lead": -0.758
+   },
+   {
+    "symbol": "RELIANCE.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.235,
+    "lead": -0.265
+   },
+   {
+    "symbol": "RELIANCE.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.877,
+    "lead": 1.506
+   },
+   {
+    "symbol": "RELINFRA.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.544,
+    "lead": 7.246
+   },
+   {
+    "symbol": "RELINFRA.NS",
+    "strategy": "macd",
+    "unseen_lead": 0.079,
+    "lead": 7.004
+   },
+   {
+    "symbol": "RELINFRA.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.699,
+    "lead": 1.517
+   },
+   {
+    "symbol": "RPOWER.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.539,
+    "lead": 2.078
+   },
+   {
+    "symbol": "RPOWER.NS",
+    "strategy": "macd",
+    "unseen_lead": 0.45,
+    "lead": 0.651
+   },
+   {
+    "symbol": "RPOWER.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.154,
+    "lead": 1.251
+   },
+   {
+    "symbol": "SIEMENS.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.934,
+    "lead": -1.713
+   },
+   {
+    "symbol": "SIEMENS.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.466,
+    "lead": -0.072
+   },
+   {
+    "symbol": "SIEMENS.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.392,
+    "lead": -0.244
+   },
+   {
+    "symbol": "SBIN.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.077,
+    "lead": 0.694
+   },
+   {
+    "symbol": "SBIN.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.807,
+    "lead": 1.315
+   },
+   {
+    "symbol": "SBIN.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.749,
+    "lead": -1.076
+   },
+   {
+    "symbol": "SAIL.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.915,
+    "lead": -1.425
+   },
+   {
+    "symbol": "SAIL.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.41,
+    "lead": -1.01
+   },
+   {
+    "symbol": "SAIL.NS",
+    "strategy": "bollinger",
+    "unseen_lead": 0.42,
+    "lead": -0.321
+   },
+   {
+    "symbol": "SUNPHARMA.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.829,
+    "lead": -0.817
+   },
+   {
+    "symbol": "SUNPHARMA.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.074,
+    "lead": 0.402
+   },
+   {
+    "symbol": "SUNPHARMA.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.941,
+    "lead": 0.276
+   },
+   {
+    "symbol": "SUZLON.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.391,
+    "lead": 1.552
+   },
+   {
+    "symbol": "SUZLON.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.483,
+    "lead": 1.074
+   },
+   {
+    "symbol": "SUZLON.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -2.045,
+    "lead": 0.514
+   },
+   {
+    "symbol": "TCS.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.502,
+    "lead": 0.111
+   },
+   {
+    "symbol": "TCS.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.249,
+    "lead": 1.041
+   },
+   {
+    "symbol": "TCS.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.535,
+    "lead": 0.219
+   },
+   {
+    "symbol": "TMPV.NS",
+    "strategy": "momentum",
+    "unseen_lead": 0.459,
+    "lead": 0.84
+   },
+   {
+    "symbol": "TMPV.NS",
+    "strategy": "macd",
+    "unseen_lead": 0.212,
+    "lead": 0.247
+   },
+   {
+    "symbol": "TMPV.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.37,
+    "lead": -0.197
+   },
+   {
+    "symbol": "TATAPOWER.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.279,
+    "lead": -0.29
+   },
+   {
+    "symbol": "TATAPOWER.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.324,
+    "lead": 0.533
+   },
+   {
+    "symbol": "TATAPOWER.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.671,
+    "lead": 1.067
+   },
+   {
+    "symbol": "TATASTEEL.NS",
+    "strategy": "momentum",
+    "unseen_lead": -0.846,
+    "lead": -0.064
+   },
+   {
+    "symbol": "TATASTEEL.NS",
+    "strategy": "macd",
+    "unseen_lead": -0.206,
+    "lead": -0.335
+   },
+   {
+    "symbol": "TATASTEEL.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -0.379,
+    "lead": 0.339
+   },
+   {
+    "symbol": "VEDL.NS",
+    "strategy": "momentum",
+    "unseen_lead": -1.086,
+    "lead": -0.049
+   },
+   {
+    "symbol": "VEDL.NS",
+    "strategy": "macd",
+    "unseen_lead": -1.576,
+    "lead": -0.304
+   },
+   {
+    "symbol": "VEDL.NS",
+    "strategy": "bollinger",
+    "unseen_lead": -1.913,
+    "lead": 1.256
+   },
+   {
+    "symbol": "WIPRO.NS",
+    "strategy": "momentum",
+    "unseen_lead": 0.053,
+    "lead": 0.274
+   },
+   {
+    "symbol": "WIPRO.NS",
+    "strategy": "macd",
+    "unseen_lead": 0.221,
+    "lead": 4.492
+   },
+   {
+    "symbol": "WIPRO.NS",
+    "strategy": "bollinger",
+    "unseen_lead": 0.084,
+    "lead": -0.307
+   }
+  ]
+ }
+}

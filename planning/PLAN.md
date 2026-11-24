@@ -101,7 +101,9 @@ Counts are for 24 Nov → 10 Dec, the author's own visits excluded.
 | Fewer than that, but one channel clearly worked | One more month on that channel only. No new building |
 | Neither | **Freeze.** Monthly maintenance only. The project is finished as a portfolio piece, and that is a fine ending |
 
-**Study 3 candidates** (do not start before 10 Dec):
+**Study 3 candidates** (first written as "do not start before 10 Dec"; the
+author started candidate 1 on 24 Nov, DECISIONS 24 Nov; plan in
+RESEARCH-PLAN "Study 3"):
 
 1. Do the four Nifty survivors hold on 2026 data they have never seen?
 2. The same funnel on the S&P 100 as it stood in 2011.
