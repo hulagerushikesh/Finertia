@@ -65,11 +65,12 @@ def api_admin(monkeypatch):
 
     os.environ.setdefault("FIREBASE_SERVICE_ACCOUNT_JSON", "{}")
     import main
+    from api import core
     from fastapi.testclient import TestClient
 
-    monkeypatch.setattr(main, "verify_token", lambda t: {"uid": "admin1", "email": "admin1@example.com"})
-    monkeypatch.setattr(main, "get_user_profile", lambda uid: {"role": "admin", "isActive": True})
-    main.ip_limiter._hits.clear()
+    monkeypatch.setattr(core, "verify_token", lambda t: {"uid": "admin1", "email": "admin1@example.com"})
+    monkeypatch.setattr(core, "get_user_profile", lambda uid: {"role": "admin", "isActive": True})
+    core.ip_limiter._hits.clear()
     return TestClient(main.app, raise_server_exceptions=False)
 
 

@@ -25,6 +25,8 @@ from fastapi.testclient import TestClient
 os.environ.setdefault("FIREBASE_SERVICE_ACCOUNT_JSON", "{}")
 
 import main  # noqa: E402
+
+from api import core  # noqa: E402
 from schemas import BacktestRequest  # noqa: E402
 
 
@@ -208,21 +210,21 @@ def api(monkeypatch):
     state = {"profile": dict(FREE), "uid": "u1"}
 
     monkeypatch.setattr(
-        main, "verify_token",
+        core, "verify_token",
         lambda token: {"uid": state["uid"], "email": f"{state['uid']}@example.com"},
     )
-    monkeypatch.setattr(main, "get_user_profile", lambda uid: state["profile"])
+    monkeypatch.setattr(core, "get_user_profile", lambda uid: state["profile"])
     # One database per test, so a test can look at what a route wrote.
     db = FakeDb()
     state["db"] = db
-    monkeypatch.setattr(main, "get_db", lambda: db)
-    monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices())
+    monkeypatch.setattr(core, "get_db", lambda: db)
+    monkeypatch.setattr(core, "fetch_ohlcv", lambda t, s, e: _prices())
 
     # Module-level singletons persist across tests in the same process, so one
     # test's traffic would otherwise spend another's budget. reset() drops a
     # single key by design; clearing every key is a test-only need, so it reaches
     # past the public API rather than widening it for one caller.
-    for limiter in (main.ip_limiter, main.backtest_limiter, main.validate_limiter):
+    for limiter in (core.ip_limiter, core.backtest_limiter, core.validate_limiter):
         limiter._hits.clear()
 
     # raise_server_exceptions=False makes the client behave like a real one:
@@ -321,12 +323,15 @@ def test_blocking_routes_run_in_worker_threads():
     import inspect
     from fastapi.routing import APIRoute
 
+    # Read from the routers: FastAPI keeps an included router as one lazy
+    # entry in app.routes, so app.routes alone would make this pass vacuously.
+    routes = [r for m in main.ROUTERS for r in m.router.routes if isinstance(r, APIRoute)]
+    assert len(routes) >= 20
     async_routes = {
-        r.endpoint.__name__
-        for r in main.app.routes
-        if isinstance(r, APIRoute) and inspect.iscoroutinefunction(r.endpoint)
+        r.endpoint.__name__ for r in routes if inspect.iscoroutinefunction(r.endpoint)
     }
     assert async_routes <= _ASYNC_ROUTES, async_routes - _ASYNC_ROUTES
+    assert _ASYNC_ROUTES <= async_routes, "a listed async route is gone or renamed"
 
 
 def test_a_slow_backtest_does_not_hold_up_other_requests(api, monkeypatch):
@@ -342,7 +347,7 @@ def test_a_slow_backtest_does_not_hold_up_other_requests(api, monkeypatch):
         _time.sleep(1.0)  # a blocking wait, like a Firestore round trip
         return _prices()
 
-    monkeypatch.setattr(main, "fetch_ohlcv", slow_prices)
+    monkeypatch.setattr(core, "fetch_ohlcv", slow_prices)
 
     async def scenario():
         transport = httpx.ASGITransport(app=main.app)
@@ -418,7 +423,7 @@ def test_admin_routes_accept_an_admin(api, monkeypatch):
     # against the emulator in test_admin_queries_firestore.py. This is the gate.
     client, state = api
     state["profile"] = dict(ADMIN)
-    monkeypatch.setattr(main, "platform_stats", lambda db: {"total_users": 0})
+    monkeypatch.setattr(core, "platform_stats", lambda db: {"total_users": 0})
     assert client.get("/api/admin/stats", headers=AUTH).status_code == 200
 
 
@@ -431,7 +436,7 @@ def test_role_comes_from_the_profile_not_the_token(api, monkeypatch):
     client, state = api
     state["profile"] = dict(FREE)
     monkeypatch.setattr(
-        main, "verify_token",
+        core, "verify_token",
         lambda token: {"uid": "u1", "email": "u1@example.com", "role": "admin"},
     )
     assert client.get("/api/admin/stats", headers=AUTH).status_code == 403
@@ -448,7 +453,7 @@ def admin_db(api, monkeypatch):
     state["profile"] = dict(ADMIN)
     db = FakeDb()
     db.store["users/t1"] = {"uid": "t1", "email": "t@example.com", **FREE}
-    monkeypatch.setattr(main, "get_db", lambda: db)
+    monkeypatch.setattr(core, "get_db", lambda: db)
     return client, state, db
 
 
@@ -494,7 +499,7 @@ def test_admin_plan_patch_on_a_missing_user_is_404(admin_db):
 def test_free_plan_over_quota_gets_402(api):
     client, state = api
     state["profile"] = {**FREE, "runsThisPeriod": 10_000,
-                        "quotaPeriod": main.current_period()}
+                        "quotaPeriod": core.current_period()}
     r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
     assert r.status_code == 402
     assert "upgrade" in r.json()["detail"].lower()
@@ -612,7 +617,7 @@ def test_rolling_too_short_degrades_instead_of_failing_the_run(api, monkeypatch)
     validation response is still worth returning."""
     client, state = api
     state["profile"] = dict(PRO)
-    monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices(days=260))
+    monkeypatch.setattr(core, "fetch_ohlcv", lambda t, s, e: _prices(days=260))
     r = client.post("/api/validate", json={**BACKTEST, "rolling_folds": 8}, headers=AUTH)
     assert r.status_code == 200
     body = r.json()
@@ -701,7 +706,7 @@ def test_portfolio_validation_carries_both_checks_for_the_book(api):
 def test_portfolio_validation_respects_the_plan_size_cap(api, monkeypatch):
     client, state = api
     state["profile"] = dict(PRO)
-    monkeypatch.setattr(main, "max_portfolio_size", lambda profile: 1)
+    monkeypatch.setattr(core, "max_portfolio_size", lambda profile: 1)
     r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
     assert r.status_code == 402
     assert "up to 1" in r.json()["detail"]
@@ -710,7 +715,7 @@ def test_portfolio_validation_respects_the_plan_size_cap(api, monkeypatch):
 def test_portfolio_validation_shares_the_validate_rate_budget(api):
     client, state = api
     state["profile"] = dict(PRO)
-    limit = main.validate_limiter.limit
+    limit = core.validate_limiter.limit
     for _ in range(limit):
         assert client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH).status_code == 200
     assert client.post("/api/validate", json=BACKTEST, headers=AUTH).status_code == 429
@@ -719,7 +724,7 @@ def test_portfolio_validation_shares_the_validate_rate_budget(api):
 def test_portfolio_validation_too_short_is_a_400(api, monkeypatch):
     client, state = api
     state["profile"] = dict(PRO)
-    monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices(days=40))
+    monkeypatch.setattr(core, "fetch_ohlcv", lambda t, s, e: _prices(days=40))
     r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
     assert r.status_code == 400
 
@@ -727,7 +732,7 @@ def test_portfolio_validation_too_short_is_a_400(api, monkeypatch):
 def test_pro_is_not_capped_by_the_free_quota(api):
     client, state = api
     state["profile"] = {**PRO, "runsThisPeriod": 10_000,
-                        "quotaPeriod": main.current_period()}
+                        "quotaPeriod": core.current_period()}
     assert client.post("/api/backtest", json=BACKTEST, headers=AUTH).status_code == 200
 
 
@@ -738,8 +743,8 @@ def test_pro_is_not_capped_by_the_free_quota(api):
 
 def test_backtest_burst_gets_429_with_retry_after(api):
     client, _ = api
-    main.backtest_limiter._hits.clear()
-    limit = main.backtest_limiter.limit
+    core.backtest_limiter._hits.clear()
+    limit = core.backtest_limiter.limit
 
     for _ in range(limit):
         assert client.post("/api/backtest", json=BACKTEST, headers=AUTH).status_code == 200
@@ -754,12 +759,12 @@ def test_over_quota_and_over_rate_limit_are_different_codes(api):
     collision here would put the wrong message in front of a paying user."""
     client, state = api
     state["profile"] = {**FREE, "runsThisPeriod": 10_000,
-                        "quotaPeriod": main.current_period()}
+                        "quotaPeriod": core.current_period()}
     quota = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
 
     state["profile"] = dict(PRO)
-    main.backtest_limiter._hits.clear()
-    for _ in range(main.backtest_limiter.limit):
+    core.backtest_limiter._hits.clear()
+    for _ in range(core.backtest_limiter.limit):
         client.post("/api/backtest", json=BACKTEST, headers=AUTH)
     burst = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
 
@@ -776,7 +781,7 @@ def test_unknown_ticker_becomes_400_not_500(api, monkeypatch):
 
     def boom(ticker, start, end):
         raise ValueError(f"No data found for {ticker}")
-    monkeypatch.setattr(main, "fetch_ohlcv", boom)
+    monkeypatch.setattr(core, "fetch_ohlcv", boom)
 
     r = client.post("/api/backtest", json={**BACKTEST, "ticker": "NOPE"}, headers=AUTH)
     assert r.status_code == 400
@@ -785,7 +790,7 @@ def test_unknown_ticker_becomes_400_not_500(api, monkeypatch):
 
 def test_too_little_history_is_explained_not_just_rejected(api, monkeypatch):
     client, _ = api
-    monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices(days=20))
+    monkeypatch.setattr(core, "fetch_ohlcv", lambda t, s, e: _prices(days=20))
     r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
     assert r.status_code == 400
     assert "not enough history" in r.json()["detail"].lower()
@@ -796,7 +801,7 @@ def test_invalid_request_body_is_rejected_before_any_work(api, monkeypatch):
 
     def should_not_run(*a, **k):
         raise AssertionError("fetched data for a request that failed validation")
-    monkeypatch.setattr(main, "fetch_ohlcv", should_not_run)
+    monkeypatch.setattr(core, "fetch_ohlcv", should_not_run)
 
     r = client.post("/api/backtest", json={**BACKTEST, "start": "2025-01-01",
                                            "end": "2020-01-01"}, headers=AUTH)
@@ -809,7 +814,7 @@ def test_an_unexpected_error_returns_500_carrying_the_request_id(api, monkeypatc
 
     def explode(*a, **k):
         raise RuntimeError("something internal")
-    monkeypatch.setattr(main, "fetch_ohlcv", explode)
+    monkeypatch.setattr(core, "fetch_ohlcv", explode)
 
     r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
     assert r.status_code == 500
@@ -885,8 +890,8 @@ def account_calls(api, monkeypatch):
         calls["delete"].append((uid, delete_auth_user))
         return {"runs": 3, "rate_limit_counters": 1}
 
-    monkeypatch.setattr(main, "export_account", fake_export)
-    monkeypatch.setattr(main, "delete_account", fake_delete)
+    monkeypatch.setattr(core, "export_account", fake_export)
+    monkeypatch.setattr(core, "delete_account", fake_delete)
     return client, state, calls
 
 
@@ -928,7 +933,7 @@ def test_delete_removes_the_callers_account_and_reports_counts(account_calls):
     assert r.json() == {"deleted": True, "runs": 3, "rate_limit_counters": 1}
     uid, deleter = calls["delete"][0]
     assert uid == "u1"
-    assert deleter is main.delete_auth_user  # the real Auth deletion, not a no-op
+    assert deleter is core.delete_auth_user  # the real Auth deletion, not a no-op
 
 
 def test_an_admin_cannot_delete_themselves(account_calls):
@@ -975,20 +980,20 @@ def allowance(api, monkeypatch):
 
     def reserve(db, uid, limit, now=None):
         calls["reserve"].append((uid, limit))
-        return {"period": main.current_period(), "used": 1} if calls["grant"] else None
+        return {"period": core.current_period(), "used": 1} if calls["grant"] else None
 
     def release(db, uid, period):
         calls["release"].append((uid, period))
 
-    monkeypatch.setattr(main, "FREE_VALIDATIONS_PER_MONTH", 1)
-    monkeypatch.setattr(main.validation_allowance, "reserve", reserve)
-    monkeypatch.setattr(main.validation_allowance, "release", release)
+    monkeypatch.setattr(core, "FREE_VALIDATIONS_PER_MONTH", 1)
+    monkeypatch.setattr(core.validation_allowance, "reserve", reserve)
+    monkeypatch.setattr(core.validation_allowance, "release", release)
     return client, state, calls
 
 
 def test_free_validation_is_off_by_default():
     """Off unless the deployment switches it on: testers keep the Pro wall."""
-    assert main.FREE_VALIDATIONS_PER_MONTH == 0
+    assert core.FREE_VALIDATIONS_PER_MONTH == 0
 
 
 def test_a_free_user_gets_one_validation_when_switched_on(allowance):
@@ -1003,7 +1008,7 @@ def test_a_free_user_gets_one_validation_when_switched_on(allowance):
 def test_a_used_free_validation_is_refused_without_taking_another(allowance):
     client, state, calls = allowance
     state["profile"] = {**FREE, "validationsThisPeriod": 1,
-                        "validationPeriod": main.current_period()}
+                        "validationPeriod": core.current_period()}
     r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
     assert r.status_code == 402
     assert "free validation" in r.json()["detail"]
@@ -1026,10 +1031,10 @@ def test_a_validation_that_fails_gives_the_slot_back(allowance, monkeypatch):
     def bad_ticker(t, s, e):
         raise ValueError("No data for ZZZZ")
 
-    monkeypatch.setattr(main, "fetch_ohlcv", bad_ticker)
+    monkeypatch.setattr(core, "fetch_ohlcv", bad_ticker)
     r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
     assert r.status_code == 400
-    assert calls["release"] == [("u1", main.current_period())]
+    assert calls["release"] == [("u1", core.current_period())]
 
 
 def test_a_crash_mid_validation_gives_the_slot_back(allowance, monkeypatch):
@@ -1038,10 +1043,10 @@ def test_a_crash_mid_validation_gives_the_slot_back(allowance, monkeypatch):
     def boom(*a, **k):
         raise RuntimeError("engine fell over")
 
-    monkeypatch.setattr(main, "walk_forward", boom)
+    monkeypatch.setattr(core, "walk_forward", boom)
     r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
     assert r.status_code == 500
-    assert calls["release"] == [("u1", main.current_period())]
+    assert calls["release"] == [("u1", core.current_period())]
 
 
 def test_pro_validates_without_touching_the_allowance(allowance):
@@ -1057,7 +1062,7 @@ def test_a_refusal_after_the_plan_check_costs_nothing(allowance):
     """Out of runs: refused with the run-quota 402, and the free validation
     is still there for next month's first run."""
     client, state, calls = allowance
-    state["profile"] = {**FREE, "runsThisPeriod": 10_000, "quotaPeriod": main.current_period()}
+    state["profile"] = {**FREE, "runsThisPeriod": 10_000, "quotaPeriod": core.current_period()}
     r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
     assert r.status_code == 402
     assert calls["reserve"] == []
@@ -1065,7 +1070,7 @@ def test_a_refusal_after_the_plan_check_costs_nothing(allowance):
 
 def test_a_free_basket_validation_takes_the_slot(allowance, monkeypatch):
     client, _, calls = allowance
-    monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices(days=260))
+    monkeypatch.setattr(core, "fetch_ohlcv", lambda t, s, e: _prices(days=260))
     r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
     assert r.status_code == 200
     assert r.json()["free_validations_remaining"] == 0
@@ -1074,7 +1079,7 @@ def test_a_free_basket_validation_takes_the_slot(allowance, monkeypatch):
 
 def test_an_oversized_free_basket_is_refused_before_the_slot_is_taken(allowance, monkeypatch):
     client, _, calls = allowance
-    monkeypatch.setattr(main, "max_portfolio_size", lambda profile: 1)
+    monkeypatch.setattr(core, "max_portfolio_size", lambda profile: 1)
     r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
     assert r.status_code == 402
     assert calls["reserve"] == []
@@ -1101,7 +1106,7 @@ def test_a_backtest_saves_the_run_and_its_counters_in_one_commit(api):
     db = state["db"]
     assert db.commits == 1
     assert f"runs/{r.json()['runId']}" in db.store
-    assert db.store["users/u1"]["quotaPeriod"] == main.current_period()
+    assert db.store["users/u1"]["quotaPeriod"] == core.current_period()
 
 
 def test_a_run_without_a_profile_document_still_succeeds(api):
@@ -1126,7 +1131,7 @@ def test_a_portfolio_takes_its_rate_slots_all_at_once(api, monkeypatch):
     """Refused as a whole, it takes nothing: a single backtest still fits."""
     client, state = api
     state["profile"] = dict(PRO)
-    monkeypatch.setattr(main.backtest_limiter, "limit", 3)
+    monkeypatch.setattr(core.backtest_limiter, "limit", 3)
     four = {**PORTFOLIO, "tickers": ["AAPL", "MSFT", "GOOG", "AMZN"]}
     r = client.post("/api/portfolio", json=four, headers=AUTH)
     assert r.status_code == 429 and "portfolio legs" in r.json()["detail"]
@@ -1135,7 +1140,7 @@ def test_a_portfolio_takes_its_rate_slots_all_at_once(api, monkeypatch):
 
 def test_a_suspended_account_gets_403_even_when_rate_limited(api, monkeypatch):
     client, state = api
-    monkeypatch.setattr(main.backtest_limiter, "limit", 1)
+    monkeypatch.setattr(core.backtest_limiter, "limit", 1)
     client.post("/api/backtest", json=BACKTEST, headers=AUTH)
     state["profile"] = dict(SUSPENDED)
     assert client.post("/api/backtest", json=BACKTEST, headers=AUTH).status_code == 403
@@ -1159,8 +1164,8 @@ def test_the_profile_and_rate_limit_are_read_at_the_same_time(api, monkeypatch):
         spans["ratelimit"] = (start, _time.perf_counter())
         return {"allowed": True, "remaining": 1, "retry_after": 0.0}
 
-    monkeypatch.setattr(main, "get_user_profile", slow_profile)
-    monkeypatch.setattr(main.backtest_limiter, "check", slow_check)
+    monkeypatch.setattr(core, "get_user_profile", slow_profile)
+    monkeypatch.setattr(core.backtest_limiter, "check", slow_check)
     r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
     assert r.status_code == 200
     steps = _server_timing(r)
@@ -1181,7 +1186,7 @@ def test_portfolio_legs_fetch_their_prices_together(api, monkeypatch):
         _time.sleep(0.5)
         return _prices()
 
-    monkeypatch.setattr(main, "fetch_ohlcv", slow_prices)
+    monkeypatch.setattr(core, "fetch_ohlcv", slow_prices)
     three = {**PORTFOLIO, "tickers": ["AAPL", "MSFT", "GOOG"]}
     started = _time.perf_counter()
     assert client.post("/api/portfolio", json=three, headers=AUTH).status_code == 200
@@ -1197,7 +1202,7 @@ def test_a_portfolio_reports_the_first_bad_ticker_in_the_users_order(api, monkey
             raise ValueError(f"No data found for {t}")
         return _prices()
 
-    monkeypatch.setattr(main, "fetch_ohlcv", prices)
+    monkeypatch.setattr(core, "fetch_ohlcv", prices)
     three = {**PORTFOLIO, "tickers": ["AAPL", "MSFT", "GOOG"]}
     r = client.post("/api/portfolio", json=three, headers=AUTH)
     assert r.status_code == 400 and r.json()["detail"].startswith("MSFT:")
@@ -1224,7 +1229,7 @@ def _runs(db):
 
 def test_a_portfolio_is_not_kept_while_the_switch_is_off(api, monkeypatch):
     client, state = api
-    monkeypatch.setattr(main, "SAVE_PORTFOLIO_RUNS", False)
+    monkeypatch.setattr(core, "SAVE_PORTFOLIO_RUNS", False)
     body = client.post("/api/portfolio", json=PORTFOLIO, headers=AUTH).json()
     assert body["runId"] is None
     assert _runs(state["db"]) == {}
@@ -1234,7 +1239,7 @@ def test_a_portfolio_is_not_kept_while_the_switch_is_off(api, monkeypatch):
 
 def test_a_portfolio_is_kept_as_a_run_with_the_switch_on(api, monkeypatch):
     client, state = api
-    monkeypatch.setattr(main, "SAVE_PORTFOLIO_RUNS", True)
+    monkeypatch.setattr(core, "SAVE_PORTFOLIO_RUNS", True)
     body = client.post("/api/portfolio", json=PORTFOLIO, headers=AUTH).json()
     doc = state["db"].store[f"runs/{body['runId']}"]
     assert doc["kind"] == "portfolio"
@@ -1250,7 +1255,7 @@ def test_a_portfolio_is_kept_as_a_run_with_the_switch_on(api, monkeypatch):
 
 def test_compare_refuses_a_portfolio_run_by_name(api, monkeypatch):
     client, state = api
-    monkeypatch.setattr(main, "SAVE_PORTFOLIO_RUNS", True)
+    monkeypatch.setattr(core, "SAVE_PORTFOLIO_RUNS", True)
     single = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()["runId"]
     basket = client.post("/api/portfolio", json=PORTFOLIO, headers=AUTH).json()["runId"]
     r = client.post("/api/compare", json={"run_ids": [single, basket]}, headers=AUTH)
@@ -1264,9 +1269,9 @@ def test_lock_contention_on_the_free_validation_is_a_409_not_a_500(allowance, mo
     client, _, calls = allowance
 
     def contended(db, uid, limit, now=None):
-        raise main.validation_allowance.Contended(uid)
+        raise core.validation_allowance.Contended(uid)
 
-    monkeypatch.setattr(main.validation_allowance, "reserve", contended)
+    monkeypatch.setattr(core.validation_allowance, "reserve", contended)
     r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
     assert r.status_code == 409
     assert r.headers["Retry-After"] == "2"

@@ -234,9 +234,11 @@ cover Phase 2's running costs.
    worker, then Postgres) with tests green at every step. Nothing is thrown
    away.
 
-## 8. Decisions needed from the author
+## 8. Decisions from the author
 
-| # | Decision | Recommended default |
+**Decided 24 Nov: all seven defaults, as written below** (DECISIONS 24 Nov).
+
+| # | Decision | Default, now decided |
 |---|---|---|
 | P1 | Market and user | Indian retail traders first |
 | P2 | Monthly budget you can spend from Phase 1 | ₹10k a month, revisited at the Phase 2 gate |

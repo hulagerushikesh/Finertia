@@ -16,6 +16,8 @@ from test_routes import AUTH, FREE, _prices, api  # noqa: F401 — `api` is a fi
 
 import main
 
+from api import core
+
 SAMPLES = json.loads(
     (Path(__file__).resolve().parents[2] / "frontend/src/data/sampleStrategies.json").read_text()
 )["samples"]
@@ -40,7 +42,7 @@ def test_every_key_is_a_field_the_api_reads(sample):
 def test_a_free_account_can_run_it(api, monkeypatch, sample):
     client, state = api
     state["profile"] = dict(FREE)
-    monkeypatch.setattr(main, "fetch_ohlcv", lambda t, s, e: _prices(days=1500, start=s))
+    monkeypatch.setattr(core, "fetch_ohlcv", lambda t, s, e: _prices(days=1500, start=s))
     path, _, params = request_for(sample)
     r = client.post(path, json=params, headers=AUTH)
     assert r.status_code == 200, r.json()

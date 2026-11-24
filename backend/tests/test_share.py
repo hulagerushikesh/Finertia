@@ -11,6 +11,8 @@ import pytest
 from PIL import Image
 
 import main
+
+from api import core
 import share
 from test_routes import AUTH, _prices, api  # noqa: F401  (api is a fixture)
 
@@ -22,14 +24,14 @@ def on(api, monkeypatch):  # noqa: F811
     client, state = api
     monkeypatch.setenv("SHARE_CARDS", "1")
     share.cache.clear()
-    main.share_limiter._hits.clear()
+    core.share_limiter._hits.clear()
     calls = []
 
     def fetch(t, s, e):
         calls.append(t)
         return _prices()
 
-    monkeypatch.setattr(main, "fetch_ohlcv", fetch)
+    monkeypatch.setattr(core, "fetch_ohlcv", fetch)
     return client, state, calls
 
 
@@ -97,7 +99,7 @@ def test_a_bad_ticker_redirects_the_page_and_fails_the_card(on, monkeypatch):
     def unknown(t, s, e):
         raise ValueError("No data for ZZZZ")
 
-    monkeypatch.setattr(main, "fetch_ohlcv", unknown)
+    monkeypatch.setattr(core, "fetch_ohlcv", unknown)
     r = client.get("/api/share?ticker=ZZZZ&start=2020-01-01&end=2022-06-30", follow_redirects=False)
     assert r.status_code == 302
     assert r.headers["location"] == "/dashboard?ticker=ZZZZ&start=2020-01-01&end=2022-06-30"
@@ -108,9 +110,9 @@ def test_cache_misses_are_metered_per_address(on):
     client, _, _ = on
     statuses = [
         client.get(f"/api/share/card.png?{LINK}&macd_signal={n}").status_code
-        for n in range(2, 2 + main.share_limiter.limit + 1)
+        for n in range(2, 2 + core.share_limiter.limit + 1)
     ]
-    assert statuses[:-1] == [200] * main.share_limiter.limit
+    assert statuses[:-1] == [200] * core.share_limiter.limit
     assert statuses[-1] == 429
     # A link already computed is still served.
     assert client.get(f"/api/share/card.png?{LINK}&macd_signal=2").status_code == 200

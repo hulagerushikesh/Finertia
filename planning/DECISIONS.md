@@ -18,8 +18,11 @@ testers, none returned, and none would pay. So PRODUCT-PLAN puts a gate on real
 users at the end of each phase: retention and the first paying users before
 scale work beyond Phase 1.
 
-**Open:** PRODUCT-PLAN decisions P1–P7 (market, budget, data vendor, payments,
-legal review, hours, pricing).
+**Decided the same day (author: "go with defaults"):** P1 Indian retail
+traders first; P2 ₹10k a month from Phase 1, revisited at the Phase 2 gate; P3
+Claude compares 3–4 data vendors and the author chooses; P4 Razorpay first; P5
+a legal review before payments go live; P6 at least 5 hours a week; P7 free
+tier kept, Pro at ₹199 a month or ₹999 a year, tested later. Phase 0 starts.
 
 ## 2026-11-24 — Back to building: study 3 starts now; search work pauses a week
 
