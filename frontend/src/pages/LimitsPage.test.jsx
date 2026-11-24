@@ -4,6 +4,9 @@ import { MemoryRouter } from "react-router-dom";
 
 const getPlans = vi.hoisted(() => vi.fn());
 vi.mock("../api", () => ({ getPlans }));
+// Footer takes the Wordmark from Navbar, which starts Firebase Auth on import.
+// CI has no Firebase key, so Auth throws there (a laptop's .env hides it).
+vi.mock("../components/Navbar", () => ({ Wordmark: () => <span>Finertia</span> }));
 
 import LimitsPage from "./LimitsPage";
 import Footer from "../components/Footer";
