@@ -11,7 +11,6 @@ import { useAuth } from "../hooks/useAuth";
 import UsageMeter from "../components/UsageMeter";
 import ProfileSection from "../components/ProfileSection";
 import AccountData from "../components/AccountData";
-import { feature } from "../lib/features";
 import PasswordInput from "../components/PasswordInput";
 import { Rise } from "../components/motion";
 import { useToast } from "../hooks/useToast";
@@ -226,7 +225,8 @@ export default function UserProfilePage() {
           </div>
         </ProfileSection>
 
-        {feature("account-data") && <AccountData />}
+        {/* Always shown: the privacy notice promises export and deletion. */}
+        <AccountData />
       </Rise>
     </div>
   );

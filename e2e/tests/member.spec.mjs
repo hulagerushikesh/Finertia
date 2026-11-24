@@ -15,17 +15,17 @@ test("register → unverified banner → run a backtest", async ({ page }) => {
 
 // Tester bugs #6 and #7, 12 Oct (fixed in #84): clearing the ticker box after
 // a run sent an empty validation request, so a free user saw "ticker missing"
-// before the Pro wall.
-test("Validation checks the run on screen, and a free user goes straight to the Pro wall", async ({ page }) => {
+// before the plan boundary. This server switches free validation off.
+test("Validation checks the run on screen, and a free user goes straight to the limit", async ({ page }) => {
   await register(page, freshEmail("prowall"));
   await runBacktest(page);
 
   await page.getByLabel("Ticker").fill("");
   await page.getByRole("tab", { name: /Validation/ }).click();
 
-  await expect(page.getByRole("link", { name: "Validation is on Pro — see plans" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Validation is switched off — see the limits" })).toBeVisible();
   // The toast repeats the message; the banner in the page is the one to read.
-  await expect(page.locator("#main").getByText(/Pro features/)).toBeVisible();
+  await expect(page.locator("#main").getByText(/switched off on this deployment/)).toBeVisible();
   await expect(page.locator("#main").getByText(/ticker/i).filter({ hasText: /required|missing|field/i })).toHaveCount(0);
   // The result header still names the run, not the emptied box.
   await expect(page.getByRole("heading", { name: "AAPL" })).toBeVisible();

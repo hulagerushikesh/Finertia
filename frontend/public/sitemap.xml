@@ -26,9 +26,19 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://finertia.hulage.in/pricing</loc>
+    <loc>https://finertia.hulage.in/limits</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://finertia.hulage.in/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://finertia.hulage.in/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
   <url>
     <loc>https://finertia.hulage.in/support</loc>

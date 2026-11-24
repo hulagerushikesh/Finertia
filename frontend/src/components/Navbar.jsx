@@ -39,7 +39,6 @@ export default function Navbar() {
         ["/dashboard", "Workspace"],
         ["/history", "History"],
         ["/learn", "Learn"],
-        ["/pricing", "Pricing"],
         ...(userProfile?.role === "admin" ? [["/admin/overview", "Admin"]] : []),
       ]
     : [
@@ -48,7 +47,6 @@ export default function Navbar() {
         ["/writeup", "The finding"],
         ["/learn", "Learn"],
         ["/docs", "How it works"],
-        ["/pricing", "Pricing"],
       ];
 
   // Active state is an underline in pencil, the editor's mark on the current

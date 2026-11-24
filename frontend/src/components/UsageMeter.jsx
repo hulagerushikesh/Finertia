@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getUsage } from "../api";
-import { feature } from "../lib/features";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -29,8 +28,8 @@ export default function UsageMeter() {
   const pctUsed = uncapped ? 0 : Math.min(100, (usage.used / usage.limit) * 100);
   // Amber before the wall, not at it — a bar that only changes colour once
   // the account is already blocked has told the user nothing useful.
-  // The free plan's monthly validations, once switched on (see features.js).
-  const freeValidations = feature("free-validation") && !usage.validation && usage.validations_limit > 0;
+  // The free plan's monthly validations (a fair-use limit set on the API).
+  const freeValidations = !usage.validation && usage.validations_limit > 0;
   const tone = uncapped ? "bg-pencil" : pctUsed >= 100 ? "bg-loss" : pctUsed >= 80 ? "bg-warn" : "bg-foreground";
 
   return (
@@ -69,7 +68,7 @@ export default function UsageMeter() {
             </span>
           ) : (
             <span className={usage.validation ? "text-gain" : "text-faint"}>
-              {usage.validation ? "included" : "Pro only"}
+              {usage.validation ? "no limit" : "switched off"}
             </span>
           )}
         </span>
@@ -79,8 +78,8 @@ export default function UsageMeter() {
       </div>
 
       {usage.plan === "free" && (
-        <Link to="/pricing" className="inline-block mt-4 text-xs text-pencil hover:underline rounded-sm">
-          Compare plans →
+        <Link to="/limits" className="inline-block mt-4 text-xs text-pencil hover:underline rounded-sm">
+          About the limits →
         </Link>
       )}
     </div>

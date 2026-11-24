@@ -84,9 +84,6 @@ export const exportMyData = () => apiFetch("/api/me/export");
 export const deleteMyAccount = (confirm) =>
   apiFetch("/api/me", { method: "DELETE", body: JSON.stringify({ confirm }) });
 
-export const startCheckout = () =>
-  apiFetch("/api/billing/checkout", { method: "POST" });
-
 export const runPortfolio = (params) =>
   apiFetch("/api/portfolio", { method: "POST", body: JSON.stringify(params) });
 

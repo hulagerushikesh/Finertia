@@ -3,8 +3,8 @@ import { freshEmail, register, runBacktest } from "./helpers.mjs";
 
 // Account export and deletion (backend/account.py), through the API with the
 // signed-in user's own token, read from where the Firebase SDK keeps it. The
-// Profile buttons are behind the "account-data" switch (switched-on/
-// account-data.spec.mjs); the last test checks they stay hidden here.
+// Profile buttons are always shown (the last test); switched-on/
+// account-data.spec.mjs walks through them.
 const API = "http://127.0.0.1:8001";
 const AUTH_EMULATOR = "http://127.0.0.1:9099";
 
@@ -60,10 +60,12 @@ test("export holds the user's run; delete removes the account and its data", asy
   expect(after.runs).toEqual([]);
 });
 
-test("Profile shows no export or delete buttons while the switch is off", async ({ page }) => {
+// Always on since 24 Nov: the privacy notice promises both, so they are no
+// longer behind the "account-data" switch.
+test("Profile offers export and delete without any switch", async ({ page }) => {
   await register(page, freshEmail("noswitch"));
   await page.goto("/profile");
   await expect(page.getByRole("heading", { name: "Change password" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Download my data" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /Delete my account/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Download my data" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Delete my account/ })).toBeVisible();
 });

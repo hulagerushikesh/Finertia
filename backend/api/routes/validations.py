@@ -144,8 +144,8 @@ def validate_portfolio(req: PortfolioValidateRequest, authorization: Optional[st
         raise HTTPException(
             status_code=402,
             detail=(
-                f"Your plan allows portfolios of up to {allowed_size} holdings; "
-                f"you selected {len(req.tickers)}. Upgrade to run larger baskets."
+                f"Portfolios can hold up to {allowed_size} names; "
+                f"you selected {len(req.tickers)}."
             ),
         )
     enforce_quota(user)

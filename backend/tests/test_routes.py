@@ -12,6 +12,7 @@ follow.
 """
 
 import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -219,6 +220,10 @@ def api(monkeypatch):
     state["db"] = db
     monkeypatch.setattr(core, "get_db", lambda: db)
     monkeypatch.setattr(core, "fetch_ohlcv", lambda t, s, e: _prices())
+    # The free validation allowance is a deployment setting (10 by default);
+    # these tests pin it to 0 so a free account meets the plain refusal. The
+    # allowance fixture turns it on where a test needs it.
+    monkeypatch.setattr(core, "FREE_VALIDATIONS_PER_MONTH", 0)
 
     # Module-level singletons persist across tests in the same process, so one
     # test's traffic would otherwise spend another's budget. reset() drops a
@@ -502,7 +507,9 @@ def test_free_plan_over_quota_gets_402(api):
                         "quotaPeriod": core.current_period()}
     r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
     assert r.status_code == 402
-    assert "upgrade" in r.json()["detail"].lower()
+    detail = r.json()["detail"].lower()
+    # Nothing is for sale (DECISIONS 24 Nov): a limit, never an upgrade offer.
+    assert "fair-use" in detail and "upgrade" not in detail
 
 
 def test_a_stale_quota_period_reads_as_zero(api):
@@ -512,11 +519,11 @@ def test_a_stale_quota_period_reads_as_zero(api):
     assert client.post("/api/backtest", json=BACKTEST, headers=AUTH).status_code == 200
 
 
-def test_validation_is_refused_on_the_free_plan(api):
+def test_validation_is_refused_when_the_free_allowance_is_off(api):
     client, _ = api
     r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
     assert r.status_code == 402
-    assert "pro" in r.json()["detail"].lower()
+    assert "switched off" in r.json()["detail"].lower()
 
 
 def test_validation_is_allowed_on_pro(api):
@@ -673,11 +680,11 @@ def test_portfolio_carries_the_sharpe_test_against_the_held_basket(api):
     assert test["bars"] == body["aligned_bars"]
 
 
-def test_portfolio_validation_is_refused_on_the_free_plan(api):
+def test_portfolio_validation_is_refused_when_the_free_allowance_is_off(api):
     client, _ = api
     r = client.post("/api/portfolio/validate", json=PORTFOLIO, headers=AUTH)
     assert r.status_code == 402
-    assert "pro" in r.json()["detail"].lower()
+    assert "switched off" in r.json()["detail"].lower()
 
 
 def test_portfolio_validation_carries_both_checks_for_the_book(api):
@@ -991,9 +998,11 @@ def allowance(api, monkeypatch):
     return client, state, calls
 
 
-def test_free_validation_is_off_by_default():
-    """Off unless the deployment switches it on: testers keep the Pro wall."""
-    assert core.FREE_VALIDATIONS_PER_MONTH == 0
+def test_free_validation_default_is_a_fair_use_ten(monkeypatch):
+    """Unless the deployment sets it, a free account gets ten a month."""
+    monkeypatch.delenv("FREE_VALIDATIONS_PER_MONTH", raising=False)
+    assert max(0, core._int_env("FREE_VALIDATIONS_PER_MONTH", 10)) == 10
+    assert "_int_env(\"FREE_VALIDATIONS_PER_MONTH\", 10)" in Path(core.__file__).read_text()
 
 
 def test_a_free_user_gets_one_validation_when_switched_on(allowance):
@@ -1011,7 +1020,7 @@ def test_a_used_free_validation_is_refused_without_taking_another(allowance):
                         "validationPeriod": core.current_period()}
     r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
     assert r.status_code == 402
-    assert "free validation" in r.json()["detail"]
+    assert "fair-use limit" in r.json()["detail"]
     assert calls["reserve"] == []
 
 
@@ -1022,7 +1031,7 @@ def test_losing_the_race_for_the_last_slot_is_a_402(allowance):
     calls["grant"] = False
     r = client.post("/api/validate", json=BACKTEST, headers=AUTH)
     assert r.status_code == 402
-    assert "free validation" in r.json()["detail"]
+    assert "fair-use limit" in r.json()["detail"]
 
 
 def test_a_validation_that_fails_gives_the_slot_back(allowance, monkeypatch):

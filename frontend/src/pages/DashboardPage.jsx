@@ -92,12 +92,12 @@ export default function DashboardPage() {
   const validatingNow = useRef(false);
   const [copied, setCopied] = useState(false);
   // The free plan's monthly validations, { limit, remaining }, or null when
-  // the account has no cap (Pro) or the allowance is off. Behind a switch
-  // until the tester round closes; the API enforces it either way.
+  // the account has no cap (admin-granted) or the allowance is off. A hint
+  // only; the API enforces the limit.
   const [allowance, setAllowance] = useState(null);
 
   useEffect(() => {
-    if (!uid || !feature("free-validation")) return;
+    if (!uid) return;
     let live = true;
     getUsage()
       .then((u) => {
@@ -261,17 +261,17 @@ export default function DashboardPage() {
 
         <div className="flex-1 min-w-0">
           {/* An error with no way forward is just an accusation. The button
-              repeats the action that failed — except a 402, the plan
-              boundary (Pro-only validation, the monthly run cap, basket
-              size), where repeating can never succeed and the way forward is
-              the pricing page. */}
+              repeats the action that failed — except a 402, a monthly
+              fair-use limit (runs, validations, basket size), where repeating
+              can never succeed this month and the way forward is reading the
+              limits. Nothing is for sale (DECISIONS 24 Nov). */}
           {error && !wallInPanel && (
             <Alert variant="destructive" className="mb-5">
               <AlertDescription className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <span className="flex-1 min-w-[14rem]">{error.message}</span>
                 {error.status === 402 ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link to="/pricing">See Pro</Link>
+                    <Link to="/limits">See the limits</Link>
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" onClick={error.action === "validate" ? handleValidate : handleRun} disabled={loading || validating}>
@@ -565,9 +565,8 @@ export default function DashboardPage() {
                     <>
                       {allowance && typeof validation.free_validations_remaining === "number" && (
                         <p className="text-xs text-graphite mb-3" data-testid="free-validation-used">
-                          That was a free validation: {allowance.remaining} of {allowance.limit} left this
-                          month. Pro validates without a limit.{" "}
-                          <Link to="/pricing" className="text-pencil hover:underline">See Pro</Link>
+                          {allowance.remaining} of {allowance.limit} validations left this month.{" "}
+                          <Link to="/limits" className="text-pencil hover:underline">About the limits</Link>
                         </p>
                       )}
                       <ValidationPanel data={validation} />
@@ -587,10 +586,10 @@ export default function DashboardPage() {
                       )}
                       {error?.action === "validate" && error.status === 402 ? (
                         <Button asChild className="mt-4">
-                          <Link to="/pricing">
+                          <Link to="/limits">
                             {allowance
-                              ? "This month's free validation is used — see Pro"
-                              : "Validation is on Pro — see plans"}
+                              ? "This month's validations are used — see the limits"
+                              : "Validation is switched off — see the limits"}
                           </Link>
                         </Button>
                       ) : (

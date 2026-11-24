@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
@@ -15,7 +15,7 @@ const FREE = {
   limit: 50,
   remaining: 9,
   validation: false,
-  max_portfolio_size: 3,
+  max_portfolio_size: 10,
 };
 
 const renderMeter = () => render(
@@ -31,12 +31,12 @@ beforeEach(() => {
 });
 
 describe("UsageMeter", () => {
-  it("shows runs left, the Pro-only note and the plans link on Free", async () => {
+  it("shows runs left and links to the limits, never to a plan to buy", async () => {
     getUsage.mockResolvedValue(FREE);
     renderMeter();
     expect(await screen.findByText("9 left")).toBeInTheDocument();
-    expect(screen.getByText("Pro only")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Compare plans/ })).toHaveAttribute("href", "/pricing");
+    expect(screen.getByRole("link", { name: /About the limits/ })).toHaveAttribute("href", "/limits");
+    expect(screen.queryByText(/Pro|upgrade|plans/i)).toBeNull();
   });
 
   // Amber before the wall, not at it.
@@ -53,12 +53,12 @@ describe("UsageMeter", () => {
     expect(again.container.querySelector(".bg-loss")).toHaveStyle({ width: "100%" });
   });
 
-  it("shows no bar and no upsell on an uncapped plan", async () => {
-    getUsage.mockResolvedValue({ ...FREE, plan: "pro", plan_label: "Pro", limit: null, validation: true });
+  it("shows no bar and no limits link on an admin-granted unlimited account", async () => {
+    getUsage.mockResolvedValue({ ...FREE, plan: "pro", plan_label: "Unlimited", limit: null, validation: true });
     renderMeter();
-    expect(await screen.findByText(/no limit/)).toBeInTheDocument();
-    expect(screen.getByText("included")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Compare plans/ })).toBeNull();
+    expect(await screen.findByText(/runs this month/)).toBeInTheDocument();
+    expect(screen.getByText("no limit")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /About the limits/ })).toBeNull();
   });
 
   it("says why when usage cannot load", async () => {
@@ -68,30 +68,16 @@ describe("UsageMeter", () => {
   });
 });
 
-
-describe("UsageMeter — free validation (switch)", () => {
-  afterEach(() => vi.unstubAllEnvs());
-  const WITH_ALLOWANCE = { ...FREE, validations_used: 1, validations_limit: 1, validations_remaining: 0 };
-
-  it("keeps saying Pro only while the switch is off", async () => {
-    vi.stubEnv("VITE_FEATURES", "");
-    getUsage.mockResolvedValue(WITH_ALLOWANCE);
+describe("UsageMeter — the monthly validations", () => {
+  it("counts them whenever the API sets an allowance", async () => {
+    getUsage.mockResolvedValue({ ...FREE, validations_used: 1, validations_limit: 10, validations_remaining: 9 });
     renderMeter();
-    expect(await screen.findByText("Pro only")).toBeInTheDocument();
+    expect(await screen.findByText(/free left/)).toHaveTextContent("9 of 10 free left");
   });
 
-  it("counts the free validations when it is on", async () => {
-    vi.stubEnv("VITE_FEATURES", "free-validation");
-    getUsage.mockResolvedValue(WITH_ALLOWANCE);
-    renderMeter();
-    expect(await screen.findByText(/free left/)).toHaveTextContent("0 of 1 free left");
-    expect(screen.queryByText("Pro only")).toBeNull();
-  });
-
-  it("keeps Pro only when the API allowance is 0", async () => {
-    vi.stubEnv("VITE_FEATURES", "free-validation");
+  it("says switched off when the allowance is 0", async () => {
     getUsage.mockResolvedValue({ ...FREE, validations_used: 0, validations_limit: 0, validations_remaining: 0 });
     renderMeter();
-    expect(await screen.findByText("Pro only")).toBeInTheDocument();
+    expect(await screen.findByText("switched off")).toBeInTheDocument();
   });
 });

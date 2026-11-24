@@ -112,7 +112,7 @@ class TestQuota:
         assert check_quota(profile(plan=PRO), at(2026, 8))["plan"] == PRO
 
     def test_an_unknown_plan_gets_the_free_quota(self):
-        rogue = {"plan": "unlimited", "runsThisPeriod": 60, "quotaPeriod": "2026-08"}
+        rogue = {"plan": "unlimited", "runsThisPeriod": 120, "quotaPeriod": "2026-08"}
         assert check_quota(rogue, at(2026, 8))["allowed"] is False
 
 
@@ -124,26 +124,23 @@ class TestEntitlements:
     def test_an_unknown_plan_does_not_unlock_validation(self):
         assert may_validate({"plan": "enterprise"}) is False
 
-    def test_portfolio_size_differs_by_plan(self):
-        assert max_portfolio_size(profile(plan=FREE)) < max_portfolio_size(profile(plan=PRO))
-
-    def test_free_portfolio_cap_is_below_the_api_maximum(self):
-        # The API allows 10; the free plan must be a real restriction.
-        assert max_portfolio_size(profile(plan=FREE)) < 10
+    def test_everyone_gets_the_full_basket(self):
+        # Nothing is sold, so the basket size is the API's maximum for all.
+        assert max_portfolio_size(profile(plan=FREE)) == max_portfolio_size(profile(plan=PRO)) == 10
 
 
 class TestPublicPlans:
-    def test_every_plan_is_listed(self):
-        assert {p["id"] for p in public_plans()} == set(PLANS)
+    def test_only_the_free_plan_is_listed(self):
+        assert [p["id"] for p in public_plans()] == [FREE]
 
     def test_each_carries_a_label_price_and_features(self):
         for p in public_plans():
             assert p["label"] and isinstance(p["price_monthly"], int)
             assert len(p["features"]) > 0
 
-    def test_free_is_free_and_pro_is_not(self):
-        prices = {p["id"]: p["price_monthly"] for p in public_plans()}
-        assert prices[FREE] == 0 and prices[PRO] > 0
+    def test_nothing_has_a_price(self):
+        # Personal, non-commercial project (DECISIONS 24 Nov).
+        assert all(plan["price_monthly"] == 0 for plan in PLANS.values())
 
 
 class TestFreeValidationAllowance:

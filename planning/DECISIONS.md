@@ -3,6 +3,35 @@
 Constraints and reversals, each with the reason. Newest first. If you are about
 to "fix" something that looks odd, check here first — it is probably deliberate.
 
+## 2026-11-24 — Personal project, Yahoo data, engineering first
+
+**Decision (author, 24 Nov, later the same day):** this corrects the entry
+below. Finertia is built to a product's engineering standard, but it stays a
+free, non-commercial personal project:
+
+- Data stays Yahoo Finance via yfinance, US stocks mostly and Indian stocks
+  as Yahoo carries them.
+- No budget, licensed data, payments or legal review now. These wait until
+  the project is in a strong position and the author decides.
+- Focus on engineering and building.
+- Nothing may break a law or a data provider's terms.
+
+The P1–P7 defaults recorded below (Indian retail first, ₹10k a month,
+Razorpay, ₹199 Pro) are withdrawn.
+
+**Why:** Yahoo's data may be used for personal, non-commercial purposes only.
+That rules out charging, and the Vercel Hobby plan is non-commercial too.
+
+**What it changes:**
+
+- A paid plan is no longer shown anywhere, and charging is blocked in code.
+- Disclaimers, data attribution, a privacy notice and terms of use go on the
+  site.
+- PRODUCT-PLAN section 6 is the standing legal checklist.
+
+**Cost of it:** the data has informal limits and no guarantee. The plan
+answers that with caching and a nightly pre-fetch, not with a paid vendor.
+
 ## 2026-11-24 — Finertia becomes a product, aimed at 100,000 users
 
 **Decision (author, 24 Nov):** the project is to be built as a product that can

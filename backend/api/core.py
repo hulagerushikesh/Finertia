@@ -140,17 +140,19 @@ def enforce_quota(user: dict) -> dict:
     """Refuse the run if the account is out of monthly quota.
 
     Separate from the rate limiter: that one protects the server from bursts,
-    this one is the product's billing boundary. A 402 rather than a 429 so the
-    client can tell "slow down" apart from "upgrade".
+    this one is the monthly fair-use limit. A 402 rather than a 429 so the
+    client can tell "slow down for a minute" apart from "this month is used
+    up". Nothing is for sale (DECISIONS 24 Nov, personal project), so the
+    message never offers an upgrade.
     """
     quota = check_quota(user.get("profile"))
     if not quota["allowed"]:
         raise HTTPException(
             status_code=402,
             detail=(
-                f"You have used all {quota['limit']} runs on the "
-                f"{quota['plan']} plan this month. Upgrade for unlimited runs, "
-                "or wait for the counter to reset at the start of next month."
+                f"You have used all {quota['limit']} runs for this month. Finertia is a "
+                "free personal project, so runs have a fair-use limit; the counter "
+                "resets at the start of next month."
             ),
         )
     return quota
@@ -188,20 +190,20 @@ def record_run(db, uid: str, profile: dict, batch=None) -> None:
         ref.set(updates, merge=True)
 
 
-# The free plan's validations a month. A deployment setting, not a plan
-# constant: it stays 0 (the Pro wall, as before) while a tester round is
-# running, so every tester sees the same product, and is switched on with an
-# env var afterwards.
-FREE_VALIDATIONS_PER_MONTH = max(0, _int_env("FREE_VALIDATIONS_PER_MONTH", 0))
+# Validations a month on the free plan, a fair-use limit: each one costs
+# hundreds of backtests of CPU and many price reads. A deployment setting, not
+# a plan constant, so it can be changed without a code change; 0 switches
+# validation off for free accounts. The Deploy workflow sets it explicitly.
+FREE_VALIDATIONS_PER_MONTH = max(0, _int_env("FREE_VALIDATIONS_PER_MONTH", 10))
 
 # Whether a portfolio run is kept in History like a single-ticker one. Off
 # until the tester round closes, so the live product does not change under
 # the testers; History and the admin views read either kind of document.
 SAVE_PORTFOLIO_RUNS = os.environ.get("SAVE_PORTFOLIO_RUNS", "").lower() in ("1", "true")
 
-_PRO_ONLY_DETAIL = (
-    "Walk-forward validation and the permutation test are Pro features. "
-    "Each run sweeps a parameter grid and then reshuffles the signals "
+_VALIDATION_OFF_DETAIL = (
+    "Walk-forward validation and the permutation test are switched off on this "
+    "deployment. Each run sweeps a parameter grid and then reshuffles the signals "
     "hundreds of times, so they cost far more than a single backtest."
 )
 
@@ -211,8 +213,9 @@ def _validation_used_up(limit: int) -> HTTPException:
     return HTTPException(
         status_code=402,
         detail=(
-            f"You have used your free {noun} for this month. Pro validates "
-            "without a limit, and the free allowance resets at the start of next month."
+            f"You have used your {noun} for this month. Each one costs hundreds of "
+            "backtests, so validation has a fair-use limit; it resets at the start "
+            "of next month."
         ),
     )
 
@@ -224,7 +227,7 @@ def check_validation_allowed(user: dict) -> None:
     if quota["allowed"]:
         return
     if quota["limit"] == 0:
-        raise HTTPException(status_code=402, detail=_PRO_ONLY_DETAIL)
+        raise HTTPException(status_code=402, detail=_VALIDATION_OFF_DETAIL)
     raise _validation_used_up(quota["limit"])
 
 

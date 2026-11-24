@@ -20,10 +20,18 @@ import time
 # rejected so a captured request cannot be replayed indefinitely.
 SIGNATURE_TOLERANCE_SECONDS = 300
 
+# Charging is off in code, whatever the environment holds. Finertia is a free,
+# non-commercial personal project: its price data is Yahoo Finance's, licensed
+# for personal, non-commercial use only, and the front end is on a
+# non-commercial hosting plan (DECISIONS 24 Nov). Turning this on needs licensed
+# data, a legal review and the author's decision first — a code change and a
+# review, never an environment variable someone sets by mistake.
+CHARGING_ALLOWED = False
+
 
 def is_configured() -> bool:
     """Whether billing is switched on for this deployment."""
-    return bool(os.environ.get("STRIPE_SECRET_KEY"))
+    return CHARGING_ALLOWED and bool(os.environ.get("STRIPE_SECRET_KEY"))
 
 
 def price_id() -> str | None:
@@ -31,6 +39,8 @@ def price_id() -> str | None:
 
 
 def webhook_secret() -> str | None:
+    if not CHARGING_ALLOWED:
+        return None
     return os.environ.get("STRIPE_WEBHOOK_SECRET")
 
 

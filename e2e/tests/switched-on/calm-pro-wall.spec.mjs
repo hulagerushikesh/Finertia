@@ -17,9 +17,9 @@ test("the plan boundary is said once, in the panel", async ({ page }) => {
   await runBacktest(page);
   await page.getByRole("tab", { name: /Validation/ }).click();
 
-  await expect(page.getByRole("link", { name: /see Pro/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /see the limits/ })).toBeVisible();
   await expect(page.getByTestId("pro-wall-reason")).toBeVisible();
   // Said once on the whole page: no banner in #main, no toast.
-  await expect(page.getByText(/used your free validation/)).toHaveCount(1);
+  await expect(page.getByText(/used your validation for this month/)).toHaveCount(1);
   noErrors();
 });

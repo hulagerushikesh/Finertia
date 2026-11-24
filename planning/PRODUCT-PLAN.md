@@ -1,257 +1,178 @@
-# Product plan: from portfolio piece to a product for 100,000 users
+# Product plan: build it like a product, stay a personal project
 
-_24 Nov 2026. Written for the author, as a staff engineer would write it: honest
-about where the project is, specific about what a 100k-user product needs, and
-phased so nothing gets rewritten twice. Supersedes the "portfolio piece" direction
-(DECISIONS 24 Nov). PLAN.md stays the record for the outreach work already running._
+_24 Nov 2026, revised the same day after the author's correction (DECISIONS 24 Nov,
+"Personal project, Yahoo data, engineering first"). Written for the author, as a
+staff engineer would write it: honest about where the project is, built to an
+engineering standard that could carry many users, and kept inside the law for
+what it is today, a free, non-commercial personal project._
+
+## 0. The frame, set by the author
+
+- **Status: personal project, not an enterprise application.** Free to use, no
+  money taken, no paid plan offered.
+- **Data: Yahoo Finance via yfinance**, US stocks first, Indian stocks (NSE
+  `.NS`, BSE `.BO`) as Yahoo carries them. Yahoo's data is for personal,
+  non-commercial use, which is the reason the project stays non-commercial.
+- **No budget decisions yet.** Running cost stays about ₹0 while idle. Spending,
+  licensed data, payments and a lawyer are for later, when the project is in a
+  strong position and the author decides.
+- **Focus: engineering and building.** The author's own part (decisions, money,
+  outreach) comes once the product is strong.
+- **Never break a law or a data provider's terms.** Section 6 is the standing
+  checklist.
 
 ## 1. Where we are, honestly
 
 **Strong, and worth keeping:**
 
 - **A correct engine.** It closes lookahead bias by design and charges costs on
-  turnover. 856 backend tests back it, and every published figure is re-run by
+  turnover. 859 backend tests back it, and every published figure is re-run by
   a script.
 - **Statistics no retail tool has.** Walk-forward testing, a shuffle test for
   timing luck, Deflated Sharpe, PBO, whole-grid tests (Reality Check, SPA,
   Romano-Wolf), and a confidence interval on every number.
 - **Sound operations for its size.** CI, a deploy workflow, Sentry, uptime
-  alerts, Firestore backups with restore drilled, a dedicated service account,
-  and costs of ₹0 when idle.
+  alerts, Firestore backups with restore drilled, a dedicated service account.
 - **A working front end.** Dashboard, portfolio, comparison, history, sharing,
   a demo, 60 pre-rendered public pages, and six articles.
+- **Code split by domain since 24 Nov** (#214): ten routers behind `/api/v1`.
 
-**Why it reads as a personal project, not a product:**
+**What still reads as a personal project, and is engineering work:**
 
-| Area | Today | What a product needs |
+| Area | Today | Target |
 |---|---|---|
-| What a user can test | 3 fixed strategies (momentum, MACD, Bollinger), one stock or a small basket | Their own rules: indicators plus conditions, built without code |
-| Data | Yahoo via yfinance, free, unlicensed for commercial use, fetched during requests | Licensed end-of-day data for all NSE/BSE stocks, held in our own store, refreshed nightly |
-| Compute | Every backtest and every validation runs inside the API request; max 2 instances | API and compute split; heavy jobs queued; repeated results served from a cache |
-| Code shape | One 1,686-line `main.py` holds every route | Modules per domain with clear boundaries, and a versioned API |
-| Environments | Production only | Staging that mirrors production; preview builds per pull request |
-| Money | Pro plan built, Stripe never wired; Vercel Hobby plan (non-commercial terms) | India-first payments (UPI), GST invoices, a host plan that allows charging |
-| Knowing users | Page views only | An activation funnel and week-1/week-4 retention, measured |
-| Reasons to come back | None: test once, leave | Saved strategies, alerts when a rule fires, watchlists |
-| Evidence of demand | 5 testers, **0 of 5 returned**, 0 would pay (DECISIONS 31 Oct) | Retention first, then revenue |
+| What a user can test | 3 fixed strategies | Their own rules: indicators plus conditions, no code |
+| Data path | Yahoo fetched during requests, cached in Firestore | Yahoo data kept in our own store, refreshed by a nightly job; requests never wait on Yahoo |
+| Compute | Every backtest and validation inside the request; max 2 instances | Heavy jobs on a queue and a worker; repeated results from a cache |
+| Environments | Production only | A staging copy and a promote step |
+| Contract | Hand-written client | OpenAPI-generated client; a breaking change fails CI |
+| Reasons to come back | None | Saved strategies, watchlists, end-of-day alerts |
+| Knowing what works | Page views only | A cookieless funnel: visit → signup → first test → return |
 
-The last row matters most. **Scale is not the hard part. Retention is.** A system
-built for 100k users that nobody returns to is still a portfolio piece. So every
-phase below has an exit gate measured on real users, not only on code.
-
-## 2. What 100k users means in numbers
-
-A staff engineer's first job is to size the problem before choosing tools.
+## 2. What many users would mean, in numbers
 
 | Assumption | Value |
 |---|---|
-| Registered users | 100,000 |
-| Active on a given day | 10% → 10,000 |
-| Backtests per active user per day | 5 → 50,000 a day |
-| Busiest hour (evening, after market close) | 15% of the day → about 2 a second, bursts of 20 |
-| Validations | 1 in 10 active users, once a day → 1,000 a day |
+| Active on a busy day | 10,000 |
+| Backtests per active user | 5 → 50,000 a day; bursts of about 20 a second |
+| Validations | about 1,000 a day |
 
-| Load | Cost to serve it |
-|---|---|
-| Backtest, 10 years of one stock, uncached | about 0.5 s of one CPU (measured 14 Oct). A burst of 20 a second is about 10 CPUs, before any caching |
-| Validation (hundreds of backtests) | 5–30 s of CPU each; 1,000 a day is about 8 CPU-hours, so it must run on a queue, never inside a request |
-| Same request twice | Same answer: a backtest is deterministic. With a cache keyed by inputs and data version, most popular runs cost nothing |
-| Storage | Daily bars for 2,500 Indian stocks over 20 years is about 12.5 million rows, under 1 GB. Small |
+- An uncached backtest is about 0.5 s of one CPU, so a burst of 20 a second is
+  about 10 CPUs before caching. A backtest is deterministic, so a cache keyed by
+  inputs and data date removes most of that.
+- A validation is 5–30 s of CPU. It belongs on a queue, never in a request.
+- Daily bars for a few thousand US and Indian stocks over 20 years are well
+  under 1 GB.
 
-**Conclusion:** the compute is modest, and Cloud Run plus a queue handles it.
-The real work for 100k users is (1) licensed data we own, (2) taking heavy jobs
-out of the request path, (3) a product people return to, and (4) payments and
-compliance that hold up. That is the order of this plan.
+**Conclusion:** compute is not the hard part. The engineering work is a data
+path that never waits on Yahoo, heavy jobs off the request path, and a product
+people come back to. Yahoo's informal limits are the real ceiling. They are a
+reason to cache hard and pre-fetch at night, and a reason the project stays
+small and personal until it moves to licensed data.
 
 ## 3. The product
 
-- **For:** Indian retail traders and investors who want to test an idea before
-  putting money on it. There are tens of millions of demat accounts, and no
-  local tool tests ideas honestly. Students and quant job candidates come
-  second; they bring traffic, not revenue.
-- **The job:** "Tell me whether my rule would have worked on Indian stocks, after
-  costs and taxes, and whether that was luck."
-- **The core loop:** build a rule → test it on one stock → test it across an
-  index → validate it → save it → get an alert when it fires → come back.
-- **North-star metric:** weekly active testers, people who ran at least one test
-  in the past 7 days. Supporting metrics: activation (signed up and finished one
-  backtest in the first session) and week-4 retention.
-- **Never:** tips, predictions, or "buy this". Finertia tests the user's own
-  rules on past data; it does not recommend trades (SEBI rule, see section 7).
+- **For:** people who want to test a trading idea on US or Indian stocks before
+  risking money; students and quant candidates who want to learn honest
+  testing.
+- **The job:** "Tell me whether my rule would have worked, after costs, and
+  whether that was luck."
+- **Core loop:** build a rule → test it on one stock → test it across an index
+  (S&P 500 names, Nasdaq-100, Nifty 50) → validate it → save it → come back
+  when something changes.
+- **Never:** tips, predictions, "buy this", or claims of future returns. It
+  tests the user's own rules on past data.
 
-## 4. Target architecture
+## 4. Target architecture (no paid services required)
 
 ```
-Browser / PWA ──► Vercel CDN: static app + pre-rendered public pages (cache all public GETs)
-      │
-      └─ /api/v1 ──► Cloud Run "api" (stateless FastAPI, autoscaled, min 1 at peak hours)
-                        │  auth (Firebase), quotas, entitlements, reads
-                        ├─► Redis (Memorystore): result cache, rate limits, hot price slices
-                        ├─► Postgres (Cloud SQL): users, plans, strategies, runs, alerts, payments
-                        ├─► Price store: Parquet on GCS, versioned per nightly load, read via DuckDB/Polars
-                        └─► Cloud Tasks ──► Cloud Run "worker": validations, index-wide scans, alerts
-                                               (same engine package, separate scaling, own timeouts)
-
-Nightly (Cloud Scheduler): ingest licensed EOD data → check it → adjust for corporate actions
-                           → publish a new data version → evaluate saved alerts → send emails
+Browser ──► Vercel CDN: static app + pre-rendered public pages
+   └─ /api/v1 ──► Cloud Run "api" (stateless FastAPI)
+                    ├─► Firestore: users, runs, strategies, alerts (as today)
+                    ├─► Price store: Parquet files on Cloud Storage, one set per
+                    │     nightly load, read with DuckDB/Polars in the instance
+                    ├─► Result cache: in-instance LRU first, Firestore-backed later
+                    └─► Cloud Tasks ──► Cloud Run "worker": validations, index scans
+Nightly (Cloud Scheduler): fetch the day's Yahoo closes for the tracked universe
+   → check them → write a new data version → pre-compute popular results
 ```
 
-**Decisions behind it (each gets its own short record, an ADR, when it is built):**
+Decisions behind it:
 
-1. **Licensed EOD data, held by us.** No vendor calls during a request. Every
-   result names the data version it used, so cached results stay valid until
-   the next nightly load. Candidates (EODHD, Global Datafeeds, TrueData, NSE's
-   own data products) are compared on licence terms, coverage, corporate
-   actions and price; the author chooses.
-2. **Postgres as the system of record. Firestore stays only where it already
-   works (auth-adjacent user documents) until migrated.** Runs, strategies,
-   alerts and payments are relational, admin queries need joins, and
-   rate-limit counters in Firestore cost money on every request.
-3. **Redis for anything hot or short-lived:** result cache, rate limits, quota
-   counters.
-4. **API and worker are the same code, deployed twice.** The engine becomes a
-   package with no web or database imports (mostly true already), so both
-   import it.
-5. **A cache key = hash(strategy definition, parameters, ticker set, dates,
-   cost model, data version).** The demo, the stock pages and popular runs are
-   pre-computed after each nightly load.
-6. **The modular monolith first, not microservices.** Split `main.py` into
-   domain modules (`auth`, `billing`, `backtests`, `validation`, `strategies`,
-   `data`, `admin`) behind `/api/v1`. A one-person team cannot run ten services,
-   and does not need to at this load.
-7. **A typed contract.** OpenAPI generates the front end's client, so a
-   backend change that breaks the UI fails in CI, not in production.
-8. **Strategies as data, not code.** A rule is stored as JSON (indicators,
-   comparisons, entry/exit, sizing) and checked against a schema. The engine
-   reads it the way it reads the 3 strategies today. This is what turns the
-   product from "3 demos" into "your idea".
+1. **One data version per night.** Every result names the data date it used, so
+   a cached result stays valid until the next load, and requests never call
+   Yahoo for the tracked universe. Tickers outside it still fall back to a live
+   fetch with today's limits.
+2. **Firestore stays the database.** It is free at this size and already
+   backed up. Postgres is a later decision with its own cost.
+3. **API and worker are the same code, deployed twice.** The engine stays a
+   package with no web or database imports.
+4. **A modular monolith, not microservices.** One person cannot run ten
+   services, and this load does not need them.
+5. **Strategies as data.** A rule is JSON (indicators, comparisons, entry/exit,
+   sizing), checked against a schema, read by the engine the way it reads the 3
+   strategies today.
+6. **Typed contract.** OpenAPI generates the front end's client.
 
-**Service levels (SLOs) to hold:**
+## 5. Roadmap: engineering first
 
-- API availability 99.9% a month.
-- Cached backtest p95 under 300 ms.
-- Uncached single-stock backtest p95 under 2 s.
-- Validation finished within 2 minutes for 95% of jobs.
-- The nightly data load finished by 06:00 IST.
+### Phase 0: foundations (in progress)
 
-## 5. Roadmap
+- ✅ `main.py` split into domain routers behind `/api/v1` (#214).
+- Non-commercial mode: no paid plan shown anywhere; charging blocked in code;
+  disclaimers, data attribution, privacy notice and terms on the site
+  (section 6).
+- Staging: a second Cloud Run service and Vercel previews pointed at it, on the
+  free tiers.
+- OpenAPI-generated front-end client.
+- A load-test script (Locust) run against staging, numbers recorded.
+- **Gate:** staging deploys automatically and the load test reports real
+  numbers.
 
-Each phase ends on a gate. A phase that fails its gate is reworked, not skipped.
+### Phase 1: data and compute platform
 
-### Phase 0: foundations (about 2 weeks; no new features)
+- Nightly Yahoo load for a tracked universe (S&P 500, Nasdaq-100, Nifty 50,
+  Nifty Next 50) into versioned Parquet; checks for gaps and bad splits.
+- Result cache; validations and index scans on Cloud Tasks with a worker, and
+  progress shown in the UI.
+- **Gate:** no request for a tracked ticker calls Yahoo, and a burst of 20
+  backtests a second holds on staging.
 
-- Staging environment (Cloud Run, a separate Firebase project, Vercel preview)
-  and a promote-to-production step.
-- Split `main.py` into domain modules behind `/api/v1`, keeping old routes as
-  aliases. Behaviour unchanged, all tests green.
-- Product analytics: a funnel from landing → signup → first backtest →
-  validation → return visit (PostHog or similar, cookieless where possible).
-- A load-test baseline (k6 or Locust) against staging, with the numbers
-  recorded.
-- SLO dashboards and alerts for the targets above.
-- ADRs written for the data vendor, Postgres and the queue.
-- **Gate:** staging deploys automatically, and the load test and funnel both
-  report real numbers.
+### Phase 2: the product people come back to
 
-### Phase 1: data and compute platform (about 4–6 weeks)
+- No-code strategy builder (10–15 common indicators to start).
+- Index scan: one rule across an index, where it held and where it failed.
+- Costs per market: US (commission-free, SEC and FINRA fees) and India
+  (brokerage, STT, exchange fees, GST, stamp duty).
+- Saved strategies, watchlists, end-of-day email alerts.
+- Onboarding with templates.
+- **Gate:** people who are not friends return in week 4.
 
-- Licensed EOD data for every NSE stock and index, ingested nightly to
-  versioned Parquet. Index membership history (fixes survivorship bias for
-  every user, not only in the study).
-- Corporate-action adjustment done by us, tested against the vendor's figures.
-- Result cache in Redis; validation and index scans moved to Cloud Tasks +
-  worker, with the UI showing job progress.
-- Postgres for runs, strategies and quotas; a data migration from Firestore
-  with a rollback plan.
-- yfinance removed from production.
-- **Gate:** the load test holds 20 backtests a second at the p95 targets on
-  staging, and no request calls a data vendor.
+### Later, only on the author's decision
 
-### Phase 2: the product people come back to (about 6–8 weeks)
+- Licensed data, payments, a legal review, a budget, mobile app, broker links.
+  Going commercial needs all four of the first items together.
 
-- **Strategy builder:** a no-code rule composer (e.g. "RSI(14) < 30 and close
-  > SMA(200)", with entry, exit, stop and sizing). Ten to fifteen common
-  indicators to start.
-- **Index scan:** run one rule across the Nifty 50, 100 or 500 at once and see
-  where it held and where it failed. This is the funnel from the study, turned
-  into a feature.
-- **Indian costs:** brokerage, STT, exchange fees, GST, stamp duty, and
-  short-term versus long-term capital gains on results.
-- Saved strategies, watchlists, and **end-of-day alerts** when a saved rule
-  fires (email first).
-- Onboarding: three templates and a guided first test.
-- **Payments:** Razorpay (UPI, cards) with GST invoices; entitlements from the
-  existing `plans.py`; Vercel moved to a commercial plan.
-- **Gate:** 100 weekly active testers who are not friends, week-4 retention of
-  at least 15%, and the first paying users. If the gate fails, talk to users
-  before building more.
+## 6. Legal and terms: the standing checklist
 
-### Phase 3: scale and growth (ongoing)
+Not legal advice. This is what the code and the site must keep true, and it is
+re-checked whenever a feature touches money, data or advice.
 
-- Mobile-first polish and an installable app (PWA); Hindi.
-- Public strategy pages people can share. The SEO pages already built feed
-  into this.
-- Raise limits under budget alerts; a read replica; a CDN for heavy public
-  results.
-- Paper trading against live end-of-day prices, then (only after legal review)
-  broker connections for importing a portfolio.
-- **Gate:** 10,000 weekly active testers, with cost per active user known and
-  covered by revenue.
-
-## 6. Cost, rough (to be confirmed per vendor)
-
-| Item | Now | At Phase 2 | At 100k users |
-|---|---|---|---|
-| Hosting (Cloud Run, Vercel) | ₹0 | ₹2–4k a month (Vercel Pro included) | ₹10–25k |
-| Postgres + Redis | none | ₹4–8k | ₹15–30k |
-| Licensed EOD data | ₹0 (unlicensed) | ₹2–15k, depending on vendor and licence | the same, or a redistribution licence (higher) |
-| Analytics, email, errors | ₹0 | free tiers | ₹3–8k |
-| Legal review (one-off) | none | ₹25–75k | none |
-
-These are estimates, not quotes. At ₹999 a year for Pro, about 300 paying users
-cover Phase 2's running costs.
-
-## 7. Risks, worst first
-
-1. **No one returns.** This already happened with the 5 testers. Mitigation:
-   the Phase 2 gate, user conversations every week from Phase 0, and alerts as
-   the reason to return.
-2. **Regulation.** SEBI regulates investment advice and research and has
-   tightened rules on showing past or expected returns of trading strategies
-   and on "finfluencers". Finertia must stay a tool that tests the user's own
-   rules: no recommendations, no tips, no "this strategy returns X%"
-   marketing. A lawyer reviews the product and the terms before payments go
-   live. The DPDP Act 2023 governs personal data: a privacy notice, consent,
-   and deletion (already built).
-3. **Data licence.** Displaying or redistributing exchange data can need a
-   licence beyond a vendor's API terms. This is checked in the vendor
-   decision, not after launch.
-4. **One person.** The author's time is the scarcest input (decision 5 says 3
-   hours a week). Claude writes and tests the code; the author decides, tests
-   by hand, and talks to users. Phases are sized so every week ends with
-   something merged and deployable.
-5. **A big rewrite.** The plan grows the existing code (modules, then a
-   worker, then Postgres) with tests green at every step. Nothing is thrown
-   away.
-
-## 8. Decisions from the author
-
-**Decided 24 Nov: all seven defaults, as written below** (DECISIONS 24 Nov).
-
-| # | Decision | Default, now decided |
+| Rule | What it means here | Status |
 |---|---|---|
-| P1 | Market and user | Indian retail traders first |
-| P2 | Monthly budget you can spend from Phase 1 | ₹10k a month, revisited at the Phase 2 gate |
-| P3 | Data vendor | Claude compares 3–4 on licence, coverage and price; you choose |
-| P4 | Payments | Razorpay first, Stripe later for users outside India |
-| P5 | Legal review before charging | Yes, before Phase 2's payments go live |
-| P6 | Hours a week you can give | At least 5: decisions, testing, and two user calls a week |
-| P7 | Pricing | Free tier kept; Pro at ₹199 a month or ₹999 a year, tested later |
+| Yahoo / yfinance terms: personal, non-commercial use | No fees, no paid plan, no ads, no selling of data. Show results derived from prices; no bulk download of raw price data. Say where the data comes from and that we are not affiliated with Yahoo | Fixed by the non-commercial change (Phase 0) |
+| Vercel Hobby plan: non-commercial only | Same as above | Kept while nothing is sold |
+| India, SEBI (investment advisers, research analysts) | No advice, no recommendations, no tips, no claims of future returns; say "not SEBI-registered". Hypothetical past results always labelled as such | Footer and research notes say so; extended to every page |
+| US, SEC and FINRA (investment advisers) | Same posture: a general-purpose educational tool, not personalised advice; say "not a registered investment adviser" | Added to the footer |
+| India, DPDP Act 2023 (personal data) | A privacy notice saying what is stored and why; access and deletion | Export and deletion built; privacy notice added |
+| Other users' privacy (GDPR/CCPA-style expectations) | Minimal data: email, runs, usage counts; no tracking cookies; analytics cookieless | Kept |
+| Payments | No payment code reachable. Charging needs licensed data, a lawyer, and the author's decision first | Blocked in code |
 
-## 9. What stops or changes
+## 7. Decisions
 
-- Search and outreach work pauses (DECISIONS 24 Nov). The articles stay live,
-  and the 10 Dec counts are still taken for the record.
-- "Maintenance only" (DECISIONS 31 Oct) ends.
-- Research studies continue only when they feed a feature, as the index scan
-  does.
+**Settled on 24 Nov by the author:** a personal, non-commercial project; Yahoo
+data, US first and then Indian; budget, payments, licensed data and legal
+review deferred; engineering first. The first version of this plan's P1–P7
+choices (Indian retail first, ₹10k a month, Razorpay, ₹199 Pro) are withdrawn.
+
+**Open, and not needed now:** when (and whether) to go commercial.

@@ -64,6 +64,10 @@ export default defineConfig({
       url: `${API}/api/health`,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
+      // The API's default is 10 a month; this server keeps validation off for
+      // free accounts so the refusal path stays tested. The switched-on pair
+      // below allows one.
+      env: { FREE_VALIDATIONS_PER_MONTH: "0" },
     },
     {
       command: "npm --prefix ../frontend run dev -- --host 127.0.0.1 --port 5175 --strictPort",

@@ -13,7 +13,6 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { EASE_OUT, StillMotion, useMotionOff } from "./components/motion";
 import { lazyPage } from "./lib/lazyPage";
-import { feature } from "./lib/features";
 import { PAIRS, STOCKS } from "./lib/stockMeta";
 
 // Eager: the pages a first-time visitor actually lands on.
@@ -22,13 +21,15 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
-import PricingPage from "./pages/PricingPage";
 
 // Public marketing pages, lazy because none is on the critical path to the
 // landing page and each pulls in charts or long copy.
 const DemoPage = lazyPage(() => import("./pages/DemoPage"));
 const DocsPage = lazyPage(() => import("./pages/DocsPage"));
 const SupportPage = lazyPage(() => import("./pages/SupportPage"));
+const LimitsPage = lazyPage(() => import("./pages/LimitsPage"));
+const PrivacyPage = lazyPage(() => import("./pages/PrivacyPage"));
+const TermsPage = lazyPage(() => import("./pages/TermsPage"));
 const AccountDeletedPage = lazy(() => import("./pages/AccountDeletedPage"));
 const WriteupPage = lazyPage(() => import("./pages/WriteupPage"));
 const StrategyPage = lazyPage(() => import("./pages/StrategyPage"));
@@ -38,12 +39,14 @@ const ComparePage = lazyPage(() => import("./pages/ComparePage"));
 
 /**
  * What to load before the first render of each page the build pre-renders
- * (scripts/prerender.mjs), keyed as in src/lib/pageMeta.js. The landing and
- * pricing pages are in the entry bundle already.
+ * (scripts/prerender.mjs), keyed as in src/lib/pageMeta.js. The landing page
+ * is in the entry bundle already.
  */
 export const PRELOAD = {
   landing: () => Promise.resolve(),
-  pricing: () => Promise.resolve(),
+  limits: LimitsPage.preload,
+  privacy: PrivacyPage.preload,
+  terms: TermsPage.preload,
   demo: DemoPage.preload,
   docs: DocsPage.preload,
   support: SupportPage.preload,
@@ -129,7 +132,11 @@ export function Layout() {
               render={(location) => (
               <Routes location={location}>
                 <Route path="/" element={<LandingPage />} />
-                <Route path="/pricing" element={<PricingPage />} />
+                {/* Nothing is sold (DECISIONS 24 Nov); old /pricing links land on the limits. */}
+                <Route path="/pricing" element={<Navigate to="/limits" replace />} />
+                <Route path="/limits" element={<LimitsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
                 <Route path="/demo" element={<DemoPage />} />
                 <Route path="/docs" element={<DocsPage />} />
                 <Route path="/writeup" element={<WriteupPage />} />
@@ -144,9 +151,7 @@ export function Layout() {
                 <Route path="/learn/:id" element={<LearnPage />} />
                 <Route path="/stocks" element={<StockPage />} />
                 <Route path="/stocks/:slug" element={<StockPage />} />
-                {feature("account-data") && (
-                  <Route path="/account-deleted" element={<AccountDeletedPage />} />
-                )}
+                <Route path="/account-deleted" element={<AccountDeletedPage />} />
                 <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
                 <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
