@@ -113,6 +113,7 @@ Claude fills one row every Monday in phase C.
 
 | Week of | Visitors, both studies | Top source | Replies from strangers | Posts live |
 |---|---|---|---|---|
+| Before start, 13–23 Nov (read 24 Nov) | **2** (author and Google/Bing test visits taken out). Whole site: 10 visitors, 48 page views | None: every visit arrived with no referrer | 0 | 0 |
 | 24 Nov | | | | |
 | 1 Dec | | | | |
 | 8 Dec | | | | |
