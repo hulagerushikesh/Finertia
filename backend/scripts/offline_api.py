@@ -22,6 +22,8 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 import main  # noqa: E402
 
+from api import core  # noqa: E402
+
 PRO = {"role": "user", "isActive": True, "plan": "pro", "totalRuns": 0}
 
 
@@ -76,9 +78,9 @@ class _Db:
         return _Batch()
 
 
-main.verify_token = lambda token: {"uid": "reproduce", "email": "reproduce@example.com"}
-main.get_user_profile = lambda uid: PRO
-main.get_db = lambda: _Db()
+core.verify_token = lambda token: {"uid": "reproduce", "email": "reproduce@example.com"}
+core.get_user_profile = lambda uid: PRO
+core.get_db = lambda: _Db()
 
 
 def offline_client() -> TestClient:
@@ -87,6 +89,6 @@ def offline_client() -> TestClient:
 
 def post(client: TestClient, route: str, body: dict):
     """One authenticated call, with the rate limiters reset so a long script never trips them."""
-    for limiter in (main.ip_limiter, main.backtest_limiter, main.validate_limiter):
+    for limiter in (core.ip_limiter, core.backtest_limiter, core.validate_limiter):
         limiter._hits.clear()
     return client.post(route, json=body, headers={"Authorization": "Bearer x"})

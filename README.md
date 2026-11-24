@@ -298,7 +298,12 @@ service recreation), update the rewrite destination in `frontend/vercel.json`.
 ```
 Finertia/
 ├── backend/
-│   ├── main.py              # FastAPI app + all routes
+│   ├── main.py              # FastAPI app: middleware, mounts the routers at /api/v1 and /api
+│   ├── api/
+│   │   ├── core.py          # config, rate limits, quotas, auth (and the seams tests replace)
+│   │   ├── simulation.py    # price fetch + simulation steps shared by several routes
+│   │   └── routes/          # one router per domain: backtests, validations, portfolios,
+│   │                        #   compare, runs, sharing, me, payments, meta, admin
 │   ├── schemas.py           # request models + validation (no Firebase dependency)
 │   ├── data.py              # yfinance behind two cache tiers
 │   ├── signals.py           # momentum, MACD, and Bollinger signal generation
