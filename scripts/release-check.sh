@@ -187,10 +187,17 @@ post() {
 
   section "Frontend"
   check_ci "$(git rev-parse origin/main)"
-  for path in / /demo /pricing /writeup /docs /robots.txt /sitemap.xml; do
+  for path in / /demo /limits /privacy /terms /writeup /docs /robots.txt /sitemap.xml; do
     code=$(http "$SITE$path")
     [ "${code%% *}" = 200 ] && pass "$path 200" || fail "$path returned ${code%% *}"
   done
+  # Nothing is sold (DECISIONS 24 Nov): the old pricing page is a permanent
+  # redirect to the limits, and the API offers one free plan with billing off.
+  code=$(http "$SITE/pricing")
+  [ "${code%% *}" = 308 ] && pass "/pricing redirects (308)" || fail "/pricing returned ${code%% *}, expected 308"
+  plans=$(curl -fsS "$SITE/api/plans" 2>/dev/null || true)
+  echo "$plans" | grep -q '"billing_enabled":false' && ! echo "$plans" | grep -q '"id":"pro"' \
+    && pass "one free plan listed, billing off" || fail "/api/plans lists a paid plan or billing is on"
 
   section "Firestore"
   check_rules_live
