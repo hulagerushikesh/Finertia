@@ -81,6 +81,8 @@ export default function RollingWalkForward({ rolling }) {
   const ci = stitched?.sharpe_interval;
   const stability = rolling.parameter_stability;
   const [lo, hi] = rolling.out_of_sample_sharpe_range || [];
+  // A user's own rule is scored as written at every step: no parameters to choose.
+  const fixed = rolling.strategy === "rules";
 
   return (
     <section className="sheet p-6">
@@ -90,9 +92,11 @@ export default function RollingWalkForward({ rolling }) {
           <p className="text-xs text-graphite mt-1 leading-relaxed">
             The split above is one date. Here it starts at{" "}
             <span className="font-mono text-foreground">{rolling.first_split_date}</span> and moves forward
-            in {rolling.n_folds} equal steps. At each step the grid is re-optimised on everything before
-            the line and the winner is scored only on the stretch after it, with the market's own return
-            beside it. Only the green column is evidence.
+            in {rolling.n_folds} equal steps.{" "}
+            {fixed
+              ? "At each step your rule, unchanged, is scored on the stretch after the line"
+              : "At each step the grid is re-optimised on everything before the line and the winner is scored only on the stretch after it"}
+            , with the market's own return beside it. Only the green column is evidence.
           </p>
         </div>
         <Badge variant={v.tone} className="shrink-0">{v.label}</Badge>
@@ -107,7 +111,7 @@ export default function RollingWalkForward({ rolling }) {
         <span>
           fold Sharpe from <span className={tone(lo)}>{num(lo)}</span> to <span className={tone(hi)}>{num(hi)}</span>
         </span>
-        {stability && (
+        {stability && !fixed && (
           <span>
             {stability.distinct_parameter_sets === 1
               ? "same parameters every fold"
@@ -122,8 +126,8 @@ export default function RollingWalkForward({ rolling }) {
             <TableRow>
               <TableHead className="pl-6">Fold</TableHead>
               <TableHead>Scored on</TableHead>
-              <TableHead>Chosen parameters</TableHead>
-              <TableHead className="text-right">Tuned Sharpe</TableHead>
+              {!fixed && <TableHead>Chosen parameters</TableHead>}
+              <TableHead className="text-right">{fixed ? "Earlier Sharpe" : "Tuned Sharpe"}</TableHead>
               <TableHead className="text-right text-pencil">Unseen Sharpe</TableHead>
               <TableHead className="text-right">Return</TableHead>
               <TableHead className="text-right">Market</TableHead>
@@ -141,7 +145,7 @@ export default function RollingWalkForward({ rolling }) {
                     {f.out_of_sample_start_date} <span className="text-faint">→</span> {f.out_of_sample_end_date}
                     <span className="block text-2xs text-faint">{f.out_of_sample_bars} bars · {f.gap_bars}-bar gap</span>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-graphite">{params(f.best_params)}</TableCell>
+                  {!fixed && <TableCell className="whitespace-nowrap text-graphite">{params(f.best_params)}</TableCell>}
                   <TableCell className="text-right text-graphite">{num(f.in_sample_sharpe)}</TableCell>
                   <TableCell className={cn("text-right pencil-mark", tone(f.out_of_sample_sharpe))}>
                     {num(f.out_of_sample_sharpe)}
@@ -155,7 +159,7 @@ export default function RollingWalkForward({ rolling }) {
             })}
             {stitched && (
               <TableRow className="bg-muted/40">
-                <TableCell className="pl-6 font-sans text-foreground font-medium" colSpan={3}>
+                <TableCell className="pl-6 font-sans text-foreground font-medium" colSpan={fixed ? 2 : 3}>
                   Stitched out-of-sample record
                   <span className="block text-2xs font-mono font-normal text-faint">
                     {stitched.start_date} → {stitched.end_date} · {stitched.bars} bars
@@ -181,7 +185,7 @@ export default function RollingWalkForward({ rolling }) {
         </Table>
       </div>
 
-      {stability && stability.distinct_parameter_sets > 1 && (
+      {stability && !fixed && stability.distinct_parameter_sets > 1 && (
         <p className="text-xs text-graphite mt-4 leading-relaxed">
           {stability.distinct_parameter_sets === rolling.n_folds
             ? `A different parameter set won every one of the ${rolling.n_folds} folds.`

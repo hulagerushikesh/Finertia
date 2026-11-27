@@ -232,12 +232,8 @@ export default function DashboardPage() {
   // The result card names the run it is showing, from the frozen config, so
   // editing the panel afterwards never rewrites the answer on screen.
   const shown = ranParams || params;
-  // The API cannot validate a user's own rule yet (no parameter grid to
-  // sweep), so the tab explains that instead of sending a request it refuses.
-  const ruleRun = shown.strategy === "rules";
-
   function handleTab(next) {
-    if (next === "validation" && !validation && !validating && !ruleRun) {
+    if (next === "validation" && !validation && !validating) {
       handleValidate();
       return;
     }
@@ -588,13 +584,7 @@ export default function DashboardPage() {
                           {error.message}
                         </p>
                       )}
-                      {ruleRun ? (
-                        <p className="text-sm mt-3 max-w-md leading-relaxed text-foreground" data-testid="rule-no-validation">
-                          Validation is not available for your own rules yet: a rule has no set of
-                          parameters to re-tune on one period and test on the next. The Results tab
-                          has the full backtest, with its confidence intervals.
-                        </p>
-                      ) : error?.action === "validate" && error.status === 402 ? (
+                      {error?.action === "validate" && error.status === 402 ? (
                         <Button asChild className="mt-4">
                           <Link to="/limits">
                             {allowance

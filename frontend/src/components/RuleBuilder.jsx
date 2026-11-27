@@ -188,7 +188,6 @@ export default function RuleBuilder({ rule, onChange }) {
       <p className="text-xs text-faint leading-relaxed">
         Held from the entry until the exit; if both fire on the same day, the exit wins. A signal
         seen at one day&rsquo;s close counts from the next day, so no rule can see ahead.
-        Validation for your own rules is coming later.
       </p>
     </div>
   );

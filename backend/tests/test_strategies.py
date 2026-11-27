@@ -231,3 +231,11 @@ def test_frontend_copy_of_grids_matches():
         "{n: {\"label\": s.STRATEGIES[n][\"label\"], \"grid\": s.param_grid(n)} "
         "for n in s.STRATEGY_NAMES}, indent=2))' > ../frontend/src/lib/strategyGrids.json"
     )
+
+
+def test_a_rules_grid_is_the_rule_itself():
+    """Validation scores the user's rule as written; it never searches variants."""
+    from strategies import RULE_STRATEGY
+
+    assert param_grid(RULE_STRATEGY) == [{}]
+    assert RULE_STRATEGY not in STRATEGY_NAMES
