@@ -68,3 +68,33 @@ def test_a_preview_origin_is_allowed_only_where_the_pattern_is_set(monkeypatch):
 
         if saved["api.core"] is not None:
             api.core = saved["api.core"]
+
+
+def test_profiles_are_read_from_the_same_database(monkeypatch):
+    """Found on staging, 27 Nov: profiles came from production's database
+    while everything else used staging's, so a plan set on staging was ignored."""
+    asked = []
+
+    class FakeDoc:
+        exists = True
+
+        def to_dict(self):
+            return {"plan": "pro"}
+
+    class FakeDb:
+        def collection(self, name):
+            return self
+
+        def document(self, uid):
+            return self
+
+        def get(self):
+            return FakeDoc()
+
+    monkeypatch.setattr(firebase_admin_init, "_get_app", lambda: None)
+    monkeypatch.setattr(
+        firebase_admin_init.firestore, "client", lambda **kw: asked.append(kw) or FakeDb()
+    )
+    monkeypatch.setenv("FIRESTORE_DATABASE", "staging")
+    assert firebase_admin_init.get_user_profile("u1") == {"plan": "pro"}
+    assert asked == [{"database_id": "staging"}]

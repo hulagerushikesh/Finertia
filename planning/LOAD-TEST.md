@@ -94,3 +94,34 @@ in flight is the first run of each set-up, which still has to be computed.
 3. **Fewer bootstrap replicates, or computing them lazily** (for example when
    the confidence intervals are opened). That would be a product decision: the
    intervals are deliberately on every result.
+
+## On staging, through the real network (28 Nov)
+
+The numbers above are one process on a laptop with Firestore and Yahoo faked.
+These are the same API on Cloud Run (`finertia-api-staging`: 1 vCPU, 512 MiB,
+**one instance**), signed in as a no-email test account (`loadtest-staging`,
+unlimited on staging only), with Firestore real and AAPL's prices already
+cached. Ten requests at a time from one laptop in India; the per-user and
+per-address limits were lifted for the test and put back after.
+
+| Test | Requests | Per second | Median | 95th pct | Refused |
+|---|---|---|---|---|---|
+| Same 10-year AAPL set-up, repeated | 200 | **13.2** | 752 ms | 938 ms | 0 |
+| 120 different set-ups (lookback × MA window) | 120 | **0.9** | 11.3 s | 12.7 s | 15 |
+
+- **Repeats** come from the result cache; what is left is saving each run and
+  counting it (Firestore: run write ~36 ms, limit check ~34 ms, profile ~18 ms
+  at the median) plus the round trip from India to Iowa.
+- **New set-ups** run the engine, its bootstrap and the regime tables, about
+  one a second on one vCPU — a quarter of the laptop figure. Ten at once
+  queue behind each other, hence 11 s; the 15 refusals are Cloud Run's own
+  ("waited too long for an available instance"), because staging is capped
+  at one instance. Production allows two.
+- **Against the plan's Phase 1 gate** ("a burst of 20 backtests a second
+  holds on staging"): repeats reach 13/s on one instance; new set-ups reach
+  about 1/s. The gate is **not met**. The levers, in order: a second staging
+  instance to measure scaling, the jobs queue (Cloud Tasks) so a burst waits
+  in line instead of being refused, and moving the bootstrap off the request.
+
+Found on the way: staging read user profiles from production's database
+(fixed in the same PR, reads only).
