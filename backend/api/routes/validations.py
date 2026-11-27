@@ -29,10 +29,20 @@ from schemas import (
     PortfolioValidateRequest,
     ValidateRequest,
 )
-from strategies import build_positions, param_grid
+from strategies import RULE_STRATEGY, build_positions, param_grid
 from validation import permutation_test
 
 router = APIRouter()
+
+
+def _refuse_rules(req) -> None:
+    """A user's own rule has no parameter grid for walk-forward to sweep yet.
+    Refused before any allowance is taken, so the refusal costs nothing."""
+    if req.strategy == RULE_STRATEGY:
+        raise HTTPException(
+            status_code=400,
+            detail="Validation is not available for your own rules yet. The backtest is.",
+        )
 
 
 @router.post("/validate")
@@ -47,6 +57,7 @@ def validate_strategy(req: ValidateRequest, authorization: Optional[str] = Heade
     # per grid combination and then again for every permutation trial, so one
     # call is worth hundreds of backtests in CPU terms.
     user = inject_user(authorization, limit=(validate_limiter, "validation runs", 1))
+    _refuse_rules(req)
     check_validation_allowed(user)
     enforce_quota(user)
 
@@ -138,6 +149,7 @@ def validate_portfolio(req: PortfolioValidateRequest, authorization: Optional[st
     plan's portfolio-size cap. Diagnostic; not persisted.
     """
     user = inject_user(authorization, limit=(validate_limiter, "validation runs", 1))
+    _refuse_rules(req)
     check_validation_allowed(user)
     allowed_size = core.max_portfolio_size(user["profile"])
     if len(req.tickers) > allowed_size:

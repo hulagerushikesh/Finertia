@@ -1433,3 +1433,78 @@ def test_a_zero_budget_caches_nothing():
     lru = result_cache.ByteLRU(max_bytes=0)
     lru.put("a", b"1", {})
     assert lru.get("a") is None
+
+
+# ---------------------------------------------------------------------------
+# Your own rule: strategy "rules" (rules.py)
+# ---------------------------------------------------------------------------
+
+RULE = {
+    "direction": "long",
+    "entry": {"all": [{"left": {"ind": "sma", "n": 10}, "op": "crosses_above", "right": {"ind": "sma", "n": 30}}]},
+    "exit": {"all": [{"left": {"ind": "sma", "n": 10}, "op": "crosses_below", "right": {"ind": "sma", "n": 30}}]},
+}
+RULE_RUN = {**BACKTEST, "strategy": "rules", "rule": RULE}
+
+
+def test_a_rule_runs_as_a_backtest_and_is_saved_with_its_rule(api):
+    client, state = api
+    r = client.post("/api/backtest", json=RULE_RUN, headers=AUTH)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["signals_summary"]["long_days"] > 0 and body["signals_summary"]["short_days"] == 0
+    saved = state["db"].store[f"runs/{body['runId']}"]
+    assert saved["strategy"] == "rules"
+    assert saved["params"]["rule"]["entry"]["all"][0]["left"] == {"ind": "sma", "n": 10}
+
+
+def test_compare_recomputes_a_rule_run_to_the_same_curve(api):
+    client, _ = api
+    a = client.post("/api/backtest", json=RULE_RUN, headers=AUTH).json()
+    b = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    r = client.post("/api/compare", json={"run_ids": [a["runId"], b["runId"]]}, headers=AUTH)
+    assert r.status_code == 200, r.text
+    last = r.json()["chart"][-1]
+    assert last[a["runId"]] == a["equity_curve"][-1]["strategy"]
+
+
+def test_a_bad_rule_is_a_422_that_names_the_fault(api):
+    client, _ = api
+    bad = {**RULE_RUN, "rule": {**RULE, "entry": {"all": [{"left": {"ind": "vwap"}, "op": ">", "right": {"value": 1}}]}}}
+    r = client.post("/api/backtest", json=bad, headers=AUTH)
+    assert r.status_code == 422
+    assert "unknown indicator" in r.text
+
+
+def test_rules_without_a_rule_are_refused(api):
+    client, _ = api
+    r = client.post("/api/backtest", json={**BACKTEST, "strategy": "rules"}, headers=AUTH)
+    assert r.status_code == 422 and "needs a rule" in r.text
+
+
+def test_a_rule_beside_a_built_in_strategy_is_ignored(api):
+    client, _ = api
+    plain = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    extra = client.post("/api/backtest", json={**BACKTEST, "rule": RULE}, headers=AUTH).json()
+    assert plain["metrics"] == extra["metrics"]
+    assert result_cache.backtests.stats()["hits"] == 1  # same key: the rule was dropped
+
+
+def test_validation_refuses_a_rule_before_taking_an_allowance(allowance):
+    client, _, calls = allowance
+    r = client.post("/api/validate", json=RULE_RUN, headers=AUTH)
+    assert r.status_code == 400 and "not available for your own rules" in r.json()["detail"]
+    assert calls["reserve"] == []
+
+
+def test_a_rule_runs_across_a_portfolio(api):
+    client, _ = api
+    r = client.post("/api/portfolio", json={**PORTFOLIO, "strategy": "rules", "rule": RULE}, headers=AUTH)
+    assert r.status_code == 200, r.text
+    assert len(r.json()["legs"]) == 2
+
+
+def test_the_public_strategy_list_is_still_the_three_built_ins(api):
+    client, _ = api
+    ids = [s["id"] for s in client.get("/api/strategies").json()["strategies"]]
+    assert ids == ["momentum", "macd", "bollinger"]

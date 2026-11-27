@@ -7,6 +7,7 @@ all go through `build_positions` and `longest_window`.
 
 import pandas as pd
 
+from rules import build_rule_positions, rule_warmup
 from signals import (
     generate_signals,
     generate_macd_signals,
@@ -76,8 +77,22 @@ STRATEGIES = {
 
 STRATEGY_NAMES = tuple(STRATEGIES)
 
+# A user's own rule (rules.py), run by the same engine. Deliberately not in
+# STRATEGIES: that tuple is the built-in list the studies, the strategy pages
+# and /api/strategies iterate, and a custom rule has no fixed parameter grid
+# for walk-forward to sweep (validation refuses it until it has one).
+RULE_STRATEGY = "rules"
+_RULES = {
+    "label": "Your own rule",
+    "build": lambda close, p: build_rule_positions(close, p["rule"]),
+    "warmup": lambda p: rule_warmup(p["rule"]),
+    "grid": None,
+}
+
 
 def _get(strategy: str) -> dict:
+    if strategy == RULE_STRATEGY:
+        return _RULES
     try:
         return STRATEGIES[strategy]
     except KeyError:
@@ -98,4 +113,7 @@ def longest_window(strategy: str, params: dict) -> int:
 
 def param_grid(strategy: str) -> list[dict]:
     """Parameter combinations for walk-forward validation to sweep."""
-    return list(_get(strategy)["grid"])
+    grid = _get(strategy)["grid"]
+    if grid is None:
+        raise ValueError("Validation is not available for your own rules yet.")
+    return list(grid)

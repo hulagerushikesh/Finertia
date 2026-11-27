@@ -9,7 +9,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from strategies import STRATEGY_NAMES, longest_window
+from rules import validate as validate_rule
+from strategies import RULE_STRATEGY, STRATEGY_NAMES, longest_window
 
 # Which fields each strategy actually consumes. Everything else on the model
 # keeps its default and is ignored for that strategy.
@@ -17,6 +18,7 @@ STRATEGY_FIELDS = {
     "momentum": ("momentum_lookback", "ma_window", "momentum_threshold"),
     "macd": ("macd_fast", "macd_slow", "macd_signal"),
     "bollinger": ("bb_window", "bb_std"),
+    RULE_STRATEGY: ("rule",),
 }
 
 TRADING_DAYS_PER_YEAR = 252
@@ -58,6 +60,10 @@ class BacktestRequest(BaseModel):
     # Bollinger
     bb_window: int = Field(20, ge=5, le=200)
     bb_std: float = Field(2.0, ge=0.5, le=4.0)
+
+    # Your own rule (strategy "rules"): JSON as described in rules.py, checked
+    # and put in canonical form (defaults filled in) by the model validator.
+    rule: Optional[dict] = None
 
     # Risk overlays — independent of the strategy, so every one of them gets
     # stops and sizing without knowing they exist.
@@ -101,9 +107,10 @@ class BacktestRequest(BaseModel):
     @classmethod
     def _validate_strategy(cls, v: str) -> str:
         cleaned = v.strip().lower()
-        if cleaned not in STRATEGY_NAMES:
+        if cleaned not in STRATEGY_NAMES and cleaned != RULE_STRATEGY:
             raise ValueError(
-                f"Unknown strategy '{v}'. Choose one of: {', '.join(STRATEGY_NAMES)}."
+                f"Unknown strategy '{v}'. Choose one of: {', '.join(STRATEGY_NAMES)}, "
+                f"or {RULE_STRATEGY} with a rule."
             )
         return cleaned
 
@@ -141,6 +148,16 @@ class BacktestRequest(BaseModel):
 
         if self.strategy == "macd" and self.macd_fast >= self.macd_slow:
             raise ValueError("MACD fast period must be shorter than the slow period")
+
+        if self.strategy == RULE_STRATEGY:
+            if self.rule is None:
+                raise ValueError("Strategy 'rules' needs a rule: an entry and an exit.")
+            # RuleError is a ValueError, so a bad rule is a 422 naming the fault.
+            self.rule = validate_rule(self.rule)
+        else:
+            # A rule sent with a built-in strategy is ignored, and dropped so it
+            # cannot split the result cache's key for the same run.
+            self.rule = None
 
         # Indicators need a full window of history before they emit a real
         # signal, so a range shorter than the warm-up gives an all-flat backtest.
