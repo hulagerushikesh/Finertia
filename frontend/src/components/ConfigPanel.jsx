@@ -3,6 +3,7 @@ import { ChevronRight, X, RotateCcw } from "lucide-react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import Tooltip from "./Tooltip";
 import Spinner from "./Spinner";
+import RuleBuilder, { DEFAULT_RULE } from "./RuleBuilder";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -193,6 +194,8 @@ const DEFAULTS = {
   // Bollinger
   bb_window: 20,
   bb_std: 2.0,
+  // Your own rule (strategy "rules"); sent only with that strategy.
+  rule: DEFAULT_RULE,
   // Risk overlays — null means the limit is off, which is the default so the
   // baseline result is the strategy itself rather than the strategy plus a
   // stop nobody chose.
@@ -231,6 +234,11 @@ const STRATEGIES = [
     label: "Bollinger",
     blurb: "Mean reversion — fades moves outside the volatility envelope.",
   },
+  {
+    id: "rules",
+    label: "Own rule",
+    blurb: "Your own entry and exit conditions, built from common indicators.",
+  },
 ];
 
 /** Which numeric inputs belong to which strategy. */
@@ -257,6 +265,8 @@ const FIELDS = {
     { key: "bb_std", label: "Std Dev", range: "0.5–4", min: 0.5, max: 4, step: 0.25,
       tip: "How wide the bands sit. Higher means fewer, more extreme trades." },
   ],
+  // A rule's numbers live in the rule builder, not in Tuning.
+  rules: [],
 };
 
 // `htmlFor` ties the label to its input, so screen readers announce it and
@@ -296,7 +306,7 @@ function Segmented({ value, onChange, options, columns }) {
       role="group"
       className={cn(
         "grid gap-1 bg-muted rounded-md p-1",
-        columns === 3 ? "grid-cols-3" : "grid-cols-2",
+        columns === 4 ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-2" : columns === 3 ? "grid-cols-3" : "grid-cols-2",
       )}
     >
       {options.map((o) => (
@@ -550,13 +560,17 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
         <div className="flex flex-col gap-2">
           <span className="eyebrow">Strategy</span>
           <Segmented
-            columns={3}
+            columns={4}
             value={strategy}
             onChange={(v) => handleChange("strategy", v)}
             options={STRATEGIES.map((s) => ({ id: s.id, label: s.label }))}
           />
           <p className="text-xs text-faint leading-relaxed">{active.blurb}</p>
         </div>
+
+        {strategy === "rules" && (
+          <RuleBuilder rule={params.rule} onChange={(rule) => handleChange("rule", rule)} />
+        )}
 
         {mode === "single" ? (
           <Field label="Ticker" htmlFor="cfg-ticker" tip="Any symbol yfinance accepts — the suggestion list is only a shortcut, not a limit.">
