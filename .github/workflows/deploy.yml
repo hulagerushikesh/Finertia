@@ -122,6 +122,22 @@ jobs:
           echo "::error::New revision never returned a healthy /api/health for $GITHUB_SHA"
           exit 1
 
+      # The nightly price load (backend/nightly_prices.py, planning/DATA.md)
+      # runs the image the API just started serving, so the two never drift.
+      # Only the image and GIT_SHA change; the job's command, limits, secret
+      # and schedule (Cloud Scheduler: finertia-prices-nightly) are left as set.
+      - name: Point the nightly price job at the same image
+        if: env.REGION == env.SERVING_REGION
+        run: |
+          IMG=$(gcloud run services describe finertia-api \
+            --region "$REGION" --project momentbacktracking \
+            --format 'value(spec.template.spec.containers[0].image)')
+          gcloud run jobs update finertia-prices \
+            --image "$IMG" \
+            --region "$REGION" --project momentbacktracking \
+            --update-env-vars "GIT_SHA=$GITHUB_SHA" \
+            --quiet
+
       # backend-drift.yml diffs backend/ against this tag on every push to
       # main and comments on the merged PR when production is behind.
       - name: Mark this commit as deployed
