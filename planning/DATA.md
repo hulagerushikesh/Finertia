@@ -106,3 +106,23 @@ it. Agreed by the author on 27 Nov.
   variable for Preview), which is the author's part.
 - **Gate (from the plan):** staging deploys automatically and the load test
   reports real numbers against it.
+
+### Staging, as built (27 Nov)
+
+- Service `finertia-api-staging` (https://finertia-api-staging-818037622374.us-central1.run.app),
+  deployed by `.github/workflows/staging.yml` on every backend push to
+  `main`; first deployed by hand from the PR branch.
+- Firestore database `staging` (nam5, like production) with production's four
+  `runs` indexes. Checked: a share card on staging cached KO's prices in
+  `staging`, not in `(default)`.
+- `/api/health` says `"environment": "staging"`; preview origins pass CORS,
+  other origins do not.
+- First numbers: 150 requests to the public share route, 10 at a time:
+  34 a second, median 282 ms, 95th percentile 339 ms — and 32 refused by the
+  per-address limit, which is working as intended. A proper load test needs
+  signed-in backtests against staging with a test account; that is the next
+  step for the gate.
+- Still to do by the author: in Vercel, set `VITE_API_BASE_URL` for
+  **Preview** only to the staging URL. Email sign-in works on preview
+  addresses; Google sign-in needs each preview address added to Firebase's
+  authorised domains, so use email there.

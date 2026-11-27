@@ -11,6 +11,8 @@ name: Staging
 #   - FINERTIA_ENV=staging, which /api/health reports
 #   - ALLOWED_ORIGIN_REGEX admits this project's Vercel preview builds, which
 #     call the API cross-origin (production is same-origin via vercel.json)
+#   - production's feature switches are repeated here (SAVE_PORTFOLIO_RUNS,
+#     SHARE_CARDS); they are set on the production service, not in deploy.yml
 #   - no Sentry, no nightly price job, no backend-deployed tag
 on:
   push:
@@ -65,7 +67,7 @@ jobs:
             --min-instances 0 --max-instances 1 --memory 512Mi --cpu 1 --concurrency 40 --cpu-boost \
             --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
             --set-secrets "FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest" \
-            --update-env-vars "^@^GIT_SHA=$GITHUB_SHA@FINERTIA_ENV=staging@FIRESTORE_DATABASE=staging@FREE_VALIDATIONS_PER_MONTH=10@ALLOWED_ORIGINS=http://localhost:5174@ALLOWED_ORIGIN_REGEX=https://finertia-[a-z0-9-]+-hulagerushikeshs-projects\.vercel\.app" \
+            --update-env-vars "^@^GIT_SHA=$GITHUB_SHA@FINERTIA_ENV=staging@FIRESTORE_DATABASE=staging@FREE_VALIDATIONS_PER_MONTH=10@SAVE_PORTFOLIO_RUNS=1@SHARE_CARDS=1@LOG_LEVEL=INFO@ALLOWED_ORIGINS=http://localhost:5174@ALLOWED_ORIGIN_REGEX=https://finertia-[a-z0-9-]+-hulagerushikeshs-projects\.vercel\.app" \
             --allow-unauthenticated \
             --quiet
 
