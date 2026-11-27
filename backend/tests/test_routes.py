@@ -256,7 +256,15 @@ BACKTEST = {"ticker": "AAPL", "start": "2020-01-01", "end": "2022-01-01",
 
 def test_health_needs_no_auth(api):
     client, _ = api
-    assert client.get("/api/health").json() == {"status": "ok", "commit": None, "revision": None}
+    assert client.get("/api/health").json() == {
+        "status": "ok", "commit": None, "revision": None, "environment": "production",
+    }
+
+
+def test_health_says_when_it_is_staging(api, monkeypatch):
+    client, _ = api
+    monkeypatch.setenv("FINERTIA_ENV", "staging")
+    assert client.get("/api/health").json()["environment"] == "staging"
 
 
 def test_health_names_the_deployed_commit_and_revision(api, monkeypatch):

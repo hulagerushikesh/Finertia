@@ -78,7 +78,11 @@ def get_db():
     every caller through here makes that impossible rather than remembered.
     """
     _get_app()
-    return firestore.client()
+    # Staging uses its own Firestore database in the same project
+    # (planning/DATA.md, "Staging"), so its runs, usage counts and price
+    # cache never mix with production's. Unset means "(default)".
+    database = os.environ.get("FIRESTORE_DATABASE") or None
+    return firestore.client(database_id=database) if database else firestore.client()
 
 
 def verify_token(id_token: str) -> dict:

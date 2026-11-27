@@ -25,6 +25,8 @@ async def health():
         "status": "ok",
         "commit": os.environ.get("GIT_SHA") or None,
         "revision": os.environ.get("K_REVISION") or None,
+        # "staging" on the staging service; production sets nothing.
+        "environment": os.environ.get("FINERTIA_ENV") or "production",
     }
 
 

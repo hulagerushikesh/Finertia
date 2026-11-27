@@ -1,0 +1,85 @@
+name: Staging
+
+# The backend on every push to main, to its own service and its own database
+# (planning/DATA.md, "Staging"). Production stays a manual decision in
+# deploy.yml; this one is automatic, because breaking staging is what staging
+# is for.
+#
+# Same image recipe and flags as production, except:
+#   - service finertia-api-staging, at most one instance
+#   - FIRESTORE_DATABASE=staging: runs, usage and the price cache are separate
+#   - FINERTIA_ENV=staging, which /api/health reports
+#   - ALLOWED_ORIGIN_REGEX admits this project's Vercel preview builds, which
+#     call the API cross-origin (production is same-origin via vercel.json)
+#   - no Sentry, no nightly price job, no backend-deployed tag
+on:
+  push:
+    branches: [main]
+    paths: [backend/**, .github/workflows/staging.yml]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests must pass first
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pytest tests/ -q
+
+  backend:
+    name: Backend → staging
+    needs: test
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Deploy
+        working-directory: backend
+        run: |
+          gcloud run deploy finertia-api-staging \
+            --source . \
+            --region us-central1 \
+            --project momentbacktracking \
+            --min-instances 0 --max-instances 1 --memory 512Mi --cpu 1 --concurrency 40 --cpu-boost \
+            --service-account finertia-api-runtime@momentbacktracking.iam.gserviceaccount.com \
+            --set-secrets "FIREBASE_SERVICE_ACCOUNT_JSON=finertia-sa:latest" \
+            --update-env-vars "^@^GIT_SHA=$GITHUB_SHA@FINERTIA_ENV=staging@FIRESTORE_DATABASE=staging@FREE_VALIDATIONS_PER_MONTH=10@ALLOWED_ORIGINS=http://localhost:5174@ALLOWED_ORIGIN_REGEX=https://finertia-[a-z0-9-]+-hulagerushikeshs-projects\.vercel\.app" \
+            --allow-unauthenticated \
+            --quiet
+
+      - name: Verify staging is serving this commit
+        run: |
+          URL=$(gcloud run services describe finertia-api-staging \
+            --region us-central1 --project momentbacktracking --format 'value(status.url)')
+          echo "Staging: $URL"
+          for i in 1 2 3 4 5; do
+            body=$(curl -s "$URL/api/health") || body=""
+            if echo "$body" | python3 -c 'import json,sys,os; b=json.load(sys.stdin); sys.exit(0 if b.get("commit")==os.environ["GITHUB_SHA"] and b.get("environment")=="staging" else 1)'; then
+              echo "healthy: $body"; exit 0
+            fi
+            echo "not yet ($i/5): ${body:-no answer}"; sleep 6
+          done
+          echo "::error::staging never reported $GITHUB_SHA as environment staging"
+          exit 1
