@@ -56,6 +56,12 @@ log = logging.getLogger("finertia.data")
 # the close by the evening without hammering Yahoo on every request.
 PARTIAL_YEAR_TTL = timedelta(hours=6)
 
+# Tickers the nightly load keeps fresh (nightly_prices.py) are not re-fetched
+# on request within this window: the load runs once a day, and the slack
+# covers a late or retried run. Only while NIGHTLY_PRICES=on — before the
+# load is scheduled, a longer window would only make those tickers staler.
+TRACKED_TTL = timedelta(hours=30)
+
 # A backtest frame is ~10 years of daily bars, roughly 100-200 KB, so 200 of
 # them stay well inside the instance's memory next to the requests in flight.
 L1_MAX_ENTRIES = 200
@@ -163,7 +169,19 @@ def _years_in(start: str, end: str) -> list[int]:
     return list(range(first, max(first, last) + 1))
 
 
-def _uniform(docs: dict[int, dict], years: list[int], *, now: datetime, fresh: bool) -> bool:
+def _partial_ttl(ticker: str | None) -> timedelta:
+    """How long a year in progress is served from L2 for this ticker."""
+    if ticker and os.environ.get("NIGHTLY_PRICES", "off").lower() == "on":
+        from universes import is_tracked  # noqa: PLC0415 — reads JSON once
+
+        if is_tracked(ticker):
+            return TRACKED_TTL
+    return PARTIAL_YEAR_TTL
+
+
+def _uniform(
+    docs: dict[int, dict], years: list[int], *, now: datetime, fresh: bool, ticker: str | None = None
+) -> bool:
     """True when every year is present, from one batch, and (if `fresh`) any
     partial year is inside its TTL."""
     if any(y not in docs for y in years):
@@ -175,11 +193,12 @@ def _uniform(docs: dict[int, dict], years: list[int], *, now: datetime, fresh: b
     if len(batches) != 1:
         return False
     if fresh:
+        ttl = _partial_ttl(ticker)
         for y in years:
             d = docs[y]
             if not d["complete"]:
                 fetched = datetime.fromisoformat(d["fetched_at"])
-                if now - fetched > PARTIAL_YEAR_TTL:
+                if now - fetched > ttl:
                     return False
     return True
 
@@ -203,7 +222,14 @@ def _refresh(store: PriceStore, ticker: str, years: list[int], *, now: datetime)
         df = _download(ticker, f"{lo}-01-01", f"{hi + 1}-01-01")
     if df.empty:
         raise ValueError(f"No data found for {ticker}")
+    docs = docs_for(ticker, df, lo, hi, now=now)
+    with step("prices_write"):
+        store.put_many(docs)
+    return {d["year"]: d for d in docs}
 
+
+def docs_for(ticker: str, df: pd.DataFrame, lo: int, hi: int, *, now: datetime) -> list[dict]:
+    """One download, as one L2 doc per year from `lo` to `hi`, all under one batch id."""
     batch = now.isoformat(timespec="seconds")
     by_year = {int(y): f for y, f in df.groupby(df.index.year)}
     docs = []
@@ -224,9 +250,7 @@ def _refresh(store: PriceStore, ticker: str, years: list[int], *, now: datetime)
                 provider=get_provider().name,
             )
         )
-    with step("prices_write"):
-        store.put_many(docs)
-    return {d["year"]: d for d in docs}
+    return docs
 
 
 def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
@@ -271,7 +295,7 @@ def _fetch_through_store(ticker: str, start: str, end: str, key) -> pd.DataFrame
     with step("prices_read"):
         docs = store.get_many(ticker, years)
 
-    if _uniform(docs, years, now=now, fresh=True):
+    if _uniform(docs, years, now=now, fresh=True, ticker=ticker):
         df = _assemble(docs, years, start, end)
         source = "cache"
     else:
