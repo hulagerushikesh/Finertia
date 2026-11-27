@@ -233,7 +233,7 @@ def api(monkeypatch):
     # test's traffic would otherwise spend another's budget. reset() drops a
     # single key by design; clearing every key is a test-only need, so it reaches
     # past the public API rather than widening it for one caller.
-    for limiter in (core.ip_limiter, core.backtest_limiter, core.validate_limiter):
+    for limiter in (core.ip_limiter, core.backtest_limiter, core.validate_limiter, core.scan_limiter):
         limiter._hits.clear()
 
     # raise_server_exceptions=False makes the client behave like a real one:

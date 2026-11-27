@@ -123,6 +123,10 @@ validate_limiter = SharedRateLimiter(
 
 # Signed out, so metered per address, and only on a cache miss: a link going
 # round a group chat is computed once, then served from share.cache and the CDN.
+# An index scan runs up to a hundred backtests in one request.
+scan_limiter = SharedRateLimiter(
+    "scan", limit=_int_env("RATE_LIMIT_SCAN_PER_MIN", 3), window_seconds=60, store_factory=_rate_store
+)
 share_limiter = RateLimiter(limit=_int_env("RATE_LIMIT_SHARE_PER_MIN", 10), window_seconds=60)
 
 
