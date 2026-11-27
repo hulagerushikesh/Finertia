@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
-import { Link2, Check, Download } from "lucide-react";
+import { Link2, Check, Download, ScanLine } from "lucide-react";
 import ConfigPanel, { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
 import { HeadlineMetrics, MoreMetrics } from "../components/MetricsGrid";
 import MoreToggle from "../components/MoreToggle";
@@ -392,10 +392,23 @@ export default function DashboardPage() {
                       </p>
                     )}
                   </div>
+                  <div className="flex flex-col items-end">
+                  {shown.mode !== "portfolio" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-graphite"
+                      onClick={() => navigate("/scan", { state: { params: shown } })}
+                    >
+                      <ScanLine className="size-3.5" />
+                      Scan an index with this set-up
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" onClick={handleCopyLink} className="text-graphite">
                     {copied ? <Check className="size-3.5 text-gain" /> : <Link2 className="size-3.5" />}
                     {copied ? "Link copied" : "Copy link to this set-up"}
                   </Button>
+                  </div>
                 </div>
 
                 {/* Results / Validation switcher. A basket goes to

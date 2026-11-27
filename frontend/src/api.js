@@ -84,6 +84,10 @@ export const exportMyData = () => apiFetch("/api/me/export");
 export const deleteMyAccount = (confirm) =>
   apiFetch("/api/me", { method: "DELETE", body: JSON.stringify({ confirm }) });
 
+/** One strategy across a tracked index (backend/scan.py). */
+export const runScan = (params, universe) =>
+  apiFetch("/api/scan", { method: "POST", body: JSON.stringify({ ...params, universe }) });
+
 export const runPortfolio = (params) =>
   apiFetch("/api/portfolio", { method: "POST", body: JSON.stringify(params) });
 

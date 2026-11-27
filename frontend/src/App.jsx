@@ -77,6 +77,7 @@ export const PRELOAD = {
 // nobody reading the landing page needs it.
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
+const ScanPage = lazy(() => import("./pages/ScanPage"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminOverviewPage = lazy(() => import("./pages/admin/AdminOverviewPage"));
@@ -161,6 +162,14 @@ export function Layout() {
                   element={
                     <ProtectedRoute>
                       <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/scan"
+                  element={
+                    <ProtectedRoute>
+                      <ScanPage />
                     </ProtectedRoute>
                   }
                 />
