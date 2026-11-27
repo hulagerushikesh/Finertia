@@ -1,12 +1,16 @@
 """Single-ticker backtests."""
 
+import json
 import time
 import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Header
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import Response
 from firebase_admin import firestore
 
+import result_cache
 from analytics import annual_returns, monthly_returns, rolling_sharpe
 from api import core
 from api.core import (
@@ -15,7 +19,7 @@ from api.core import (
     inject_user,
     record_run,
 )
-from api.simulation import simulate
+from api.simulation import load_prices, simulate
 from bootstrap import bootstrap_metrics, stable_seed
 from costs import cost_sensitivity
 from metrics import compute_metrics
@@ -27,17 +31,21 @@ from timing import step
 router = APIRouter()
 
 
-@router.post("/backtest")
-def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(None)):
-    """Run a backtest for the selected strategy and persist results to Firestore."""
-    user = inject_user(authorization, limit=(backtest_limiter, "backtests", 1))
-    uid = user["uid"]
-    email = user["email"]
-    enforce_quota(user)
+def _render(content) -> bytes:
+    """JSON exactly as FastAPI's default response would render it."""
+    return json.dumps(
+        jsonable_encoder(content), ensure_ascii=False, allow_nan=False, indent=None, separators=(",", ":")
+    ).encode("utf-8")
 
-    start_time = time.time()
 
-    close, returns, engine_out, benchmark, data_source = simulate(req)
+def _compute(req: BacktestRequest, df) -> tuple[dict, dict]:
+    """(metrics, the response body's deterministic part) for one backtest.
+
+    Everything here depends only on the request and the prices, which is what
+    lets result_cache hold it. The per-request fields (runId, data_source,
+    duration_ms) are added by the route.
+    """
+    close, returns, engine_out, benchmark, _ = simulate(req, df)
 
     net_return = engine_out["net_return"].fillna(0)
     equity_curve = engine_out["equity_curve"].fillna(1)
@@ -49,13 +57,12 @@ def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(Non
 
     # 5b. Uncertainty around those metrics.
     #
-    # Deliberately NOT a Pro feature, unlike validation. Validation is gated
-    # because a grid sweep plus hundreds of permutations genuinely costs
-    # hundreds of backtests; this is one resample of a series already in memory
-    # and adds ~50ms. Gating it would mean the free tier — the tier most likely
-    # to read a Sharpe of 1.2 as a fact about the strategy — is the only one
-    # shown a naked point estimate, which is the exact failure the module exists
-    # to prevent.
+    # Deliberately on every plan, like validation. A grid sweep plus hundreds
+    # of permutations genuinely costs hundreds of backtests; this is one
+    # resample of a series already in memory. Leaving it out would show the
+    # reader most likely to read a Sharpe of 1.2 as a fact about the strategy
+    # a naked point estimate, which is the exact failure the module exists to
+    # prevent.
     #
     # The seed is derived from the run's own inputs so the interval is stable:
     # re-running the same backtest returns the same band rather than a slightly
@@ -117,8 +124,8 @@ def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(Non
     # p-value that belongs between them — Ledoit-Wolf on the paired series, so
     # the shared bars work for the reader instead of against them. Same
     # reasoning as the confidence intervals above for not gating it: 50-90ms on
-    # a series already in memory, and the free tier is the tier most likely to
-    # read "1.2 vs 0.6" as a settled fact.
+    # a series already in memory, and the reader most likely to read "1.2 vs
+    # 0.6" as a settled fact is the one who most needs it.
     benchmark_test = sharpe_difference_test(
         net_return,
         benchmark_daily,
@@ -141,9 +148,53 @@ def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(Non
         "flat_days": int((position == 0).sum()),
     }
 
+    return metrics, {
+        "metrics": metrics,
+        "equity_curve": equity_curve_data,
+        "drawdown": drawdown_data,
+        "trades": trades,
+        "monthly_returns": monthly,
+        "annual_returns": annual,
+        "rolling_sharpe": rolling,
+        "regimes": regimes,
+        "benchmark_test": benchmark_test,
+        "cost_sensitivity": cost_block,
+        "signals_summary": signals_summary,
+        "confidence_intervals": confidence_intervals,
+    }
+
+
+@router.post("/backtest")
+def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(None)):
+    """Run a backtest for the selected strategy and persist results to Firestore."""
+    user = inject_user(authorization, limit=(backtest_limiter, "backtests", 1))
+    uid = user["uid"]
+    email = user["email"]
+    enforce_quota(user)
+
+    start_time = time.time()
+
+    df = load_prices(req)
+    # "yfinance" | "cache" | "cache-stale" | "memory". Stale means Yahoo was
+    # down and this is the last good copy — the UI says so. Per request, so
+    # never part of the cached body.
+    data_source = df.attrs.get("data_source", "yfinance")
+
+    key = result_cache.request_key(req.model_dump(mode="json"), df["Close"])
+    with step("result_cache"):
+        cached = result_cache.backtests.get(key)
+    if cached is None:
+        metrics, body = _compute(req, df)
+        rendered = _render(body)
+        result_cache.backtests.put(key, rendered, {"metrics": metrics})
+    else:
+        rendered, extra = cached
+        metrics = extra["metrics"]
+
     duration_ms = int((time.time() - start_time) * 1000)
 
-    # 7. Persist to Firestore
+    # 7. Persist to Firestore — every run, cached or not: it is the user's run
+    # and it counts against the month.
     run_id = str(uuid.uuid4())
     db = core.get_db()
     run_doc = {
@@ -169,23 +220,7 @@ def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(Non
     with step("run_write"):
         batch.commit()
 
-    return {
-        "runId": run_id,
-        "metrics": metrics,
-        "equity_curve": equity_curve_data,
-        "drawdown": drawdown_data,
-        "trades": trades,
-        "monthly_returns": monthly,
-        "annual_returns": annual,
-        "rolling_sharpe": rolling,
-        "regimes": regimes,
-        "benchmark_test": benchmark_test,
-        "cost_sensitivity": cost_block,
-        "signals_summary": signals_summary,
-        "confidence_intervals": confidence_intervals,
-        # "yfinance" | "cache" | "cache-stale" | "memory". Stale means Yahoo
-        # was down and this is the last good copy — the UI says so.
-        "data_source": data_source,
-        "duration_ms": duration_ms,
-    }
-
+    # The cached body is a JSON object; the per-request fields go around it.
+    head = _render({"runId": run_id})[:-1]
+    tail = _render({"data_source": data_source, "duration_ms": duration_ms})[1:]
+    return Response(content=head + b"," + rendered[1:-1] + b"," + tail, media_type="application/json")

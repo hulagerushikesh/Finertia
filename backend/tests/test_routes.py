@@ -28,6 +28,7 @@ os.environ.setdefault("FIREBASE_SERVICE_ACCOUNT_JSON", "{}")
 import main  # noqa: E402
 
 from api import core  # noqa: E402
+import result_cache  # noqa: E402
 from schemas import BacktestRequest  # noqa: E402
 
 
@@ -224,6 +225,9 @@ def api(monkeypatch):
     # these tests pin it to 0 so a free account meets the plain refusal. The
     # allowance fixture turns it on where a test needs it.
     monkeypatch.setattr(core, "FREE_VALIDATIONS_PER_MONTH", 0)
+    # Each test starts with an empty result cache, so no test passes on a body
+    # another test computed.
+    result_cache.backtests.clear()
 
     # Module-level singletons persist across tests in the same process, so one
     # test's traffic would otherwise spend another's budget. reset() drops a
@@ -1358,3 +1362,74 @@ def test_small_responses_and_clients_without_gzip_are_left_alone(api):
     assert "content-encoding" not in client.get("/api/health", headers={"Accept-Encoding": "gzip"}).headers
     r = client.post("/api/backtest", json=BACKTEST, headers={**AUTH, "Accept-Encoding": "identity"})
     assert "content-encoding" not in r.headers
+
+
+# ---------------------------------------------------------------------------
+# Result cache (result_cache.py, planning/LOAD-TEST.md)
+# ---------------------------------------------------------------------------
+
+def _without_per_request(body):
+    return {k: v for k, v in body.items() if k not in ("runId", "duration_ms")}
+
+
+def test_a_repeated_backtest_is_served_from_the_cache_with_the_same_body(api):
+    client, state = api
+    first = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    second = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    assert first.status_code == second.status_code == 200
+    a, b = first.json(), second.json()
+    assert _without_per_request(a) == _without_per_request(b)
+    assert a["runId"] != b["runId"]
+    assert result_cache.backtests.stats()["hits"] == 1
+
+
+def test_a_cached_run_is_still_saved_and_counted(api):
+    client, state = api
+    for _ in range(2):
+        r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    run_id = r.json()["runId"]
+    saved = state["db"].store[f"runs/{run_id}"]
+    assert saved["metrics"] == r.json()["metrics"]
+    assert state["db"].store["users/u1"]["runsThisPeriod"] is not None
+
+
+def test_new_prices_are_a_new_result(api, monkeypatch):
+    client, _ = api
+    client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    moved = _prices()
+    moved.loc[moved.index[-1], "Close"] *= 1.5
+    monkeypatch.setattr(core, "fetch_ohlcv", lambda t, s, e: moved)
+    r = client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    assert r.status_code == 200
+    assert result_cache.backtests.stats()["hits"] == 0
+
+
+def test_a_changed_parameter_is_a_new_result(api):
+    client, _ = api
+    client.post("/api/backtest", json=BACKTEST, headers=AUTH)
+    client.post("/api/backtest", json={**BACKTEST, "transaction_cost": 0.002}, headers=AUTH)
+    assert result_cache.backtests.stats()["hits"] == 0
+
+
+def test_the_cached_body_is_what_fastapi_would_have_sent(api):
+    client, _ = api
+    body = client.post("/api/backtest", json=BACKTEST, headers=AUTH).json()
+    assert list(body)[0] == "runId" and list(body)[-2:] == ["data_source", "duration_ms"]
+    for key in ("metrics", "equity_curve", "confidence_intervals", "benchmark_test", "cost_sensitivity"):
+        assert key in body
+
+
+def test_the_byte_budget_evicts_the_oldest():
+    lru = result_cache.ByteLRU(max_bytes=10)
+    lru.put("a", b"12345", {})
+    lru.put("b", b"12345", {})
+    lru.put("c", b"12345", {})
+    assert lru.get("a") is None and lru.get("b") and lru.get("c")
+    lru.put("huge", b"x" * 11, {})
+    assert lru.get("huge") is None
+
+
+def test_a_zero_budget_caches_nothing():
+    lru = result_cache.ByteLRU(max_bytes=0)
+    lru.put("a", b"1", {})
+    assert lru.get("a") is None

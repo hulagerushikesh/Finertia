@@ -50,7 +50,28 @@ def backtest_body(i):
     }
 
 
+def unique_body(i):
+    """A backtest no earlier request asked for: the result cache cannot help."""
+    day = 1 + (i % 28)
+    month = 1 + (i // 28) % 12
+    year = 2016 + (i // 336)
+    return {**backtest_body(i), "start": f"{year}-{month:02d}-{day:02d}"}
+
+
+_unique_offset = [0]
+
+
+def fresh_body(i):
+    # Every scenario gets its own range of unique requests.
+    return unique_body(_unique_offset[0] + i)
+
+
+# (name, path, body builder, concurrency, requests). "backtest" repeats 24
+# set-ups (8 tickers x 3 strategies), so after the first of each it is served
+# from the result cache; "backtest-new" never repeats, the uncached cost.
 PLAN = [
+    ("backtest-new", "/api/v1/backtest", fresh_body, 1, 20),
+    ("backtest-new", "/api/v1/backtest", fresh_body, 20, 100),
     ("backtest", "/api/v1/backtest", backtest_body, 1, 20),
     ("backtest", "/api/v1/backtest", backtest_body, 5, 50),
     ("backtest", "/api/v1/backtest", backtest_body, 20, 100),
@@ -163,7 +184,9 @@ async def run_scenario(base, name, path, body, concurrency, total):
     limits = httpx.Limits(max_connections=concurrency, max_keepalive_connections=concurrency)
     async with httpx.AsyncClient(timeout=300, limits=limits) as client:
         # One untimed request per scenario so a first-call cost is not counted.
-        await client.post(f"{base}{path}", json=body(0), headers={"Authorization": "Bearer x"})
+        # body(total) is outside the timed range, so for unique requests the
+        # warm-up never pre-fills the cache for a timed one.
+        await client.post(f"{base}{path}", json=body(total), headers={"Authorization": "Bearer x"})
         started = time.perf_counter()
         await asyncio.gather(*(worker(client) for _ in range(concurrency)))
         wall = time.perf_counter() - started
@@ -186,9 +209,10 @@ async def run_all(base):
     results = []
     for name, path, body, concurrency, total in PLAN:
         res = await run_scenario(base, name, path, body, concurrency, total)
+        _unique_offset[0] += total + 1
         results.append(res)
         print(
-            f"{res['scenario']:9} c={res['concurrency']:<3} n={res['requests']:<4} "
+            f"{res['scenario']:12} c={res['concurrency']:<3} n={res['requests']:<4} "
             f"ok={res['ok']:<4} {res['throughput_per_s']:>7} req/s  "
             f"p50 {res['p50_s']}s  p95 {res['p95_s']}s  max {res['max_s']}s  errors {res['errors'] or '-'}",
             flush=True,

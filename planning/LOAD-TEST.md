@@ -58,11 +58,36 @@ No errors in any scenario.
   identical indices, but it was no faster, because generating the random
   numbers is the real cost.
 
+## Result cache (added 27 Nov, `backend/result_cache.py`)
+
+A backtest is deterministic, so a finished result is kept in the process and
+served again for the same request on the same prices.
+
+- **The key covers every request field and a hash of every close and date.**
+  A revised price or a new day is therefore a new key, and nothing has to be
+  invalidated by hand. A deploy starts the cache empty.
+- **It holds the rendered JSON under a 64 MB budget** (`RESULT_CACHE_MB`,
+  0 = off), dropping the least recently used results first.
+- **Every run is still saved to History and counted** against the month, from
+  the cache or not.
+
+| Scenario | In flight | Throughput | p50 | p95 |
+|---|---|---|---|---|
+| New set-up every time (no hits) | 1 | 3.3 /s | 0.30 s | 0.34 s |
+| New set-up every time (no hits) | 20 | 4.1 /s | 4.70 s | 5.36 s |
+| 24 set-ups repeated | 5 | 29 /s | 0.02 s | 1.17 s |
+| 24 set-ups repeated | 20 | 328 /s | 0.04 s | 0.19 s |
+| 24 set-ups repeated | 40 | 247 /s | 0.10 s | 0.35 s |
+
+**Hits serve about 60–80 times the throughput of misses.** New set-ups cost
+the same as before: the cache helps only when a request repeats. The p95 at 5
+in flight is the first run of each set-up, which still has to be computed.
+
 ## What would move the ceiling (in order)
 
-1. **A result cache** keyed by the request and the data's last date (Phase 1).
-   A backtest is deterministic, so a repeated run skips its 0.3 s of CPU
-   entirely. Popular set-ups and the example runs are most of the traffic.
+1. ~~**A result cache**~~: done, see above. Next, **pre-compute** the example
+   runs and the stock pages' set-ups after each deploy, so even their first
+   request is a hit.
 2. **Lower `--concurrency`** (about 8) so Cloud Run starts a second instance
    before queues grow. This is free while `--max-instances` stays at 2. Raising
    the maximum is a spending decision for later.

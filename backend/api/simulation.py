@@ -23,21 +23,28 @@ from schemas import (
 from strategies import build_positions
 
 
-def simulate(req: BacktestRequest):
-    """Fetch the prices and run one backtest: signals, overlays, engine.
+def load_prices(req: BacktestRequest) -> pd.DataFrame:
+    """The request's prices. A bad ticker or an empty range is the user's
+    mistake, so it surfaces as a 400 with the underlying reason, not a 500."""
+    try:
+        return core.fetch_ohlcv(req.ticker, req.start, req.end)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except DataUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+def simulate(req: BacktestRequest, df: pd.DataFrame | None = None):
+    """Run one backtest: signals, overlays, engine (fetching the prices unless
+    `df` is given).
 
     Shared by POST /api/backtest and the share card, so a card can never show
     a different number from the run it links to. Returns (close, returns,
     engine output, buy-and-hold equity, data source).
     """
-    # 1. Fetch data — a bad ticker or an empty range is the user's mistake, so
-    # surface it as a 400 with the underlying reason rather than a 500.
-    try:
-        df = core.fetch_ohlcv(req.ticker, req.start, req.end)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except DataUnavailableError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    # 1. Data
+    if df is None:
+        df = load_prices(req)
     data_source = df.attrs.get("data_source", "yfinance")
     close = df["Close"]
 
