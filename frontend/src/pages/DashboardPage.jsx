@@ -229,17 +229,21 @@ export default function DashboardPage() {
     showToast(`Loaded "${sample.title}". Press Run when you're ready.`, "info");
   }
 
+  // The result card names the run it is showing, from the frozen config, so
+  // editing the panel afterwards never rewrites the answer on screen.
+  const shown = ranParams || params;
+  // The API cannot validate a user's own rule yet (no parameter grid to
+  // sweep), so the tab explains that instead of sending a request it refuses.
+  const ruleRun = shown.strategy === "rules";
+
   function handleTab(next) {
-    if (next === "validation" && !validation && !validating) {
+    if (next === "validation" && !validation && !validating && !ruleRun) {
       handleValidate();
       return;
     }
     setTab(next);
   }
 
-  // The result card names the run it is showing, from the frozen config, so
-  // editing the panel afterwards never rewrites the answer on screen.
-  const shown = ranParams || params;
   const strategyLabel =
     STRATEGIES.find((s) => s.id === (result?.strategy || shown.strategy))?.label || shown.strategy;
   const stamp = validation ? WF_STAMP[validation.walk_forward.verdict] || WF_STAMP.inconclusive : null;
@@ -584,7 +588,13 @@ export default function DashboardPage() {
                           {error.message}
                         </p>
                       )}
-                      {error?.action === "validate" && error.status === 402 ? (
+                      {ruleRun ? (
+                        <p className="text-sm mt-3 max-w-md leading-relaxed text-foreground" data-testid="rule-no-validation">
+                          Validation is not available for your own rules yet: a rule has no set of
+                          parameters to re-tune on one period and test on the next. The Results tab
+                          has the full backtest, with its confidence intervals.
+                        </p>
+                      ) : error?.action === "validate" && error.status === 402 ? (
                         <Button asChild className="mt-4">
                           <Link to="/limits">
                             {allowance

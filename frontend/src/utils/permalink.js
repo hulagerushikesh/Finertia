@@ -16,6 +16,8 @@ const STRATEGY_KEYS = {
   momentum: ["momentum_lookback", "ma_window", "momentum_threshold"],
   macd: ["macd_fast", "macd_slow", "macd_signal"],
   bollinger: ["bb_window", "bb_std"],
+  // A user's own rule travels as one JSON value. The server re-validates it.
+  rules: ["rule"],
 };
 
 const BASE_KEYS = ["ticker", "start", "end", "strategy", "transaction_cost"];
@@ -85,6 +87,10 @@ export function encodeParams(params) {
     // A disabled stop is simply omitted; decode restores it as null.
     if (value === undefined || value === null || value === "") continue;
 
+    if (key === "rule") {
+      query.set(key, JSON.stringify(value));
+      continue;
+    }
     query.set(key, Array.isArray(value) ? value.join(",") : String(value));
   }
   return query.toString();
@@ -139,6 +145,17 @@ export function decodeParams(search) {
       // falls back to the default basket rather than loading a broken form.
       if (list.length < 2) continue;
       out.tickers = [...new Set(list)].slice(0, 10);
+    } else if (key === "rule") {
+      // A mangled rule keeps the default one rather than breaking the page;
+      // the server names anything still wrong when the rule is run.
+      let rule;
+      try {
+        rule = JSON.parse(raw);
+      } catch {
+        continue;
+      }
+      if (!rule || typeof rule !== "object" || !rule.entry || !rule.exit) continue;
+      out.rule = rule;
     } else if (NUMERIC.has(key)) {
       const n = Number(raw);
       if (!Number.isFinite(n)) continue;
@@ -163,6 +180,7 @@ export function permalinkFor(params) {
  * workspace. Portfolios have no card, so they keep the plain set-up link.
  */
 export function shareLinkFor(params) {
-  if ((params.mode || "single") === "portfolio") return permalinkFor(params);
+  // Portfolios and own rules have no card, so they keep the plain set-up link.
+  if ((params.mode || "single") === "portfolio" || params.strategy === "rules") return permalinkFor(params);
   return `${window.location.origin}/api/share?${encodeParams(params)}`;
 }

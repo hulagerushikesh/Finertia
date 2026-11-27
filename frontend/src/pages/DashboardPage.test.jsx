@@ -269,3 +269,20 @@ describe("DashboardPage — examples (switch)", () => {
     expect(screen.queryByTestId("example-look-at")).toBeNull();
   });
 });
+
+
+// A user's own rule (strategy "rules"): the API cannot validate it yet.
+describe("DashboardPage — own rule", () => {
+  it("runs the rule and explains Validation instead of asking the API", async () => {
+    renderPage({ entry: { pathname: "/dashboard", state: { params: { ...DEFAULTS, strategy: "rules" } } } });
+    expect(screen.getByTestId("rule-builder")).toBeInTheDocument();
+    await runAapl();
+    expect(api.runBacktest).toHaveBeenCalledWith(
+      expect.objectContaining({ strategy: "rules", rule: expect.objectContaining({ direction: "long" }) })
+    );
+    await userEvent.click(screen.getByRole("tab", { name: /Validation/ }));
+    expect(await screen.findByTestId("rule-no-validation")).toBeInTheDocument();
+    expect(api.validateStrategy).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Run validation" })).toBeNull();
+  });
+});

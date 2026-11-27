@@ -14,9 +14,11 @@ describe("sample strategies", () => {
     expect(new Set(SAMPLES.map((s) => s.id)).size).toBe(3);
   });
 
-  it("covers every strategy the app offers", () => {
+  // One example per built-in strategy. "Own rule" has no example: its
+  // starting point is the builder's default rule.
+  it("covers every built-in strategy the app offers", () => {
     expect(new Set(SAMPLES.map((s) => s.params.strategy))).toEqual(
-      new Set(STRATEGIES.map((s) => s.id))
+      new Set(STRATEGIES.map((s) => s.id).filter((id) => id !== "rules"))
     );
   });
 
