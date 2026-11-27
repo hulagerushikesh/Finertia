@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import demo from "../demoData.json";
@@ -271,18 +271,17 @@ describe("DashboardPage — examples (switch)", () => {
 });
 
 
-// A user's own rule (strategy "rules"): the API cannot validate it yet.
+// A user's own rule (strategy "rules"): validated as written, like any run.
 describe("DashboardPage — own rule", () => {
-  it("runs the rule and explains Validation instead of asking the API", async () => {
+  it("runs the rule, then validates that same rule", async () => {
+    api.validateStrategy.mockResolvedValue({ ...demoValidation, strategy: "rules" });
     renderPage({ entry: { pathname: "/dashboard", state: { params: { ...DEFAULTS, strategy: "rules" } } } });
     expect(screen.getByTestId("rule-builder")).toBeInTheDocument();
     await runAapl();
-    expect(api.runBacktest).toHaveBeenCalledWith(
-      expect.objectContaining({ strategy: "rules", rule: expect.objectContaining({ direction: "long" }) })
-    );
+    const sent = expect.objectContaining({ strategy: "rules", rule: expect.objectContaining({ direction: "long" }) });
+    expect(api.runBacktest).toHaveBeenCalledWith(sent);
     await userEvent.click(screen.getByRole("tab", { name: /Validation/ }));
-    expect(await screen.findByTestId("rule-no-validation")).toBeInTheDocument();
-    expect(api.validateStrategy).not.toHaveBeenCalled();
-    expect(screen.queryByRole("button", { name: "Run validation" })).toBeNull();
+    await waitFor(() => expect(api.validateStrategy).toHaveBeenCalledWith(sent));
+    expect(await screen.findByText("Above zero")).toBeInTheDocument();
   });
 });

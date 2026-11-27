@@ -1490,11 +1490,47 @@ def test_a_rule_beside_a_built_in_strategy_is_ignored(api):
     assert result_cache.backtests.stats()["hits"] == 1  # same key: the rule was dropped
 
 
-def test_validation_refuses_a_rule_before_taking_an_allowance(allowance):
+def test_a_rule_is_validated_as_one_fixed_candidate(allowance):
+    """Nothing is tuned: the rule itself is the only candidate, so the checks
+    that need a search (PBO, effective N) say so and the rest run as usual."""
     client, _, calls = allowance
     r = client.post("/api/validate", json=RULE_RUN, headers=AUTH)
-    assert r.status_code == 400 and "not available for your own rules" in r.json()["detail"]
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["strategy"] == "rules"
+    wf = body["walk_forward"]
+    assert wf["combinations_tested"] == 1 and wf["best_params"] == {}
+    assert wf["deflated"]["n_trials"] == 1 and wf["deflated"]["expected_max_sharpe"] == 0
+    assert wf["overfitting"]["computable"] is False
+    assert wf["snooping"]["n_candidates"] == 1
+    assert all(f["combinations_tested"] == 1 for f in body["rolling_walk_forward"]["folds"])
+    assert body["permutation"]["trials"] == 500
+    assert calls["reserve"] == [("u1", 1)]  # it costs a validation like any other
+
+
+def test_a_rule_scores_the_same_positions_as_its_backtest(api):
+    """The validated rule is the backtested rule, not a variation of it."""
+    client, state = api
+    state["profile"] = dict(PRO)
+    bt = client.post("/api/backtest", json=RULE_RUN, headers=AUTH).json()
+    v = client.post("/api/validate", json=RULE_RUN, headers=AUTH).json()
+    assert v["permutation"]["real_sharpe"] == pytest.approx(bt["metrics"]["sharpe_ratio"], abs=1e-6)
+
+
+def test_a_bad_rule_is_refused_by_validation_before_taking_an_allowance(allowance):
+    client, _, calls = allowance
+    bad = {**RULE_RUN, "rule": {**RULE, "direction": "up"}}
+    assert client.post("/api/validate", json=bad, headers=AUTH).status_code == 422
     assert calls["reserve"] == []
+
+
+def test_a_rule_is_validated_across_a_portfolio(api):
+    client, state = api
+    state["profile"] = dict(PRO)
+    r = client.post("/api/portfolio/validate", json={**PORTFOLIO, "strategy": "rules", "rule": RULE}, headers=AUTH)
+    assert r.status_code == 200, r.text
+    wf = r.json()["walk_forward"]
+    assert wf["combinations_tested"] == 1 and set(wf["legs"]) == {"AAPL", "MSFT"}
 
 
 def test_a_rule_runs_across_a_portfolio(api):

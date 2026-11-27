@@ -50,3 +50,21 @@ describe("VerdictCard", () => {
     expect(onJump).toHaveBeenCalledWith("timing");
   });
 });
+
+// A user's own rule: no search behind it, so the words do not assume one.
+describe("VerdictCard for a user's own rule", () => {
+  const rule = (verdict, extra = {}) => ({ strategy: "rules", ...wf(verdict, extra) });
+
+  it("names the search checks by what they measure for one rule", () => {
+    const checks = readChecks(
+      rule("held_up", { deflated: { computable: true, verdict: "significant" }, snooping: { computable: true, verdict: "no_evidence" } })
+    );
+    expect(checks.map((c) => c.name)).toEqual(["Unseen data", "Above zero", "Against holding"]);
+  });
+
+  it("does not blame tuned parameters when there were none", () => {
+    render(<VerdictCard data={{ ...rule("failed"), permutation: { significant: true } }} />);
+    expect(screen.getByText(/lost its edge in the later part/)).toBeInTheDocument();
+    expect(screen.queryByText(/parameters/)).toBeNull();
+  });
+});

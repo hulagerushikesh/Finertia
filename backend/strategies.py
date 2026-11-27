@@ -79,14 +79,19 @@ STRATEGY_NAMES = tuple(STRATEGIES)
 
 # A user's own rule (rules.py), run by the same engine. Deliberately not in
 # STRATEGIES: that tuple is the built-in list the studies, the strategy pages
-# and /api/strategies iterate, and a custom rule has no fixed parameter grid
-# for walk-forward to sweep (validation refuses it until it has one).
+# and /api/strategies iterate.
+#
+# Its grid is the rule itself and nothing else: one candidate. Validation then
+# asks the questions that still make sense of a fixed rule — does it hold up
+# after the split, in every rolling fold, against random timing, against
+# buy-and-hold — and has no in-sample search to correct for. Searching
+# variations of the user's rule would be validating a rule they did not write.
 RULE_STRATEGY = "rules"
 _RULES = {
     "label": "Your own rule",
     "build": lambda close, p: build_rule_positions(close, p["rule"]),
     "warmup": lambda p: rule_warmup(p["rule"]),
-    "grid": None,
+    "grid": ({},),
 }
 
 
@@ -113,7 +118,4 @@ def longest_window(strategy: str, params: dict) -> int:
 
 def param_grid(strategy: str) -> list[dict]:
     """Parameter combinations for walk-forward validation to sweep."""
-    grid = _get(strategy)["grid"]
-    if grid is None:
-        raise ValueError("Validation is not available for your own rules yet.")
-    return list(grid)
+    return list(_get(strategy)["grid"])

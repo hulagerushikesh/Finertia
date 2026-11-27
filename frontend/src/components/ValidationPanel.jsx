@@ -109,6 +109,26 @@ const GRID_VERDICT = {
   },
 };
 
+// For one rule as written, the same verdicts in words that do not assume a
+// search. Labels stay the backend's; only the explanation changes.
+const RULE_BLURB = {
+  wf: {
+    overfit: "Most of the edge from the earlier part vanished in the later part.",
+    failed: "The rule lost money in the later part. The earlier part was not a guide to it.",
+  },
+  dsr: {
+    significant: "The earlier part's Sharpe is very likely above zero.",
+    marginal: "Probably above zero, but not with the usual 95% confidence.",
+    not_significant: "It could still be zero: the record is too short or too lumpy to tell.",
+    noise: "It could still be zero: the record is too short or too lumpy to tell.",
+  },
+  grid: {
+    grid_beats_benchmark: "Your rule earned more than holding the stock, by more than chance would explain.",
+    weak_evidence: "Your rule edged out holding the stock, but not by enough to rule out chance.",
+    no_evidence: "Your rule did not do better than simply holding the stock for the whole period.",
+  },
+};
+
 const pct = (v) => (v === null || v === undefined ? "—" : `${(v * 100).toFixed(2)}%`);
 const signedPct = (v, dp = 1) =>
   v === null || v === undefined ? "—" : `${v >= 0 ? "+" : "−"}${(Math.abs(v) * 100).toFixed(dp)}%`;
@@ -305,6 +325,10 @@ export default function ValidationPanel({ data }) {
   const legs = wf.legs ? Object.entries(wf.legs) : null;
   const legTests = pm.legs ? Object.entries(pm.legs) : null;
   const verdict = WF_VERDICT[wf.verdict] || WF_VERDICT.inconclusive;
+  // A user's own rule is validated as written: one candidate, nothing tuned.
+  // The sections that describe a search say what they mean for one rule
+  // instead, and the figures that only exist to price a search are left out.
+  const fixed = data.strategy === "rules";
 
   // The working is long — six sheets of figures — and most readers want
   // the answer first. Collapsed by default; the choice is remembered so a
@@ -345,7 +369,9 @@ export default function ValidationPanel({ data }) {
         <Head
           title="Walk-forward validation"
           blurb={
-            isBasket
+            fixed
+              ? "Your rule, exactly as written, scored on the earlier part of the period and then on the later part. Nothing was tuned, so the later part is the test."
+              : isBasket
               ? "One parameter set for every name, optimised on the basket's earlier returns, then scored on the later part. Only the green figures are evidence."
               : "Parameters were optimised on the earlier part of the period, then scored on the later part. Only the green figures are evidence."
           }
@@ -353,21 +379,25 @@ export default function ValidationPanel({ data }) {
           tone={verdict.tone}
         />
 
-        <p className="margin-note mt-4 mb-5">{verdict.blurb}</p>
+        <p className="margin-note mt-4 mb-5">{(fixed && RULE_BLURB.wf[wf.verdict]) || verdict.blurb}</p>
 
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-2xs font-mono text-graphite mb-3">
           <span>split <span className="text-foreground">{wf.split_date}</span></span>
           <span>{wf.in_sample_bars} in-sample bars</span>
           <span>{wf.out_of_sample_bars} out-of-sample bars</span>
-          <span>{wf.combinations_tested} combinations tested</span>
+          <span>{fixed ? "your rule as written, nothing tuned" : `${wf.combinations_tested} combinations tested`}</span>
         </div>
 
         {boundary && <BoundaryNote boundary={boundary} />}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <SegmentCard title="In-sample (tuned here)" caption="optimistic" metrics={wf.best_in_sample} />
           <SegmentCard
-            title="Out-of-sample (never seen)"
+            title={fixed ? "Earlier part" : "In-sample (tuned here)"}
+            caption={fixed ? "for comparison" : "optimistic"}
+            metrics={wf.best_in_sample}
+          />
+          <SegmentCard
+            title={fixed ? "Later part" : "Out-of-sample (never seen)"}
             caption="the checked number"
             metrics={wf.best_out_of_sample}
             checked
@@ -375,10 +405,17 @@ export default function ValidationPanel({ data }) {
         </div>
 
         <div className="mt-4 flex items-center justify-between bg-muted/50 rounded-md px-4 py-3 flex-wrap gap-2">
-          <div>
-            <p className="eyebrow">Best parameters found</p>
-            <p className="font-mono text-xs text-foreground mt-0.5">{describeParams(wf.best_params)}</p>
-          </div>
+          {fixed ? (
+            <p className="text-xs text-graphite max-w-md">
+              This checks the rule you wrote. It cannot see rules you tried before it: if you changed the
+              rule until the backtest looked good, that search happened on this same data.
+            </p>
+          ) : (
+            <div>
+              <p className="eyebrow">Best parameters found</p>
+              <p className="font-mono text-xs text-foreground mt-0.5">{describeParams(wf.best_params)}</p>
+            </div>
+          )}
           <div className="text-right">
             <p className="eyebrow">Sharpe decay</p>
             <p className={cn("font-mono text-xs mt-0.5", wf.sharpe_degradation > 0.5 ? "text-loss" : "text-foreground")}>
@@ -457,27 +494,29 @@ export default function ValidationPanel({ data }) {
       {wf.deflated?.computable && (
         <StaggerItem as="section" id="validation-deflated" className="sheet p-6 scroll-mt-20">
           <Head
-            title="Deflated Sharpe ratio"
-            blurb={`Picking the best of ${wf.deflated.n_trials} combinations is itself a search, and the winner of any search looks good. This asks how high a Sharpe that search would have produced on data with no edge at all, then measures the winner against that bar instead of zero.`}
+            title={fixed ? "Sharpe ratio against zero" : "Deflated Sharpe ratio"}
+            blurb={fixed
+              ? "With nothing searched there is nothing to deflate. This asks how likely the earlier part's Sharpe is to be above zero, given how many days it rests on and how lumpy they were."
+              : `Picking the best of ${wf.deflated.n_trials} combinations is itself a search, and the winner of any search looks good. This asks how high a Sharpe that search would have produced on data with no edge at all, then measures the winner against that bar instead of zero.`}
             stamp={dsrVerdict.label}
             tone={dsrVerdict.tone}
           />
 
-          <p className="margin-note mt-4 mb-5">{wf.deflated.unreliable || dsrVerdict.blurb}</p>
+          <p className="margin-note mt-4 mb-5">{wf.deflated.unreliable || (fixed && RULE_BLURB.dsr[wf.deflated.verdict]) || dsrVerdict.blurb}</p>
 
           {!wf.deflated.unreliable && (
             <>
               {/* The comparison the whole section exists to make. */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Figure label="Selected Sharpe" value={num(wf.deflated.selected_sharpe)} sub="in-sample, annualised" />
-                <Figure
+                {!fixed && <Figure
                   label="Noise bar"
                   value={num(wf.deflated.expected_max_sharpe)}
                   sub={`best of ${wf.deflated.n_trials} on no edge`}
                   tone={wf.deflated.clears_noise_bar ? "text-foreground" : "text-loss"}
-                />
+                />}
                 <Figure
-                  label="Deflated probability"
+                  label={fixed ? "Probability above zero" : "Deflated probability"}
                   value={wf.deflated.deflated_sharpe_ratio === null ? "—" : pct(wf.deflated.deflated_sharpe_ratio)}
                   sub="0.95 is the usual bar"
                   tone={
@@ -493,7 +532,7 @@ export default function ValidationPanel({ data }) {
 
               {/* Stating the uncorrected figure beside it is the point: the gap
                   between the two is exactly what selection was worth. */}
-              {wf.deflated.psr_vs_zero !== null && (
+              {!fixed && wf.deflated.psr_vs_zero !== null && (
                 <p className="text-xs text-graphite mt-4 leading-relaxed">
                   Without correcting for the search, the same result reads as{" "}
                   <span className="font-mono text-foreground">{pct(wf.deflated.psr_vs_zero)}</span>{" "}
@@ -596,28 +635,32 @@ export default function ValidationPanel({ data }) {
       {sn?.computable && (
         <StaggerItem as="section" id="validation-snooping" className="sheet p-6 scroll-mt-20">
           <Head
-            title="The whole grid against holding"
-            blurb={`Every one of the ${sn.n_candidates} combinations the search tried is set beside simply holding ${held} for the whole period, after costs. All ${sn.n_candidates} go into one bootstrap of ${sn.n_bootstrap} draws, so the best is judged as the best of a search — not as if it had been the only idea.`}
+            title={fixed ? "Your rule against holding" : "The whole grid against holding"}
+            blurb={fixed
+              ? `Your rule set beside simply holding ${held} for the whole period, after costs, in a bootstrap of ${sn.n_bootstrap} draws.`
+              : `Every one of the ${sn.n_candidates} combinations the search tried is set beside simply holding ${held} for the whole period, after costs. All ${sn.n_candidates} go into one bootstrap of ${sn.n_bootstrap} draws, so the best is judged as the best of a search — not as if it had been the only idea.`}
             stamp={gridVerdict.label}
             tone={gridVerdict.tone}
           />
 
-          <p className="margin-note mt-4 mb-5">{gridVerdict.blurb}</p>
+          <p className="margin-note mt-4 mb-5">{(fixed && RULE_BLURB.grid[sn.verdict]) || gridVerdict.blurb}</p>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <Figure
-              label="Best cell vs holding"
+              label={fixed ? "Your rule vs holding" : "Best cell vs holding"}
               value={signedPct(sn.best.excess_return_annualised)}
-              sub={`a year · ${describeParams(sn.best.params)}`}
+              sub={fixed ? "a year" : `a year · ${describeParams(sn.best.params)}`}
               tone={sn.best.excess_return_annualised > 0 ? "text-gain" : "text-loss"}
               mark
             />
             <Figure
-              label="Tested alone"
+              label={fixed ? "p-value" : "Tested alone"}
               value={`p = ${pval(sn.best.p_value_naive)}`}
-              sub="as if it were the only cell"
-              tone="text-graphite"
+              sub={fixed ? "below 0.05 is the usual bar" : "as if it were the only cell"}
+              tone={fixed ? (sn.best.p_value_naive <= sn.alpha ? "text-gain" : "text-loss") : "text-graphite"}
+              mark={fixed}
             />
+            {!fixed && <>
             <Figure
               label="Reality Check"
               value={`p = ${pval(sn.reality_check.p_value)}`}
@@ -636,7 +679,10 @@ export default function ValidationPanel({ data }) {
               tone={sn.spa.p_value <= sn.alpha ? "text-gain" : "text-loss"}
               mark
             />
+            </>}
           </div>
+
+          {!fixed && <>
 
           {/* The gap between "tested alone" and the two grid-wide p-values
               is the cost of the search. It is the one number here a reader
@@ -701,6 +747,7 @@ export default function ValidationPanel({ data }) {
             on the full period, so it cannot see a regime change. The bootstrap resamples in blocks of
             about {sn.block_length.block_length} bars.
           </p>
+          </>}
         </StaggerItem>
       )}
 
@@ -793,9 +840,10 @@ export default function ValidationPanel({ data }) {
       </StaggerItem>
 
       <p className="text-2xs text-graphite leading-relaxed max-w-prose">
-        These checks are diagnostic and are not saved to your run history. A strategy can pass the
-        timing test and still fail walk-forward — that combination means the approach has signal but
-        the specific parameters were tuned too tightly.
+        These checks are diagnostic and are not saved to your run history.{" "}
+        {fixed
+          ? "They test this one rule on this one stretch of history; a pass is not a forecast."
+          : "A strategy can pass the timing test and still fail walk-forward — that combination means the approach has signal but the specific parameters were tuned too tightly."}
       </p>
       </div>
       )}

@@ -91,20 +91,25 @@ const CHECKS = [
   },
 ];
 
+// A user's own rule has no search behind it, so two checks change their name
+// to what they measure for one rule.
+const RULE_NAMES = { deflated: "Above zero", snooping: "Against holding" };
+
 /** Resolve every check that ran into { id, name, word, tone }. */
 export function readChecks(data) {
+  const fixed = data.strategy === "rules";
   const out = [];
   for (const c of CHECKS) {
     const v = c.read(data);
     if (v === null || v === undefined) continue;
     const [word, tone] = c.words[v] || ["unclear", "faint"];
-    out.push({ id: c.id, name: c.name, word, tone });
+    out.push({ id: c.id, name: (fixed && RULE_NAMES[c.id]) || c.name, word, tone });
   }
   return out;
 }
 
 /** The sentence after the count — what this particular combination usually means. */
-function interpret(byId, held) {
+function interpret(byId, held, fixed) {
   const wf = byId["walk-forward"]?.tone;
   const timing = byId.timing?.tone;
   const dsr = byId.deflated?.tone;
@@ -116,22 +121,30 @@ function interpret(byId, held) {
     return "Every check agrees. On this window the edge is more than luck — though one window is still one window.";
   }
   if (wf === "loss" && timing === "gain") {
-    return "The timing carries signal, but these exact parameters were fitted too tightly to the tuning period. Loosen them before trusting the number.";
+    return fixed
+      ? "The timing carries signal, but the rule lost its edge in the later part of the period."
+      : "The timing carries signal, but these exact parameters were fitted too tightly to the tuning period. Loosen them before trusting the number.";
   }
   if (wf === "loss" && timing === "loss") {
     return "The returns look like market exposure rather than strategy. There is nothing here to build on yet.";
   }
   if (wf === "gain" && (dsr === "loss" || dsr === "warn")) {
-    return "It held up on unseen data, but with this many combinations tried a Sharpe this high could still be a lucky pick.";
+    return fixed
+      ? "It held up in the later part, but the record is too short or too uneven to be confident the edge is above zero."
+      : "It held up on unseen data, but with this many combinations tried a Sharpe this high could still be a lucky pick.";
   }
   if (wf === "gain" && grid === "loss") {
-    return `It held up on unseen data, but not one combination in the grid beats simply holding ${held} once the search is inside the test. Beating doing nothing is the harder bar, and it was not cleared.`;
+    return fixed
+      ? `It held up in the later part, but it does not beat simply holding ${held}. Beating doing nothing is the harder bar, and it was not cleared.`
+      : `It held up on unseen data, but not one combination in the grid beats simply holding ${held} once the search is inside the test. Beating doing nothing is the harder bar, and it was not cleared.`;
   }
   if (rolling === "warn") {
     return "The result depends on where the split falls. Treat it as an edge in some years, not a general one.";
   }
   if (wf === "warn") {
-    return "Some of the edge survived contact with unseen data. Real, but smaller than the tuned number suggests.";
+    return fixed
+      ? "Some of the edge carried into the later part. Real, but smaller than the earlier part suggests."
+      : "Some of the edge survived contact with unseen data. Real, but smaller than the tuned number suggests.";
   }
   return null;
 }
@@ -158,7 +171,7 @@ export default function VerdictCard({ data, className, onJump }) {
     counted.length === 0
       ? "None of the checks could run on this configuration."
       : `${passed.length} of ${counted.length} checks passed.`;
-  const meaning = interpret(byId, Array.isArray(data.tickers) ? "the basket" : "the stock");
+  const meaning = interpret(byId, Array.isArray(data.tickers) ? "the basket" : "the stock", data.strategy === "rules");
 
   // The sections may be collapsed; the parent opens them and scrolls once
   // they exist. Without a parent, scroll directly.
