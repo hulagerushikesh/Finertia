@@ -76,8 +76,10 @@ so it stays paced and small, and it stops if Yahoo objects.
 
 ## Slices
 
-1. **Loader, checks, universe, tests** — this PR. Run by hand as a dry run
-   on all 618 tickers.
+1. **Loader, checks, universe, tests** — this PR. Dry run by hand on 27 Nov
+   on all 618 tickers: **618 checked, 0 failed, 57 warned** (all of them a
+   daily move over 50%, e.g. crash days, spin-offs and old splits — worth a
+   look one day, not a reason to block), **17 minutes**.
 2. **The job and the schedule** (needs the author's "deploy"): deploy the
    job from the same image in `deploy.yml`, create the Scheduler trigger,
    run it once by hand, read the summary, then switch `NIGHTLY_PRICES=on`.
