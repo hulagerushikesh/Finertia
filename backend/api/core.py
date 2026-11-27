@@ -68,6 +68,10 @@ log = configure_logging(os.environ.get("LOG_LEVEL", "INFO"))
 
 _origins_env = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5174")
 ALLOWED_ORIGINS = [o.strip() for o in _origins_env.split(",") if o.strip()]
+# Staging only: Vercel preview builds get a new hostname per commit, so a
+# fixed list cannot name them. Unset in production, where only the listed
+# origins (and the same-origin /api rewrite) apply.
+ALLOWED_ORIGIN_REGEX = os.environ.get("ALLOWED_ORIGIN_REGEX") or None
 
 # ---------------------------------------------------------------------------
 # Rate limits

@@ -19,7 +19,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from api import core
-from api.core import ALLOWED_ORIGINS, backtest_limiter, client_ip, ip_limiter, log, validate_limiter
+from api.core import ALLOWED_ORIGIN_REGEX, ALLOWED_ORIGINS, backtest_limiter, client_ip, ip_limiter, log, validate_limiter
 from api.routes import admin, backtests, compare, me, meta, payments, portfolios, runs, sharing, validations
 import billing
 from logging_config import configure_sentry
@@ -45,6 +45,7 @@ app = FastAPI(title="Finertia API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=ALLOWED_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
