@@ -126,3 +126,24 @@ it. Agreed by the author on 27 Nov.
   **Preview** only to the staging URL. Email sign-in works on preview
   addresses; Google sign-in needs each preview address added to Firebase's
   authorised domains, so use email there.
+
+## Index scan (Phase 2), first numbers on staging (27 Nov)
+
+Staging's own price store was filled for the three scannable indexes with
+the nightly loader run by hand (201 tickers, 0 failed). The scan API
+(#231) was deployed to staging by hand and called as the test account,
+momentum, 2016–2026:
+
+| Index | Server time, first scan | Server time, repeat | Ran | Skipped |
+|---|---|---|---|---|
+| Nasdaq-100 | 8.4 s (15.5 s with a cold start) | 2.7 s | 99 | 2 (HONA, SPCX: listed in 2026, no bars in range) |
+| Nifty 50 | 5.4 s | — | 50 | 0 |
+
+The first scan's time is mostly reading prices from Firestore (sixteen at a
+time); a repeat reads them from the instance's memory and is the engine
+alone (~2.5 s for 99 stocks). Momentum's result on both: no stock beat
+holding (0 of 99 against ~5 expected by chance; 0 of 50 against 2.5).
+
+Firestore reads per first scan: about one per stock per year (~1,000 for
+Nasdaq-100 over ten years), so the free 50,000 a day allows ~50 cold
+scans of that size a day before repeats are served from memory.
