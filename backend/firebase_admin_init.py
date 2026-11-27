@@ -102,9 +102,8 @@ def get_user_profile(uid: str) -> dict | None:
     client writing the profile doc — callers must treat that as a new,
     unblocked user rather than denying access.
     """
-    _get_app()
-    db = firestore.client()
-    doc = db.collection("users").document(uid).get()
+    # Through get_db, so staging reads its own users, not production's.
+    doc = get_db().collection("users").document(uid).get()
     return doc.to_dict() if doc.exists else None
 
 
