@@ -49,9 +49,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# A backtest is ~450 KB of JSON and ~80 KB gzipped; nothing between here
+# A backtest is ~420 KB of JSON and ~70 KB gzipped; nothing between here
 # and the browser compressed it. Below 1 KB compression is not worth the CPU.
-app.add_middleware(GZipMiddleware, minimum_size=1000)
+# Level 6, not Starlette's default 9: measured 27 Nov on a 10-year backtest,
+# 9 took 25 ms for 68 KB, 6 takes 6 ms for 74 KB. On one vCPU, 19 ms a
+# request is worth more than 6 KB on the wire (scripts/load_test.py).
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
 
 # Paths that only ever read tiny documents and are polled by the UI — holding
 # them to the same budget as a backtest would break normal navigation.
