@@ -133,7 +133,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <Rise className="flex items-end justify-between gap-4 flex-wrap mb-8">
         <div>
           <p className="eyebrow mb-3">Saved runs</p>

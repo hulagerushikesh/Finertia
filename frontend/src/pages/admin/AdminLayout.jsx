@@ -10,7 +10,7 @@ const linkClass = ({ isActive }) =>
 
 export default function AdminLayout() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-2 mb-6">
         <span className="text-xs bg-accent/10 text-pencil border border-pencil/20 px-2 py-0.5 rounded font-medium">
           ADMIN

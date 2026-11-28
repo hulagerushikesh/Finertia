@@ -253,7 +253,7 @@ export default function DashboardPage() {
     feature("calm-pro-wall") && error?.action === "validate" && error.status === 402 && !validation;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* The workspace shows no page title — you arrive to configure a run,
           not to read a header. But the document still needs one. */}
       <h1 className="sr-only">Backtest workspace</h1>
@@ -302,12 +302,12 @@ export default function DashboardPage() {
                 className="sheet border-2 border-dashed border-border shadow-none p-8 sm:p-10 flex flex-col items-start gap-4"
               >
                 <p className="eyebrow">Nothing run yet</p>
-                <h2 className="font-display text-display-sm font-semibold text-foreground max-w-md text-balance">
+                <h2 className="font-display text-display-sm font-semibold text-foreground max-w-2xl text-balance">
                   {isPortfolio
                     ? `Run the ${params.tickers.length}-name portfolio and see what comes back.`
                     : `Run ${params.ticker || "a ticker"} and see what comes back.`}
                 </h2>
-                <p className="text-sm text-graphite max-w-md leading-relaxed">
+                <p className="text-sm text-graphite max-w-2xl leading-relaxed">
                   The set-up beside this is ready to go. You will get twelve metrics with confidence
                   intervals, an equity curve against buy-and-hold, and a plain statement of what the
                   result cannot tell you.
@@ -462,6 +462,10 @@ export default function DashboardPage() {
                     {/* The Sharpe above and the benchmark curve below invite a
                         comparison the page could not previously support. This
                         is the p-value between them. */}
+                    {/* Side by side on wide screens: each is a few short lines,
+                        and stacked full-width they left half of every row
+                        empty. */}
+                    <div className="grid gap-5 2xl:grid-cols-2 2xl:[&_.sheet]:h-full">
                     {result.benchmark_test && (
                       <StaggerItem>
                         <BenchmarkTest
@@ -481,6 +485,7 @@ export default function DashboardPage() {
                         <CostSensitivity data={result.cost_sensitivity} />
                       </StaggerItem>
                     )}
+                    </div>
                     {resultIsPortfolio && (
                       <StaggerItem>
                         <PortfolioLegs result={result} />
