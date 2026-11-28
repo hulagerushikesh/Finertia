@@ -209,6 +209,7 @@ def run_backtest(req: BacktestRequest, authorization: Optional[str] = Header(Non
             **req.strategy_params(),
             **req.risk_params(),
             "transaction_cost": req.transaction_cost,
+            **req.cost_params(),
         },
         "metrics": metrics,
         "createdAt": firestore.SERVER_TIMESTAMP,

@@ -171,6 +171,7 @@ def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(N
                 **req.strategy_params(),
                 **req.risk_params(),
                 "transaction_cost": req.transaction_cost,
+                **req.cost_params(),
                 "weighting": req.weighting,
                 "weight_window": req.weight_window,
                 "max_weight": req.max_weight,
