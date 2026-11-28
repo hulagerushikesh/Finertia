@@ -4,6 +4,7 @@ import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import Tooltip from "./Tooltip";
 import Spinner from "./Spinner";
 import RuleBuilder, { DEFAULT_RULE } from "./RuleBuilder";
+import CostModelField from "./CostModelField";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -183,6 +184,10 @@ const DEFAULTS = {
   end: "2024-01-01",
   strategy: "momentum",
   transaction_cost: 0.001,
+  // Costs: "flat" uses transaction_cost; "us" / "india" use that market's
+  // charges plus slippage (backend/fees.py).
+  cost_model: "flat",
+  slippage_bps: 2,
   // Momentum
   momentum_lookback: 20,
   ma_window: 50,
@@ -517,7 +522,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading, ruleToo
     (params.take_profit != null ? 1 : 0) +
     (params.sizing !== DEFAULTS.sizing ? 1 : 0) +
     FIELDS[strategy].filter((f) => params[f.key] !== DEFAULTS[f.key]).length +
-    (params.transaction_cost !== DEFAULTS.transaction_cost ? 1 : 0) +
+    (params.transaction_cost !== DEFAULTS.transaction_cost || (params.cost_model || "flat") !== "flat" ? 1 : 0) +
     (mode !== "single" ? 1 : 0) +
     (mode === "portfolio" && params.weighting !== DEFAULTS.weighting ? 1 : 0);
 
@@ -666,7 +671,27 @@ export default function ConfigPanel({ params, setParams, onRun, loading, ruleToo
               <FieldError>Fast EMA must be shorter than the slow EMA.</FieldError>
             )}
 
-            {feature("cost-in-bps") ? (
+            <Field label="Costs" tip="Flat charges the cost you type on every trade. United States and India charge that market's real fees and taxes, plus your slippage estimate.">
+              <Segmented
+                value={params.cost_model || "flat"}
+                onChange={(v) => handleChange("cost_model", v)}
+                options={[
+                  { id: "flat", label: "Flat" },
+                  { id: "us", label: "United States" },
+                  { id: "india", label: "India" },
+                ]}
+                columns={3}
+              />
+            </Field>
+
+            {(params.cost_model || "flat") !== "flat" ? (
+              <CostModelField
+                model={params.cost_model}
+                slippageBps={params.slippage_bps ?? 2}
+                onSlippage={(v) => handleChange("slippage_bps", v)}
+                inputClass={inputClass}
+              />
+            ) : feature("cost-in-bps") ? (
               // Entered in basis points, the unit the results report it in; the
               // API still takes a fraction, so 10 bps is sent as 0.001.
               <Field

@@ -20,7 +20,8 @@ const STRATEGY_KEYS = {
   rules: ["rule"],
 };
 
-const BASE_KEYS = ["ticker", "start", "end", "strategy", "transaction_cost"];
+const BASE_KEYS = ["ticker", "start", "end", "strategy", "transaction_cost", "cost_model", "slippage_bps"];
+const COST_MODELS = new Set(["flat", "us", "india"]);
 
 // Portfolio mode. `tickers` is a list, so it travels as a comma-joined string
 // rather than repeated keys — shorter, and readable in the address bar.
@@ -38,6 +39,7 @@ const RISK_KEYS = [
 
 const NUMERIC = new Set([
   "transaction_cost",
+  "slippage_bps",
   "stop_loss",
   "take_profit",
   "target_vol",
@@ -82,6 +84,12 @@ export function encodeParams(params) {
     }
     // In portfolio mode the single `ticker` is a leftover from the other mode.
     if (portfolio && key === "ticker") continue;
+    // A market model sets the cost itself; a flat cost has no model or
+    // slippage to carry. Either way the link holds only what matters.
+    const market = (params.cost_model || "flat") !== "flat";
+    if (key === "cost_model" && !market) continue;
+    if (key === "slippage_bps" && !market) continue;
+    if (key === "transaction_cost" && market) continue;
 
     const value = params[key];
     // A disabled stop is simply omitted; decode restores it as null.
@@ -156,6 +164,9 @@ export function decodeParams(search) {
       }
       if (!rule || typeof rule !== "object" || !rule.entry || !rule.exit) continue;
       out.rule = rule;
+    } else if (key === "cost_model") {
+      if (!COST_MODELS.has(raw)) continue;
+      out.cost_model = raw;
     } else if (NUMERIC.has(key)) {
       const n = Number(raw);
       if (!Number.isFinite(n)) continue;
