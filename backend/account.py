@@ -6,6 +6,7 @@ module is the server side of both (M12 sprint 1, item 5).
 What belongs to a user, and where:
 - `users/{uid}`: the profile (email, display name, plan, counters);
 - `runs` with `uid == uid`: every saved backtest;
+- `rules` with `uid == uid`: the user's saved rules (api/routes/saved_rules.py);
 - `ratelimits` documents named `{limiter}:{uid}:{window}`: short-lived
   counters, keyed by uid, with nothing in them but a number;
 - the Firebase Auth account itself (email, password hash).
@@ -36,7 +37,7 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 from google.cloud.firestore_v1.field_path import FieldPath
 
 # Kept in step with the SharedRateLimiter names in main.py.
-LIMITER_NAMES = ("backtest", "validate")
+LIMITER_NAMES = ("backtest", "validate", "scan")
 
 # Firestore allows 500 writes per batch; stay under it.
 _BATCH = 400
@@ -44,6 +45,10 @@ _BATCH = 400
 
 def _runs(db, uid):
     return db.collection("runs").where(filter=FieldFilter("uid", "==", uid))
+
+
+def _rules(db, uid):
+    return db.collection("rules").where(filter=FieldFilter("uid", "==", uid))
 
 
 def export_account(db, uid: str, email: str, now: datetime | None = None) -> dict:
@@ -57,6 +62,10 @@ def export_account(db, uid: str, email: str, now: datetime | None = None) -> dic
         "account": {"uid": uid, "email": email},
         "profile": profile.to_dict() if profile.exists else None,
         "runs": runs,
+        "rules": sorted(
+            ({"id": s.id, **(s.to_dict() or {})} for s in _rules(db, uid).stream()),
+            key=lambda r: str(r.get("updatedAt") or ""), reverse=True,
+        ),
         "notes": (
             "Prices are not included: they are market data, not yours, and are "
             "re-fetched when a run is re-opened. Rate-limit counters are not "
@@ -91,7 +100,8 @@ def _counters(db, name: str, uid: str):
 def delete_account(db, uid: str, delete_auth_user: Callable[[str], None]) -> dict:
     """Remove the user's data, then the account. Safe to run again."""
     runs = _delete_query(db, _runs(db, uid))
+    rules = _delete_query(db, _rules(db, uid))
     counters = sum(_delete_query(db, _counters(db, name, uid)) for name in LIMITER_NAMES)
     db.collection("users").document(uid).delete()
     delete_auth_user(uid)
-    return {"runs": runs, "rate_limit_counters": counters}
+    return {"runs": runs, "rules": rules, "rate_limit_counters": counters}

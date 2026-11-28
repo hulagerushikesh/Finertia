@@ -11,6 +11,7 @@ const api = vi.hoisted(() => ({
   runPortfolio: vi.fn(),
   validatePortfolio: vi.fn(),
   getUsage: vi.fn(),
+  listRules: vi.fn(() => Promise.resolve({ rules: [], max: 20 })),
 }));
 vi.mock("../api", () => api);
 

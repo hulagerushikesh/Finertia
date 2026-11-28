@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 
 from api import core
 from api.core import ALLOWED_ORIGIN_REGEX, ALLOWED_ORIGINS, backtest_limiter, client_ip, ip_limiter, log, validate_limiter
-from api.routes import admin, backtests, compare, me, meta, payments, portfolios, runs, scans, sharing, validations
+from api.routes import admin, backtests, compare, me, meta, payments, portfolios, runs, saved_rules, scans, sharing, validations
 import billing
 from logging_config import configure_sentry
 from monitoring import init_sentry, tag_request
@@ -170,7 +170,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 #
 # Order matters only where two paths could match the same URL: sharing's
 # /share/card.png is a literal path and no other router has /share/{x}.
-ROUTERS = (meta, me, payments, backtests, sharing, validations, portfolios, compare, runs, admin, scans)
+ROUTERS = (meta, me, payments, backtests, sharing, validations, portfolios, compare, runs, admin, scans, saved_rules)
 for module in ROUTERS:
     app.include_router(module.router, prefix="/api/v1")
 for module in ROUTERS:

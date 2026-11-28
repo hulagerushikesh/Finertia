@@ -32,9 +32,12 @@ def seed(db, uid, runs=2):
         db.collection("runs").document(f"{uid}-run-{i}").set(
             {"uid": uid, "ticker": "AAPL", "createdAt": NOW - timedelta(days=i)}
         )
-    for name in ("backtest", "validate"):
+    for name in ("backtest", "validate", "scan"):
         for window in (100, 101):
             db.collection("ratelimits").document(f"{name}:{uid}:{window}").set({"n": 1})
+    db.collection("rules").document(f"{uid}-rule").set(
+        {"uid": uid, "name": "RSI dip", "rule": {"direction": "long"}, "updatedAt": NOW.isoformat()}
+    )
 
 
 def ids(db, collection):
@@ -52,13 +55,14 @@ def test_export_holds_the_profile_and_only_the_users_runs(db):
     assert out["profile"]["email"] == "alice@x.com"
     assert [r["id"] for r in out["runs"]] == ["alice-run-0", "alice-run-1", "alice-run-2"]  # newest first
     assert out["exported_at"] == "2026-10-14T12:00:00+00:00"
+    assert [r["id"] for r in out["rules"]] == ["alice-rule"]
 
 
 def test_export_of_an_account_with_no_profile_yet(db):
     from account import export_account
 
     out = export_account(db, "new", "new@x.com", now=NOW)
-    assert out["profile"] is None and out["runs"] == []
+    assert out["profile"] is None and out["runs"] == [] and out["rules"] == []
 
 
 def test_delete_leaves_nothing_of_the_user_and_everything_of_others(db):
@@ -72,12 +76,13 @@ def test_delete_leaves_nothing_of_the_user_and_everything_of_others(db):
 
     counts = delete_account(db, "alice", gone.append)
 
-    assert counts == {"runs": 3, "rate_limit_counters": 4}
+    assert counts == {"runs": 3, "rules": 1, "rate_limit_counters": 6}
     assert gone == ["alice"]
     assert ids(db, "users") == ["alice2", "bob"]
     assert ids(db, "runs") == ["alice2-run-0", "bob-run-0", "bob-run-1"]
     assert all(not i.split(":")[1] == "alice" for i in ids(db, "ratelimits"))
-    assert len(ids(db, "ratelimits")) == 8
+    assert len(ids(db, "ratelimits")) == 12
+    assert ids(db, "rules") == ["alice2-rule", "bob-rule"]
 
 
 def test_delete_pages_through_more_runs_than_one_batch(db):
@@ -104,6 +109,6 @@ def test_a_failed_deletion_can_be_finished_by_running_it_again(db):
     # The data was already gone when Auth failed: the account is last.
     assert ids(db, "users") == [] and ids(db, "runs") == []
     gone = []
-    assert delete_account(db, "carol", gone.append) == {"runs": 0, "rate_limit_counters": 0}
+    assert delete_account(db, "carol", gone.append) == {"runs": 0, "rules": 0, "rate_limit_counters": 0}
     assert gone == ["carol"]
     assert ids(db, "users") == [] and ids(db, "runs") == []
