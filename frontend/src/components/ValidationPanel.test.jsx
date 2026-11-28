@@ -50,10 +50,29 @@ describe("ValidationPanel for a user's own rule", () => {
     }
   });
 
+  it("says nothing about choosing parameters in the gap note or the Sharpe label", () => {
+    render(<ValidationPanel data={ruleValidation()} />);
+    expect(screen.getByText(/the earlier part stops at/)).toBeInTheDocument();
+    expect(screen.getByText(/would count in both parts/)).toBeInTheDocument();
+    expect(screen.queryByText(/choosing these parameters/)).toBeNull();
+    expect(screen.getByText("Earlier part's Sharpe")).toBeInTheDocument();
+    expect(screen.queryByText("Selected Sharpe")).toBeNull();
+  });
+
+  it("explains why the two in-sample Sharpes differ", () => {
+    render(<ValidationPanel data={ruleValidation()} />);
+    expect(screen.getByTestId("dsr-sharpe-note")).toHaveTextContent(
+      "Why 0.806 here and 0.748 in the earlier part card above"
+    );
+  });
+
   it("keeps the search wording for a built-in strategy", () => {
     render(<ValidationPanel data={demoValidation} />);
     expect(screen.getByText("Best parameters found")).toBeInTheDocument();
     expect(screen.getByText("Deflated Sharpe ratio")).toBeInTheDocument();
     expect(screen.queryByText("your rule as written, nothing tuned")).toBeNull();
+    expect(screen.getByText(/choosing these parameters/)).toBeInTheDocument();
+    expect(screen.getByText("Selected Sharpe")).toBeInTheDocument();
+    expect(screen.getByTestId("dsr-sharpe-note")).toHaveTextContent("in the in-sample card above");
   });
 });

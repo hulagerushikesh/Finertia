@@ -211,14 +211,19 @@ function SegmentCard({ title, caption, metrics, checked = false }) {
  * because it explains why the bar counts do not add up to the period and why
  * the split ratio the user chose is not exactly what they got.
  */
-function BoundaryNote({ boundary }) {
+function BoundaryNote({ boundary, fixed }) {
+  // A rule as written has nothing chosen on the earlier part, so the gap
+  // there keeps the two parts' figures apart rather than keeping a choice
+  // from being scored on its own evidence.
   if (!boundary.applied) {
     return (
       <p className="text-2xs text-warn leading-relaxed mb-5">
         This period was too short to leave a gap at the split, so the two halves
-        touch. A trade held across the boundary earns in both — the out-of-sample
-        figure may be flattered by a move the selection was already paid for. A
-        longer date range removes the doubt.
+        touch. A trade held across the boundary earns in both —{" "}
+        {fixed
+          ? "the later part's figure may repeat a move the earlier part already counted."
+          : "the out-of-sample figure may be flattered by a move the selection was already paid for."}{" "}
+        A longer date range removes the doubt.
       </p>
     );
   }
@@ -226,13 +231,14 @@ function BoundaryNote({ boundary }) {
     <p
       className={cn("text-2xs leading-relaxed mb-5", boundary.shortened ? "text-warn" : "text-faint")}
     >
-      A {boundary.purge_bars}-bar gap sits on each side of the split, so selection
-      stops at{" "}
+      A {boundary.purge_bars}-bar gap sits on each side of the split, so the{" "}
+      {fixed ? "earlier part" : "selection"} stops at{" "}
       <span className="font-mono text-foreground">{boundary.in_sample_end_date}</span>{" "}
-      and scoring resumes at{" "}
+      and {fixed ? "the later part starts" : "scoring resumes"} at{" "}
       <span className="font-mono pencil-mark">{boundary.out_of_sample_start_date}</span>.
-      Without it, a position held across the boundary would earn once as evidence
-      for choosing these parameters and again as proof they worked.
+      {fixed
+        ? " Without it, a position held across the boundary would count in both parts, and the later part would partly repeat the earlier one."
+        : " Without it, a position held across the boundary would earn once as evidence for choosing these parameters and again as proof they worked."}
       {boundary.shortened && (
         <>
           {" "}This period could only spare {boundary.purge_bars} of the{" "}
@@ -388,7 +394,7 @@ export default function ValidationPanel({ data }) {
           <span>{fixed ? "your rule as written, nothing tuned" : `${wf.combinations_tested} combinations tested`}</span>
         </div>
 
-        {boundary && <BoundaryNote boundary={boundary} />}
+        {boundary && <BoundaryNote boundary={boundary} fixed={fixed} />}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <SegmentCard
@@ -508,7 +514,11 @@ export default function ValidationPanel({ data }) {
             <>
               {/* The comparison the whole section exists to make. */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <Figure label="Selected Sharpe" value={num(wf.deflated.selected_sharpe)} sub="in-sample, annualised" />
+                <Figure
+                  label={fixed ? "Earlier part's Sharpe" : "Selected Sharpe"}
+                  value={num(wf.deflated.selected_sharpe)}
+                  sub={fixed ? "daily average, annualised" : "in-sample, daily average, annualised"}
+                />
                 {!fixed && <Figure
                   label="Noise bar"
                   value={num(wf.deflated.expected_max_sharpe)}
@@ -529,6 +539,19 @@ export default function ValidationPanel({ data }) {
                   mark
                 />
               </div>
+
+              {/* Same days as the walk-forward card above, different formula:
+                  a reader who sees 0.303 here and 0.207 there has no reason to
+                  guess why, so it is said in the open when the two differ. */}
+              {num(wf.deflated.selected_sharpe) !== num(wf.best_in_sample?.sharpe_ratio) &&
+                wf.best_in_sample?.sharpe_ratio != null && (
+                <p className="text-2xs text-graphite mt-4 leading-relaxed max-w-prose" data-testid="dsr-sharpe-note">
+                  Why {num(wf.deflated.selected_sharpe)} here and {num(wf.best_in_sample.sharpe_ratio)} in the{" "}
+                  {fixed ? "earlier part" : "in-sample"} card above: this uses average daily return over its
+                  standard deviation; the card uses the compounded annual return over volatility. Same days, two
+                  definitions.
+                </p>
+              )}
 
               {/* Stating the uncorrected figure beside it is the point: the gap
                   between the two is exactly what selection was worth. */}
