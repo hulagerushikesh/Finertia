@@ -174,7 +174,7 @@ def _validate_book(req) -> dict:
         wf = portfolio_walk_forward(
             aligned,
             weights,
-            transaction_cost=req.transaction_cost,
+            transaction_cost=req.leg_costs(),
             strategy=req.strategy,
             base_params=params,
             user_params=user_params,
@@ -188,7 +188,7 @@ def _validate_book(req) -> dict:
         leg_positions(aligned, req.strategy, params),
         aligned.pct_change(),
         weights,
-        req.transaction_cost,
+        req.leg_costs(),
         n_trials=req.permutation_trials,
     )
 

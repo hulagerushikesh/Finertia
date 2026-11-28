@@ -87,11 +87,21 @@ LABELS = {
 }
 
 
+# Where a Yahoo symbol trades, for the "auto" choice: NSE (.NS) and BSE (.BO)
+# listings are Indian cash equities; everything else is priced as US.
+INDIAN_SUFFIXES = (".NS", ".BO")
+
+
+def market_for(ticker: str) -> str:
+    """The cost model a symbol's own market implies."""
+    return "india" if ticker.upper().endswith(INDIAN_SUFFIXES) else "us"
+
+
 def breakdown(model: str, slippage_bps: float = DEFAULT_SLIPPAGE_BPS) -> dict:
     """Each charge's buy and sell rate, the totals, and the per-side figure
     the engine uses. Rates are fractions of the value traded."""
     if model not in MODELS:
-        raise ValueError(f"Unknown cost model '{model}'. Choose one of: flat, {', '.join(MODELS)}.")
+        raise ValueError(f"Unknown cost model '{model}'. Choose one of: flat, auto, {', '.join(MODELS)}.")
     slip = slippage_bps / 10_000
     charges = {**MODELS[model]["charges"], "slippage": (slip, slip)}
     buy = sum(b for b, _ in charges.values())

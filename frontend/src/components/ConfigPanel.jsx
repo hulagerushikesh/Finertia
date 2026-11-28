@@ -671,16 +671,17 @@ export default function ConfigPanel({ params, setParams, onRun, loading, ruleToo
               <FieldError>Fast EMA must be shorter than the slow EMA.</FieldError>
             )}
 
-            <Field label="Costs" tip="Flat charges the cost you type on every trade. United States and India charge that market's real fees and taxes, plus your slippage estimate.">
+            <Field label="Costs" tip="Flat charges the cost you type on every trade. United States and India charge that market's real fees and taxes, plus your slippage estimate. Auto picks the market from each ticker: .NS and .BO are Indian, the rest US.">
               <Segmented
                 value={params.cost_model || "flat"}
                 onChange={(v) => handleChange("cost_model", v)}
                 options={[
                   { id: "flat", label: "Flat" },
+                  { id: "auto", label: "Auto" },
                   { id: "us", label: "United States" },
                   { id: "india", label: "India" },
                 ]}
-                columns={3}
+                columns={4}
               />
             </Field>
 

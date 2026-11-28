@@ -21,7 +21,7 @@ const STRATEGY_KEYS = {
 };
 
 const BASE_KEYS = ["ticker", "start", "end", "strategy", "transaction_cost", "cost_model", "slippage_bps"];
-const COST_MODELS = new Set(["flat", "us", "india"]);
+const COST_MODELS = new Set(["flat", "auto", "us", "india"]);
 
 // Portfolio mode. `tickers` is a list, so it travels as a comma-joined string
 // rather than repeated keys — shorter, and readable in the address bar.

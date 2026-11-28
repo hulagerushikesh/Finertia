@@ -94,7 +94,7 @@ def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(N
             max_leverage=req.max_leverage,
         )
 
-        out = apply_positions(positions, returns, req.transaction_cost)
+        out = apply_positions(positions, returns, req.cost_for(symbol))
         leg_net = out["net_return"].fillna(0)
         leg_returns[symbol] = leg_net
         leg_positions[symbol] = out["position"]
@@ -143,7 +143,7 @@ def run_portfolio(req: PortfolioRequest, authorization: Optional[str] = Header(N
     # book is affine in cost exactly as one leg is — nothing upstream of the
     # weighted sum reads the cost. costs.py carries the check.
     cost_block = portfolio_cost_sensitivity(
-        leg_positions, leg_asset_returns, weights, req.transaction_cost
+        leg_positions, leg_asset_returns, weights, req.transaction_cost, leg_costs=req.leg_costs()
     )
 
     duration_ms = int((time.time() - start_time) * 1000)

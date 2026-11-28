@@ -33,7 +33,9 @@ KEEP = ("total_return", "annualized_return", "sharpe_ratio", "max_drawdown", "nu
 def scan_one(req, ticker: str, df: pd.DataFrame) -> dict:
     """One stock's row. Never raises: a stock that cannot be run is a row
     saying why, so one short listing does not sink the whole scan."""
-    one = req.model_copy(update={"ticker": ticker})
+    # Under "auto" each stock pays its own market's cost; model_copy skips
+    # the validators that would otherwise have set it.
+    one = req.model_copy(update={"ticker": ticker, "transaction_cost": req.cost_for(ticker)})
     try:
         close, _, engine_out, benchmark, _ = simulate(one, df)
     except HTTPException as exc:

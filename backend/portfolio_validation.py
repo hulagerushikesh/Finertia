@@ -51,11 +51,17 @@ def leg_positions(aligned: pd.DataFrame, strategy: str, params: dict) -> pd.Data
     )
 
 
+def _leg_cost(transaction_cost, ticker: str) -> float:
+    """A leg's per-side cost: one shared figure, or a {ticker: cost} map
+    (the "auto" cost choice, where each leg pays its own market's charges)."""
+    return transaction_cost[ticker] if isinstance(transaction_cost, dict) else transaction_cost
+
+
 def book_net_return(
     positions: pd.DataFrame,
     asset_returns: pd.DataFrame,
     weights: pd.DataFrame,
-    transaction_cost: float,
+    transaction_cost: "float | dict[str, float]",
 ) -> tuple[pd.Series, pd.Series]:
     """Weighted sum of each leg's net return, and the book's gross exposure.
 
@@ -65,7 +71,7 @@ def book_net_return(
     """
     legs = pd.DataFrame(
         {
-            t: _segment_net_return(positions[t], asset_returns[t], transaction_cost)
+            t: _segment_net_return(positions[t], asset_returns[t], _leg_cost(transaction_cost, t))
             for t in positions.columns
         },
         index=positions.index,
@@ -103,7 +109,7 @@ def _sharpe(net: np.ndarray) -> float:
 def portfolio_walk_forward(
     aligned: pd.DataFrame,
     weights: pd.DataFrame,
-    transaction_cost: float,
+    transaction_cost: "float | dict[str, float]",
     strategy: str = "momentum",
     base_params: dict | None = None,
     user_params: dict | None = None,
@@ -171,7 +177,7 @@ def portfolio_walk_forward(
     # The winner leg by leg: which ticker the out-of-sample number rests on.
     legs = {}
     for t in tickers:
-        leg_net = _segment_net_return(best_pos[t], asset_returns[t], transaction_cost)
+        leg_net = _segment_net_return(best_pos[t], asset_returns[t], _leg_cost(transaction_cost, t))
         legs[t] = {
             "in_sample_sharpe": _metrics(leg_net.iloc[is_slice], best_pos[t].iloc[is_slice])["sharpe_ratio"],
             "out_of_sample_sharpe": _metrics(leg_net.iloc[oos_slice], best_pos[t].iloc[oos_slice])["sharpe_ratio"],
@@ -251,7 +257,7 @@ def portfolio_permutation_test(
     positions: pd.DataFrame,
     asset_returns: pd.DataFrame,
     weights: pd.DataFrame,
-    transaction_cost: float,
+    transaction_cost: "float | dict[str, float]",
     n_trials: int = 500,
     seed: int = 42,
 ) -> dict:
@@ -283,11 +289,13 @@ def portfolio_permutation_test(
 
     real_leg_sharpes = np.array(
         [
-            _sharpe(_segment_net_return(positions[t], asset_returns[t], transaction_cost).to_numpy())
+            _sharpe(_segment_net_return(positions[t], asset_returns[t], _leg_cost(transaction_cost, t)).to_numpy())
             for t in tickers
         ]
     )
 
+    # One cost per column: the same figure everywhere, or each leg's own.
+    leg_cost_row = np.array([_leg_cost(transaction_cost, t) for t in tickers])
     book_sharpes = np.empty(n_trials)
     leg_sharpes = np.empty((n_trials, n_legs))
     for i in range(n_trials):
@@ -295,7 +303,7 @@ def portfolio_permutation_test(
         for k in range(n_legs):
             shuffled[:, k] = shuffle_runs(pos[:, k], rng)
         trades = np.abs(np.diff(shuffled, axis=0, prepend=shuffled[:1])) > 0
-        leg_net = shuffled * ret - trades * transaction_cost
+        leg_net = shuffled * ret - trades * leg_cost_row
         book_sharpes[i] = _sharpe((leg_net * w).sum(axis=1))
         for k in range(n_legs):
             leg_sharpes[i, k] = _sharpe(leg_net[:, k])
