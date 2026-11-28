@@ -3,7 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 
-const api = vi.hoisted(() => ({ runScan: vi.fn() }));
+const api = vi.hoisted(() => ({ runScan: vi.fn(), listRules: vi.fn() }));
 vi.mock("../api", () => api);
 
 import ScanPage, { scanSentence } from "./ScanPage";
@@ -32,7 +32,7 @@ const RESULT = {
 
 function Where() {
   const loc = useLocation();
-  return <p data-testid="where">{loc.pathname} {loc.state?.params?.ticker}</p>;
+  return <p data-testid="where">{loc.pathname} {loc.state?.params?.ticker} {loc.state?.params?.strategy}</p>;
 }
 
 const renderPage = (params = { ...DEFAULTS, strategy: "macd" }) =>
@@ -47,6 +47,8 @@ const renderPage = (params = { ...DEFAULTS, strategy: "macd" }) =>
 
 beforeEach(() => {
   api.runScan.mockReset();
+  api.listRules.mockReset();
+  api.listRules.mockResolvedValue({ rules: [], max: 20 });
 });
 
 describe("ScanPage", () => {
@@ -78,7 +80,7 @@ describe("ScanPage", () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: "Run scan" }));
     await userEvent.click(await screen.findByRole("button", { name: "CCC" }));
-    expect(screen.getByTestId("where")).toHaveTextContent("/dashboard CCC");
+    expect(screen.getByTestId("where")).toHaveTextContent("/dashboard CCC macd");
   });
 
   it("shows the server's refusal", async () => {
@@ -86,6 +88,43 @@ describe("ScanPage", () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: "Run scan" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many requests");
+  });
+});
+
+describe("ScanPage — a saved rule", () => {
+  const RSI = {
+    direction: "long",
+    entry: { all: [{ left: { ind: "rsi", n: 14 }, op: "<", right: { value: 30 } }] },
+    exit: { all: [{ left: { ind: "rsi", n: 14 }, op: ">", right: { value: 55 } }] },
+  };
+
+  it("scans a saved rule with the workspace's dates and costs", async () => {
+    api.listRules.mockResolvedValue({ rules: [{ id: "r1", name: "RSI dip", rule: RSI }], max: 20 });
+    api.runScan.mockResolvedValue(RESULT);
+    renderPage({ ...DEFAULTS, strategy: "macd", start: "2018-01-01", transaction_cost: 0.002 });
+    await userEvent.selectOptions(await screen.findByLabelText("What to scan"), "r1");
+    expect(screen.getByText("Your rule “RSI dip”")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Run scan" }));
+    expect(api.runScan).toHaveBeenCalledWith(
+      expect.objectContaining({ strategy: "rules", rule: RSI, start: "2018-01-01", transaction_cost: 0.002 }),
+      "nifty50"
+    );
+  });
+
+  it("opens a stock from a saved-rule scan with that rule", async () => {
+    api.listRules.mockResolvedValue({ rules: [{ id: "r1", name: "RSI dip", rule: RSI }], max: 20 });
+    api.runScan.mockResolvedValue(RESULT);
+    renderPage();
+    await userEvent.selectOptions(await screen.findByLabelText("What to scan"), "r1");
+    await userEvent.click(screen.getByRole("button", { name: "Run scan" }));
+    await userEvent.click(await screen.findByRole("button", { name: "AAA" }));
+    expect(screen.getByTestId("where")).toHaveTextContent("/dashboard AAA rules");
+  });
+
+  it("offers no choice when there are no saved rules", async () => {
+    renderPage();
+    await screen.findByRole("button", { name: "Run scan" });
+    expect(screen.queryByLabelText("What to scan")).toBeNull();
   });
 });
 
