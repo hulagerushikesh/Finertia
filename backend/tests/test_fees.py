@@ -33,7 +33,7 @@ def test_us_is_slippage_plus_the_sec_fee_on_sales():
 
 
 def test_an_unknown_model_is_named():
-    with pytest.raises(ValueError, match="flat, us, india"):
+    with pytest.raises(ValueError, match="flat, auto, us, india"):
         fees.breakdown("uk")
 
 
@@ -69,3 +69,48 @@ def test_a_run_saves_how_its_cost_was_chosen_and_compare_redraws_it(api):  # noq
     r = client.post("/api/compare", json={"run_ids": [india["runId"], flat["runId"]]}, headers=AUTH)
     assert r.status_code == 200, r.text
     assert r.json()["chart"][-1][india["runId"]] == india["equity_curve"][-1]["strategy"]
+
+
+# ── auto: each symbol pays its own market's cost ────────────────────────────
+
+def test_auto_reads_the_market_from_the_symbol():
+    assert fees.market_for("RELIANCE.NS") == "india"
+    assert fees.market_for("tcs.bo") == "india"
+    assert fees.market_for("AAPL") == "us" and fees.market_for("BRK-B") == "us"
+    india = BacktestRequest(**{**BASE, "ticker": "RELIANCE.NS"}, cost_model="auto")
+    us = BacktestRequest(**BASE, cost_model="auto")
+    assert india.transaction_cost == pytest.approx(fees.per_side("india"))
+    assert us.transaction_cost == pytest.approx(fees.per_side("us"))
+
+
+def test_a_mixed_basket_charges_each_leg_its_own_market(api):  # noqa: F811
+    from schemas import PortfolioRequest
+    from tests.test_routes import PORTFOLIO
+
+    body = {**PORTFOLIO, "tickers": ["AAPL", "RELIANCE.NS"], "cost_model": "auto"}
+    req = PortfolioRequest(**body)
+    legs = req.leg_costs()
+    assert legs["AAPL"] == pytest.approx(fees.per_side("us"))
+    assert legs["RELIANCE.NS"] == pytest.approx(fees.per_side("india"))
+    assert req.transaction_cost == pytest.approx((legs["AAPL"] + legs["RELIANCE.NS"]) / 2)
+
+    client, _ = api
+    auto = client.post("/api/portfolio", json=body, headers=AUTH).json()
+    all_us = client.post("/api/portfolio", json={**body, "cost_model": "us"}, headers=AUTH).json()
+    all_in = client.post("/api/portfolio", json={**body, "cost_model": "india"}, headers=AUTH).json()
+    # Between the two single-market books, and the cost curve's 1× point is
+    # the book as run.
+    r = lambda b: b["metrics"]["total_return"]  # noqa: E731
+    assert r(all_in) < r(auto) < r(all_us)
+    one_x = auto["cost_sensitivity"]["curve"][2]
+    assert one_x["total_return"] == pytest.approx(r(auto), abs=1e-6)
+
+
+def test_a_mixed_basket_validates_with_per_leg_costs(api):  # noqa: F811
+    from tests.test_routes import PORTFOLIO, PRO
+
+    client, state = api
+    state["profile"] = dict(PRO)
+    body = {**PORTFOLIO, "tickers": ["AAPL", "RELIANCE.NS"], "cost_model": "auto"}
+    r = client.post("/api/portfolio/validate", json=body, headers=AUTH)
+    assert r.status_code == 200, r.text

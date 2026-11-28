@@ -9,7 +9,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from fees import DEFAULT_SLIPPAGE_BPS, MODELS as _MARKETS, per_side as market_per_side
+from fees import DEFAULT_SLIPPAGE_BPS, MODELS as _MARKETS, market_for, per_side as market_per_side
 from rules import validate as validate_rule
 from strategies import RULE_STRATEGY, STRATEGY_NAMES, longest_window
 
@@ -36,7 +36,7 @@ RISK_KEYS = ("stop_loss", "take_profit", "sizing", "target_vol", "vol_window", "
 # How the cost was chosen (fees.py); stored beside transaction_cost, which is
 # the per-side figure it resolved to.
 COST_KEYS = ("cost_model", "slippage_bps")
-COST_MODELS = ("flat", *_MARKETS)
+COST_MODELS = ("flat", "auto", *_MARKETS)
 
 
 class BacktestRequest(BaseModel):
@@ -89,6 +89,13 @@ class BacktestRequest(BaseModel):
     def cost_params(self) -> dict:
         """How the cost was set, saved beside the per-side figure it became."""
         return {"cost_model": self.cost_model, "slippage_bps": self.slippage_bps}
+
+    def cost_for(self, symbol: str) -> float:
+        """Per-side cost for one symbol. Only "auto" differs by symbol: an NSE
+        or BSE listing pays India's charges, anything else the US ones."""
+        if self.cost_model == "auto":
+            return market_per_side(market_for(symbol), self.slippage_bps)
+        return self.transaction_cost
 
     def risk_params(self) -> dict:
         """The overlay settings, separated from the signal parameters."""
@@ -168,6 +175,8 @@ class BacktestRequest(BaseModel):
             # Slippage only means something inside a market model; pinned so
             # it cannot split the result cache's key for the same flat run.
             self.slippage_bps = DEFAULT_SLIPPAGE_BPS
+        elif self.cost_model == "auto":
+            self.transaction_cost = self.cost_for(self.ticker)
         else:
             self.transaction_cost = market_per_side(self.cost_model, self.slippage_bps)
 
@@ -277,6 +286,22 @@ class PortfolioRequest(BacktestRequest):
             if first:
                 data = {**data, "ticker": first}
         return data
+
+    @model_validator(mode="after")
+    def _auto_cost_across_legs(self) -> "PortfolioRequest":
+        # Under "auto" each leg pays its own market's cost (cost_for). The
+        # single transaction_cost kept on the request — and saved with the
+        # run — is then their plain average, for display.
+        if self.cost_model == "auto":
+            costs = [self.cost_for(t) for t in self.tickers]
+            self.transaction_cost = sum(costs) / len(costs)
+        return self
+
+    def leg_costs(self) -> "dict[str, float] | float":
+        """Per-leg costs under "auto", else the one shared figure."""
+        if self.cost_model == "auto":
+            return {t: self.cost_for(t) for t in self.tickers}
+        return self.transaction_cost
 
     @field_validator("tickers")
     @classmethod

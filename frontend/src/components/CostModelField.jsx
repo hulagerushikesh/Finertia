@@ -26,7 +26,9 @@ export function marketCost(model, slippageBps) {
 }
 
 export default function CostModelField({ model, slippageBps, onSlippage, inputClass }) {
-  const cost = marketCost(model, slippageBps);
+  const auto = model === "auto";
+  const cost = marketCost(auto ? "india" : model, slippageBps);
+  const us = auto ? marketCost("us", slippageBps) : null;
   if (!cost) return null;
   return (
     <div className="flex flex-col gap-2" data-testid="market-cost">
@@ -43,13 +45,24 @@ export default function CostModelField({ model, slippageBps, onSlippage, inputCl
           onChange={(e) => onSlippage(Number(e.target.value))}
         />
       </label>
+      {auto ? (
+        <p className="text-xs text-graphite leading-relaxed">
+          Each ticker pays its own market&rsquo;s charges: NSE and BSE listings (.NS, .BO){" "}
+          <span className="text-foreground font-mono">{bps(cost.perSide)} bps</span> a side, everything
+          else <span className="text-foreground font-mono">{bps(us.perSide)} bps</span>, slippage included. In a
+          portfolio, each holding is charged its own.
+        </p>
+      ) : (
       <p className="text-xs text-graphite leading-relaxed">
         <span className="text-foreground font-mono">{bps(cost.perSide)} bps</span> a side on average
         (buys {bps(cost.buy)}, sales {bps(cost.sell)}):{" "}
         {cost.parts.map((p) => `${p.label.toLowerCase()} ${bps(p.perSide)}`).join(", ")}, plus your slippage.
       </p>
+      )}
       <p className="text-2xs text-faint leading-relaxed">
-        {model === "india"
+        {auto
+          ? "Indian costs assume equity delivery with a zero-brokerage broker; US costs a commission-free broker. Depository charges and FINRA's per-share fee are left out."
+          : model === "india"
           ? "Equity delivery with a zero-brokerage broker. Depository charges (a flat fee per sale) are left out; an Indian account cannot hold a short position overnight."
           : "A commission-free broker. FINRA's per-share fee is under 0.1 bp on stocks above $20 and is left out."}{" "}
         Today&rsquo;s rates (as of {cost.asOf}), applied to the whole history.

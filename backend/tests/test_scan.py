@@ -175,3 +175,16 @@ def test_many_tickers_are_read_together_and_match_one_by_one(scanning):
     for t in TICKERS[:3]:
         one = data.cached_ohlcv(t, "2020-01-01", "2026-01-01", remember=False)
         assert out[t]["Close"].equals(one["Close"])
+
+
+def test_auto_costs_price_each_scanned_stock_by_its_market(scanning, monkeypatch):
+    """The scan's placeholder ticker must not decide the cost: an NSE stock
+    scanned under "auto" pays India's, matching its own backtest."""
+    client, _ = scanning
+    from api import core
+
+    monkeypatch.setattr(core, "fetch_ohlcv", lambda t, s, e: data.cached_ohlcv(t, s, e))
+    body = {**BODY, "cost_model": "auto"}
+    row = next(r for r in client.post("/api/scan", json=body, headers=AUTH).json()["rows"] if r["ticker"] == "AAA.NS")
+    bt = client.post("/api/backtest", json={**BODY, "ticker": "AAA.NS", "cost_model": "india"}, headers=AUTH).json()
+    assert row["total_return"] == bt["metrics"]["total_return"]

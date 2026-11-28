@@ -54,6 +54,17 @@ describe("cost model in the workspace", () => {
     expect(screen.getByTestId("market-cost")).toHaveTextContent("16.12 bps a side");
   });
 
+  it("auto shows both markets' figures", async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByText("Advanced"));
+    await userEvent.click(screen.getByRole("button", { name: "Auto" }));
+    expect(state().cost_model).toBe("auto");
+    const text = screen.getByTestId("market-cost").textContent;
+    expect(text).toContain("13.12 bps a side");
+    expect(text).toContain("2.10 bps");
+    expect(decodeParams(encodeParams({ ...DEFAULTS, cost_model: "auto" })).cost_model).toBe("auto");
+  });
+
   it("travels in a set-up link, and a flat link stays as it was", () => {
     const india = { ...DEFAULTS, cost_model: "india", slippage_bps: 4 };
     const back = decodeParams(encodeParams(india));

@@ -266,6 +266,7 @@ def portfolio_cost_sensitivity(
     leg_returns: dict[str, pd.Series],
     weights: pd.DataFrame,
     assumed_cost: float,
+    leg_costs: "dict[str, float] | float | None" = None,
 ) -> dict:
     """The same question for a book rather than a single name.
 
@@ -284,8 +285,18 @@ def portfolio_cost_sensitivity(
 
     The curve is still built by re-running every leg and re-combining at each
     cost, so each point is exactly what re-running the portfolio would print.
+
+    With per-leg costs (the "auto" choice: Indian legs dearer than US ones)
+    every leg keeps its cost relative to `assumed_cost`, their average, and
+    the curve scales them together — so the 1× point is the book as run, and
+    the breakeven reads as the average cost at which it would break even.
     """
     symbols = list(leg_positions)
+    scale = (
+        {s: (leg_costs[s] / assumed_cost if assumed_cost > 0 else 1.0) for s in symbols}
+        if isinstance(leg_costs, dict)
+        else {s: 1.0 for s in symbols}
+    )
     index = weights.index
 
     aligned_weights = weights.reindex(index).fillna(0.0)
@@ -295,7 +306,7 @@ def portfolio_cost_sensitivity(
         w = aligned_weights[symbol]
         position = leg_positions[symbol].reindex(index)
         gross = gross.add(w * (position * leg_returns[symbol].reindex(index).fillna(0.0)), fill_value=0.0)
-        turnover = turnover.add(w * _turnover(position), fill_value=0.0)
+        turnover = turnover.add(w * _turnover(position) * scale[symbol], fill_value=0.0)
 
     breakeven, status = _breakeven_from(
         gross.to_numpy(dtype=float), turnover.to_numpy(dtype=float)
@@ -310,7 +321,7 @@ def portfolio_cost_sensitivity(
     curve = []
     for cost in levels:
         legs = {
-            symbol: apply_positions(leg_positions[symbol], leg_returns[symbol], cost)[
+            symbol: apply_positions(leg_positions[symbol], leg_returns[symbol], cost * scale[symbol])[
                 "net_return"
             ].fillna(0)
             for symbol in symbols
