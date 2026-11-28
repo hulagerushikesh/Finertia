@@ -253,6 +253,37 @@ def docs_for(ticker: str, df: pd.DataFrame, lo: int, hi: int, *, now: datetime) 
     return docs
 
 
+class NotCachedError(Exception):
+    """The store holds no single-batch copy of this ticker's span."""
+
+
+def cached_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
+    """OHLCV from L1/L2 only — never the provider.
+
+    For the index scan (scan.py): a scan reads a whole index at once, which
+    must not become a burst of provider calls. Tracked tickers are kept fresh
+    by the nightly load, so a missing or mixed-batch span here means the
+    ticker is new to the list or the load failed for it; the scan reports it
+    as skipped. Stale is acceptable — the nightly load is the freshness.
+    """
+    ticker = ticker.upper()
+    key = (ticker, start, end)
+    hit = _from_memory(key)
+    if hit is not None:
+        return hit
+    years = _years_in(start, end)
+    with step("prices_read"):
+        docs = _get_store().get_many(ticker, years)
+    if not _uniform(docs, years, now=_now(), fresh=False):
+        raise NotCachedError(f"{ticker} has no stored prices for this range yet")
+    df = _assemble(docs, years, start, end)
+    if df.empty:
+        raise NotCachedError(f"{ticker} has no bars in this range")
+    df.attrs["data_source"] = "cache"
+    _cache.put(key, df)
+    return df
+
+
 def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
     """OHLCV for ticker in [start, end). The frame's `.attrs["data_source"]`
     says where it came from: "memory", "cache", "cache-stale", or the

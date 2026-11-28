@@ -203,6 +203,33 @@ class ValidateRequest(BacktestRequest):
     rolling_folds: int = Field(4, ge=2, le=8)
 
 
+class ScanRequest(BacktestRequest):
+    """One strategy across every stock in a tracked index (scan.py).
+
+    Every strategy and risk field is the backtest's own, validated the same
+    way. The inherited `ticker` is a placeholder for the parent's checks; the
+    scan supplies each stock in turn.
+    """
+
+    universe: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def _seed_ticker(cls, data):
+        if isinstance(data, dict) and not data.get("ticker"):
+            data = {**data, "ticker": "SCAN"}
+        return data
+
+    @field_validator("universe")
+    @classmethod
+    def _known_universe(cls, v: str) -> str:
+        from api.routes.scans import SCANNABLE  # noqa: PLC0415 — avoids an import cycle
+
+        if v not in SCANNABLE:
+            raise ValueError(f"Scans cover {', '.join(SCANNABLE)} for now.")
+        return v
+
+
 class PortfolioRequest(BacktestRequest):
     """One strategy run across several tickers and combined into a portfolio.
 
