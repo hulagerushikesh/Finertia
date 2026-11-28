@@ -14,6 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import { PRESETS, presetRange, matchingPreset, describeRange } from "../utils/dates";
 import { feature } from "../lib/features";
+import indianTickers from "../lib/indianTickers.json";
 
 // A curated list rather than a symbol-search API: it needs no key, no network
 // call, and no rate limit, and these cover the overwhelming majority of what
@@ -48,6 +49,9 @@ const COMMON_TICKERS = [
   { symbol: "ETH-USD", name: "Ethereum" },
   { symbol: "^GSPC", name: "S&P 500 Index" },
   { symbol: "^IXIC", name: "Nasdaq Composite" },
+  // The Nifty 50 and Nifty Next 50 (the index scan's lists), after the US
+  // names so a short query that fits both ("BA", "M") offers the US one first.
+  ...indianTickers.tickers,
 ];
 
 /**

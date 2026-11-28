@@ -32,6 +32,27 @@ describe("ConfigPanel", () => {
     expect(onRun).toHaveBeenCalledOnce();
   });
 
+  it("suggests Indian stocks by name and picks the NSE symbol", async () => {
+    render(<Harness />);
+    const box = screen.getByLabelText("Ticker");
+    await userEvent.clear(box);
+    await userEvent.type(box, "reliance");
+    await userEvent.click(screen.getByRole("button", { name: /RELIANCE\.NS/ }));
+    expect(state().ticker).toBe("RELIANCE.NS");
+
+    await userEvent.clear(box);
+    await userEvent.type(box, "infosys");
+    expect(screen.getByRole("listbox")).toHaveTextContent("INFY.NS");
+  });
+
+  it("still offers the US name first when a short query fits both", async () => {
+    render(<Harness />);
+    const box = screen.getByLabelText("Ticker");
+    await userEvent.clear(box);
+    await userEvent.type(box, "BA");
+    expect(screen.getAllByRole("option")[0]).toHaveTextContent(/BA\s*Boeing/);
+  });
+
   it("switches strategy", async () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole("button", { name: "MACD" }));
