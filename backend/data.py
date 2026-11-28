@@ -257,7 +257,7 @@ class NotCachedError(Exception):
     """The store holds no single-batch copy of this ticker's span."""
 
 
-def cached_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
+def cached_ohlcv(ticker: str, start: str, end: str, *, remember: bool = True) -> pd.DataFrame:
     """OHLCV from L1/L2 only — never the provider.
 
     For the index scan (scan.py): a scan reads a whole index at once, which
@@ -265,6 +265,10 @@ def cached_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
     by the nightly load, so a missing or mixed-batch span here means the
     ticker is new to the list or the load failed for it; the scan reports it
     as skipped. Stale is acceptable — the nightly load is the freshness.
+
+    `remember=False` leaves L1 alone: a 500-stock scan would otherwise push
+    every backtest's frame out of the 200-entry cache. The scan keeps its own
+    close-only cache instead (api/routes/scans.py).
     """
     ticker = ticker.upper()
     key = (ticker, start, end)
@@ -280,8 +284,31 @@ def cached_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
     if df.empty:
         raise NotCachedError(f"{ticker} has no bars in this range")
     df.attrs["data_source"] = "cache"
-    _cache.put(key, df)
+    if remember:
+        _cache.put(key, df)
     return df
+
+
+def cached_ohlcv_many(tickers: list[str], start: str, end: str) -> dict[str, "pd.DataFrame | NotCachedError"]:
+    """cached_ohlcv for many tickers in a few store round trips. Each value is
+    the frame or the NotCachedError saying why it is missing. L1 untouched."""
+    years = _years_in(start, end)
+    now = _now()
+    with step("prices_read"):
+        found = _get_store().get_for_tickers([t.upper() for t in tickers], years, closes_only=True)
+    out = {}
+    for t in tickers:
+        docs = found.get(t.upper(), {})
+        if not _uniform(docs, years, now=now, fresh=False):
+            out[t] = NotCachedError(f"{t.upper()} has no stored prices for this range yet")
+            continue
+        df = _assemble(docs, years, start, end)
+        if df.empty:
+            out[t] = NotCachedError(f"{t.upper()} has no bars in this range")
+            continue
+        df.attrs["data_source"] = "cache"
+        out[t] = df
+    return out
 
 
 def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
