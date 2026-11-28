@@ -221,6 +221,9 @@ def test_declines_when_the_strategy_is_flat_almost_every_bar():
     assert out["verdict"] == "inconclusive"
     assert out["unreliable"] is not None
     assert out["active_bars"] == 12
+    # The same note is shown for a user's own rule, which has no parameters.
+    assert out["unreliable"].startswith("The strategy was in the market on only 12 of 1000 trading days")
+    assert "parameters" not in out["unreliable"]
 
 
 def test_reports_not_computable_rather_than_crashing_on_empty_input():

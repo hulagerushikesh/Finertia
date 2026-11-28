@@ -261,8 +261,10 @@ def deflated_sharpe_ratio(
     unreliable = None
     if active_bars < 30:
         unreliable = (
-            f"The selected parameters were in the market on only {active_bars} "
-            f"of {n_obs} bars, which is too few for a Sharpe ratio to describe."
+            # Worded for both cases: a built-in strategy's chosen setting and a
+            # user's own rule, which has no parameters to select.
+            f"The strategy was in the market on only {active_bars} "
+            f"of {n_obs} trading days, which is too few for a Sharpe ratio to describe."
         )
     elif kurtosis > 50:
         unreliable = (
