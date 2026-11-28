@@ -25,9 +25,12 @@ const LINKS = [
  */
 export default function Footer() {
   return (
-    <footer className="border-t border-border mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid gap-8 md:grid-cols-[1fr_auto] items-start">
-        <div className="max-w-xl">
+    <footer className="border-t border-border mt-12">
+      {/* Two equal columns on wide screens: with `1fr auto` the long link row
+          took its full width and squeezed the disclaimer into a tall, narrow
+          block, which made the footer most of a short page. */}
+      <div className="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 grid gap-6 lg:grid-cols-2 items-start">
+        <div className="max-w-2xl">
           <Wordmark className="text-lg" />
           <p className="text-xs text-graphite leading-relaxed mt-3" data-testid="disclaimer">
             Backtested results are hypothetical and do not reflect what trading
@@ -43,7 +46,7 @@ export default function Footer() {
             is a free, non-commercial personal project.
           </p>
         </div>
-        <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Footer">
+        <nav className="flex flex-wrap gap-x-6 gap-y-2 lg:justify-end" aria-label="Footer">
           {LINKS.map(([to, label]) => (
             <Link
               key={to}
