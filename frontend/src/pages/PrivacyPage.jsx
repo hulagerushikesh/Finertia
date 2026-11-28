@@ -38,6 +38,10 @@ export default function PrivacyPage() {
             Compare work.
           </p>
           <p>
+            <strong className="text-foreground font-medium">Your saved rules:</strong> the name and the
+            conditions of each rule you choose to save, so you can run it again.
+          </p>
+          <p>
             <strong className="text-foreground font-medium">Usage counters:</strong> how many runs and
             validations you have used this month, to apply the fair-use limits.
           </p>
@@ -69,7 +73,7 @@ export default function PrivacyPage() {
         <Section id="rights" title="Your choices">
           <p>
             From your <Link to="/profile" className="text-pencil underline underline-offset-2">profile</Link>{" "}
-            you can download everything stored about you, and delete your account and all its runs.
+            you can download everything stored about you, and delete your account with all its runs and saved rules.
             Deletion removes them from the live database at once; backups age out within 14 weeks.
           </p>
           <p>

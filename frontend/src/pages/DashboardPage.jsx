@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { Link2, Check, Download, ScanLine } from "lucide-react";
 import ConfigPanel, { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
+import SavedRules from "../components/SavedRules";
 import { HeadlineMetrics, MoreMetrics } from "../components/MetricsGrid";
 import MoreToggle from "../components/MoreToggle";
 import useDisclosure from "../hooks/useDisclosure";
@@ -257,7 +258,15 @@ export default function DashboardPage() {
           not to read a header. But the document still needs one. */}
       <h1 className="sr-only">Backtest workspace</h1>
       <div className="flex flex-col lg:flex-row gap-6 items-stretch lg:items-start">
-        <ConfigPanel params={params} setParams={setParams} onRun={handleRun} loading={loading} />
+        <ConfigPanel
+          params={params}
+          setParams={setParams}
+          onRun={handleRun}
+          loading={loading}
+          ruleTools={
+            <SavedRules rule={params.rule} onLoad={(rule) => setParams((p) => ({ ...p, rule }))} />
+          }
+        />
 
         <div className="flex-1 min-w-0">
           {/* An error with no way forward is just an accusation. The button

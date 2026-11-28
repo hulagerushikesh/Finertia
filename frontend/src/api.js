@@ -96,6 +96,14 @@ export const exportMyData = () => apiFetch("/api/me/export");
 export const deleteMyAccount = (confirm) =>
   apiFetch("/api/me", { method: "DELETE", body: JSON.stringify({ confirm }) });
 
+/** Saved rules (backend/api/routes/saved_rules.py). */
+export const listRules = () => apiFetch("/api/rules");
+export const saveRule = (name, rule) =>
+  apiFetch("/api/rules", { method: "POST", body: JSON.stringify({ name, rule }) });
+export const updateRule = (id, changes) =>
+  apiFetch(`/api/rules/${id}`, { method: "PATCH", body: JSON.stringify(changes) });
+export const deleteRule = (id) => apiFetch(`/api/rules/${id}`, { method: "DELETE" });
+
 /** One strategy across a tracked index (backend/scan.py). */
 export const runScan = (params, universe) =>
   apiFetch("/api/scan", { method: "POST", body: JSON.stringify({ ...params, universe }) });

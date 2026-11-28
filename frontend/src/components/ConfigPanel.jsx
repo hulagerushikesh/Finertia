@@ -481,7 +481,7 @@ function LimitField({ label, hint, value, onChange, defaultPct }) {
   );
 }
 
-export default function ConfigPanel({ params, setParams, onRun, loading }) {
+export default function ConfigPanel({ params, setParams, onRun, loading, ruleTools = null }) {
   const strategy = params.strategy || "momentum";
   const active = STRATEGIES.find((s) => s.id === strategy) || STRATEGIES[0];
   const macdInverted = strategy === "macd" && params.macd_fast >= params.macd_slow;
@@ -568,6 +568,7 @@ export default function ConfigPanel({ params, setParams, onRun, loading }) {
           <p className="text-xs text-faint leading-relaxed">{active.blurb}</p>
         </div>
 
+        {strategy === "rules" && ruleTools}
         {strategy === "rules" && (
           <RuleBuilder rule={params.rule} onChange={(rule) => handleChange("rule", rule)} />
         )}

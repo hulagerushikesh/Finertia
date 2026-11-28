@@ -68,6 +68,9 @@ class FakeDoc:
         else:
             self._store[self._path] = dict(data)
 
+    def delete(self):
+        self._store.pop(self._path, None)
+
     def update(self, data):
         # Firestore refuses an update to a document that does not exist.
         if self._path not in self._store:
@@ -907,7 +910,7 @@ def account_calls(api, monkeypatch):
 
     def fake_delete(db, uid, delete_auth_user):
         calls["delete"].append((uid, delete_auth_user))
-        return {"runs": 3, "rate_limit_counters": 1}
+        return {"runs": 3, "rules": 0, "rate_limit_counters": 1}
 
     monkeypatch.setattr(core, "export_account", fake_export)
     monkeypatch.setattr(core, "delete_account", fake_delete)
@@ -949,7 +952,7 @@ def test_delete_removes_the_callers_account_and_reports_counts(account_calls):
     client, _, calls = account_calls
     r = _delete(client, {"confirm": "  U1@Example.com "})
     assert r.status_code == 200
-    assert r.json() == {"deleted": True, "runs": 3, "rate_limit_counters": 1}
+    assert r.json() == {"deleted": True, "runs": 3, "rules": 0, "rate_limit_counters": 1}
     uid, deleter = calls["delete"][0]
     assert uid == "u1"
     assert deleter is core.delete_auth_user  # the real Auth deletion, not a no-op
