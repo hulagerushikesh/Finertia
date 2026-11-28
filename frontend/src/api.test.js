@@ -102,3 +102,19 @@ describe("apiFetch requests", () => {
     expect(JSON.parse(init.body)).toEqual({ confirm: "me@x.com" });
   });
 });
+
+describe("apiBase", () => {
+  it("pins the production site to its own origin, whatever the build was given", async () => {
+    const { apiBase } = await import("./api");
+    const prod = { hostname: "finertia.hulage.in", origin: "https://finertia.hulage.in" };
+    expect(apiBase("https://finertia-api-staging-818037622374.us-central1.run.app", prod)).toBe("https://finertia.hulage.in");
+    expect(apiBase(undefined, prod)).toBe("https://finertia.hulage.in");
+  });
+
+  it("lets preview builds and local development use the configured base", async () => {
+    const { apiBase } = await import("./api");
+    const preview = { hostname: "finertia-abc-hulagerushikeshs-projects.vercel.app", origin: "https://x" };
+    expect(apiBase("https://staging.example", preview)).toBe("https://staging.example");
+    expect(apiBase(undefined, { hostname: "localhost", origin: "http://localhost:5174" })).toBe("http://localhost:8000");
+  });
+});
