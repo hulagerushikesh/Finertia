@@ -1,6 +1,18 @@
 import { auth } from "./firebase";
 
-const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+// The production site always calls its own origin, which vercel.json rewrites
+// to the production API — whatever the build was given. On 28 Nov a value
+// meant for Preview builds (the staging API) reached a production build, and
+// the live site sent every request to staging, where its origin is refused.
+// Preview builds and local development still use VITE_API_BASE_URL.
+export const PRODUCTION_HOSTS = ["finertia.hulage.in"];
+
+export function apiBase(env = import.meta.env.VITE_API_BASE_URL, loc = globalThis.location) {
+  if (loc && PRODUCTION_HOSTS.includes(loc.hostname)) return loc.origin;
+  return env || "http://localhost:8000";
+}
+
+const BASE = apiBase();
 
 /**
  * Turn FastAPI's `detail` into something a person can read.
