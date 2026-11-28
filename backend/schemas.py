@@ -9,6 +9,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from fees import DEFAULT_SLIPPAGE_BPS, MODELS as _MARKETS, per_side as market_per_side
 from rules import validate as validate_rule
 from strategies import RULE_STRATEGY, STRATEGY_NAMES, longest_window
 
@@ -32,6 +33,10 @@ TICKER_PUNCTUATION = ".-^=&"
 # is what /api/compare splits them back apart with — single source of truth, so
 # adding an overlay field cannot leave the two halves disagreeing.
 RISK_KEYS = ("stop_loss", "take_profit", "sizing", "target_vol", "vol_window", "max_leverage")
+# How the cost was chosen (fees.py); stored beside transaction_cost, which is
+# the per-side figure it resolved to.
+COST_KEYS = ("cost_model", "slippage_bps")
+COST_MODELS = ("flat", *_MARKETS)
 
 
 class BacktestRequest(BaseModel):
@@ -73,6 +78,17 @@ class BacktestRequest(BaseModel):
     target_vol: float = Field(0.15, gt=0, le=2.0)
     vol_window: int = Field(20, ge=2, le=250)
     max_leverage: float = Field(2.0, gt=0, le=5.0)
+
+    # Costs. "flat" charges `transaction_cost` per side as given (the old,
+    # and default, behaviour). "us" or "india" replace it with that market's
+    # real charges plus `slippage_bps` (fees.py), resolved once below so every
+    # downstream path — backtest, validation, scan, compare — sees one number.
+    cost_model: str = "flat"
+    slippage_bps: float = Field(DEFAULT_SLIPPAGE_BPS, ge=0, le=100)
+
+    def cost_params(self) -> dict:
+        """How the cost was set, saved beside the per-side figure it became."""
+        return {"cost_model": self.cost_model, "slippage_bps": self.slippage_bps}
 
     def risk_params(self) -> dict:
         """The overlay settings, separated from the signal parameters."""
@@ -145,6 +161,15 @@ class BacktestRequest(BaseModel):
             raise ValueError("Start date must be before end date")
         if end_d > date.today():
             raise ValueError("End date cannot be in the future")
+
+        if self.cost_model not in COST_MODELS:
+            raise ValueError(f"cost_model must be one of: {', '.join(COST_MODELS)}")
+        if self.cost_model == "flat":
+            # Slippage only means something inside a market model; pinned so
+            # it cannot split the result cache's key for the same flat run.
+            self.slippage_bps = DEFAULT_SLIPPAGE_BPS
+        else:
+            self.transaction_cost = market_per_side(self.cost_model, self.slippage_bps)
 
         if self.strategy == "macd" and self.macd_fast >= self.macd_slow:
             raise ValueError("MACD fast period must be shorter than the slow period")

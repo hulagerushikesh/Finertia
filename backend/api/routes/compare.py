@@ -14,6 +14,7 @@ from data import DataUnavailableError
 from engine import apply_positions, compute_returns
 from risk import apply_stops, size_positions
 from schemas import (
+    COST_KEYS,
     RISK_KEYS,
     CompareRequest,
 )
@@ -76,7 +77,7 @@ def compare_runs(req: CompareRequest, authorization: Optional[str] = Header(None
         risk = {k: stored.get(k) for k in RISK_KEYS if k in stored}
         params = {
             k: v for k, v in stored.items()
-            if k != "transaction_cost" and k not in RISK_KEYS
+            if k != "transaction_cost" and k not in RISK_KEYS and k not in COST_KEYS
         }
 
         try:

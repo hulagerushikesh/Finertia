@@ -1,0 +1,90 @@
+{
+ "as_of": "2026-11-28",
+ "default_slippage_bps": 2.0,
+ "models": {
+  "us": {
+   "model": "us",
+   "label": "United States",
+   "as_of": "2026-11-28",
+   "slippage_bps": 2.0,
+   "charges": [
+    {
+     "id": "commission",
+     "label": "Commission",
+     "buy": 0.0,
+     "sell": 0.0
+    },
+    {
+     "id": "sec_fee",
+     "label": "SEC fee (sales)",
+     "buy": 0.0,
+     "sell": 2.06e-05
+    },
+    {
+     "id": "slippage",
+     "label": "Slippage (your estimate)",
+     "buy": 0.0002,
+     "sell": 0.0002
+    }
+   ],
+   "buy": 0.0002,
+   "sell": 0.0002206,
+   "round_trip": 0.0004206,
+   "per_side": 0.0002103
+  },
+  "india": {
+   "model": "india",
+   "label": "India, delivery",
+   "as_of": "2026-11-28",
+   "slippage_bps": 2.0,
+   "charges": [
+    {
+     "id": "brokerage",
+     "label": "Brokerage",
+     "buy": 0.0,
+     "sell": 0.0
+    },
+    {
+     "id": "stt",
+     "label": "Securities transaction tax",
+     "buy": 0.001,
+     "sell": 0.001
+    },
+    {
+     "id": "stamp_duty",
+     "label": "Stamp duty (buys)",
+     "buy": 0.00015,
+     "sell": 0.0
+    },
+    {
+     "id": "exchange",
+     "label": "Exchange charge",
+     "buy": 3.07e-05,
+     "sell": 3.07e-05
+    },
+    {
+     "id": "sebi_fee",
+     "label": "SEBI turnover fee",
+     "buy": 1e-06,
+     "sell": 1e-06
+    },
+    {
+     "id": "gst",
+     "label": "GST on charges",
+     "buy": 5.706e-06,
+     "sell": 5.706e-06
+    },
+    {
+     "id": "slippage",
+     "label": "Slippage (your estimate)",
+     "buy": 0.0002,
+     "sell": 0.0002
+    }
+   ],
+   "buy": 0.001387406,
+   "sell": 0.001237406,
+   "round_trip": 0.002624812,
+   "per_side": 0.001312406
+  }
+ }
+}
