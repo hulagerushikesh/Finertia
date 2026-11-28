@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { runScan } from "../api";
+import { listRules, runScan } from "../api";
 import { DEFAULTS, STRATEGIES } from "../components/ConfigPanel";
 import { decodeParams } from "../utils/permalink";
 import Spinner from "../components/Spinner";
@@ -59,9 +59,24 @@ export function scanSentence(s) {
 export default function ScanPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const params = useMemo(
+  const workspace = useMemo(
     () => location.state?.params || decodeParams(location.search) || DEFAULTS,
     [location.state, location.search]
+  );
+  // "" scans the workspace set-up as it came in; a saved rule's id swaps in
+  // that rule (strategy "rules") and keeps the workspace's dates, costs and
+  // risk settings.
+  const [saved, setSaved] = useState([]);
+  const [source, setSource] = useState("");
+  useEffect(() => {
+    listRules()
+      .then((d) => setSaved(d.rules || []))
+      .catch(() => setSaved([]));
+  }, []);
+  const chosen = saved.find((r) => r.id === source) || null;
+  const params = useMemo(
+    () => (chosen ? { ...workspace, strategy: "rules", rule: chosen.rule } : workspace),
+    [workspace, chosen]
   );
   const [universe, setUniverse] = useState("nifty50");
   const [result, setResult] = useState(null);
@@ -69,7 +84,9 @@ export default function ScanPage() {
   const [error, setError] = useState(null);
   const [sort, setSort] = useState(["sharpe_ratio", -1]);
 
-  const strategyLabel = STRATEGIES.find((s) => s.id === params.strategy)?.label || params.strategy;
+  const strategyLabel = chosen
+    ? `Your rule “${chosen.name}”`
+    : STRATEGIES.find((s) => s.id === params.strategy)?.label || params.strategy;
 
   async function handleRun() {
     setRunning(true);
@@ -112,6 +129,28 @@ export default function ScanPage() {
           Change the set-up
         </Link>
       </p>
+
+      {saved.length > 0 && (
+        <label className="flex flex-wrap items-center gap-2 mt-5 text-sm text-graphite">
+          Scan
+          <select
+            aria-label="What to scan"
+            value={source}
+            onChange={(e) => {
+              setSource(e.target.value);
+              setResult(null);
+            }}
+            className="h-8 rounded-md border border-border bg-background px-2 text-sm text-foreground"
+          >
+            <option value="">the workspace set-up</option>
+            {saved.map((r) => (
+              <option key={r.id} value={r.id}>
+                saved rule: {r.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <div className="flex flex-wrap items-center gap-3 mt-6" role="group" aria-label="Index">
         {UNIVERSES.map((u) => (
