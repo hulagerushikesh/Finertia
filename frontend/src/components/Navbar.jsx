@@ -37,6 +37,7 @@ export default function Navbar() {
   const links = user
     ? [
         ["/dashboard", "Workspace"],
+        ["/scan", "Scan"],
         ["/history", "History"],
         ["/learn", "Learn"],
         ...(userProfile?.role === "admin" ? [["/admin/overview", "Admin"]] : []),
