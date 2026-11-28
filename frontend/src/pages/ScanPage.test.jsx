@@ -128,6 +128,20 @@ describe("ScanPage — a saved rule", () => {
   });
 });
 
+describe("ScanPage — the S&P 500", () => {
+  it("offers the S&P 500 and says it takes longer", async () => {
+    let finish;
+    api.runScan.mockReturnValue(new Promise((r) => (finish = r)));
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: "S&P 500" }));
+    await userEvent.click(screen.getByRole("button", { name: "Run scan" }));
+    expect(api.runScan).toHaveBeenCalledWith(expect.anything(), "sp500");
+    expect(screen.getByRole("status")).toHaveTextContent("up to a minute");
+    finish(RESULT);
+    expect(await screen.findByText(/Beat holding the stock on 1 of 3/)).toBeInTheDocument();
+  });
+});
+
 describe("scanSentence", () => {
   it("says when something survives the correction", () => {
     const s = { ...RESULT.summary, tested_against_holding: 50, beats_holding: 6, expected_by_chance: 2.5, survives_correction: 2 };

@@ -52,8 +52,10 @@ def frame_to_doc(ticker: str, year: int, frame: pd.DataFrame, *, batch: str,
 
 
 def doc_to_frame(doc: dict) -> pd.DataFrame:
+    # A doc read with a field mask (the scan reads closes only) has just the
+    # columns it asked for.
     frame = pd.DataFrame(
-        {c: doc[c.lower()] for c in COLUMNS},
+        {c: doc[c.lower()] for c in COLUMNS if c.lower() in doc},
         index=pd.to_datetime(doc["dates"]),
     )
     frame.index.name = "Date"
@@ -65,6 +67,12 @@ class PriceStore(Protocol):
         """Return {year: doc} for every year that exists; missing years absent."""
 
     def put_many(self, docs: list[dict]) -> None: ...
+
+    def get_for_tickers(
+        self, tickers: list[str], years: list[int], closes_only: bool = False
+    ) -> dict[str, dict[int, dict]]:
+        """{ticker: {year: doc}} for many tickers at once (the index scan).
+        `closes_only` may drop the other price columns from each doc."""
 
     def years_for(self, ticker: str) -> list[int]:
         """Every year cached for this ticker, in any batch."""
@@ -88,6 +96,11 @@ class MemoryPriceStore:
     def put_many(self, docs: list[dict]) -> None:
         for d in docs:
             self._docs[doc_id(d["ticker"], d["year"])] = d
+
+    def get_for_tickers(
+        self, tickers: list[str], years: list[int], closes_only: bool = False
+    ) -> dict[str, dict[int, dict]]:
+        return {t: self.get_many(t, years) for t in tickers}
 
     def years_for(self, ticker: str) -> list[int]:
         t = ticker.upper()
@@ -115,6 +128,33 @@ class FirestorePriceStore:
             if snap.exists:
                 d = snap.to_dict()
                 out[int(d["year"])] = d
+        return out
+
+    def get_for_tickers(
+        self, tickers: list[str], years: list[int], closes_only: bool = False
+    ) -> dict[str, dict[int, dict]]:
+        # An S&P 500 scan is ~5,000 documents. Read them in chunks of a few
+        # hundred, eight chunks at a time, and with `closes_only` ask Firestore
+        # for the close column alone — the other four are most of each doc's
+        # bytes, and a scan never looks at them.
+        from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
+
+        fields = (
+            ["ticker", "year", "batch", "provider", "complete", "fetched_at", "dates", "close"]
+            if closes_only
+            else None
+        )
+        refs = [self._col.document(doc_id(t, y)) for t in tickers for y in years]
+        chunks = [refs[i : i + 250] for i in range(0, len(refs), 250)]
+
+        def read(chunk):
+            return [s.to_dict() for s in self._db.get_all(chunk, field_paths=fields) if s.exists]
+
+        out: dict[str, dict[int, dict]] = {t.upper(): {} for t in tickers}
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            for docs in pool.map(read, chunks):
+                for d in docs:
+                    out.setdefault(d["ticker"], {})[int(d["year"])] = d
         return out
 
     def put_many(self, docs: list[dict]) -> None:

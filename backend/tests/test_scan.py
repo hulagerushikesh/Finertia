@@ -26,6 +26,9 @@ def scanning(api, monkeypatch):  # noqa: F811
     store = MemoryPriceStore()
     data.configure_store(store)
     data._cache.clear()
+    from api.routes import scans as scans_route
+
+    scans_route._closes.clear()
     monkeypatch.setattr(data, "_now", lambda: NOW)
     for seed, t in enumerate(TICKERS[:3]):
         df = _bars("2005-01-01", "2026-09-14", seed=seed)
@@ -85,8 +88,8 @@ def test_a_scan_counts_as_one_run_and_is_rate_limited(scanning):
 
 def test_only_the_scannable_indexes_are_accepted(scanning):
     client, _ = scanning
-    r = client.post("/api/scan", json={**BODY, "universe": "sp500"}, headers=AUTH)
-    assert r.status_code == 422 and "Scans cover" in r.text
+    r = client.post("/api/scan", json={**BODY, "universe": "ftse100"}, headers=AUTH)
+    assert r.status_code == 422 and "Scans cover" in r.text and "sp500" in r.text
 
 
 def test_a_rule_can_be_scanned(scanning):
@@ -136,3 +139,39 @@ def test_a_losing_strategy_never_counts_as_beating_holding():
              "sharpe_ratio": -1.0, "p_value": 0.0001, "sharpe_vs_hold": -2.0}]
     s = scan.summarise(rows)
     assert s["beats_holding"] == 0 and s["survives_correction"] == 0
+
+
+def test_a_scan_keeps_its_own_cache_and_leaves_the_backtests_alone(scanning, monkeypatch):
+    """A 500-stock scan must not push every backtest's frame out of L1, and a
+    repeat scan must not read the store again."""
+    client, state = scanning
+    state["profile"] = dict(PRO)
+    assert client.post("/api/scan", json=BODY, headers=AUTH).status_code == 200
+    assert len(data._cache) == 0
+
+    store = data._get_store()
+    reads = []
+    real = store.get_many
+    monkeypatch.setattr(store, "get_many", lambda t, y: reads.append(t) or real(t, y))
+    again = client.post("/api/scan", json=BODY, headers=AUTH).json()
+    assert again["summary"]["ran"] == 3
+    assert reads == ["DDD.NS"]  # only the stock that was missing is asked for again
+
+
+def test_the_sp500_is_scannable(scanning, monkeypatch):
+    client, _ = scanning
+    real = universes.load
+    monkeypatch.setattr(
+        universes, "load",
+        lambda name: {**real(name), "tickers": TICKERS[:3]} if name == "sp500" else real(name),
+    )
+    r = client.post("/api/scan", json={**BODY, "universe": "sp500"}, headers=AUTH)
+    assert r.status_code == 200 and r.json()["universe_title"] == "S&P 500"
+
+
+def test_many_tickers_are_read_together_and_match_one_by_one(scanning):
+    out = data.cached_ohlcv_many(TICKERS, "2020-01-01", "2026-01-01")
+    assert isinstance(out["DDD.NS"], data.NotCachedError)
+    for t in TICKERS[:3]:
+        one = data.cached_ohlcv(t, "2020-01-01", "2026-01-01", remember=False)
+        assert out[t]["Close"].equals(one["Close"])

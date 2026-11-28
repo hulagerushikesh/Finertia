@@ -6,8 +6,8 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 
 from api import core
-from api.core import enforce_quota, in_parallel, inject_user, record_run, scan_limiter
-from data import NotCachedError, cached_ohlcv
+from api.core import enforce_quota, inject_user, record_run, scan_limiter
+from data import PARTIAL_YEAR_TTL, NotCachedError, _MemoryCache, cached_ohlcv_many
 from scan import scan_one, summarise
 from schemas import ScanRequest
 from timing import step
@@ -15,12 +15,14 @@ import universes
 
 router = APIRouter()
 
-# The indexes a scan may cover. The S&P 500 waits until scans of a hundred
-# are measured in production (planning/DATA.md, index scan).
-SCANNABLE = ("nifty50", "niftynext50", "nasdaq100")
+# The indexes a scan may cover — every tracked list.
+SCANNABLE = ("nifty50", "niftynext50", "nasdaq100", "sp500")
 
-# Prices are read sixteen at a time (the shared I/O pool's size).
-READ_CHUNK = 16
+# Closes only, keyed (ticker, start, end): ten years of one stock is ~20 kB,
+# so three S&P 500 scans' worth fits in ~30 MB. Separate from data.py's L1 so
+# a scan never evicts the frames backtests are using. Six hours, like L1: the
+# nightly load is the only thing that changes these prices.
+_closes = _MemoryCache(max_entries=1600, ttl_seconds=PARTIAL_YEAR_TTL.total_seconds())
 
 
 @router.post("/scan")
@@ -38,16 +40,25 @@ def run_scan(req: ScanRequest, authorization: Optional[str] = Header(None)):
     universe = universes.load(req.universe)
     tickers = universe["tickers"]
 
-    def read(t):
-        try:
-            return cached_ohlcv(t, req.start, req.end)
-        except NotCachedError as exc:
-            return exc
-
-    frames = []
-    for i in range(0, len(tickers), READ_CHUNK):
-        chunk = tickers[i : i + READ_CHUNK]
-        frames.extend(in_parallel(*[lambda t=t: read(t) for t in chunk]))
+    # Closes already in this instance's scan cache; the rest in one batched
+    # read from the store.
+    frames, missing = {}, []
+    for t in tickers:
+        hit = _closes.get((t, req.start, req.end))
+        if hit is not None:
+            frames[t] = hit
+        else:
+            missing.append(t)
+    if missing:
+        for t, df in cached_ohlcv_many(missing, req.start, req.end).items():
+            if isinstance(df, NotCachedError):
+                frames[t] = df
+                continue
+            closes = df[["Close"]].copy()
+            closes.attrs = dict(df.attrs)
+            _closes.put((t, req.start, req.end), closes)
+            frames[t] = closes
+    frames = [frames[t] for t in tickers]
 
     rows = []
     with step("scan_compute"):

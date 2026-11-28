@@ -147,3 +147,19 @@ holding (0 of 99 against ~5 expected by chance; 0 of 50 against 2.5).
 Firestore reads per first scan: about one per stock per year (~1,000 for
 Nasdaq-100 over ten years), so the free 50,000 a day allows ~50 cold
 scans of that size a day before repeats are served from memory.
+
+### The S&P 500 in the scan (28 Nov)
+
+503 stocks is ~5,000 Firestore documents per first scan (ten years). Read one
+ticker at a time that took 38 s from a laptop; batched (250 documents per
+request, eight requests at once) and asking for the close column only, it
+takes 14 s from the same laptop, and less from Cloud Run next to the
+database. The engine then needs ~8 s on a laptop for 499 stocks. The scan
+keeps its own close-only cache (~30 MB for three S&P scans) so it never
+evicts the frames backtests use, and a repeat scan reads nothing.
+
+Momentum, 2016–2026, on the S&P 500: 0 of 499 beat holding, against ~25
+expected by chance; 4 skipped (listed too recently for the range).
+
+Reads budget: a first S&P 500 scan costs ~5,000 of the 50,000 free reads a
+day; repeats on the same instance cost none.

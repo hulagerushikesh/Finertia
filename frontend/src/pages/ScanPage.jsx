@@ -21,6 +21,7 @@ export const UNIVERSES = [
   { id: "nifty50", label: "Nifty 50" },
   { id: "niftynext50", label: "Nifty Next 50" },
   { id: "nasdaq100", label: "Nasdaq-100" },
+  { id: "sp500", label: "S&P 500", slow: true },
 ];
 
 const COLUMNS = [
@@ -172,6 +173,11 @@ export default function ScanPage() {
           {running ? "Scanning…" : "Run scan"}
         </Button>
       </div>
+      {running && UNIVERSES.find((u) => u.id === universe)?.slow && (
+        <p className="text-xs text-graphite mt-3" role="status">
+          Five hundred stocks: this can take up to a minute the first time, and seconds after that.
+        </p>
+      )}
       <p className="text-2xs text-faint mt-2">
         Counts as one run from your monthly allowance. Prices are the nightly copy; nothing is saved to
         your history.
